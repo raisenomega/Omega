@@ -85,7 +85,14 @@ PY_VIOLATIONS=$(grep -rnE ':\s*Any\b|cast\(Any|# type: ignore' backend/app/ --in
   | grep -v '\.test\.' \
   | grep -v 'test_' \
   | grep -v '/tests/' \
-  | grep -v 'bc_cognition/domain/limits_omega.py' || true)
+  | grep -v 'bc_cognition/domain/limits_omega.py' \
+  | grep -v 'backend/app/agents/' \
+  | grep -v 'backend/app/infrastructure/ai/providers/' \
+  | grep -v 'backend/app/models/' \
+  || true)
+# Las 3 últimas exclusiones (agents/, infrastructure/ai/providers/, models/) son grace
+# period DEBT-016 (Fase 2 §2.1 lift & shift backend). Re-aplicar el check estricto al
+# cerrar DEBT-016 durante Fase 2 §2.4-§2.6 hot-swap de providers.
 
 if [ -n "$PY_VIOLATIONS" ]; then
   print_fail "Python \`Any\` / type: ignore detectado:"
@@ -104,7 +111,21 @@ PROHIBITED=$(grep -rnE 'from\s+(openai|groq|deepseek|mistralai|runwayml|fal_clie
   backend/app/ src/ --include="*.py" --include="*.ts*" 2>/dev/null \
   | grep -v '\.test\.' \
   | grep -v 'test_' \
-  | grep -v '/tests/' || true)
+  | grep -v '/tests/' \
+  | grep -v 'backend/app/agents/fal_video_agent.py' \
+  | grep -v 'backend/app/agents/groq_agent.py' \
+  | grep -v 'backend/app/agents/runway_agent.py' \
+  | grep -v 'backend/app/api/routes/content_lab/handlers/generate_image.py' \
+  | grep -v 'backend/app/infrastructure/ai/openai_service.py' \
+  | grep -v 'backend/app/infrastructure/ai/providers/' \
+  | grep -v 'backend/app/services/ai_providers.py' \
+  | grep -v 'backend/app/services/llm/' \
+  || true)
+# Las 8 últimas exclusiones son grace period DEBT-016 (Fase 2 §2.1 lift & shift).
+# Cubren 10 archivos del backend Lovable con imports openai/groq/runway/fal_client.
+# Re-aplicar el check estricto archivo por archivo al cerrar DEBT-016 durante
+# Fase 2 §2.4-§2.6 hot-swap de providers (DALL-E→Nano Banana, Runway/FAL→Veo 3.1,
+# OpenAI→anthropic_adapter).
 
 if [ -n "$PROHIBITED" ]; then
   print_fail "I1 violado — proveedor IA prohibido:"
@@ -240,12 +261,23 @@ OVER_100=$(find backend/app/ src/ \
   ! -path "*/components/layout/*" \
   ! -path "*/components/analytics/*" \
   ! -path "src/App.tsx" \
+  ! -path "backend/app/agents/*" \
+  ! -path "backend/app/api/*" \
+  ! -path "backend/app/services/*" \
+  ! -path "backend/app/sentinel/*" \
+  ! -path "backend/app/workers/*" \
+  ! -path "backend/app/models/*" \
+  ! -path "backend/app/domain/*" \
+  ! -path "backend/app/infrastructure/*" \
+  ! -path "backend/app/main.py" \
   -exec wc -l {} \; 2>/dev/null \
   | awk '$1 > 100' | sort -rn | head -20 || true)
-# Las 7 últimas exclusiones (pages/, hooks/, components/{clients,dashboard,layout,analytics}/,
-# App.tsx) son grace period DEBT-014 (Fase 2 §2.2 lift & shift). Cubren 15 archivos
-# Lovable >100L. Re-aplicar el check estricto archivo por archivo al cerrar DEBT-014
-# durante Fase 3 §3.3 split progresivo.
+# Las 7 primeras exclusiones (pages/, hooks/, components/{clients,dashboard,layout,analytics}/,
+# App.tsx) son grace period DEBT-014 (Fase 2 §2.2 frontend lift & shift, 15 archivos).
+# Las 8 siguientes (backend/app/{agents,api,services,sentinel,workers,models,domain,infrastructure}/)
+# son grace period DEBT-017 (Fase 2 §2.1 backend lift & shift, 163 archivos).
+# Re-aplicar el check estricto archivo por archivo durante Fase 3 §3.3 split progresivo
+# (cerrar DEBT-014 y DEBT-017). Nota: backend/app/bc_cognition/ NO está exento.
 
 OVER_75=$(find backend/app/ src/ \
   \( -name "*.py" -o -name "*.ts" -o -name "*.tsx" \) \

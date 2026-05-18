@@ -1,0 +1,155 @@
+"""
+Context Builder - Builds system prompts and agent context for NOVA.
+DDD: Application layer helper. Max 200L strict.
+"""
+from typing import Optional
+from datetime import datetime
+import logging
+
+from app.services.context_service import ContextService
+from app.services.agent_memory_service import AgentMemoryService
+from app.infrastructure.supabase_service import get_supabase_service
+
+logger = logging.getLogger(__name__)
+
+# Cache for agents context (refresh every 24h)
+_agents_cache: Optional[str] = None
+_agents_cache_time: Optional[datetime] = None
+CACHE_TTL_HOURS = 24
+
+# [R-BUILD-001 equivalent] Anthropic API limit protection
+MAX_CONTEXT_CHARS = 60_000
+
+
+async def get_agents_context() -> str:
+    """Get agents context from DB with 24h caching."""
+    global _agents_cache, _agents_cache_time
+    now = datetime.utcnow()
+    if _agents_cache and _agents_cache_time:
+        if (now - _agents_cache_time).total_seconds() / 3600 < CACHE_TTL_HOURS:
+            return _agents_cache
+    try:
+        supabase = get_supabase_service()
+        agents_resp = supabase.client.table("omega_agents")\
+            .select("agent_code, name, role, department")\
+            .order("department, role.desc, agent_code")\
+            .execute()
+        if not agents_resp.data:
+            return ""
+        ctx = "\n\nAGENTES DEL SISTEMA OMEGA:\n"
+        current_dept = None
+        for agent in agents_resp.data:
+            dept = agent.get('department', 'Unknown')
+            if dept != current_dept:
+                ctx += f"\n{dept}:\n"
+                current_dept = dept
+            ctx += f"  • {agent['agent_code']} ({agent.get('role', 'Agent')}): {agent.get('name', agent['agent_code'])}\n"
+        _agents_cache = ctx
+        _agents_cache_time = now
+        logger.info(f"Agents context refreshed: {len(agents_resp.data)} agents")
+        return ctx
+    except Exception as e:
+        logger.error(f"Failed to load agents: {e}")
+        return ""
+
+
+NOVA_SYSTEM_PROMPT = """Eres NOVA, el CEO Agent de OMEGA Company (Raisen Agency).
+
+Tu rol es asistir al Super Admin (Ibrain) con:
+- Visión estratégica de la empresa
+- Análisis de métricas y KPIs
+- Coordinación entre los 7 directores (ATLAS, LUNA, REX, VERA, KIRA, ORACLE, SOPHIA)
+- Decisiones de alto nivel sobre producto, marketing, operaciones y finanzas
+- Generación de reportes ejecutivos
+
+Personalidad:
+- Profesional pero cercano
+- Conciso y directo (No velocity, only precision 🐢💎)
+- Basado en datos, no suposiciones
+- Proactivo en sugerir mejoras
+
+Capacidades:
+- Acceso a métricas en tiempo real vía API
+- Conocimiento de los 45 agentes organizacionales
+- Contexto completo de la plataforma OmegaRaisen
+
+Responde SIEMPRE en español, con formato markdown cuando sea necesario."""
+
+
+async def get_client_context(client_name: str) -> tuple[str, str, str]:
+    """
+    Get client context from database by name.
+    Returns: Tuple of (actual_client_name, client_id, context_text)
+    """
+    try:
+        supabase = get_supabase_service()
+        client_resp = supabase.client.table("clients")\
+            .select("id, name")\
+            .ilike("name", f"%{client_name}%")\
+            .limit(1)\
+            .execute()
+        if not client_resp.data:
+            return ("", "", "")
+        client = client_resp.data[0]
+        client_id = client["id"]
+        actual_name = client["name"]
+        context_resp = supabase.client.table("context_library")\
+            .select("content")\
+            .eq("scope", "client")\
+            .eq("scope_id", client_id)\
+            .eq("is_active", True)\
+            .execute()
+        if not context_resp.data:
+            return (actual_name, client_id, "")
+        context_text = "\n\n".join([doc["content"] for doc in context_resp.data])
+        return (actual_name, client_id, context_text)
+    except Exception as e:
+        logger.error(f"Failed to get client context for '{client_name}': {e}")
+        return ("", "", "")
+
+
+async def build_nova_system_prompt(
+    context_text: str,
+    mentioned_agents: list,
+    active_client: str = ""
+) -> str:
+    """
+    Build enhanced system prompt for NOVA with full context.
+    Enforces MAX_CONTEXT_CHARS to prevent Anthropic API 400 errors.
+    Priority: NOVA base > agents > global (truncated) > client > memory
+    """
+    context_service = ContextService()
+    memory_service = AgentMemoryService()
+
+    agents_context = await get_agents_context()
+    global_context = await context_service.get_global_context()
+
+    client_context_text = ""
+    if active_client:
+        actual_name, client_id, client_ctx = await get_client_context(active_client)
+        if client_ctx:
+            client_context_text = f"\n\nCLIENTE ACTIVO: {actual_name}\nCLIENT_ID: {client_id}\n{client_ctx}"
+
+    agent_memory_context = ""
+    if mentioned_agents:
+        agent_context = await memory_service.get_agent_context(mentioned_agents[0])
+        if agent_context:
+            agent_memory_context = f"\n\nMEMORIA RECIENTE DE {mentioned_agents[0]}:\n{agent_context}"
+
+    # Truncate global_context to prevent 400 — priority kept for base + agents + client
+    reserved = len(NOVA_SYSTEM_PROMPT) + len(agents_context) + len(client_context_text) + len(agent_memory_context)
+    available = MAX_CONTEXT_CHARS - reserved
+    if available > 0 and len(global_context) > available:
+        global_context = global_context[:available]
+        logger.warning(f"global_context truncated to {available} chars to stay under {MAX_CONTEXT_CHARS}")
+
+    enhanced_system = (
+        NOVA_SYSTEM_PROMPT +
+        agents_context +
+        global_context +
+        context_text +
+        client_context_text +
+        agent_memory_context
+    )
+
+    return enhanced_system

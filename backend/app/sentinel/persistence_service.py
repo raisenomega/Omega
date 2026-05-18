@@ -1,0 +1,172 @@
+# app/sentinel/persistence_service.py
+"""
+SENTINEL Persistence Service
+Registra errores corregidos → genera reglas permanentes en Supabase.
+Cada fix documentado aquí previene que el mismo error ocurra de nuevo.
+MAX 200L — DDD compliant
+"""
+import re
+from datetime import datetime, timezone
+from dataclasses import dataclass
+from typing import Optional
+from app.infrastructure.supabase_service import SupabaseService
+
+
+@dataclass
+class ErrorFix:
+    error_type: str
+    file_path: str
+    symptom: str
+    root_cause: str
+    fix_description: str
+    rule_code: str
+    rule_text: str
+    prevention: str
+    commit_hash: Optional[str] = None
+    registered_by: str = "IBRAIN"
+
+
+@dataclass
+class RiskScoreData:
+    score: float
+    security_score: Optional[float] = None
+    architecture_score: Optional[float] = None
+    performance_score: Optional[float] = None
+    quality_score: Optional[float] = None
+    deployment_score: Optional[float] = None
+    documentation_score: Optional[float] = None
+    issues_critical: int = 0
+    issues_high: int = 0
+    issues_medium: int = 0
+    issues_low: int = 0
+    auto_fixes_applied: int = 0
+
+
+class PersistenceService:
+    """
+    Motor del bucle de mejora automática de SENTINEL.
+    register_fix() → nueva regla permanente en Supabase.
+    """
+
+    def __init__(self, db: SupabaseService):
+        self.db = db
+
+    def register_fix(self, fix: ErrorFix) -> dict:
+        """
+        Registra un bug resuelto.
+        Genera ID automático y guarda en omega_error_registry.
+        """
+        error_id = self._generate_error_id(fix.error_type)
+        timestamp = datetime.now(timezone.utc).isoformat()
+
+        self.db.client.table("omega_error_registry").insert({
+            "error_id": error_id,
+            "error_type": fix.error_type,
+            "file_path": fix.file_path,
+            "symptom": fix.symptom,
+            "root_cause": fix.root_cause,
+            "fix_description": fix.fix_description,
+            "rule_code": fix.rule_code,
+            "rule_text": fix.rule_text,
+            "prevention": fix.prevention,
+            "commit_hash": fix.commit_hash,
+            "registered_by": fix.registered_by,
+            "registered_at": timestamp,
+        }).execute()
+
+        return {
+            "success": True,
+            "error_id": error_id,
+            "rule_added": fix.rule_code,
+            "message": f"Regla {fix.rule_code} registrada permanentemente",
+            "timestamp": timestamp,
+        }
+
+    def resolve_debt(self, debt_id: str, resolution: str) -> dict:
+        """Marca una deuda técnica como resuelta."""
+        timestamp = datetime.now(timezone.utc).isoformat()
+
+        result = self.db.client.table("omega_tech_debt").update({
+            "status": "resolved",
+            "resolution": resolution,
+            "resolved_at": timestamp,
+        }).eq("debt_id", debt_id).execute()
+
+        if not result.data:
+            return {"success": False, "message": f"{debt_id} no encontrada"}
+
+        return {
+            "success": True,
+            "debt_id": debt_id,
+            "resolution": resolution,
+            "timestamp": timestamp,
+        }
+
+    def save_risk_score(self, data: RiskScoreData) -> dict:
+        """Guarda el Risk Score calculado por SENT_BRAIN."""
+        verdict = self._calculate_verdict(data.score)
+        timestamp = datetime.now(timezone.utc).isoformat()
+
+        self.db.client.table("sentinel_risk_scores").insert({
+            "score": data.score,
+            "security_score": data.security_score,
+            "architecture_score": data.architecture_score,
+            "performance_score": data.performance_score,
+            "quality_score": data.quality_score,
+            "deployment_score": data.deployment_score,
+            "documentation_score": data.documentation_score,
+            "verdict": verdict,
+            "issues_critical": data.issues_critical,
+            "issues_high": data.issues_high,
+            "issues_medium": data.issues_medium,
+            "issues_low": data.issues_low,
+            "auto_fixes_applied": data.auto_fixes_applied,
+            "calculated_at": timestamp,
+        }).execute()
+
+        return {
+            "success": True,
+            "score": data.score,
+            "verdict": verdict,
+            "timestamp": timestamp,
+        }
+
+    def get_summary(self) -> dict:
+        """
+        Resumen del estado actual del sistema.
+        Usado por NOVA para briefing diario.
+        """
+        errors = self.db.client.table("omega_error_registry")\
+            .select("error_type", count="exact").execute()
+
+        debts = self.db.client.table("omega_tech_debt")\
+            .select("debt_id, description, priority, status")\
+            .eq("status", "active").execute()
+
+        latest_score = self.db.client.table("sentinel_risk_scores")\
+            .select("score, verdict, calculated_at")\
+            .order("calculated_at", desc=True)\
+            .limit(1).execute()
+
+        score_data = latest_score.data[0] if latest_score.data else None
+
+        return {
+            "total_errors_registered": errors.count or 0,
+            "active_debts": len(debts.data or []),
+            "debts": debts.data or [],
+            "latest_risk_score": score_data,
+        }
+
+    # ── PRIVATE ──────────────────────────────────────────────
+
+    def _generate_error_id(self, error_type: str) -> str:
+        from datetime import datetime, timezone
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+        return f"ERR-{error_type}-{ts}"
+
+    def _calculate_verdict(self, score: float) -> str:
+        if score >= 75:
+            return "DEPLOY"
+        if score >= 60:
+            return "DEPLOY_WITH_CAUTION"
+        return "DO_NOT_DEPLOY"

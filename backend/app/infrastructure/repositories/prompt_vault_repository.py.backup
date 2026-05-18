@@ -1,0 +1,231 @@
+"""
+Prompt Vault Repository — Dynamic prompt selection with performance tracking.
+Implements intelligent selection based on vertical, platform, and performance scores.
+"""
+from typing import Optional, Dict, Any, List
+from app.infrastructure.supabase_service import SupabaseService
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class PromptVaultRepository:
+    """Repository for Prompt Vault operations"""
+
+    def __init__(self, supabase: SupabaseService):
+        self.supabase = supabase
+
+    async def select_optimal_prompt(
+        self,
+        category: str,
+        vertical: str,
+        platform: str,
+        agent_code: str
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Selects best prompt from vault based on:
+        1. Exact match (category + vertical + platform + agent)
+        2. Highest performance_score
+        3. is_active = true
+
+        Args:
+            category: Content type (caption, ad, email, script, story, post)
+            vertical: Industry (real_estate, construction, health, restaurant, generic)
+            platform: Social platform (instagram, facebook, linkedin, tiktok, email)
+            agent_code: Agent code (RAFA, DUDA, PIXEL, etc.)
+
+        Returns:
+            Prompt dict if found, None otherwise
+        """
+        try:
+            # Try exact match first
+            response = self.supabase.client.table("prompt_vault").select("*").match({
+                "category": category,
+                "vertical": vertical,
+                "platform": platform,
+                "agent_code": agent_code,
+                "is_active": True
+            }).order("performance_score", desc=True).limit(1).execute()
+
+            if response.data:
+                prompt = response.data[0]
+                logger.info(
+                    f"Selected prompt {prompt['name']} (score={prompt['performance_score']}) "
+                    f"for {category}/{vertical}/{platform}"
+                )
+
+                # Increment times_used
+                await self._increment_usage(prompt["id"], prompt["times_used"])
+
+                return prompt
+
+            # Fallback: try without platform specificity
+            logger.warning(
+                f"No exact match for {category}/{vertical}/{platform}, "
+                f"trying without platform filter"
+            )
+
+            response = self.supabase.client.table("prompt_vault").select("*").match({
+                "category": category,
+                "vertical": vertical,
+                "agent_code": agent_code,
+                "is_active": True
+            }).order("performance_score", desc=True).limit(1).execute()
+
+            if response.data:
+                prompt = response.data[0]
+                logger.info(
+                    f"Selected fallback prompt {prompt['name']} "
+                    f"(score={prompt['performance_score']})"
+                )
+                await self._increment_usage(prompt["id"], prompt["times_used"])
+                return prompt
+
+            # Ultimate fallback: generic vertical
+            logger.warning(
+                f"No match for {category}/{vertical}, trying generic vertical"
+            )
+
+            response = self.supabase.client.table("prompt_vault").select("*").match({
+                "category": category,
+                "vertical": "generic",
+                "agent_code": agent_code,
+                "is_active": True
+            }).order("performance_score", desc=True).limit(1).execute()
+
+            if response.data:
+                prompt = response.data[0]
+                logger.info(
+                    f"Selected generic prompt {prompt['name']} "
+                    f"(score={prompt['performance_score']})"
+                )
+                await self._increment_usage(prompt["id"], prompt["times_used"])
+                return prompt
+
+            logger.warning(
+                f"No prompt found in vault for {category}/{vertical}/{platform}, "
+                f"will use default builder"
+            )
+            return None
+
+        except Exception as e:
+            logger.error(f"Error selecting prompt from vault: {e}")
+            return None
+
+    async def _increment_usage(self, prompt_id: str, current_count: int) -> None:
+        """Increment times_used counter for a prompt"""
+        try:
+            self.supabase.client.table("prompt_vault").update({
+                "times_used": current_count + 1,
+                "last_updated": "now()"
+            }).eq("id", prompt_id).execute()
+        except Exception as e:
+            logger.error(f"Failed to increment usage for prompt {prompt_id}: {e}")
+
+    async def update_performance_score(
+        self,
+        prompt_id: str,
+        engagement_rate: float
+    ) -> None:
+        """
+        Updates prompt performance_score based on real engagement data.
+
+        Formula:
+        - new_score = (old_score * 0.7) + (engagement_rate * 10 * 0.3)
+        - Weighted average to avoid wild swings from single data points
+
+        Args:
+            prompt_id: UUID of the prompt
+            engagement_rate: Actual engagement rate (0.0 to 1.0, e.g., 0.035 = 3.5%)
+        """
+        try:
+            # Get current prompt data
+            response = self.supabase.client.table("prompt_vault").select(
+                "performance_score, engagement_avg, times_used"
+            ).eq("id", prompt_id).execute()
+
+            if not response.data:
+                logger.warning(f"Prompt {prompt_id} not found, cannot update performance")
+                return
+
+            current = response.data[0]
+            old_score = current["performance_score"]
+            times_used = current["times_used"]
+
+            # Calculate new engagement average
+            if current["engagement_avg"] is None:
+                new_engagement_avg = engagement_rate
+            else:
+                # Running average
+                old_avg = current["engagement_avg"]
+                new_engagement_avg = (
+                    (old_avg * (times_used - 1)) + engagement_rate
+                ) / times_used
+
+            # Calculate new performance score (weighted 70% old, 30% new)
+            new_score = (old_score * 0.7) + (engagement_rate * 10 * 0.3)
+
+            # Clamp to 0-10 range
+            new_score = max(0.0, min(10.0, new_score))
+
+            # Update in database
+            self.supabase.client.table("prompt_vault").update({
+                "performance_score": round(new_score, 2),
+                "engagement_avg": round(new_engagement_avg, 4),
+                "last_updated": "now()"
+            }).eq("id", prompt_id).execute()
+
+            logger.info(
+                f"Updated prompt {prompt_id}: "
+                f"score {old_score:.2f} → {new_score:.2f}, "
+                f"engagement_avg={new_engagement_avg:.4f}"
+            )
+
+        except Exception as e:
+            logger.error(f"Error updating performance score for {prompt_id}: {e}")
+
+    async def get_top_prompts(
+        self,
+        vertical: Optional[str] = None,
+        limit: int = 10
+    ) -> List[Dict[str, Any]]:
+        """
+        Get top performing prompts, optionally filtered by vertical.
+
+        Args:
+            vertical: Optional vertical filter
+            limit: Max number of prompts to return
+
+        Returns:
+            List of top performing prompts
+        """
+        try:
+            query = self.supabase.client.table("prompt_vault").select("*").eq(
+                "is_active", True
+            )
+
+            if vertical:
+                query = query.eq("vertical", vertical)
+
+            response = query.order(
+                "performance_score", desc=True
+            ).limit(limit).execute()
+
+            return response.data if response.data else []
+
+        except Exception as e:
+            logger.error(f"Error fetching top prompts: {e}")
+            return []
+
+    async def get_prompt_by_id(self, prompt_id: str) -> Optional[Dict[str, Any]]:
+        """Get a single prompt by ID"""
+        try:
+            response = self.supabase.client.table("prompt_vault").select("*").eq(
+                "id", prompt_id
+            ).execute()
+
+            return response.data[0] if response.data else None
+
+        except Exception as e:
+            logger.error(f"Error fetching prompt {prompt_id}: {e}")
+            return None

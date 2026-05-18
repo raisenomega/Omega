@@ -128,7 +128,7 @@ SENTINEL global score ≥ 95/100 sostenido 7 días
 | DEBT-001 | `scheduled_post_repository.py` = 265L | Crecimiento orgánico | 2h | Bajo |
 | DEBT-002 | Math.random() en analytics frontend | Datos sintéticos pre-integración | 4h | Alto (P1) |
 | DEBT-003 | Instagram/TikTok/Facebook APIs sin keys | Falta Meta Developer App | 40h | Bloquea publicación |
-| DEBT-004 | 202 archivos backend >75L | Falta enforcement | 60h | Alto (DDD C4) |
+| DEBT-004 | 202 archivos backend >75L (cifra estimada pre-lift&shift) | Falta enforcement | — | subsumido por DEBT-017 (post-lift&shift cifra real) |
 | DEBT-005 | 5 proveedores IA cuando solo Anthropic permitido | Histórico | 40h | Crítico (DDD I1) |
 | DEBT-006 | Sin `agent_memory` con pgvector | Usa Qdrant externo | 8h | Alto (M1, M2) |
 | DEBT-007 | 3 directorios de migraciones distintos | Histórico Lovable+backend | 6h | Medio |
@@ -140,8 +140,10 @@ SENTINEL global score ≥ 95/100 sostenido 7 días
 | DEBT-013 | `tsconfig.json` en modo Lovable laxo (sin strict, sin 9 aliases `@bc-*/*` V3) | Lift & shift §2.2 (18 may 2026): código Lovable escrito sin strict — preservar V3 bloquearía build con cientos de errores de `any`/null/unused. Re-aplicar strict V3 + aliases progresivamente durante refactor por bounded context Fase 3 §3.2. Backup V3 en `D:/tmp-lovable-extract/_v3_backups/tsconfig.v3.json` | 16h (re-strict por BC) | Alto (C1+C2) |
 | DEBT-014 | 11+ archivos frontend >100L (Clients.tsx 448L, Content.tsx 306L, SettingsPage.tsx 291L, ClientDetail.tsx 286L, ClientAIConfig.tsx 277L, etc.) | Lift & shift §2.2 (18 may 2026): código Lovable no diseñado con regla 75/100L. Exception list en `scripts/validate-before-push.sh` check 7/10 para `src/pages/`, `src/hooks/`, `src/components/clients/` como **grace period Fase 2**. Cerrar antes/durante Fase 3 §3.3 split progresivo | 40h | Alto (C4) |
 | DEBT-015 | 15+ `as any` / `as any[]` en hooks y pages del Lovable (useOrganization.ts 7×, Calendar.tsx, ClientDetail.tsx, Clients.tsx, Content.tsx) | Escape hatch Lovable para tablas Supabase sin types generadas (`audit_logs`, `posts`). Exception list en check 1/10 para `src/pages/`, `src/hooks/`, `src/components/clients/` como **grace period Fase 2**. Cerrar regenerando types con `supabase gen types typescript` + reemplazando casts durante Fase 3 §3.2 refactor por BC | 20h | Alto (C1+C2) |
+| DEBT-016 | 10 archivos backend con imports prohibidos por I1 (openai 6, groq 1, runwayml 1, fal_client 2): `agents/{fal_video,groq,runway}_agent.py` · `api/routes/content_lab/handlers/generate_image.py` · `infrastructure/ai/openai_service.py` · `infrastructure/ai/providers/{openai,groq,deepseek}_provider.py` · `services/ai_providers.py` · `services/llm/router.py` · más 6 ocurrencias `# type: ignore` en `base_agent.py` y `providers/anthropic_provider.py` | Lift & shift §2.1 (18 may 2026): código Lovable usa OpenAI/Groq/Runway/FAL directos. Exception list en checks 1/10 (`agents/`, `infrastructure/ai/providers/`) y 2/10 (los 10 archivos) como **grace period Fase 2**. Cerrar durante Fase 2 §2.4 (DALL-E→Nano Banana) + §2.5 (Runway/FAL→Veo 3.1) + §2.6 (eliminar OpenAI/Groq/DeepSeek imports) | 16h | Crítico (DDD I1) |
+| DEBT-017 | 163 archivos backend Lovable >100L (cifra real post-lift&shift). Top: `trend_hunter_agent.py` 316L, `analytics_agent.py` 313L, `engagement_agent.py` 306L, `scheduling_agent.py` 301L, `crisis_manager_agent.py` 298L | Lift & shift §2.1 (18 may 2026): código Lovable no diseñado con regla 75/100L. Exception list en check 7/10 para `backend/app/{agents,api,services,sentinel,workers,models,domain,infrastructure}/` como **grace period Fase 2**. `bc_cognition/` NO exento. Subsume y reemplaza DEBT-004 (cifra estimada). Cerrar en Fase 3 §3.3 split progresivo por bounded context | 80h | Alto (C4) |
 
-**Total deuda estimada: ~420h (~10.5 semanas full-time)** · DEBT-012 no suma; DEBT-013 +16h; DEBT-014 +40h; DEBT-015 +20h.
+**Total deuda estimada: ~516h (~13 semanas full-time)** · DEBT-004 subsumido por DEBT-017 (–60h estimadas); DEBT-012 no suma; DEBT-013 +16h; DEBT-014 +40h; DEBT-015 +20h; DEBT-016 +16h; DEBT-017 +80h (net +96h vs DEBT-004 original).
 
 ## SECCIÓN 7 — STACK CONFIRMADO
 

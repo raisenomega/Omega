@@ -1,0 +1,323 @@
+"""
+Prompt Vault API Router — CRUD operations for intelligent prompt management.
+Filosofía: No velocity, only precision 🐢💎
+"""
+from fastapi import APIRouter, HTTPException, Query
+from typing import Optional, List
+from app.infrastructure.supabase_service import get_supabase_service
+from app.infrastructure.repositories.prompt_vault_repository import PromptVaultRepository
+from .models import (
+    PromptVaultCreate,
+    PromptVaultUpdate,
+    PromptVaultResponse,
+    PerformanceUpdateRequest,
+    PromptVaultListResponse
+)
+import logging
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/prompt-vault", tags=["prompt-vault"])
+
+
+@router.get("/", response_model=PromptVaultListResponse)
+async def list_prompts(
+    vertical: Optional[str] = Query(None, description="Filter by vertical"),
+    category: Optional[str] = Query(None, description="Filter by category"),
+    platform: Optional[str] = Query(None, description="Filter by platform"),
+    agent_code: Optional[str] = Query(None, description="Filter by agent"),
+    is_active: Optional[bool] = Query(True, description="Filter by active status"),
+    min_score: Optional[float] = Query(None, ge=0, le=10, description="Minimum performance score"),
+    limit: int = Query(50, ge=1, le=100, description="Max results"),
+    offset: int = Query(0, ge=0, description="Offset for pagination")
+):
+    """
+    Lista prompts del vault con filtros opcionales.
+
+    Ordenado por performance_score descendente.
+    """
+    try:
+        supabase = get_supabase_service()
+        query = supabase.client.table("prompt_vault").select("*", count="exact")
+
+        # Apply filters
+        if vertical:
+            query = query.eq("vertical", vertical)
+        if category:
+            query = query.eq("category", category)
+        if platform:
+            query = query.eq("platform", platform)
+        if agent_code:
+            query = query.eq("agent_code", agent_code)
+        if is_active is not None:
+            query = query.eq("is_active", is_active)
+        if min_score is not None:
+            query = query.gte("performance_score", min_score)
+
+        # Execute with pagination
+        response = query.order(
+            "performance_score", desc=True
+        ).range(offset, offset + limit - 1).execute()
+
+        total = response.count if hasattr(response, 'count') else len(response.data)
+
+        return {
+            "prompts": response.data,
+            "total": total
+        }
+
+    except Exception as e:
+        logger.error(f"Error listing prompts: {e}")
+        raise HTTPException(500, f"Error listing prompts: {str(e)}")
+
+
+@router.get("/{prompt_id}", response_model=PromptVaultResponse)
+async def get_prompt(prompt_id: str):
+    """
+    Obtiene un prompt específico por ID.
+    """
+    try:
+        supabase = get_supabase_service()
+        vault_repo = PromptVaultRepository(supabase)
+
+        prompt = await vault_repo.get_prompt_by_id(prompt_id)
+
+        if not prompt:
+            raise HTTPException(404, f"Prompt {prompt_id} not found")
+
+        return prompt
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching prompt {prompt_id}: {e}")
+        raise HTTPException(500, f"Error fetching prompt: {str(e)}")
+
+
+@router.post("/", response_model=PromptVaultResponse, status_code=201)
+async def create_prompt(request: PromptVaultCreate):
+    """
+    Crea un nuevo prompt en el vault.
+
+    Requiere permisos de admin.
+    """
+    try:
+        supabase = get_supabase_service()
+
+        response = supabase.client.table("prompt_vault").insert(
+            request.dict()
+        ).execute()
+
+        if not response.data:
+            raise HTTPException(500, "Failed to create prompt")
+
+        logger.info(
+            f"Created new prompt: {request.name} "
+            f"({request.vertical}/{request.category}/{request.platform})"
+        )
+
+        return response.data[0]
+
+    except Exception as e:
+        logger.error(f"Error creating prompt: {e}")
+        raise HTTPException(500, f"Error creating prompt: {str(e)}")
+
+
+@router.patch("/{prompt_id}", response_model=PromptVaultResponse)
+async def update_prompt(prompt_id: str, request: PromptVaultUpdate):
+    """
+    Actualiza un prompt existente.
+
+    Solo actualiza los campos proporcionados.
+    """
+    try:
+        supabase = get_supabase_service()
+
+        # Get update data (exclude unset fields)
+        update_data = request.dict(exclude_unset=True)
+
+        if not update_data:
+            raise HTTPException(400, "No fields to update")
+
+        # Always update last_updated
+        update_data["last_updated"] = "now()"
+
+        response = supabase.client.table("prompt_vault").update(
+            update_data
+        ).eq("id", prompt_id).execute()
+
+        if not response.data:
+            raise HTTPException(404, f"Prompt {prompt_id} not found")
+
+        logger.info(f"Updated prompt {prompt_id}: {list(update_data.keys())}")
+
+        return response.data[0]
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating prompt {prompt_id}: {e}")
+        raise HTTPException(500, f"Error updating prompt: {str(e)}")
+
+
+@router.delete("/{prompt_id}")
+async def delete_prompt(prompt_id: str):
+    """
+    Soft delete de un prompt (marca como is_active=false).
+
+    No elimina físicamente del vault.
+    """
+    try:
+        supabase = get_supabase_service()
+
+        response = supabase.client.table("prompt_vault").update({
+            "is_active": False,
+            "last_updated": "now()"
+        }).eq("id", prompt_id).execute()
+
+        if not response.data:
+            raise HTTPException(404, f"Prompt {prompt_id} not found")
+
+        logger.info(f"Soft deleted prompt {prompt_id}")
+
+        return {
+            "id": prompt_id,
+            "deleted": True,
+            "message": "Prompt marcado como inactivo"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting prompt {prompt_id}: {e}")
+        raise HTTPException(500, f"Error deleting prompt: {str(e)}")
+
+
+@router.post("/{prompt_id}/performance")
+async def update_performance(
+    prompt_id: str,
+    request: PerformanceUpdateRequest
+):
+    """
+    Actualiza el performance_score de un prompt basado en engagement real.
+
+    Formula: new_score = (old_score * 0.7) + (engagement_rate * 10 * 0.3)
+
+    Args:
+        prompt_id: UUID del prompt
+        engagement_rate: Tasa de engagement real (0.0 a 1.0, ej: 0.045 = 4.5%)
+    """
+    try:
+        supabase = get_supabase_service()
+        vault_repo = PromptVaultRepository(supabase)
+
+        # Update performance score
+        await vault_repo.update_performance_score(
+            prompt_id=prompt_id,
+            engagement_rate=request.engagement_rate
+        )
+
+        # Get updated prompt
+        updated_prompt = await vault_repo.get_prompt_by_id(prompt_id)
+
+        if not updated_prompt:
+            raise HTTPException(404, f"Prompt {prompt_id} not found after update")
+
+        logger.info(
+            f"Updated performance for prompt {prompt_id}: "
+            f"engagement={request.engagement_rate:.4f}, "
+            f"new_score={updated_prompt['performance_score']:.2f}"
+        )
+
+        return {
+            "prompt_id": prompt_id,
+            "engagement_rate": request.engagement_rate,
+            "new_performance_score": updated_prompt["performance_score"],
+            "engagement_avg": updated_prompt["engagement_avg"],
+            "times_used": updated_prompt["times_used"],
+            "updated": True
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating performance for {prompt_id}: {e}")
+        raise HTTPException(500, f"Error updating performance: {str(e)}")
+
+
+@router.get("/top/{vertical}")
+async def get_top_prompts_by_vertical(
+    vertical: str,
+    limit: int = Query(10, ge=1, le=50)
+):
+    """
+    Obtiene los prompts con mejor performance para un vertical específico.
+    """
+    try:
+        supabase = get_supabase_service()
+        vault_repo = PromptVaultRepository(supabase)
+
+        top_prompts = await vault_repo.get_top_prompts(
+            vertical=vertical,
+            limit=limit
+        )
+
+        return {
+            "vertical": vertical,
+            "prompts": top_prompts,
+            "count": len(top_prompts)
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching top prompts for {vertical}: {e}")
+        raise HTTPException(500, f"Error fetching top prompts: {str(e)}")
+
+
+@router.get("/stats/summary")
+async def get_vault_stats():
+    """
+    Obtiene estadísticas generales del Prompt Vault.
+    """
+    try:
+        supabase = get_supabase_service()
+
+        # Total prompts
+        total_response = supabase.client.table("prompt_vault").select(
+            "*", count="exact"
+        ).execute()
+
+        # Active prompts
+        active_response = supabase.client.table("prompt_vault").select(
+            "*", count="exact"
+        ).eq("is_active", True).execute()
+
+        # Average score
+        avg_response = supabase.client.table("prompt_vault").select(
+            "performance_score"
+        ).eq("is_active", True).execute()
+
+        avg_score = 0
+        if avg_response.data:
+            scores = [p["performance_score"] for p in avg_response.data]
+            avg_score = sum(scores) / len(scores) if scores else 0
+
+        # By vertical
+        vertical_response = supabase.client.table("prompt_vault").select(
+            "vertical"
+        ).eq("is_active", True).execute()
+
+        verticals = {}
+        for item in vertical_response.data:
+            v = item["vertical"]
+            verticals[v] = verticals.get(v, 0) + 1
+
+        return {
+            "total_prompts": total_response.count if hasattr(total_response, 'count') else len(total_response.data),
+            "active_prompts": active_response.count if hasattr(active_response, 'count') else len(active_response.data),
+            "average_performance_score": round(avg_score, 2),
+            "by_vertical": verticals
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching vault stats: {e}")
+        raise HTTPException(500, f"Error fetching stats: {str(e)}")
