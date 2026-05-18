@@ -64,7 +64,7 @@ async def generate_content(
         return LLMResponse(
             content=text,
             provider="anthropic",
-            model="claude-sonnet-4-5-20250929",
+            model="claude-sonnet-4-6",
             cached=False,
             tokens_used=0,
             cost_usd=None,

@@ -18,32 +18,32 @@ logger = logging.getLogger(__name__)
 
 class AnthropicProvider(BaseAIProvider):
     """
-    Anthropic Claude Sonnet 4.5 provider.
+    Anthropic Claude V3 provider (Haiku/Sonnet/Opus 4.5-4.7).
 
-    Model: claude-sonnet-4-5-20250929
-    Used by: NOVA (CEO Agent - Executive Director)
+    Default model: claude-sonnet-4-6 (post §2.6 bump · DEBT-023 cerrada)
+    Used by: agent_dispatcher for all 45 OMEGA agents (Anthropic-only post §2.6).
 
-    Note: Does NOT replace claude_service.py (legacy compatibility)
+    Note: Does NOT replace claude_service.py (legacy compatibility · DEBT-024).
     """
 
-    def __init__(self, api_key: str, model_name: str = "claude-sonnet-4-5-20250929") -> None:
+    def __init__(self, api_key: str, model_name: str = "claude-sonnet-4-6") -> None:
         """
         Initialize Anthropic provider.
 
         Args:
             api_key: Anthropic API key
-            model_name: Model name (claude-sonnet-4-5-20250929)
+            model_name: Model name (default claude-sonnet-4-6)
         """
         super().__init__(api_key, model_name)
         self._client: AsyncAnthropic = AsyncAnthropic(api_key=self._api_key)
         self._validate_model(model_name)
 
     def _validate_model(self, model_name: str) -> None:
-        """Validate Claude model name."""
+        """Validate Claude V3 model name (Haiku/Sonnet/Opus)."""
         valid_models = [
-            "claude-sonnet-4-5-20250929",
-            "claude-sonnet-4-5-20251001",
-            "claude-opus-4-6"
+            "claude-haiku-4-5-20251001",   # V3 Haiku · workhorse económico
+            "claude-sonnet-4-6",            # V3 Sonnet · default
+            "claude-opus-4-7",              # V3 Opus · razonamiento crítico
         ]
         if model_name not in valid_models:
             raise ValueError(
