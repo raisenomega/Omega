@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings",
+  "_comment": "OmegaRaisen — Claude Code project settings. Hooks enforce DDD_REGLAS_OMEGA.md.",
+
+  "hooks": {
+    "PreToolUse": [
+      {
+        "match": "Edit|Write",
+        "command": "python3 .claude/hooks/protect-guardrails.py",
+        "description": "Bloquea modificación de archivos protegidos (limits_omega.py, hooks, sha1 baseline)"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "match": "Edit|Write",
+        "command": "python3 .claude/hooks/check-file-length.py",
+        "description": "Warning si archivo modificado >75L, error si >100L"
+      }
+    ],
+    "Stop": [
+      {
+        "command": "bash .claude/hooks/verify-on-stop.sh",
+        "description": "Verifica antes de terminar la sesión: tests, lint, SHA1"
+      }
+    ]
+  },
+
+  "agents": {
+    "auditor": {
+      "model": "opus",
+      "description": "Auditor read-only de calidad arquitectónica. Lee, busca patrones, reporta.",
+      "tools": ["Read", "Grep", "Glob"]
+    },
+    "memory-writer": {
+      "model": "haiku",
+      "description": "Escribe entradas en agent_memory tras decisiones del agente principal.",
+      "tools": ["Bash"]
+    },
+    "context-checker": {
+      "model": "haiku",
+      "description": "Verifica que SOURCE_OF_TRUTH.md y archivos clave fueron leídos al inicio.",
+      "tools": ["Read"]
+    }
+  },
+
+  "skills": {
+    "iniciar-fase": {
+      "path": ".claude/skills/iniciar-fase/SKILL.md"
+    },
+    "cerrar-ciclo": {
+      "path": ".claude/skills/cerrar-ciclo/SKILL.md"
+    },
+    "auditoria": {
+      "path": ".claude/skills/auditoria/SKILL.md"
+    },
+    "registrar-deuda": {
+      "path": ".claude/skills/registrar-deuda/SKILL.md"
+    }
+  },
+
+  "behavior": {
+    "alwaysReadFirst": [
+      "INDICE_PROYECTO.md",
+      "IDENTIDAD_GIT_CRITICA.md",
+      "CLAUDE.md",
+      "SOURCE_OF_TRUTH.md"
+    ],
+    "planModeThreshold": 3,
+    "_comment": "INDICE_PROYECTO.md es el mapa maestro · siempre PRIMERO. Luego identidad git (bloqueante), constitución, y estado verificado del proyecto. Tier 2 (DDD_REGLAS, BC_COGNITION, MCP_ARSENAL, etc.) se lee según scope · ver INDICE §2."
+  }
+}

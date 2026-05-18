@@ -1,0 +1,78 @@
+# ═══════════════════════════════════════════════════════════════════
+# OmegaRaisen Backend — requirements.txt
+# Limpio: solo Anthropic + Google GenAI (Nano Banana + Veo 3.1) + core
+# Eliminados: openai, groq, deepseek, runwayml, fal-client, tavily-python
+# ═══════════════════════════════════════════════════════════════════
+
+# ─── Framework ────────────────────────────────────────────────────
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.10.5
+pydantic-settings==2.6.1
+
+# ─── Database ─────────────────────────────────────────────────────
+sqlalchemy==2.0.25
+psycopg2-binary==2.9.10
+supabase==2.7.4
+
+# ─── AI providers (SOLO 2 — Anthropic + Google) ───────────────────
+anthropic>=0.34.0,<1.0.0
+google-genai>=0.3.0          # Nano Banana (imagen) + Veo 3.1 (video) — ÚNICA excepción I1
+
+# ─── Auth ─────────────────────────────────────────────────────────
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.1.2
+PyJWT==2.10.1
+
+# ─── Payments ─────────────────────────────────────────────────────
+stripe==7.10.0
+
+# ─── HTTP / API consumption ───────────────────────────────────────
+httpx==0.26.0
+requests==2.31.0
+
+# ─── Form data / files ────────────────────────────────────────────
+python-multipart==0.0.6
+
+# ─── Scrapers / extracción ────────────────────────────────────────
+beautifulsoup4==4.12.0
+lxml==5.1.0
+pypdf==4.0.0
+
+# ─── Schedulers ───────────────────────────────────────────────────
+apscheduler==3.10.4
+
+# ─── Memory / Vector (transición a pgvector planificada) ──────────
+# Comentados en Fase 0 (17 may 2026) — registrado como deuda en SOURCE_OF_TRUTH §6.
+# Razón: mem0ai requiere sqlalchemy>=2.0.31, pero pinneamos 2.0.25 (alineado con
+# producción Railway). Migración planificada a pgvector + Langfuse en Phase 3.
+# mem0ai>=0.1.0                 # bloqueante — conflict sqlalchemy 2.0.25
+# qdrant-client>=1.7.0           # legacy — migrar a pgvector Phase 3
+# langsmith>=0.1.0               # observabilidad legacy — reemplazar por Langfuse
+
+# ─── Observabilidad LLM (futuro) ──────────────────────────────────
+# langfuse>=2.0.0             # descomentar al integrar Phase 4
+
+# ─── Configuración ────────────────────────────────────────────────
+python-dotenv==1.0.0
+
+# ─── Utilities ────────────────────────────────────────────────────
+email-validator==2.1.0
+
+# ─── Testing (dev — separar a requirements-dev.txt en futuro) ─────
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+
+# ═══════════════════════════════════════════════════════════════════
+# ELIMINADOS POR DECISIÓN OWNER (17 may 2026 — viola DDD I1):
+#
+# openai>=1.35.0        ← reemplazado por anthropic
+# groq>=0.4.0           ← reemplazado por anthropic
+# deepseek-ai           ← reemplazado por anthropic
+# google-generativeai   ← reemplazado por google-genai (SDK nuevo)
+# runwayml              ← reemplazado por google-genai Veo 3.1
+# fal-client            ← reemplazado por google-genai Veo 3.1
+# tavily-python         ← reemplazado por Brave Search (commit 1e2ed99)
+# ═══════════════════════════════════════════════════════════════════

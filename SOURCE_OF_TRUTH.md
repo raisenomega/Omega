@@ -1,0 +1,186 @@
+# OMEGARAISEN — FUENTE ÚNICA DE VERDAD
+
+> Documento fundacional. Se lee al inicio de cada sesión.
+> Versión 1.0 · 17 mayo 2026 · Compatible con PLANTILLA_OMEGA_V3.md
+
+```
+PROYECTO       OmegaRaisen (Master Redes)
+OWNER          Jorge Ibrain · Raisen Agency
+DOMINIO        Operación r-omega.agency
+REPO ÚNICO     github.com/raisenomega/Omega
+INFRA NUEVA    Supabase: rwlnihoqhxwpbehibgxu.supabase.co
+               Railway:  por crear (replaces omegaraisen-production-2031)
+               Vercel:   por crear (un solo proyecto frontend, sin Lovable)
+ESTADO         Reset arquitectónico desde repos viejos
+               (repo backend anterior (deprecado) + repo frontend anterior (deprecado))
+PROVEEDOR IA   Anthropic (ÚNICO para texto/razonamiento)
+EXCEPCIONES    Google Nano Banana (imágenes) · Google Veo 3.1 (video)
+```
+
+---
+
+## SECCIÓN 1 — LO QUE EXISTE (verificado en código)
+
+| Componente | Estado | Evidencia |
+|------------|--------|-----------|
+| Backend FastAPI | ✅ | `backend/app/main.py:43` · 38 routers registrados |
+| 22 agentes IA implementados | ✅ | `backend/app/agents/*.py` (22 archivos `.py`) |
+| 45 agentes organizacionales seedeados | ✅ | `migrations/create_omega_agents.sql:14` (NOVA, ATLAS, LUNA…) |
+| Schema multi-tenant | ✅ | `supabase_migrations/002_resellers_multitenant.sql:9` |
+| Auth con bcrypt + JWT | ✅ | `api/routes/auth/jwt_utils.py` |
+| Stripe Connect billing | ✅ | `api/routes/billing/webhook.py:1` |
+| 8 cron workers autónomos | ✅ | `main.py:72-85` SENTINEL/ORACLE/News/Competitor/Trend |
+| SENTINEL security system | ✅ | `services/sentinel_service.py:1` + 4 mixins |
+| ORACLE intelligence brief | ✅ | `services/oracle_service.py:1` (lunes 7 AM) |
+| NOVA chat agent (CEO) | ✅ | `api/routes/nova/handlers/chat.py` |
+| Content Lab (texto + imagen + video) | ✅ | `api/routes/content_lab/handlers/*.py` |
+| Reseller dashboard backend | ✅ | `api/routes/reseller/router.py` (commit fa0b5a8) |
+| Sub-brands CRUD | ✅ | `api/routes/sub_brands/router.py` (commit 8049b67) |
+| Upsell workflow | ✅ | `api/routes/upsell/router.py` (commit fa0b5a8) |
+| Feature usage tracking | ✅ | `api/routes/clients/feature_usage_router.py` |
+| Frontend Vite + React + shadcn/ui | ✅ | `package.json:1` + `src/App.tsx:31` con 12 rutas |
+| Brave Search integration | ✅ | `infrastructure/tools/web_search_tool.py` (commit 1e2ed99) |
+| Mem0 + Qdrant vector store | ⚠️ | importado pero no es pgvector nativo |
+| RLS en tablas iniciales | ✅ | `supabase/migrations/20260212230856...sql:60-65` |
+
+## SECCIÓN 2 — LO QUE NO EXISTE (aunque se diga)
+
+| Afirmación | Realidad |
+|------------|----------|
+| "Sistema con Solo-Anthropic" | NO. Hay 5 proveedores IA activos: Anthropic, OpenAI, Google Gemini, Groq, DeepSeek |
+| "37/37 agents 100% funcionales" | Parcial. 22 archivos `agents/*.py`, varios sin tests, varios con OpenAI hardcoded |
+| "Tests pasando" | NO. 1 solo test: `src/test/example.test.ts`. Cero pytest en backend |
+| "Frontend → Backend FastAPI" | NO. El frontend del zip (src/) habla DIRECTO a Supabase, no llama a `/api/v1/*` |
+| "DDD aplicado" | Parcial. Existe `domain/`, `application/`, `infrastructure/` en backend pero mezclado. NO existe `bc-cognition/` |
+| "Archivos ≤200L" | NO. 202 archivos backend >75L. 13 archivos >300L (`trend_hunter_agent.py:316`) |
+| "RLS en todas las tablas" | NO. Migrations 002-008 NO activan RLS. `resellers`, `reseller_branding`, `clients` (modif), `leads` sin RLS |
+| "Pipeline CI/CD verificable" | NO. Sin `.github/workflows/`, sin `validate-before-push.sh`, sin hooks |
+| "agent_memory + pgvector" | NO. Usa Qdrant externo. Sin tabla `agent_memory` con `vector(1536)` |
+| "training_pairs preparada" | NO. Tabla no existe |
+| "Modelo Claude 4.6" (declarado) | INCONSISTENTE. `config.py:40` dice `claude-sonnet-4-20250514`. Provider dice `claude-sonnet-4-5-20250929` |
+| "DALL-E 3, Runway, FAL en uso" | DEPRECADO por decisión del owner (17 may 2026). Reemplazo: Nano Banana + Veo 3.1 |
+
+## SECCIÓN 3 — REGLAS INMUTABLES (P1-P5)
+
+```
+P1 — VERDAD BRUTAL
+   OmegaRaisen reporta a sus resellers/clientes la realidad sin
+   adornar. Si un post no se publicó, se reporta así. Si una métrica
+   es estimada, se marca como estimada. Cero "datos sintéticos" en
+   dashboards de cliente.
+
+P2 — OBJETIVO PRIMARIO
+   Preservar la reputación del cliente final. Cualquier acción que
+   pueda dañar la marca del cliente (post incorrecto, respuesta
+   automática a queja, contenido fuera de tono) requiere aprobación
+   humana. La marca del cliente es el activo. No es negociable.
+
+P3 — CONVICCIÓN MÍNIMA
+   Ningún agente publica/responde/contacta sin: (a) confidence ≥ 7,
+   (b) brand voice check pasado, (c) compliance check pasado.
+   Si falta una de las tres, action="hold_for_human_review".
+
+P4 — ANTI-IMPULSIVIDAD
+   Ningún agente posteará "porque está trending ahora" sin cruce
+   con brand_voice del cliente. Crisis manager NUNCA responde
+   crisis públicas automáticamente — solo alerta y propone draft.
+
+P5 — APRENDIZAJE HONESTO
+   Cada decisión de cada agente → INSERT en agent_memory con
+   was_correct=null. A 24-72h: UPDATE con outcome. Errores se
+   registran con detalle, no se minimizan.
+```
+
+## SECCIÓN 4 — GUARDRAILS DEL NEGOCIO
+
+> Viven en `backend/app/bc_cognition/domain/limits_omega.py` con SHA1 verificado.
+
+```
+MIN_CONFIDENCE_TO_ACT          = 7            # escala 0-10
+MAX_POSTS_AUTO_PER_DIA_CLIENTE = 3            # más → human review
+MAX_USD_AUTO_AD_SPEND          = 50           # más → owner approval
+MAX_USD_DIARIO_API_POR_CLIENTE = 5            # circuit breaker AI costs
+MAX_TOKENS_CONTEXT_DINAMICO    = 2000         # I6: Lost-in-the-Middle
+MIN_HORAS_ENTRE_POSTS          = 2            # anti-spam
+ACCIONES_PROHIBIDAS            = [
+  "respond_to_complaint_publicly",            # crisis → solo draft
+  "contact_lead_without_consent",             # CAN-SPAM/GDPR
+  "delete_client_brand_file",                 # destructivo
+  "modify_stripe_subscription_amount",        # contractual
+  "auto_post_to_paid_account_no_oauth",       # impossible w/o key
+]
+```
+
+## SECCIÓN 5 — MÉTRICA PRINCIPAL
+
+```
+SENTINEL global score ≥ 95/100 sostenido 7 días
+  · Cero false positives en crisis_manager_agent durante un mes
+  · 100% de los clientes activos con reseller_dashboard.health = verde
+  · Costo medio Claude por cliente/mes ≤ $5 (P95 ≤ $15)
+  · Cero secretos hardcoded detectados en pre-push hook
+```
+
+## SECCIÓN 6 — DEUDA TÉCNICA CONOCIDA
+
+| ID | Item | Por qué existe | Tiempo | Impacto |
+|----|------|----------------|--------|---------|
+| DEBT-001 | `scheduled_post_repository.py` = 265L | Crecimiento orgánico | 2h | Bajo |
+| DEBT-002 | Math.random() en analytics frontend | Datos sintéticos pre-integración | 4h | Alto (P1) |
+| DEBT-003 | Instagram/TikTok/Facebook APIs sin keys | Falta Meta Developer App | 40h | Bloquea publicación |
+| DEBT-004 | 202 archivos backend >75L | Falta enforcement | 60h | Alto (DDD C4) |
+| DEBT-005 | 5 proveedores IA cuando solo Anthropic permitido | Histórico | 40h | Crítico (DDD I1) |
+| DEBT-006 | Sin `agent_memory` con pgvector | Usa Qdrant externo | 8h | Alto (M1, M2) |
+| DEBT-007 | 3 directorios de migraciones distintos | Histórico Lovable+backend | 6h | Medio |
+| DEBT-008 | Frontend habla directo a Supabase | Bootstrap Lovable | 80h | Bajo (funcional) |
+| DEBT-009 | Sin promptfoo evals | No implementado | 16h | Medio |
+| DEBT-010 | Sin observabilidad LLM (Langfuse) | langsmith en deps pero no usado | 8h | Medio |
+| DEBT-011 | Sin tests reales (1 solo test) | Velocidad sobre solidez | 80h | Alto |
+| DEBT-012 | mem0ai/qdrant-client/langsmith comentados en `backend/requirements.txt:46-52` | Bootstrap Fase 0 (17 may 2026): `mem0ai>=0.1.0` requiere `sqlalchemy>=2.0.31` vs pin 2.0.25 (alineado con prod Railway). Descomentar requiere migración a pgvector+Langfuse (ya cubierta por DEBT-006+010) | 0h (subsumida en DEBT-006+010) | Bajo |
+
+**Total deuda estimada: ~344h (~9 semanas full-time)** · DEBT-012 no suma horas — solo formaliza el snapshot post-bootstrap.
+
+## SECCIÓN 7 — STACK CONFIRMADO
+
+```
+FRONTEND       Vite 5 + React 18 + TypeScript 5.8 + shadcn/ui + Tailwind
+               React Query 5 · React Router 6 · React Hook Form + Zod
+BACKEND        Python 3.11 + FastAPI 0.109 + Pydantic 2 + SQLAlchemy 2
+               Supabase Python SDK 2.7 · APScheduler · BeautifulSoup4 · pypdf
+IA TEXTO       Anthropic SDK 0.34+ · claude-haiku-4-5-20251001
+                                     claude-sonnet-4-6
+                                     claude-opus-4-7
+IA IMAGEN      google-genai · gemini-3.1-flash-image-preview (Nano Banana 2)
+IA VIDEO       google-genai · veo-3.1-generate-preview (Veo 3.1)
+DB             Supabase (PostgreSQL 15 + pgvector + auth + storage + RLS)
+DEPLOY FRONT   Vercel (un solo proyecto)
+DEPLOY BACK    Railway (nixpacks → uvicorn)
+SECRETS        .env local · Railway env vars · Vercel env vars
+OBSERV LLM     Langfuse (pendiente integrar)
+TESTING        Vitest (frontend) · Pytest (backend) · Promptfoo (cognition)
+```
+
+## SECCIÓN 8 — IDENTIDAD GIT
+
+```
+SETUP DUAL EN ESTA MÁQUINA (verificado arranque 17 may 2026)
+──────────────────────────────────────────────────────────────────
+Proyecto          Ruta local              Gitconfig file
+──────────────    ──────────────────────  ──────────────────────────────
+OmegaRaisen       D:\Omega Master redes\  ~/.gitconfig-omegamaster ← ESTE
+                                            user.name  = raisenomega
+                                            user.email = raisenagencypr@gmail.com
+
+Raisen Omega      D:\Raisen Omega\        ~/.gitconfig-raisen      ← LEGACY
+(otro proyecto)                            NO MODIFICAR
+──────────────────────────────────────────────────────────────────
+```
+
+Ambos bloques `[includeIf]` coexisten en `C:\Users\muscl\.gitconfig`.
+Ver `IDENTIDAD_GIT_CRITICA.md` §1 + `PROTOCOLO_IDENTIDAD_GIT_OMEGA.md`.
+
+---
+
+> **Regla:** Si está en "lo que existe" pero no puedes mostrar el archivo
+> de código donde vive → se mueve a "no existe". Sin excepciones.
+> **Última actualización:** 17 mayo 2026 · firmado: Claude (auditor) + Ibrain (CEO)

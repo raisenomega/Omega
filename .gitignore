@@ -1,0 +1,145 @@
+# ═══════════════════════════════════════════════════════════════════
+# OmegaRaisen — .gitignore
+# ═══════════════════════════════════════════════════════════════════
+
+# Secrets — NUNCA commitear
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+.env.development
+*.key
+*.pem
+*.p12
+credentials.json
+service-account*.json
+
+# Frontend (Vite + React + TypeScript)
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+.eslintcache
+*.tsbuildinfo
+
+# Backend (Python)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+backend/venv/
+backend/.venv/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+
+# Supabase CLI
+.supabase/
+supabase/.branches/
+supabase/.temp/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Builds y artifacts
+build/
+*.egg-info/
+*.egg
+dist/
+.parcel-cache/
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# Editor / temp
+*~
+*.bak
+*.tmp
+*.temp
+.cache/
+
+# Claude Code session artifacts (no commitear)
+.claude/cache/
+.claude/transcripts/
+
+# Graphify outputs (regenerar siempre)
+graphify-out/
+graph-snapshots/
+
+# Sentinel internal files (existen runtime, no en repo)
+sentinel_files/output/
+sentinel_files/temp/
+omega_persistence/temp/
+
+# Tests sueltos (limpiar antes de commit)
+test_*.json
+test_*.txt
+test_*.html
+debug_*.py
+sandbox_*.py
+
+# Migrations sin aplicar
+supabase/migrations/.draft/
+
+# Documentos personales del owner
+docs/personal/
+notas/
+PENDIENTES_*.md
+PROGRESOS_*.md
+INFO_PRESIDENCIAL*.md
+APROBACIONES_VIVAS*.md
+
+# Lovable artifacts (deprecado)
+.lovable/
+lovable-*.json
+
+# CI artifacts
+.github/runner/
+
+# Wiki / generated docs
+docs/generated/
+docs/api-reference/

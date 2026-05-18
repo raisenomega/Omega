@@ -1,0 +1,56 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "useDefineForClassFields": true,
+    "allowJs": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noEmit": true,
+
+    "//": "═══ DDD V3 strict mode — 9 flags inviolables ═══",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "useUnknownInCatchVariables": true,
+
+    "//2": "═══ Strictness adicional OmegaRaisen ═══",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+
+    "//3": "═══ Path aliases (bounded contexts) ═══",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@bc-01-clients/*": ["src/bc-01-clients/*"],
+      "@bc-02-content-lab/*": ["src/bc-02-content-lab/*"],
+      "@bc-03-calendar/*": ["src/bc-03-calendar/*"],
+      "@bc-04-analytics/*": ["src/bc-04-analytics/*"],
+      "@bc-05-resellers/*": ["src/bc-05-resellers/*"],
+      "@bc-06-sentinel/*": ["src/bc-06-sentinel/*"],
+      "@bc-07-oracle/*": ["src/bc-07-oracle/*"],
+      "@bc-cognition/*": ["src/bc-cognition/*"]
+    }
+  },
+  "include": ["src", "vite.config.ts"],
+  "exclude": ["node_modules", "dist", ".vite"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
