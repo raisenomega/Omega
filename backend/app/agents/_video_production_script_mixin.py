@@ -1,6 +1,6 @@
 """Video Production script writing and adaptation mixin"""
 import logging
-from app.infrastructure.ai.openai_service import openai_service
+from app.infrastructure.ai.claude_service import claude_service
 from app.infrastructure.ai.claude_service import claude_service
 from app.services.video_pipeline import (
     VideoSpec,
@@ -49,7 +49,7 @@ class VideoProductionScriptMixin:
             f"SCENE X (Xs): [narration] | Visual: [description] | Overlay: [text or 'none'] | Transition: [cut/fade/slide]"
         )
 
-        script_content = await openai_service.generate_text(
+        script_content = await claude_service.generate_text(
             prompt=script_prompt, max_tokens=800, temperature=0.7
         )
 
@@ -103,7 +103,7 @@ class VideoProductionScriptMixin:
             f"Maintain core message but optimize for {target_platform} audience."
         )
 
-        await openai_service.generate_text(prompt=prompt, max_tokens=400, temperature=0.7)
+        await claude_service.generate_text(prompt=prompt, max_tokens=400, temperature=0.7)
 
         adapted_scenes = [
             VideoScene(

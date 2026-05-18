@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 from datetime import datetime
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
-from app.infrastructure.ai.openai_service import openai_service
+from app.infrastructure.ai.claude_service import claude_service
 from app.services.competitor_analyzer import (
     competitor_analyzer,
     CompetitorProfile,
@@ -99,7 +99,7 @@ class CompetitiveIntelligenceAgent(BaseAgent):
             f"3. Top 5 hashtags\n"
         )
         
-        analysis = await openai_service.generate_text(
+        analysis = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=200,
             temperature=0.6
@@ -150,7 +150,7 @@ class CompetitiveIntelligenceAgent(BaseAgent):
             f"3. Opportunities (3 items)\n"
         )
         
-        insights = await openai_service.generate_text(
+        insights = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=250,
             temperature=0.7
@@ -192,7 +192,7 @@ class CompetitiveIntelligenceAgent(BaseAgent):
             f"2. 3 content pillars to develop\n"
         )
         
-        recommendations = await openai_service.generate_text(
+        recommendations = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=200,
             temperature=0.7
@@ -225,7 +225,7 @@ class CompetitiveIntelligenceAgent(BaseAgent):
             f"Provide 5 specific, actionable recommendations:\n"
         )
         
-        recommendations_text = await openai_service.generate_text(
+        recommendations_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=300,
             temperature=0.7

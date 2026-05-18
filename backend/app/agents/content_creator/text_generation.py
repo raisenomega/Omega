@@ -4,7 +4,7 @@ Handles captions, hashtags, and video scripts
 """
 from typing import Dict, Any
 import logging
-from app.infrastructure.ai.openai_service import openai_service
+from app.infrastructure.ai.claude_service import claude_service
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ async def generate_caption(task: Dict[str, Any]) -> Dict[str, Any]:
         f"- Max 2200 characters"
     )
 
-    caption = await openai_service.generate_text(
+    caption = await claude_service.generate_text(
         prompt=prompt,
         system_message=system_message,
         temperature=0.8
@@ -90,7 +90,7 @@ async def generate_hashtags(task: Dict[str, Any]) -> Dict[str, Any]:
         f"{context_block}"
     )
 
-    response = await openai_service.generate_text(
+    response = await claude_service.generate_text(
         prompt=prompt,
         temperature=0.6
     )
@@ -141,7 +141,7 @@ async def generate_video_script(task: Dict[str, Any]) -> Dict[str, Any]:
         f"{context_block}"
     )
 
-    script = await openai_service.generate_text(
+    script = await claude_service.generate_text(
         prompt=prompt,
         temperature=0.7,
         max_tokens=500

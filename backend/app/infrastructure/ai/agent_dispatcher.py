@@ -15,12 +15,9 @@ from .providers import (
     BaseAIProvider,
     ChatMessage,
     AIProviderResponse,
-    OpenAIProvider,
-    DeepseekProvider,
-    GeminiProvider,
-    GroqProvider,
-    AnthropicProvider
+    AnthropicProvider,
 )
+# Fase 2 §2.6: OpenAIProvider/DeepseekProvider/GeminiProvider/GroqProvider eliminados (DDD I1)
 
 logger = logging.getLogger(__name__)
 
@@ -37,13 +34,12 @@ class AgentDispatcher:
     """
 
     def __init__(self) -> None:
-        """Initialize dispatcher with API keys from environment."""
+        """Initialize dispatcher with API keys from environment.
+
+        Fase 2 §2.6: solo Anthropic permitido. Otros providers eliminados (DDD I1).
+        """
         self._api_keys: Dict[str, str] = {
-            "openai": os.getenv("OPENAI_API_KEY", ""),
-            "deepseek": os.getenv("DEEPSEEK_API_KEY", ""),
-            "gemini": os.getenv("GEMINI_API_KEY", ""),
-            "groq": os.getenv("GROQ_API_KEY", ""),
-            "anthropic": os.getenv("ANTHROPIC_API_KEY", "")
+            "anthropic": os.getenv("ANTHROPIC_API_KEY", ""),
         }
         self._validate_api_keys()
 
@@ -81,18 +77,14 @@ class AgentDispatcher:
         if not api_key:
             raise ValueError(f"API key not configured for provider: {provider_name}")
 
-        if provider_name == "openai":
-            return OpenAIProvider(api_key, model_name)
-        elif provider_name == "deepseek":
-            return DeepseekProvider(api_key, model_name)
-        elif provider_name == "gemini":
-            return GeminiProvider(api_key, model_name)
-        elif provider_name == "groq":
-            return GroqProvider(api_key, model_name)
-        elif provider_name == "anthropic":
+        # Fase 2 §2.6: solo Anthropic permitido (DDD I1).
+        # Otros providers eliminados; agent_registry mapea todos a "anthropic".
+        if provider_name == "anthropic":
             return AnthropicProvider(api_key, model_name)
-        else:
-            raise ValueError(f"Unknown provider: {provider_name}")
+        raise ValueError(
+            f"Unknown provider: {provider_name}. "
+            "Only 'anthropic' is permitted post-Fase 2 §2.6."
+        )
 
     async def dispatch(
         self,

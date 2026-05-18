@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 from datetime import datetime
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
-from app.infrastructure.ai.openai_service import openai_service
+from app.infrastructure.ai.claude_service import claude_service
 from app.services.report_builder import (
     report_builder,
     ExecutiveReport,
@@ -208,7 +208,7 @@ class ReportGeneratorAgent(BaseAgent):
             f"and providing strategic context. Tone: professional, data-driven."
         )
 
-        summary = await openai_service.generate_text(
+        summary = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=250,
             temperature=0.7

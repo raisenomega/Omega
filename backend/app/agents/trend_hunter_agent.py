@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 from datetime import datetime, timedelta
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
-from app.infrastructure.ai.openai_service import openai_service
+from app.infrastructure.ai.claude_service import claude_service
 from app.services.trend_processor import (
     trend_processor,
     TrendingTopic,
@@ -104,7 +104,7 @@ class TrendHunterAgent(BaseAgent):
                     f"4. Audience alignment (0-1)\n"
                 )
                 
-                analysis = await openai_service.generate_text(
+                analysis = await claude_service.generate_text(
                     prompt=prompt,
                     max_tokens=150,
                     temperature=0.6
@@ -157,7 +157,7 @@ class TrendHunterAgent(BaseAgent):
             f"4. Best timing\n"
         )
         
-        prediction_text = await openai_service.generate_text(
+        prediction_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=200,
             temperature=0.6
@@ -222,7 +222,7 @@ class TrendHunterAgent(BaseAgent):
                 f"Brand tone: {brand_profile.get('tone', 'professional')}\n"
             )
             
-            ideas_text = await openai_service.generate_text(
+            ideas_text = await claude_service.generate_text(
                 prompt=prompt,
                 max_tokens=150,
                 temperature=0.8
@@ -297,7 +297,7 @@ class TrendHunterAgent(BaseAgent):
             f"3. Call-to-action\n"
         )
         
-        content = await openai_service.generate_text(
+        content = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=250,
             temperature=0.8

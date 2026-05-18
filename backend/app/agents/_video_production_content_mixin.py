@@ -1,7 +1,7 @@
 """Video Production planning, hook optimization and idea generation mixin"""
 from typing import List
 import logging
-from app.infrastructure.ai.openai_service import openai_service
+from app.infrastructure.ai.claude_service import claude_service
 from app.infrastructure.ai.claude_service import claude_service
 from app.services.video_pipeline import VideoSpec, VideoScript, VideoProductionPlan
 
@@ -28,7 +28,7 @@ class VideoProductionContentMixin:
             f"4. Production tips (3-5 practical tips)"
         )
 
-        await openai_service.generate_text(prompt=prompt, max_tokens=600, temperature=0.6)
+        await claude_service.generate_text(prompt=prompt, max_tokens=600, temperature=0.6)
 
         shot_list = [
             f"Shot {i+1}: {spec.visual_style} angle"
@@ -110,7 +110,7 @@ class VideoProductionContentMixin:
             f"1. TITLE | HOOK | CONCEPT"
         )
 
-        ideas_text = await openai_service.generate_text(
+        ideas_text = await claude_service.generate_text(
             prompt=prompt, max_tokens=500, temperature=0.8
         )
 

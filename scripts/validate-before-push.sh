@@ -112,20 +112,10 @@ PROHIBITED=$(grep -rnE 'from\s+(openai|groq|deepseek|mistralai|runwayml|fal_clie
   | grep -v '\.test\.' \
   | grep -v 'test_' \
   | grep -v '/tests/' \
-  | grep -v 'backend/app/agents/fal_video_agent.py' \
-  | grep -v 'backend/app/agents/groq_agent.py' \
-  | grep -v 'backend/app/agents/runway_agent.py' \
-  | grep -v 'backend/app/api/routes/content_lab/handlers/generate_image.py' \
-  | grep -v 'backend/app/infrastructure/ai/openai_service.py' \
-  | grep -v 'backend/app/infrastructure/ai/providers/' \
-  | grep -v 'backend/app/services/ai_providers.py' \
-  | grep -v 'backend/app/services/llm/' \
   || true)
-# Las 8 últimas exclusiones son grace period DEBT-016 (Fase 2 §2.1 lift & shift).
-# Cubren 10 archivos del backend Lovable con imports openai/groq/runway/fal_client.
-# Re-aplicar el check estricto archivo por archivo al cerrar DEBT-016 durante
-# Fase 2 §2.4-§2.6 hot-swap de providers (DALL-E→Nano Banana, Runway/FAL→Veo 3.1,
-# OpenAI→anthropic_adapter).
+# Fase 2 §2.6 (18 may 2026): cerrado DEBT-016 · 100% I1 compliance achieved.
+# Todos los providers prohibidos (openai/groq/deepseek/gemini-texto/runway/fal_client)
+# fueron eliminados o reemplazados por claude_service / anthropic_adapter / Nano Banana / Veo 3.1.
 
 if [ -n "$PROHIBITED" ]; then
   print_fail "I1 violado — proveedor IA prohibido:"

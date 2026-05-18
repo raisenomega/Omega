@@ -1,12 +1,10 @@
 """
 AI Providers Package
 Multi-AI provider abstraction layer for OMEGA agents.
+Fase 2 §2.6: eliminados OpenAI/Deepseek/Gemini/Groq providers (DDD I1).
+Solo Anthropic queda como provider permitido para texto.
 """
 from .base_provider import BaseAIProvider, AIProviderResponse, ChatMessage, MessageRole
-from .openai_provider import OpenAIProvider
-from .deepseek_provider import DeepseekProvider
-from .gemini_provider import GeminiProvider
-from .groq_provider import GroqProvider
 from .anthropic_provider import AnthropicProvider
 
 __all__ = [
@@ -14,9 +12,5 @@ __all__ = [
     "AIProviderResponse",
     "ChatMessage",
     "MessageRole",
-    "OpenAIProvider",
-    "DeepseekProvider",
-    "GeminiProvider",
-    "GroqProvider",
     "AnthropicProvider"
 ]

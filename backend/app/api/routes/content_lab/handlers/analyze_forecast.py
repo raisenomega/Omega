@@ -6,7 +6,7 @@ from typing import Dict, Any
 from fastapi import HTTPException
 import logging
 
-from app.infrastructure.ai.openai_service import openai_service
+from app.infrastructure.ai.claude_service import claude_service
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ async def handle_analyze_forecast(
         )
 
         # Generar predicción con OpenAI
-        prediction_text = await openai_service.generate_text(
+        prediction_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=250,
             temperature=0.6

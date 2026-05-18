@@ -5,7 +5,7 @@ Identifies growth opportunities and designs experiments
 from typing import Dict, Any, List
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
-from app.infrastructure.ai.openai_service import openai_service
+from app.infrastructure.ai.claude_service import claude_service
 from app.services.growth_analyzer import (
     growth_analyzer,
     GrowthOpportunity,
@@ -97,7 +97,7 @@ class GrowthHackerAgent(BaseAgent):
             f"5. Estimated ROI multiplier"
         )
 
-        analysis = await openai_service.generate_text(
+        analysis = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=500,
             temperature=0.7
@@ -206,7 +206,7 @@ class GrowthHackerAgent(BaseAgent):
             f"Focus on immediate impact actions."
         )
 
-        wins_text = await openai_service.generate_text(
+        wins_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=200,
             temperature=0.7

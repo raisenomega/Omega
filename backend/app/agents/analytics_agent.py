@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
-from app.infrastructure.ai.openai_service import openai_service
+from app.infrastructure.ai.claude_service import claude_service
 from app.services.analytics_processor import analytics_processor
 
 logger = logging.getLogger(__name__)
@@ -110,7 +110,7 @@ class AnalyticsAgent(BaseAgent):
             f"Provide 3 actionable insights to improve performance."
         )
         
-        ai_insights = await openai_service.generate_text(
+        ai_insights = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=300,
             temperature=0.7
@@ -170,7 +170,7 @@ class AnalyticsAgent(BaseAgent):
             f"Identify key patterns and trends."
         )
         
-        ai_analysis = await openai_service.generate_text(
+        ai_analysis = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=250,
             temperature=0.6
@@ -198,7 +198,7 @@ class AnalyticsAgent(BaseAgent):
         prompt = self._build_insights_prompt(metrics)
         
         # Generate insights with GPT-4
-        insights_text = await openai_service.generate_text(
+        insights_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=400,
             temperature=0.7

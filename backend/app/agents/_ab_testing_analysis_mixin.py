@@ -1,7 +1,7 @@
 """A/B Testing analysis methods mixin: analyze, insights, recommendations"""
 from typing import List
 import logging
-from app.infrastructure.ai.openai_service import openai_service
+from app.infrastructure.ai.claude_service import claude_service
 from app.services.experiment_engine import (
     ABVariant,
     ABTestResult,
@@ -50,7 +50,7 @@ class ABTestingAnalysisMixin:
             f"Provide 3 key insights about these results."
         )
 
-        insights_text = await openai_service.generate_text(
+        insights_text = await claude_service.generate_text(
             prompt=prompt, max_tokens=250, temperature=0.6
         )
 
@@ -103,7 +103,7 @@ class ABTestingAnalysisMixin:
             "5. Next optimization opportunity"
         )
 
-        insights_text = await openai_service.generate_text(
+        insights_text = await claude_service.generate_text(
             prompt=prompt, max_tokens=400, temperature=0.6
         )
 
@@ -130,7 +130,7 @@ class ABTestingAnalysisMixin:
             f"4. Expected impact"
         )
 
-        recommendation_text = await openai_service.generate_text(
+        recommendation_text = await claude_service.generate_text(
             prompt=prompt, max_tokens=300, temperature=0.7
         )
 

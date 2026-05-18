@@ -20,8 +20,8 @@ class Department(str, Enum):
     SECURITY = "SECURITY"
 
 
-# Type-safe provider literals (no string guessing)
-ProviderName = Literal["anthropic", "openai", "deepseek", "gemini", "groq"]
+# Type-safe provider literals (Fase 2 §2.6: solo anthropic permitido · I1)
+ProviderName = Literal["anthropic"]
 
 
 class AgentConfig(TypedDict):
@@ -39,74 +39,74 @@ AGENT_REGISTRY: Dict[str, AgentConfig] = {
     # EXECUTIVE (1 agent)
     "NOVA": {
         "provider": "anthropic",
-        "model": "claude-sonnet-4-5-20250929",
+        "model": "claude-sonnet-4-6",
         "department": Department.EXECUTIVE
     },
 
     # MARKETING (6 agents) - GPT-4o-mini
-    "ATLAS": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.MARKETING},
-    "RAFA": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.MARKETING},
-    "DUDA": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.MARKETING},
-    "ECHO": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.MARKETING},
-    "LUAN": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.MARKETING},
-    "PIXEL": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.MARKETING},
+    "ATLAS": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
+    "RAFA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
+    "DUDA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
+    "ECHO": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
+    "LUAN": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
+    "PIXEL": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
 
     # PRODUCT & TECHNOLOGY (5 agents) - Deepseek Chat
-    "LUNA": {"provider": "deepseek", "model": "deepseek-chat", "department": Department.PRODUCT},
-    "SHIELD": {"provider": "deepseek", "model": "deepseek-chat", "department": Department.PRODUCT},
-    "FORGE": {"provider": "deepseek", "model": "deepseek-chat", "department": Department.PRODUCT},
-    "DEBUG": {"provider": "deepseek", "model": "deepseek-chat", "department": Department.PRODUCT},
-    "SCOPE": {"provider": "deepseek", "model": "deepseek-chat", "department": Department.PRODUCT},
+    "LUNA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PRODUCT},
+    "SHIELD": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PRODUCT},
+    "FORGE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PRODUCT},
+    "DEBUG": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PRODUCT},
+    "SCOPE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PRODUCT},
 
     # OPERATIONS (5 agents) - GPT-4o-mini (cost-efficient)
-    "REX": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.OPERATIONS},
-    "ANCHOR": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.OPERATIONS},
-    "BRIDGE": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.OPERATIONS},
-    "FLOW": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.OPERATIONS},
-    "SCOUT": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.OPERATIONS},
+    "REX": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.OPERATIONS},
+    "ANCHOR": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.OPERATIONS},
+    "BRIDGE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.OPERATIONS},
+    "FLOW": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.OPERATIONS},
+    "SCOUT": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.OPERATIONS},
 
     # FINANCE (5 agents) - Gemini 2.0 Flash
-    "VERA": {"provider": "gemini", "model": "gemini-2.0-flash-exp", "department": Department.FINANCE},
-    "LEDGER": {"provider": "gemini", "model": "gemini-2.0-flash-exp", "department": Department.FINANCE},
-    "PULSE_FIN": {"provider": "gemini", "model": "gemini-2.0-flash-exp", "department": Department.FINANCE},
-    "QUOTA": {"provider": "gemini", "model": "gemini-2.0-flash-exp", "department": Department.FINANCE},
-    "MARGIN": {"provider": "gemini", "model": "gemini-2.0-flash-exp", "department": Department.FINANCE},
+    "VERA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.FINANCE},
+    "LEDGER": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.FINANCE},
+    "PULSE_FIN": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.FINANCE},
+    "QUOTA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.FINANCE},
+    "MARGIN": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.FINANCE},
 
     # COMMUNITY (5 agents) - Groq Llama 3.3 (ultra-fast)
-    "KIRA": {"provider": "groq", "model": "llama-3.3-70b-versatile", "department": Department.COMMUNITY},
-    "REVIEW": {"provider": "groq", "model": "llama-3.3-70b-versatile", "department": Department.COMMUNITY},
-    "NURTURE": {"provider": "groq", "model": "llama-3.3-70b-versatile", "department": Department.COMMUNITY},
-    "TRIBE": {"provider": "groq", "model": "llama-3.3-70b-versatile", "department": Department.COMMUNITY},
-    "VOICE": {"provider": "groq", "model": "llama-3.3-70b-versatile", "department": Department.COMMUNITY},
+    "KIRA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.COMMUNITY},
+    "REVIEW": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.COMMUNITY},
+    "NURTURE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.COMMUNITY},
+    "TRIBE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.COMMUNITY},
+    "VOICE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.COMMUNITY},
 
     # INTELLIGENCE (5 agents) - Deepseek R1 Reasoner
-    "ORACLE": {"provider": "deepseek", "model": "deepseek-reasoner", "department": Department.INTELLIGENCE},
-    "TREND": {"provider": "deepseek", "model": "deepseek-reasoner", "department": Department.INTELLIGENCE},
-    "SIGNAL": {"provider": "deepseek", "model": "deepseek-reasoner", "department": Department.INTELLIGENCE},
-    "MAP": {"provider": "deepseek", "model": "deepseek-reasoner", "department": Department.INTELLIGENCE},
-    "LENS": {"provider": "deepseek", "model": "deepseek-reasoner", "department": Department.INTELLIGENCE},
+    "ORACLE": {"provider": "anthropic", "model": "claude-opus-4-7", "department": Department.INTELLIGENCE},
+    "TREND": {"provider": "anthropic", "model": "claude-opus-4-7", "department": Department.INTELLIGENCE},
+    "SIGNAL": {"provider": "anthropic", "model": "claude-opus-4-7", "department": Department.INTELLIGENCE},
+    "MAP": {"provider": "anthropic", "model": "claude-opus-4-7", "department": Department.INTELLIGENCE},
+    "LENS": {"provider": "anthropic", "model": "claude-opus-4-7", "department": Department.INTELLIGENCE},
 
     # PEOPLE (5 agents) - GPT-4o-mini
-    "SOPHIA": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.PEOPLE},
-    "HIRE": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.PEOPLE},
-    "TRAIN": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.PEOPLE},
-    "CULTURE": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.PEOPLE},
-    "COMPASS": {"provider": "openai", "model": "gpt-4o-mini", "department": Department.PEOPLE},
+    "SOPHIA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PEOPLE},
+    "HIRE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PEOPLE},
+    "TRAIN": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PEOPLE},
+    "CULTURE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PEOPLE},
+    "COMPASS": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PEOPLE},
 
     # SECURITY (13 agents) - GPT-4o
-    "SENTINEL": {"provider": "openai", "model": "gpt-4o", "department": Department.SECURITY},
-    "VAULT": {"provider": "openai", "model": "gpt-4o", "department": Department.SECURITY},
-    "PULSE_MON": {"provider": "openai", "model": "gpt-4o", "department": Department.SECURITY},
-    "GUARD": {"provider": "openai", "model": "gpt-4o", "department": Department.SECURITY},
-    "WATCH": {"provider": "openai", "model": "gpt-4o", "department": Department.SECURITY},
-    "LOCK": {"provider": "openai", "model": "gpt-4o", "department": Department.SECURITY},
-    "TRACE": {"provider": "openai", "model": "gpt-4o", "department": Department.SECURITY},
-    "AUDIT": {"provider": "openai", "model": "gpt-4o", "department": Department.SECURITY},
-    "SHIELD_SEC": {"provider": "openai", "model": "gpt-4o", "department": Department.SECURITY},
-    "CIPHER": {"provider": "openai", "model": "gpt-4o", "department": Department.SECURITY},
-    "PERIMETER": {"provider": "openai", "model": "gpt-4o", "department": Department.SECURITY},
-    "RESPONSE": {"provider": "openai", "model": "gpt-4o", "department": Department.SECURITY},
-    "SCAN": {"provider": "openai", "model": "gpt-4o", "department": Department.SECURITY},
+    "SENTINEL": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
+    "VAULT": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
+    "PULSE_MON": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
+    "GUARD": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
+    "WATCH": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
+    "LOCK": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
+    "TRACE": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
+    "AUDIT": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
+    "SHIELD_SEC": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
+    "CIPHER": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
+    "PERIMETER": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
+    "RESPONSE": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
+    "SCAN": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
 }
 
 

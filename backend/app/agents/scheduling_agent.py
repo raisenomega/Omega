@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 from datetime import datetime, timedelta
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
-from app.infrastructure.ai.openai_service import openai_service
+from app.infrastructure.ai.claude_service import claude_service
 from app.services.queue_manager import (
     ScheduledPost,
     PublicationQueue,
@@ -227,7 +227,7 @@ class SchedulingAgent(BaseAgent):
             f"3. Expected engagement boost vs bad timing (as percentage)"
         )
 
-        analysis = await openai_service.generate_text(
+        analysis = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=200,
             temperature=0.6

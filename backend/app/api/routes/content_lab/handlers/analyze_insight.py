@@ -7,7 +7,7 @@ from fastapi import HTTPException
 import logging
 
 from app.agents.analytics_agent import analytics_agent
-from app.infrastructure.ai.openai_service import openai_service
+from app.infrastructure.ai.claude_service import claude_service
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ async def handle_analyze_insight(
         )
 
         # Generar análisis con OpenAI
-        analysis_text = await openai_service.generate_text(
+        analysis_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=300,
             temperature=0.7

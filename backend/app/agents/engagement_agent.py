@@ -7,7 +7,7 @@ from datetime import datetime
 import logging
 from pydantic import BaseModel
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
-from app.infrastructure.ai.openai_service import openai_service
+from app.infrastructure.ai.claude_service import claude_service
 from app.services.sentiment_processor import (
     sentiment_processor,
     CommentAnalysis
@@ -109,7 +109,7 @@ class EngagementAgent(BaseAgent):
         )
         
         # Generate response with GPT-4
-        response_text = await openai_service.generate_text(
+        response_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=150,
             temperature=0.7
@@ -117,7 +117,7 @@ class EngagementAgent(BaseAgent):
         
         # Generate alternatives
         alt_prompt = f"{prompt}\n\nProvide 2 alternative responses (one line each):"
-        alternatives_text = await openai_service.generate_text(
+        alternatives_text = await claude_service.generate_text(
             prompt=alt_prompt,
             max_tokens=100,
             temperature=0.8
@@ -162,7 +162,7 @@ class EngagementAgent(BaseAgent):
             f"Provide a helpful, professional response:"
         )
         
-        response_text = await openai_service.generate_text(
+        response_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=200,
             temperature=0.6
@@ -226,7 +226,7 @@ class EngagementAgent(BaseAgent):
                 f"Generate a professional crisis response statement:"
             )
             
-            suggested_response = await openai_service.generate_text(
+            suggested_response = await claude_service.generate_text(
                 prompt=prompt,
                 max_tokens=150,
                 temperature=0.5
