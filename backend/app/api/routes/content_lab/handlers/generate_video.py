@@ -1,5 +1,5 @@
 """
-Handler: Generate Video with Runway Gen-3 Alpha Turbo
+Handler: Generate Video with Veo 3.1 (Fase 2 §2.5 swap from Runway Gen-3)
 Filosofía: No velocity, only precision 🐢💎
 """
 from typing import Dict, Any
@@ -8,7 +8,7 @@ import logging
 
 from app.infrastructure.supabase_service import get_supabase_service
 from app.infrastructure.repositories.client_context_repository import ClientContextRepository
-from app.agents.runway_agent import RunwayAgent
+from app.bc_cognition.infrastructure._video_compat import generate_video_compat
 
 logger = logging.getLogger(__name__)
 
@@ -20,14 +20,17 @@ async def handle_generate_video_runway(
     style: str = "realistic"
 ) -> Dict[str, Any]:
     """
-    Generate video using Runway Gen-3 Alpha Turbo
+    Generate video using Veo 3.1 (Fase 2 §2.5 swap from Runway Gen-3 Alpha Turbo)
+
+    NOTE: function name retains `_runway` suffix for API compatibility
+    (frontend Lovable calls `/generate-video-runway/`) — see DEBT-021.
 
     Workflow:
     1. Get client_id from account_id
     2. Load client_context for prompt enrichment
     3. Enrich prompt with brand voice and context
-    4. Call RunwayAgent to generate video
-    5. Save to content_lab_generated
+    4. Call Veo 3.1 via generate_video_compat (handles LRO polling internally)
+    5. Save to content_lab_generated (video_url is temporary · DEBT-019)
     6. Return video URL + metadata
 
     Args:
@@ -95,9 +98,8 @@ async def handle_generate_video_runway(
 
             logger.info(f"Enriched prompt: {enriched_prompt}")
 
-        # 4. Generate video with RunwayAgent
-        runway = RunwayAgent()
-        result = await runway.execute(
+        # 4. Generate video with Veo 3.1 (Fase 2 §2.5 swap from Runway)
+        result = await generate_video_compat(
             prompt=enriched_prompt,
             duration=duration,
             ratio="1280:768"
@@ -118,14 +120,16 @@ async def handle_generate_video_runway(
             )
 
         # 5. Save to content_lab_generated
+        # NOTE: video_url is a TEMPORARY Google URI (TTL · DEBT-019).
+        # Production requires Supabase Storage upload before persisting.
         content_data = {
             "client_id": client_id,
             "social_account_id": account_id,
             "content_type": "video",
             "content": video_url,
-            "provider": "runway",
-            "model": result.get("model", "gen3a_turbo"),
-            "tokens_used": 0,  # Runway doesn't use tokens
+            "provider": "google",
+            "model": result.get("model", "veo-3.1-generate-preview"),
+            "tokens_used": 0,  # Veo doesn't expose token billing
             "is_saved": False,
             "is_active": True
         }
@@ -140,8 +144,8 @@ async def handle_generate_video_runway(
         return {
             "generated_text": video_url,
             "content_type": "video",
-            "provider": "runway",
-            "model": result.get("model", "gen3a_turbo"),
+            "provider": "google",
+            "model": result.get("model", "veo-3.1-generate-preview"),
             "cached": False,
             "tokens_used": 0,
             "duration": duration,

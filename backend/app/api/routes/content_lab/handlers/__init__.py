@@ -4,7 +4,7 @@ Content Lab Handlers
 from .generate_text import handle_generate_text
 from .generate_image import handle_generate_image
 from .generate_video import handle_generate_video_runway
-from .generate_video_fal import handle_generate_video_fal
+# handle_generate_video_fal REMOVED in Fase 2 §2.5 (FAL provider eliminated · DDD I1)
 from .list_content import handle_list_content
 # from .save_content import handle_save_content  # REMOVED: save endpoint deprecated
 from .delete_content import handle_delete_content
@@ -16,7 +16,6 @@ __all__ = [
     "handle_generate_text",
     "handle_generate_image",
     "handle_generate_video_runway",
-    "handle_generate_video_fal",
     "handle_list_content",
     # "handle_save_content",  # REMOVED: save endpoint deprecated
     "handle_delete_content",

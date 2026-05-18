@@ -9,8 +9,8 @@ from .handlers import (
     handle_generate_text,
     handle_generate_image,
     handle_generate_video_runway,
-    handle_generate_video_fal,
 )
+# handle_generate_video_fal REMOVED in Fase 2 §2.5 (FAL provider eliminated · DDD I1)
 from .router_content import content_router
 
 router = APIRouter(prefix="/content-lab", tags=["content-lab"])
@@ -51,15 +51,7 @@ async def generate_video_runway(
     return await handle_generate_video_runway(account_id, prompt, duration, style)
 
 
-@router.post("/generate-video-fal/")
-async def generate_video_fal(
-    account_id: str = Query(...),
-    prompt: str = Query(...),
-    duration: int = Query(default=5),
-    model: str = Query(default="kling"),
-    style: str = Query(default="realistic"),
-):
-    return await handle_generate_video_fal(account_id, prompt, duration, model, style)
+# Endpoint /generate-video-fal/ REMOVED in Fase 2 §2.5 (FAL provider eliminated · DDD I1)
 
 
 @router.get("/providers/")
