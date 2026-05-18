@@ -10,7 +10,7 @@ import logging
 import os
 import fal_client
 from app.infrastructure.supabase_service import get_supabase_service
-from app.infrastructure.ai.openai_service import openai_service
+from app.bc_cognition.infrastructure._image_compat import generate_image_compat
 
 logger = logging.getLogger(__name__)
 
@@ -134,23 +134,23 @@ async def _edit_with_fal_kontext(prompt: str, images: List[Dict[str, Any]], styl
 
     except Exception as e:
         logger.error(f"FAL Flux Kontext edit failed: {e}")
-        # Fallback a DALL-E 3 si falla
-        logger.warning("Falling back to DALL-E 3 generation")
-        return await _generate_with_dalle3(prompt, style)
+        # Fallback a Nano Banana si falla
+        logger.warning("Falling back to Nano Banana generation")
+        return await _generate_with_nano_banana(prompt, style)
 
-async def _generate_with_dalle3(prompt: str, style: str) -> Dict[str, Any]:
-    """Generación nueva con DALL-E 3 (sin imágenes base)"""
+async def _generate_with_nano_banana(prompt: str, style: str) -> Dict[str, Any]:
+    """Generación nueva con Nano Banana (sin imágenes base · Fase 2 §2.4)"""
     enhanced_prompt = _enhance_prompt(prompt, style)
     try:
-        image_urls = await openai_service.generate_image(
+        image_urls = await generate_image_compat(
             prompt=enhanced_prompt, n=1, size="1024x1024", quality="standard"
         )
         if not image_urls:
-            raise Exception("DALL-E 3 returned no images")
-        return {"image_url": image_urls[0], "provider": "openai", "model": "dall-e-3", "mode": "generate"}
+            raise Exception("Nano Banana returned no images")
+        return {"image_url": image_urls[0], "provider": "google", "model": "nano-banana-2", "mode": "generate"}
     except Exception as e:
-        logger.error(f"DALL-E 3 generation failed: {e}")
-        raise HTTPException(500, f"DALL-E 3 generation failed: {str(e)}")
+        logger.error(f"Nano Banana generation failed: {e}")
+        raise HTTPException(500, f"Nano Banana generation failed: {str(e)}")
 
 def _enhance_prompt(prompt: str, style: str) -> str:
     """Mejora el prompt según el estilo solicitado"""

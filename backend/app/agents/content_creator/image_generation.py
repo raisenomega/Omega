@@ -1,23 +1,23 @@
 """
 Image generation function for Content Creator Agent
-Handles DALL-E 3 image generation
+Handles Nano Banana image generation (Fase 2 §2.4 swap from DALL-E 3)
 """
 from typing import Dict, Any
 import logging
-from app.infrastructure.ai.openai_service import openai_service
+from app.bc_cognition.infrastructure._image_compat import generate_image_compat
 
 logger = logging.getLogger(__name__)
 
 
 async def generate_image(task: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Generate image with DALL-E 3
+    Generate image with Nano Banana
 
     Args:
         task: Task parameters including optional client brief
 
     Returns:
-        Image URLs with metadata
+        Image URLs with metadata (currently data URIs · DEBT-018)
     """
     prompt = task.get("prompt", "")
     size = task.get("size", "1024x1024")
@@ -28,7 +28,7 @@ async def generate_image(task: Dict[str, Any]) -> Dict[str, Any]:
     if brief:
         prompt = f"{prompt}\n\nContext for style/branding: {brief}"
 
-    urls = await openai_service.generate_image(
+    urls = await generate_image_compat(
         prompt=prompt,
         size=size,
         quality=quality
