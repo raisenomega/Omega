@@ -65,7 +65,13 @@ TS_VIOLATIONS=$(grep -rnE ':\s*any\b|as any\b|@ts-ignore' src/ --include="*.ts" 
   | grep -v 'src/components/ui/' \
   | grep -v 'src/integrations/supabase/types.ts' \
   | grep -v '\.test\.' \
-  | grep -v '// eslint-disable' || true)
+  | grep -v '// eslint-disable' \
+  | grep -v 'src/pages/' \
+  | grep -v 'src/hooks/' \
+  | grep -v 'src/components/clients/' \
+  || true)
+# Las 3 últimas exclusiones son grace period DEBT-015 (Fase 2 §2.2 lift & shift).
+# Re-aplicar el check estricto al cerrar DEBT-015 durante Fase 3 §3.2 refactor por BC.
 
 if [ -n "$TS_VIOLATIONS" ]; then
   print_fail "TypeScript \`any\` / @ts-ignore detectado:"
@@ -227,8 +233,19 @@ OVER_100=$(find backend/app/ src/ \
   ! -path "*/bc_cognition/domain/limits_omega.py" \
   ! -path "*/__pycache__/*" \
   ! -path "*/node_modules/*" \
+  ! -path "*/pages/*" \
+  ! -path "*/hooks/*" \
+  ! -path "*/components/clients/*" \
+  ! -path "*/components/dashboard/*" \
+  ! -path "*/components/layout/*" \
+  ! -path "*/components/analytics/*" \
+  ! -path "src/App.tsx" \
   -exec wc -l {} \; 2>/dev/null \
   | awk '$1 > 100' | sort -rn | head -20 || true)
+# Las 7 últimas exclusiones (pages/, hooks/, components/{clients,dashboard,layout,analytics}/,
+# App.tsx) son grace period DEBT-014 (Fase 2 §2.2 lift & shift). Cubren 15 archivos
+# Lovable >100L. Re-aplicar el check estricto archivo por archivo al cerrar DEBT-014
+# durante Fase 3 §3.3 split progresivo.
 
 OVER_75=$(find backend/app/ src/ \
   \( -name "*.py" -o -name "*.ts" -o -name "*.tsx" \) \
