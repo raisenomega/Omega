@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getNetworkIcon } from "@/lib/network-icons";
 
 interface PlatformData {
   platform: string;
@@ -7,13 +8,13 @@ interface PlatformData {
   activeCount: number;
 }
 
-const PLATFORM_CONFIG: Record<string, { label: string; emoji: string; color: string }> = {
-  instagram: { label: "Instagram", emoji: "📸", color: "bg-pink-500/10 text-pink-400" },
-  facebook: { label: "Facebook", emoji: "📘", color: "bg-blue-500/10 text-blue-400" },
-  tiktok: { label: "TikTok", emoji: "🎵", color: "bg-foreground/10 text-foreground" },
-  twitter: { label: "X / Twitter", emoji: "🐦", color: "bg-sky-500/10 text-sky-400" },
-  linkedin: { label: "LinkedIn", emoji: "💼", color: "bg-blue-600/10 text-blue-500" },
-  youtube: { label: "YouTube", emoji: "🎬", color: "bg-red-500/10 text-red-400" },
+const PLATFORM_LABELS: Record<string, string> = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+  tiktok: "TikTok",
+  twitter: "X / Twitter",
+  linkedin: "LinkedIn",
+  youtube: "YouTube",
 };
 
 interface PlatformStatusProps {
@@ -39,19 +40,16 @@ export function PlatformStatus({ data }: PlatformStatusProps) {
             {data
               .filter((d) => d.count > 0)
               .map((d) => {
-                const config = PLATFORM_CONFIG[d.platform] || {
-                  label: d.platform,
-                  emoji: "🌐",
-                  color: "bg-muted text-muted-foreground",
-                };
+                const { icon: Icon } = getNetworkIcon(d.platform);
+                const label = PLATFORM_LABELS[d.platform] ?? d.platform;
                 return (
                   <div
                     key={d.platform}
                     className="flex items-center gap-3 rounded-lg border border-border/30 bg-muted/30 p-3"
                   >
-                    <span className="text-xl">{config.emoji}</span>
+                    <Icon className="h-5 w-5 text-muted-foreground" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{config.label}</p>
+                      <p className="text-sm font-medium">{label}</p>
                       <p className="text-xs text-muted-foreground">
                         {d.activeCount}/{d.count} {d.count === 1 ? "activa" : "activas"}
                       </p>

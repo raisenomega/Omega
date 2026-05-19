@@ -68,7 +68,9 @@ export function useClientPlanStatus(clientId: string): PlanStatusData {
   });
 
   const hasPlan = !!planQuery.data;
-  const planCode = (planQuery.data?.plan ?? "basic") as PlanCode;
+  // Default a 'adopcion' (entry tier · spec §3) cuando no hay row en client_plans:
+  // cliente pre-activación ve la bar con valores zero del trial de 7 días.
+  const planCode = (planQuery.data?.plan ?? "adopcion") as PlanCode;
   const planConfig = getPlanConfig(planCode);
   const postsUsed = postsQuery.data ?? 0;
   const postsTotal = planConfig.postsPerCycle === Infinity ? 0 : planConfig.postsPerCycle;

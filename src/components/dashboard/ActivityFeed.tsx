@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Users, Wifi } from "lucide-react";
+import { Users } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import { getNetworkIcon } from "@/lib/network-icons";
 
 interface Client {
   id: string;
@@ -26,15 +26,6 @@ interface ActivityFeedProps {
   recentAccounts: SocialAccount[];
 }
 
-const PLATFORM_EMOJI: Record<string, string> = {
-  instagram: "📸",
-  facebook: "📘",
-  tiktok: "🎵",
-  twitter: "🐦",
-  linkedin: "💼",
-  youtube: "🎬",
-};
-
 export function ActivityFeed({ recentClients, recentAccounts }: ActivityFeedProps) {
   const allActivities = [
     ...recentClients.map((c) => ({
@@ -48,10 +39,10 @@ export function ActivityFeed({ recentClients, recentAccounts }: ActivityFeedProp
     ...recentAccounts.map((a) => ({
       id: a.id,
       type: "account" as const,
-      title: `${PLATFORM_EMOJI[a.platform] || "🌐"} ${a.account_name}`,
-      subtitle: `${a.platform} • ${a.status === "active" ? "Activa" : a.status === "expired" ? "Expirada" : "Desconectada"}`,
+      title: a.account_name,
+      subtitle: `${a.platform} · ${a.status === "active" ? "Activa" : a.status === "expired" ? "Expirada" : "Desconectada"}`,
       time: a.created_at,
-      icon: Wifi,
+      icon: getNetworkIcon(a.platform).icon,
     })),
   ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 8);
 

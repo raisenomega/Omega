@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, Zap, Crown, DollarSign, Check } from "lucide-react";
+import { Loader2, Sparkles, Zap, Crown, DollarSign, Check, FileText, Image as ImageIcon, Video, Music, Mic } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 const PACKAGES = [
   {
@@ -42,12 +43,12 @@ const PACKAGES = [
   },
 ] as const;
 
-const CAPABILITY_LABELS: Record<string, { label: string; emoji: string }> = {
-  text: { label: "Texto", emoji: "📝" },
-  image: { label: "Imagen", emoji: "🎨" },
-  video: { label: "Video", emoji: "🎬" },
-  audio: { label: "Audio", emoji: "🎵" },
-  voice: { label: "Voz", emoji: "🗣️" },
+const CAPABILITY_LABELS: Record<string, { label: string; icon: LucideIcon }> = {
+  text: { label: "Texto", icon: FileText },
+  image: { label: "Imagen", icon: ImageIcon },
+  video: { label: "Video", icon: Video },
+  audio: { label: "Audio", icon: Music },
+  voice: { label: "Voz", icon: Mic },
 };
 
 interface Props {
@@ -219,11 +220,15 @@ export function ClientAIConfig({ clientId, organizationId }: Props) {
                     <p className="text-sm font-medium truncate">{provider.name}</p>
                     <p className="text-xs text-muted-foreground line-clamp-1">{provider.description}</p>
                     <div className="flex gap-1 mt-1.5 flex-wrap">
-                      {capabilities.map((cap) => (
-                        <span key={cap} className="text-[10px] px-1.5 py-0.5 rounded bg-muted/40 text-muted-foreground">
-                          {CAPABILITY_LABELS[cap]?.emoji} {CAPABILITY_LABELS[cap]?.label ?? cap}
-                        </span>
-                      ))}
+                      {capabilities.map((cap) => {
+                        const CapIcon = CAPABILITY_LABELS[cap]?.icon;
+                        return (
+                          <span key={cap} className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-muted/40 text-muted-foreground">
+                            {CapIcon && <CapIcon className="h-3 w-3" />}
+                            {CAPABILITY_LABELS[cap]?.label ?? cap}
+                          </span>
+                        );
+                      })}
                     </div>
                   </div>
                   {isSelected && <Check className="h-4 w-4 text-primary shrink-0 mt-1" />}

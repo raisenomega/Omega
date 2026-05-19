@@ -38,8 +38,10 @@ export default function Dashboard() {
         <p className="text-muted-foreground">Resumen general de tu plataforma</p>
       </div>
 
-      {/* Plan Status Bar · solo cliente PYME (Opción A: bar visible si tiene fila en clients) */}
-      {myPlan.isClient && myPlan.clientId && <PlanStatusBar clientId={myPlan.clientId} />}
+      {/* Plan Status Bar · visible para todo user logueado que NO sea Owner/Reseller.
+          Pre-activación: bar muestra defaults de Adopción con ceros (clientId null OK).
+          Post-activación: bar muestra plan + uso reales. */}
+      {!myPlan.isOwner && <PlanStatusBar clientId={myPlan.clientId ?? ""} />}
 
       {/* KPI Cards — datos reales (regla P1) */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -6,17 +6,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Camera, Square, Music2, Briefcase, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Network } from "@/lib/plan-limits";
-import type { LucideIcon } from "lucide-react";
-
-const NETWORK_ICONS: Record<Network, { icon: LucideIcon; label: string }> = {
-  instagram: { icon: Camera, label: "Instagram" },
-  facebook: { icon: Square, label: "Facebook" },
-  tiktok: { icon: Music2, label: "TikTok" },
-  linkedin: { icon: Briefcase, label: "LinkedIn" },
-};
+import { NETWORKS, type Network } from "@/lib/plan-limits";
+import { getNetworkIcon } from "@/lib/network-icons";
 
 interface PlanStatusBarProps {
   clientId: string;
@@ -37,14 +30,8 @@ export function PlanStatusBar({ clientId }: PlanStatusBarProps) {
     );
   }
 
-  if (!status.hasPlan) {
-    return (
-      <Card className="flex items-center px-4 py-2.5 border-border/50 bg-card/80 backdrop-blur-sm text-sm text-muted-foreground">
-        Sin plan configurado para este cliente
-      </Card>
-    );
-  }
-
+  // Bar siempre se renderiza (incluso pre-activación · status devuelve defaults de Adopción).
+  // Cuando cliente activa plan, los números se actualizan reactivamente sin remontaje.
   const { planConfig, postsUsed, postsTotal, percentUsed, accountsByNetwork, features, renewsInDays } = status;
 
   const barColor =
@@ -80,8 +67,8 @@ export function PlanStatusBar({ clientId }: PlanStatusBarProps) {
 
         {/* Platform icons */}
         <div className="flex items-center gap-2.5">
-          {(Object.keys(NETWORK_ICONS) as Network[]).map((network) => {
-            const { icon: Icon, label } = NETWORK_ICONS[network];
+          {NETWORKS.map((network) => {
+            const { icon: Icon, label } = getNetworkIcon(network);
             const state = accountsByNetwork[network];
             return (
               <Tooltip key={network}>
