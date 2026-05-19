@@ -1,9 +1,11 @@
 import { Users, Sparkles, CalendarDays, Wifi, Loader2 } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useMyPlanStatus } from "@/hooks/useMyPlanStatus";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { AccountDistributionChart } from "@/components/dashboard/PlatformCharts";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { PlatformStatus } from "@/components/dashboard/PlatformStatus";
+import { PlanStatusBar } from "@/components/clients/PlanStatusBar";
 
 export default function Dashboard() {
   const {
@@ -19,6 +21,8 @@ export default function Dashboard() {
     recentAccounts,
   } = useDashboardData();
 
+  const myPlan = useMyPlanStatus();
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -33,6 +37,9 @@ export default function Dashboard() {
         <h1 className="text-2xl font-display font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">Resumen general de tu plataforma</p>
       </div>
+
+      {/* Plan Status Bar · solo cliente PYME (Opción A: bar visible si tiene fila en clients) */}
+      {myPlan.isClient && myPlan.clientId && <PlanStatusBar clientId={myPlan.clientId} />}
 
       {/* KPI Cards — datos reales (regla P1) */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
