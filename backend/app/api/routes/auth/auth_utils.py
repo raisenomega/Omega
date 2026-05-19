@@ -5,18 +5,14 @@ Extended authentication helpers for role-based access control
 from typing import Optional, Dict, Any
 from fastapi import HTTPException
 import jwt
-import os
 import logging
+
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# JWT configuration
-JWT_SECRET = os.environ.get("JWT_SECRET_KEY", "")
-if not JWT_SECRET:
-    raise RuntimeError(
-        "JWT_SECRET_KEY environment variable is not set. "
-        "Configure it in Railway before deploying."
-    )
+# DEBT-028: leer JWT_SECRET via settings; fail-fast cubierto por Settings()
+JWT_SECRET = settings.jwt_secret_key
 JWT_ALGORITHM = "HS256"
 
 

@@ -4,7 +4,7 @@ Manages all environment variables and settings
 """
 from typing import List
 from pydantic_settings import BaseSettings
-from pydantic import Field, validator
+from pydantic import Field
 
 
 class Settings(BaseSettings):
@@ -19,20 +19,23 @@ class Settings(BaseSettings):
 
     # API
     api_v1_prefix: str = Field(default="/api/v1", env="API_V1_PREFIX")
-    backend_cors_origins: List[str] = Field(
-        default=["http://localhost:5173"],
+    # DEBT-026: pydantic_settings 2.6.1 JSON-parsea List[str] antes de @validator
+    # (NoDecode no existe en esta versión). Solución: campo str (no-complex) +
+    # property `cors_origins_list` que expone el CSV parseado.
+    backend_cors_origins: str = Field(
+        default="http://localhost:5173",
         env="BACKEND_CORS_ORIGINS"
     )
+
+    @property
+    def cors_origins_list(self) -> List[str]:
+        """Lista parseada desde BACKEND_CORS_ORIGINS CSV. DEBT-026."""
+        return [o.strip() for o in self.backend_cors_origins.split(",") if o.strip()]
 
     # Supabase
     supabase_url: str = Field(..., env="SUPABASE_URL")
     supabase_anon_key: str = Field(..., env="SUPABASE_ANON_KEY")
     supabase_service_role_key: str = Field(..., env="SUPABASE_SERVICE_ROLE_KEY")
-
-    # OpenAI
-    openai_api_key: str = Field(..., env="OPENAI_API_KEY")
-    openai_model: str = Field(default="gpt-4-turbo-preview", env="OPENAI_MODEL")
-    openai_image_model: str = Field(default="dall-e-3", env="OPENAI_IMAGE_MODEL")
 
     # Anthropic Claude
     anthropic_api_key: str = Field(..., env="ANTHROPIC_API_KEY")
@@ -72,16 +75,10 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = Field(default=60, env="RATE_LIMIT_PER_MINUTE")
     rate_limit_per_hour: int = Field(default=1000, env="RATE_LIMIT_PER_HOUR")
 
-    @validator("backend_cors_origins", pre=True)
-    def parse_cors_origins(cls, v: str | List[str]) -> List[str]:
-        """Parse CORS origins from string or list"""
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
-
     class Config:
         env_file = ".env"
         case_sensitive = False
+        extra = "ignore"  # DEBT-027 · drops vite_*/db_url/etc. orphan env vars
 
 
 # Global settings instance

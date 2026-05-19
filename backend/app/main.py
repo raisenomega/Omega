@@ -3,6 +3,12 @@ OmegaRaisen FastAPI Application
 Main entry point for the backend API
 37 AI Agents | 101 Endpoints | Enterprise Social Media Automation
 """
+# DEBT-028: cargar .env a os.environ para legacy os.getenv() reads
+# (33 sites en 21 archivos pendientes de migración a settings.xxx · DEBT-029)
+from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / ".env")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse

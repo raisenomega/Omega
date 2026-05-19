@@ -1,20 +1,17 @@
 """JWT token creation and verification utilities"""
-import os
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Any
 import jwt
 from fastapi import HTTPException
 import logging
 
+from app.config import settings
+
 logger = logging.getLogger(__name__)
 
-# Fail-fast JWT_SECRET validation
-JWT_SECRET: str = os.environ.get("JWT_SECRET_KEY", "")
-if not JWT_SECRET:
-    raise RuntimeError(
-        "JWT_SECRET_KEY environment variable is not set. "
-        "Configure it in Railway before deploying."
-    )
+# DEBT-028: leer JWT_SECRET via settings; fail-fast ya cubierto por
+# Settings(jwt_secret_key=Field(..., env="JWT_SECRET_KEY"))
+JWT_SECRET: str = settings.jwt_secret_key
 
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
