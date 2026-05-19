@@ -4,8 +4,7 @@ import { Badge } from "@/components/ui/badge";
 interface PlatformData {
   platform: string;
   count: number;
-  followers: number;
-  connected: number;
+  activeCount: number;
 }
 
 const PLATFORM_CONFIG: Record<string, { label: string; emoji: string; color: string }> = {
@@ -54,14 +53,14 @@ export function PlatformStatus({ data }: PlatformStatusProps) {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{config.label}</p>
                       <p className="text-xs text-muted-foreground">
-                        {d.followers.toLocaleString()} seguidores
+                        {d.activeCount}/{d.count} {d.count === 1 ? "activa" : "activas"}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary" className="text-xs">
                         {d.count} {d.count === 1 ? "cuenta" : "cuentas"}
                       </Badge>
-                      {d.connected > 0 && (
+                      {d.activeCount > 0 && (
                         <div className="h-2 w-2 rounded-full bg-success" />
                       )}
                     </div>

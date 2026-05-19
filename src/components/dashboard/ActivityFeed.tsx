@@ -7,8 +7,8 @@ import { es } from "date-fns/locale";
 interface Client {
   id: string;
   name: string;
-  company: string | null;
-  active: boolean;
+  business_type: string | null;
+  status: string;
   created_at: string;
 }
 
@@ -16,7 +16,7 @@ interface SocialAccount {
   id: string;
   platform: string;
   account_name: string;
-  connected: boolean;
+  status: string;
   created_at: string;
   clients?: { name: string } | null;
 }
@@ -41,7 +41,7 @@ export function ActivityFeed({ recentClients, recentAccounts }: ActivityFeedProp
       id: c.id,
       type: "client" as const,
       title: `Nuevo cliente: ${c.name}`,
-      subtitle: c.company || "Sin empresa",
+      subtitle: c.business_type || "Sin industria",
       time: c.created_at,
       icon: Users,
     })),
@@ -49,7 +49,7 @@ export function ActivityFeed({ recentClients, recentAccounts }: ActivityFeedProp
       id: a.id,
       type: "account" as const,
       title: `${PLATFORM_EMOJI[a.platform] || "🌐"} ${a.account_name}`,
-      subtitle: `${a.platform} • ${a.connected ? "Conectada" : "Pendiente"}`,
+      subtitle: `${a.platform} • ${a.status === "active" ? "Activa" : a.status === "expired" ? "Expirada" : "Desconectada"}`,
       time: a.created_at,
       icon: Wifi,
     })),

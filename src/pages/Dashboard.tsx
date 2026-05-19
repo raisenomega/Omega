@@ -1,7 +1,7 @@
-import { Users, TrendingUp, CalendarDays, Wifi, Loader2 } from "lucide-react";
+import { Users, Sparkles, CalendarDays, Wifi, Loader2 } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { StatsCard } from "@/components/dashboard/StatsCard";
-import { FollowersByPlatformChart, AccountDistributionChart } from "@/components/dashboard/PlatformCharts";
+import { AccountDistributionChart } from "@/components/dashboard/PlatformCharts";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { PlatformStatus } from "@/components/dashboard/PlatformStatus";
 
@@ -9,9 +9,11 @@ export default function Dashboard() {
   const {
     loading,
     activeClients,
-    totalFollowers,
-    connectedAccounts,
+    totalClients,
+    activeAccounts,
     totalAccounts,
+    scheduledNext7d,
+    contentLast30d,
     platformCounts,
     recentClients,
     recentAccounts,
@@ -32,39 +34,36 @@ export default function Dashboard() {
         <p className="text-muted-foreground">Resumen general de tu plataforma</p>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards — datos reales (regla P1) */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Clientes Activos"
           value={activeClients}
           icon={Users}
-          subtitle={`${activeClients} de ${activeClients} activos`}
+          subtitle={`${totalClients} total`}
         />
         <StatsCard
-          title="Seguidores Totales"
-          value={totalFollowers.toLocaleString()}
-          icon={TrendingUp}
-          subtitle="Todas las plataformas"
+          title="Contenido Generado"
+          value={contentLast30d}
+          icon={Sparkles}
+          subtitle="Últimos 30 días"
         />
         <StatsCard
           title="Posts Programados"
-          value="0"
+          value={scheduledNext7d}
           icon={CalendarDays}
-          subtitle="Próximamente"
+          subtitle="Próximos 7 días"
         />
         <StatsCard
           title="Cuentas Conectadas"
-          value={`${connectedAccounts}/${totalAccounts}`}
+          value={`${activeAccounts}/${totalAccounts}`}
           icon={Wifi}
-          subtitle={`${totalAccounts} cuentas registradas`}
+          subtitle={`${totalAccounts} registradas`}
         />
       </div>
 
-      {/* Charts */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <FollowersByPlatformChart data={platformCounts} />
-        <AccountDistributionChart data={platformCounts} />
-      </div>
+      {/* Distribución de cuentas (única chart con data real) */}
+      <AccountDistributionChart data={platformCounts} />
 
       {/* Activity + Platform Status */}
       <div className="grid gap-4 lg:grid-cols-2">
