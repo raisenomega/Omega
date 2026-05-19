@@ -22,6 +22,7 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { SidebarUserFooter } from "@/components/layout/SidebarUserFooter";
 
 const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -99,13 +100,12 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 group-data-[collapsible=icon]:p-2">
-        <div className="flex items-center gap-2 rounded-lg bg-sidebar-accent/50 p-2 group-data-[collapsible=icon]:justify-center">
-          <div className="h-2 w-2 rounded-full bg-success shrink-0" />
-          <span className="text-xs text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-            Sistema activo
-          </span>
-        </div>
+      <SidebarFooter className="border-t border-sidebar-border p-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarUserFooter />
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
