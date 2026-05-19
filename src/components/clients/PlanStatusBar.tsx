@@ -24,7 +24,7 @@ export function PlanStatusBar({ clientId }: PlanStatusBarProps) {
 
   if (status.loading) {
     return (
-      <Card className="flex items-center justify-center py-3 border-border/50 bg-card/80 backdrop-blur-sm">
+      <Card className="flex items-center justify-center py-3 border-2 border-warning bg-card/80 backdrop-blur-sm">
         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
       </Card>
     );
@@ -41,7 +41,7 @@ export function PlanStatusBar({ clientId }: PlanStatusBarProps) {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <Card className="flex flex-wrap items-center gap-3 px-4 py-2.5 border-border/50 bg-card/80 backdrop-blur-sm text-sm">
+      <Card className="flex flex-wrap items-center gap-3 px-4 py-2.5 border-2 border-warning bg-card/80 backdrop-blur-sm text-sm">
         {/* Plan badge */}
         <span className="font-semibold whitespace-nowrap">
           {planConfig.label}

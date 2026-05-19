@@ -33,15 +33,20 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-display font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Resumen general de tu plataforma</p>
+      {/* Header inline · título + Plan Status Bar en misma línea horizontal.
+          Bar visible solo para clientes PYME (no Owner/Reseller). En mobile
+          flex-wrap lo baja a línea propia automáticamente. */}
+      <div className="flex items-center justify-between gap-6 flex-wrap">
+        <div className="shrink-0">
+          <h1 className="text-2xl font-display font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">Resumen general de tu plataforma</p>
+        </div>
+        {!myPlan.isOwner && (
+          <div className="flex-1 min-w-[420px]">
+            <PlanStatusBar clientId={myPlan.clientId ?? ""} />
+          </div>
+        )}
       </div>
-
-      {/* Plan Status Bar · visible para todo user logueado que NO sea Owner/Reseller.
-          Pre-activación: bar muestra defaults de Adopción con ceros (clientId null OK).
-          Post-activación: bar muestra plan + uso reales. */}
-      {!myPlan.isOwner && <PlanStatusBar clientId={myPlan.clientId ?? ""} />}
 
       {/* KPI Cards — datos reales (regla P1) */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
