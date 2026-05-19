@@ -73,21 +73,12 @@ export default function Clients() {
   const [form, setForm] = useState<ClientFormData>(emptyForm);
   const [expandedClient, setExpandedClient] = useState<string | null>(null);
 
-  // Fetch profile to get org_id
-  const { data: profile } = useQuery({
-    queryKey: ["profile"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-  });
+  // DEBT-033: profile query removida — tabla `profiles` no existe en V3.
+  // El flow CREATE/UPDATE depende de `profile.organization_id` y de cols
+  // (email/phone/company/notes/organization_id) que tampoco existen en V3.
+  // Hasta el rewrite Fase 3 §3.x, el listado funciona pero las mutations
+  // fallan al click (error toast existente). Stub para no romper firma.
+  const profile: { organization_id: string | null } | null = null;
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],

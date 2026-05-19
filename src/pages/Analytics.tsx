@@ -47,7 +47,7 @@ export default function Analytics() {
       <div className="grid gap-4 sm:grid-cols-3">
         <StatsCard
           title="Seguidores Totales"
-          value={totalFollowers.toLocaleString()}
+          value={(totalFollowers ?? 0).toLocaleString()}
           icon={TrendingUp}
           subtitle="Todas las plataformas"
         />

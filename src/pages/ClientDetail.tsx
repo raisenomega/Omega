@@ -39,43 +39,11 @@ export default function ClientDetail() {
     enabled: !!id,
   });
 
-  // Team members for agent assignment
-  const { data: teamMembers } = useQuery({
-    queryKey: ["team_members"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("organization_id")
-        .eq("user_id", user.id)
-        .single();
-      if (!profile?.organization_id) return [];
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, avatar_url")
-        .eq("organization_id", profile.organization_id);
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  // Client posts
-  const { data: posts } = useQuery({
-    queryKey: ["client_posts", id],
-    queryFn: async () => {
-      if (!client?.organization_id) return [];
-      const { data, error } = await supabase
-        .from("posts")
-        .select("*")
-        .eq("organization_id", client.organization_id)
-        .order("created_at", { ascending: false })
-        .limit(20);
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: !!client?.organization_id,
-  });
+  // DEBT-033: queries removidas — tablas `profiles` y `posts` no existen en V3.
+  // teamMembers + posts retornan arrays vacíos. Las tabs "Agente" y "Posts"
+  // muestran estado vacío en lugar de generar errores. Fase 3 §3.x rewrite.
+  const teamMembers: { user_id: string; full_name: string | null; avatar_url: string | null }[] = [];
+  const posts: { id: string; title?: string; status?: string; created_at?: string }[] = [];
 
   const assignMutation = useMutation({
     mutationFn: async (userId: string | null) => {

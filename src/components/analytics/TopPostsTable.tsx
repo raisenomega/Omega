@@ -57,9 +57,9 @@ export function TopPostsTable({ posts }: { posts: TopPost[] }) {
                     {post.platform}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right tabular-nums">{post.likes.toLocaleString()}</TableCell>
-                <TableCell className="text-right tabular-nums">{post.comments.toLocaleString()}</TableCell>
-                <TableCell className="text-right tabular-nums">{post.shares.toLocaleString()}</TableCell>
+                <TableCell className="text-right tabular-nums">{(post.likes ?? 0).toLocaleString()}</TableCell>
+                <TableCell className="text-right tabular-nums">{(post.comments ?? 0).toLocaleString()}</TableCell>
+                <TableCell className="text-right tabular-nums">{(post.shares ?? 0).toLocaleString()}</TableCell>
                 <TableCell className="text-right tabular-nums font-semibold text-primary">
                   {post.engagement}%
                 </TableCell>

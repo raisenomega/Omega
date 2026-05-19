@@ -81,7 +81,7 @@ export function FollowersByPlatformChart({ data }: PlatformChartsProps) {
                 borderRadius: "8px",
                 color: "hsl(var(--foreground))",
               }}
-              formatter={(value: number) => [value.toLocaleString(), "Seguidores"]}
+              formatter={(value: number) => [(value ?? 0).toLocaleString(), "Seguidores"]}
             />
             <Bar dataKey="followers" radius={[6, 6, 0, 0]}>
               {chartData.map((entry, i) => (
