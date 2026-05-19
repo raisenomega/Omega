@@ -11,8 +11,21 @@ import os
 import time
 from typing import Any
 
-from langsmith import traceable
-from mem0 import Memory
+# langsmith + mem0 disabled · DEBT-012
+def traceable(*_args: object, **_kwargs: object):
+    def _wrap(fn):
+        return fn
+    return _wrap
+
+
+class Memory:
+    """Stub fail-fast — instanciar V2 falla hasta restaurar mem0."""
+    @classmethod
+    def from_config(cls, _config: object) -> "Memory":
+        raise NotImplementedError(
+            "mem0 disabled · DEBT-012 · AgenticRunnerV2 no instanciable hasta restaurar mem0ai"
+        )
+
 
 from app.infrastructure.agentic_runner import AgenticRunner, AgentResult
 

@@ -8,7 +8,12 @@ import time
 import os
 from typing import Any
 import anthropic
-from langsmith import traceable
+
+# langsmith disabled · DEBT-012 — no-op decorator preserva @traceable sin tracing
+def traceable(*_args: object, **_kwargs: object):
+    def _wrap(fn):
+        return fn
+    return _wrap
 
 from app.infrastructure.tools.tool_registry import ToolRegistry
 from app.infrastructure.tool_executor import ToolExecutor
