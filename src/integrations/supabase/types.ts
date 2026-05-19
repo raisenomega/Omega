@@ -10,293 +10,612 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
-      ai_providers: {
+      agent_log: {
         Row: {
-          capabilities: string[]
+          agent_code: string
+          cache_hit: boolean | null
+          client_id: string | null
+          cost_usd: number | null
           created_at: string
-          description: string | null
+          error_message: string | null
           id: string
-          logo_url: string | null
-          name: string
-          slug: string
+          input_tokens: number | null
+          latency_ms: number | null
+          model_used: string
+          output_tokens: number | null
+          request_id: string | null
+          status: string
+          user_id: string | null
         }
         Insert: {
-          capabilities?: string[]
+          agent_code: string
+          cache_hit?: boolean | null
+          client_id?: string | null
+          cost_usd?: number | null
           created_at?: string
-          description?: string | null
+          error_message?: string | null
           id?: string
-          logo_url?: string | null
-          name: string
-          slug: string
+          input_tokens?: number | null
+          latency_ms?: number | null
+          model_used: string
+          output_tokens?: number | null
+          request_id?: string | null
+          status: string
+          user_id?: string | null
         }
         Update: {
-          capabilities?: string[]
+          agent_code?: string
+          cache_hit?: boolean | null
+          client_id?: string | null
+          cost_usd?: number | null
           created_at?: string
-          description?: string | null
+          error_message?: string | null
           id?: string
-          logo_url?: string | null
-          name?: string
-          slug?: string
-        }
-        Relationships: []
-      }
-      audit_logs: {
-        Row: {
-          action: string
-          created_at: string
-          details: Json | null
-          entity_id: string | null
-          entity_type: string
-          id: string
-          organization_id: string
-          user_id: string
-        }
-        Insert: {
-          action: string
-          created_at?: string
-          details?: Json | null
-          entity_id?: string | null
-          entity_type: string
-          id?: string
-          organization_id: string
-          user_id: string
-        }
-        Update: {
-          action?: string
-          created_at?: string
-          details?: Json | null
-          entity_id?: string | null
-          entity_type?: string
-          id?: string
-          organization_id?: string
-          user_id?: string
+          input_tokens?: number | null
+          latency_ms?: number | null
+          model_used?: string
+          output_tokens?: number | null
+          request_id?: string | null
+          status?: string
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "audit_logs_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: "agent_log_client_id_fkey"
+            columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
       }
-      client_ai_config: {
+      agent_memory: {
         Row: {
-          active_providers: string[]
-          budget_used: number | null
-          client_id: string
+          agent_code: string
+          client_id: string | null
+          confidence: number
+          context: string
           created_at: string
+          decision: string
+          embedding: string | null
+          evaluated_at: string | null
           id: string
-          monthly_budget: number | null
-          organization_id: string
-          package: string
-          updated_at: string
+          memory_type: string
+          metadata: Json | null
+          outcome: string | null
+          reasoning: string | null
+          reseller_id: string | null
+          user_id: string | null
+          was_correct: boolean | null
         }
         Insert: {
-          active_providers?: string[]
-          budget_used?: number | null
-          client_id: string
+          agent_code: string
+          client_id?: string | null
+          confidence: number
+          context: string
           created_at?: string
+          decision: string
+          embedding?: string | null
+          evaluated_at?: string | null
           id?: string
-          monthly_budget?: number | null
-          organization_id: string
-          package?: string
-          updated_at?: string
+          memory_type: string
+          metadata?: Json | null
+          outcome?: string | null
+          reasoning?: string | null
+          reseller_id?: string | null
+          user_id?: string | null
+          was_correct?: boolean | null
         }
         Update: {
-          active_providers?: string[]
-          budget_used?: number | null
-          client_id?: string
+          agent_code?: string
+          client_id?: string | null
+          confidence?: number
+          context?: string
           created_at?: string
+          decision?: string
+          embedding?: string | null
+          evaluated_at?: string | null
           id?: string
-          monthly_budget?: number | null
-          organization_id?: string
-          package?: string
-          updated_at?: string
+          memory_type?: string
+          metadata?: Json | null
+          outcome?: string | null
+          reasoning?: string | null
+          reseller_id?: string | null
+          user_id?: string | null
+          was_correct?: boolean | null
         }
         Relationships: [
           {
-            foreignKeyName: "client_ai_config_client_id_fkey"
+            foreignKeyName: "agent_memory_client_id_fkey"
             columns: ["client_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "client_ai_config_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: "agent_memory_reseller_id_fkey"
+            columns: ["reseller_id"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "resellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agents: {
+        Row: {
+          category: string
+          code: string
+          config: Json | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_premium: boolean
+          model_tier: string
+          name: string
+          system_prompt: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          code: string
+          config?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_premium?: boolean
+          model_tier: string
+          name: string
+          system_prompt?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          code?: string
+          config?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_premium?: boolean
+          model_tier?: string
+          name?: string
+          system_prompt?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      analytics_events: {
+        Row: {
+          client_id: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          metric_value: number | null
+          occurred_at: string
+          platform: string
+          scheduled_post_id: string | null
+        }
+        Insert: {
+          client_id: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          metric_value?: number | null
+          occurred_at?: string
+          platform: string
+          scheduled_post_id?: string | null
+        }
+        Update: {
+          client_id?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          metric_value?: number | null
+          occurred_at?: string
+          platform?: string
+          scheduled_post_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_events_scheduled_post_id_fkey"
+            columns: ["scheduled_post_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anti_fraud_signals: {
+        Row: {
+          auto_blocked: boolean
+          client_id: string | null
+          detected_at: string
+          id: string
+          metadata: Json
+          resolution_note: string | null
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          signal_type: string
+          signal_value: string
+        }
+        Insert: {
+          auto_blocked?: boolean
+          client_id?: string | null
+          detected_at?: string
+          id?: string
+          metadata?: Json
+          resolution_note?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          signal_type: string
+          signal_value: string
+        }
+        Update: {
+          auto_blocked?: boolean
+          client_id?: string | null
+          detected_at?: string
+          id?: string
+          metadata?: Json
+          resolution_note?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          signal_type?: string
+          signal_value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anti_fraud_signals_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_files: {
+        Row: {
+          client_id: string
+          file_type: string
+          filename: string
+          id: string
+          size_bytes: number | null
+          storage_path: string
+          uploaded_at: string
+        }
+        Insert: {
+          client_id: string
+          file_type: string
+          filename: string
+          id?: string
+          size_bytes?: number | null
+          storage_path: string
+          uploaded_at?: string
+        }
+        Update: {
+          client_id?: string
+          file_type?: string
+          filename?: string
+          id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_files_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_plans: {
+        Row: {
+          addons: Json
+          client_id: string
+          created_at: string
+          current_period_end: string
+          current_period_start: string
+          id: string
+          plan: string
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          addons?: Json
+          client_id: string
+          created_at?: string
+          current_period_end: string
+          current_period_start?: string
+          id?: string
+          plan: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          addons?: Json
+          client_id?: string
+          created_at?: string
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          plan?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_plans_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
       }
       clients: {
         Row: {
-          active: boolean
-          assigned_to: string | null
-          company: string | null
+          brand_voice: Json | null
+          business_type: string | null
           created_at: string
-          email: string | null
+          description: string | null
+          device_fingerprint: string | null
           id: string
+          industry: string | null
           name: string
-          notes: string | null
-          organization_id: string
-          phone: string | null
-          plan: string | null
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          assigned_to?: string | null
-          company?: string | null
-          created_at?: string
-          email?: string | null
-          id?: string
-          name: string
-          notes?: string | null
-          organization_id: string
-          phone?: string | null
-          plan?: string | null
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          assigned_to?: string | null
-          company?: string | null
-          created_at?: string
-          email?: string | null
-          id?: string
-          name?: string
-          notes?: string | null
-          organization_id?: string
-          phone?: string | null
-          plan?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "clients_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      org_ai_keys: {
-        Row: {
-          api_key_encrypted: string
-          created_at: string
-          id: string
-          is_active: boolean | null
-          organization_id: string
-          provider_slug: string
-          updated_at: string
-        }
-        Insert: {
-          api_key_encrypted: string
-          created_at?: string
-          id?: string
-          is_active?: boolean | null
-          organization_id: string
-          provider_slug: string
-          updated_at?: string
-        }
-        Update: {
-          api_key_encrypted?: string
-          created_at?: string
-          id?: string
-          is_active?: boolean | null
-          organization_id?: string
-          provider_slug?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "org_ai_keys_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      organizations: {
-        Row: {
-          created_at: string
-          id: string
-          logo_url: string | null
-          name: string
-          slug: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          logo_url?: string | null
-          name: string
-          slug: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          logo_url?: string | null
-          name?: string
-          slug?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      posts: {
-        Row: {
-          body: string
-          created_at: string
-          id: string
-          organization_id: string
-          platform: string
-          published_at: string | null
-          scheduled_at: string | null
+          plan: string
+          reseller_id: string
           status: string
-          title: string
+          target_audience: Json | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          brand_voice?: Json | null
+          business_type?: string | null
+          created_at?: string
+          description?: string | null
+          device_fingerprint?: string | null
+          id?: string
+          industry?: string | null
+          name: string
+          plan?: string
+          reseller_id: string
+          status?: string
+          target_audience?: Json | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          brand_voice?: Json | null
+          business_type?: string | null
+          created_at?: string
+          description?: string | null
+          device_fingerprint?: string | null
+          id?: string
+          industry?: string | null
+          name?: string
+          plan?: string
+          reseller_id?: string
+          status?: string
+          target_audience?: Json | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_lab_generated: {
+        Row: {
+          agent_code: string
+          brand_voice_score: number | null
+          client_id: string
+          compliance_passed: boolean | null
+          confidence: number | null
+          content_type: string
+          created_at: string
+          generated_text: string | null
+          id: string
+          media_urls: Json | null
+          metadata: Json | null
+          prompt: string | null
+          status: string
+          sub_brand_id: string | null
           updated_at: string
         }
         Insert: {
-          body?: string
+          agent_code: string
+          brand_voice_score?: number | null
+          client_id: string
+          compliance_passed?: boolean | null
+          confidence?: number | null
+          content_type: string
           created_at?: string
+          generated_text?: string | null
           id?: string
-          organization_id: string
-          platform?: string
-          published_at?: string | null
-          scheduled_at?: string | null
+          media_urls?: Json | null
+          metadata?: Json | null
+          prompt?: string | null
           status?: string
-          title: string
+          sub_brand_id?: string | null
           updated_at?: string
         }
         Update: {
-          body?: string
+          agent_code?: string
+          brand_voice_score?: number | null
+          client_id?: string
+          compliance_passed?: boolean | null
+          confidence?: number | null
+          content_type?: string
           created_at?: string
+          generated_text?: string | null
           id?: string
-          organization_id?: string
-          platform?: string
-          published_at?: string | null
-          scheduled_at?: string | null
+          media_urls?: Json | null
+          metadata?: Json | null
+          prompt?: string | null
           status?: string
-          title?: string
+          sub_brand_id?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "posts_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: "content_lab_generated_client_id_fkey"
+            columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_lab_generated_sub_brand_id_fkey"
+            columns: ["sub_brand_id"]
+            isOneToOne: false
+            referencedRelation: "sub_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feature_usage: {
+        Row: {
+          client_id: string
+          cost_usd: number | null
+          feature_code: string
+          id: string
+          metadata: Json | null
+          period_end: string | null
+          period_start: string
+          usage_count: number
+        }
+        Insert: {
+          client_id: string
+          cost_usd?: number | null
+          feature_code: string
+          id?: string
+          metadata?: Json | null
+          period_end?: string | null
+          period_start: string
+          usage_count?: number
+        }
+        Update: {
+          client_id?: string
+          cost_usd?: number | null
+          feature_code?: string
+          id?: string
+          metadata?: Json | null
+          period_end?: string | null
+          period_start?: string
+          usage_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_usage_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          consent_date: string | null
+          consent_given: boolean
+          created_at: string
+          email: string
+          id: string
+          name: string | null
+          notes: string | null
+          phone: string | null
+          reseller_id: string
+          source: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          consent_date?: string | null
+          consent_given?: boolean
+          created_at?: string
+          email: string
+          id?: string
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          reseller_id: string
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          consent_date?: string | null
+          consent_given?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          reseller_id?: string
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers"
             referencedColumns: ["id"]
           },
         ]
@@ -305,75 +624,259 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          email: string
           full_name: string | null
           id: string
-          organization_id: string | null
+          role: string
           updated_at: string
-          user_id: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          email: string
           full_name?: string | null
-          id?: string
-          organization_id?: string | null
+          id: string
+          role?: string
           updated_at?: string
-          user_id: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          email?: string
           full_name?: string | null
           id?: string
-          organization_id?: string | null
+          role?: string
           updated_at?: string
-          user_id?: string
+        }
+        Relationships: []
+      }
+      reseller_agents: {
+        Row: {
+          agent_id: string
+          created_at: string
+          custom_config: Json | null
+          id: string
+          is_enabled: boolean
+          reseller_id: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          custom_config?: Json | null
+          id?: string
+          is_enabled?: boolean
+          reseller_id: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          custom_config?: Json | null
+          id?: string
+          is_enabled?: boolean
+          reseller_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "profiles_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: "reseller_agents_agent_id_fkey"
+            columns: ["agent_id"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_agents_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reseller_branding: {
+        Row: {
+          created_at: string
+          custom_css: string | null
+          logo_url: string | null
+          primary_color: string | null
+          reseller_id: string
+          secondary_color: string | null
+          tagline: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custom_css?: string | null
+          logo_url?: string | null
+          primary_color?: string | null
+          reseller_id: string
+          secondary_color?: string | null
+          tagline?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custom_css?: string | null
+          logo_url?: string | null
+          primary_color?: string | null
+          reseller_id?: string
+          secondary_color?: string | null
+          tagline?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_branding_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: true
+            referencedRelation: "resellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resellers: {
+        Row: {
+          created_at: string
+          custom_domain: string | null
+          id: string
+          name: string
+          owner_user_id: string
+          plan: string
+          slug: string
+          status: string
+          stripe_account_id: string | null
+          stripe_customer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custom_domain?: string | null
+          id?: string
+          name: string
+          owner_user_id: string
+          plan?: string
+          slug: string
+          status?: string
+          stripe_account_id?: string | null
+          stripe_customer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custom_domain?: string | null
+          id?: string
+          name?: string
+          owner_user_id?: string
+          plan?: string
+          slug?: string
+          status?: string
+          stripe_account_id?: string | null
+          stripe_customer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scheduled_posts: {
+        Row: {
+          attempts: number
+          client_id: string
+          content_id: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          platform_post_id: string | null
+          scheduled_for: string
+          social_account_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          client_id: string
+          content_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          platform_post_id?: string | null
+          scheduled_for: string
+          social_account_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          client_id?: string
+          content_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          platform_post_id?: string | null
+          scheduled_for?: string
+          social_account_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_posts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_posts_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_lab_generated"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_posts_social_account_id_fkey"
+            columns: ["social_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
             referencedColumns: ["id"]
           },
         ]
       }
       social_accounts: {
         Row: {
+          access_token: string | null
+          account_id: string | null
           account_name: string
-          account_url: string | null
           client_id: string
-          connected: boolean
           created_at: string
-          followers_count: number | null
+          expires_at: string | null
           id: string
-          organization_id: string
           platform: string
+          refresh_token: string | null
+          status: string
           updated_at: string
         }
         Insert: {
+          access_token?: string | null
+          account_id?: string | null
           account_name: string
-          account_url?: string | null
           client_id: string
-          connected?: boolean
           created_at?: string
-          followers_count?: number | null
+          expires_at?: string | null
           id?: string
-          organization_id: string
           platform: string
+          refresh_token?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
+          access_token?: string | null
+          account_id?: string | null
           account_name?: string
-          account_url?: string | null
           client_id?: string
-          connected?: boolean
           created_at?: string
-          followers_count?: number | null
+          expires_at?: string | null
           id?: string
-          organization_id?: string
           platform?: string
+          refresh_token?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: [
@@ -384,49 +887,213 @@ export type Database = {
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      stripe_webhook_events: {
+        Row: {
+          data: Json
+          error_message: string | null
+          id: string
+          processed_at: string
+          success: boolean | null
+          type: string
+        }
+        Insert: {
+          data: Json
+          error_message?: string | null
+          id: string
+          processed_at?: string
+          success?: boolean | null
+          type: string
+        }
+        Update: {
+          data?: Json
+          error_message?: string | null
+          id?: string
+          processed_at?: string
+          success?: boolean | null
+          type?: string
+        }
+        Relationships: []
+      }
+      sub_brands: {
+        Row: {
+          brand_voice: Json | null
+          client_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          brand_voice?: Json | null
+          client_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          brand_voice?: Json | null
+          client_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
           {
-            foreignKeyName: "social_accounts_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: "sub_brands_client_id_fkey"
+            columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
       }
-      user_roles: {
+      training_pairs: {
         Row: {
+          agent_code: string
+          created_at: string
+          curator_notes: string | null
+          curator_user_id: string | null
+          expected_output: string
           id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
+          input_context: string
+          is_active: boolean
+          quality_score: number | null
+          source_memory_id: string | null
         }
         Insert: {
+          agent_code: string
+          created_at?: string
+          curator_notes?: string | null
+          curator_user_id?: string | null
+          expected_output: string
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id: string
+          input_context: string
+          is_active?: boolean
+          quality_score?: number | null
+          source_memory_id?: string | null
         }
         Update: {
+          agent_code?: string
+          created_at?: string
+          curator_notes?: string | null
+          curator_user_id?: string | null
+          expected_output?: string
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
+          input_context?: string
+          is_active?: boolean
+          quality_score?: number | null
+          source_memory_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_pairs_source_memory_id_fkey"
+            columns: ["source_memory_id"]
+            isOneToOne: false
+            referencedRelation: "agent_memory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      upsell_requests: {
+        Row: {
+          agent_id: string | null
+          amount_usd: number | null
+          approved_at: string | null
+          approved_by: string | null
+          client_id: string
+          created_at: string
+          id: string
+          requested_by: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          amount_usd?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          client_id: string
+          created_at?: string
+          id?: string
+          requested_by?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          amount_usd?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          requested_by?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "upsell_requests_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "upsell_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      agent_performance_stats: {
+        Row: {
+          accuracy_rate: number | null
+          agent_code: string | null
+          avg_confidence: number | null
+          avg_confidence_when_correct: number | null
+          avg_confidence_when_wrong: number | null
+          correct_count: number | null
+          incorrect_count: number | null
+          pending_evaluation: number | null
+          total_decisions: number | null
         }
         Relationships: []
       }
     }
-    Views: {
-      [_ in never]: never
-    }
     Functions: {
-      get_user_org_id: { Args: { _user_id: string }; Returns: string }
-      has_role: {
+      find_similar_memories: {
         Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
+          limit_count?: number
+          min_similarity?: number
+          query_embedding: string
+          target_agent_code: string
+          target_client_id?: string
         }
-        Returns: boolean
+        Returns: {
+          confidence: number
+          context: string
+          decision: string
+          id: string
+          reasoning: string
+          similarity: number
+          was_correct: boolean
+        }[]
       }
     }
     Enums: {
-      app_role: "admin" | "editor" | "viewer"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -552,9 +1219,10 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
-    Enums: {
-      app_role: ["admin", "editor", "viewer"],
-    },
+    Enums: {},
   },
 } as const

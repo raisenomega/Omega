@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Users, Globe, UserCheck, FileText, Loader2, Bot } from "lucide-react";
 import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts";
 import { ClientAIConfig } from "@/components/clients/ClientAIConfig";
+import { PlanStatusBar } from "@/components/clients/PlanStatusBar";
 
 export default function ClientDetail() {
   const { id } = useParams<{ id: string }>();
@@ -131,6 +132,9 @@ export default function ClientDetail() {
           </p>
         </div>
       </div>
+
+      {/* Plan Status Bar (Step 3 · MODELO §7) */}
+      <PlanStatusBar clientId={id!} />
 
       {/* Tabs */}
       <Tabs defaultValue="social" className="space-y-4">
