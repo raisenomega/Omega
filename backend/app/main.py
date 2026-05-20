@@ -40,6 +40,7 @@ from app.api.routes import (
 # DEBT-036: legacy Lovable billing module desregistrado · reemplazado por billing_v3 bc_billing
 from app.api.routes import billing_v3
 from app.api.routes import aria_v1
+from app.api.routes import clients_v3
 from app.sentinel.persistence_router import router as sentinel_persistence_router
 from app.api.routes.clients.feature_usage_router import router as feature_usage_router
 
@@ -128,6 +129,7 @@ app.include_router(resellers.router, prefix=settings.api_v1_prefix, tags=["Resel
 app.include_router(auth.router, prefix=settings.api_v1_prefix, tags=["Auth 🔐"])
 app.include_router(billing_v3.router, prefix=settings.api_v1_prefix, tags=["Billing 💳"])
 app.include_router(aria_v1.router, prefix=settings.api_v1_prefix, tags=["ARIA"])
+app.include_router(clients_v3.router, prefix=settings.api_v1_prefix, tags=["Clients V3"])
 app.include_router(context.router, prefix=settings.api_v1_prefix)
 app.include_router(clients.router, prefix=settings.api_v1_prefix, tags=["Clients 👥"])
 app.include_router(social_accounts.router, prefix=settings.api_v1_prefix, tags=["Social Accounts 📱"])
