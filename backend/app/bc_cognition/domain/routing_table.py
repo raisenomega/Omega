@@ -56,6 +56,12 @@ _AGENT_TIER_RAW: dict[str, ModelTier] = {
     "news_monitor":               "sonnet",
     "competitor_tracker":         "sonnet",
 
+    # ARIA — proyección de NOVA · 4 niveles · spec ARIA_NOVA_INTELLIGENCE §6
+    "aria_1":                     "haiku",
+    "aria_2":                     "sonnet",
+    "aria_3":                     "sonnet",
+    "aria_4":                     "sonnet",
+
     # OPUS — decisiones críticas / reputacionales / briefing ejecutivo
     "orchestrator":               "opus",
     "crisis_manager":             "opus",
@@ -72,15 +78,8 @@ AGENT_TIER: Final[MappingProxyType] = MappingProxyType(_AGENT_TIER_RAW)
 
 
 def resolve_model(agent_code: str) -> str:
-    """Retorna el model_id Anthropic para el agente.
-
-    Raises:
-        KeyError: si el agent_code no está registrado.
-                  Esto es intencional — agentes sin tier asignado NO se
-                  ejecutan en producción (cumple I2).
-    """
-    tier = AGENT_TIER[agent_code]
-    return MODEL_IDS[tier]
+    """Retorna model_id Anthropic. KeyError si agente no registrado (cumple I2)."""
+    return MODEL_IDS[AGENT_TIER[agent_code]]
 
 
 def get_tier(agent_code: str) -> ModelTier:

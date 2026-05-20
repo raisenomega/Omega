@@ -1,6 +1,7 @@
 import { Users, Sparkles, CalendarDays, Wifi, Loader2 } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useMyPlanStatus } from "@/hooks/useMyPlanStatus";
+import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { AccountDistributionChart } from "@/components/dashboard/PlatformCharts";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
@@ -8,6 +9,8 @@ import { PlatformStatus } from "@/components/dashboard/PlatformStatus";
 import { PlanStatusBar } from "@/components/clients/PlanStatusBar";
 
 export default function Dashboard() {
+  useTrackOnMount("feature_open", { feature: "dashboard" });
+
   const {
     loading,
     activeClients,

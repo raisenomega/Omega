@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import {
   ImageIcon,
   Upload,
@@ -32,6 +33,8 @@ function formatBytes(bytes: number) {
 }
 
 export default function Media() {
+  useTrackOnMount("feature_open", { feature: "media" });
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
