@@ -12,28 +12,30 @@ export function SectionGoals({ form }: Props) {
   const v = form.watch("goals");
   const set = <K extends keyof OnboardingForm["goals"]>(k: K, x: OnboardingForm["goals"][K]) => form.setValue(`goals.${k}`, x);
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1"><Label className="text-sm">Objetivo principal</Label>
+        <div className="space-y-1"><Label className="text-xs">Objetivo principal</Label>
           <Select value={v?.primary_goal ?? ""} onValueChange={(x) => set("primary_goal", x as OnboardingForm["goals"]["primary_goal"])}>
-            <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
+            <SelectTrigger className="h-8"><SelectValue placeholder="—" /></SelectTrigger>
             <SelectContent>{PRIMARY_GOALS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        <div className="space-y-1"><Label className="text-sm">Métrica de éxito</Label>
-          <Input className="h-9" value={v?.success_metric ?? ""} onChange={(e) => set("success_metric", e.target.value)} placeholder="ej. 30 leads/mes" />
+        <div className="space-y-1"><Label className="text-xs">Métrica de éxito</Label>
+          <Input className="h-8" value={v?.success_metric ?? ""} onChange={(e) => set("success_metric", e.target.value)} placeholder="ej. 30 leads/mes" />
         </div>
       </div>
-      <div className="space-y-1"><Label className="text-sm">Meta este mes</Label>
-        <Textarea value={v?.goal_this_month ?? ""} onChange={(e) => set("goal_this_month", e.target.value)} rows={2} /></div>
-      <div className="space-y-1"><Label className="text-sm">Meta este trimestre</Label>
-        <Textarea value={v?.goal_this_quarter ?? ""} onChange={(e) => set("goal_this_quarter", e.target.value)} rows={2} /></div>
+      <div className="space-y-1"><Label className="text-xs">Meta este mes</Label>
+        <Textarea value={v?.goal_this_month ?? ""} onChange={(e) => set("goal_this_month", e.target.value)} rows={2} className="resize-none" />
+      </div>
+      <div className="space-y-1"><Label className="text-xs">Meta este trimestre</Label>
+        <Textarea value={v?.goal_this_quarter ?? ""} onChange={(e) => set("goal_this_quarter", e.target.value)} rows={2} className="resize-none" />
+      </div>
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1"><Label className="text-sm">Prioridad ahora</Label>
-          <Input className="h-9" value={v?.goal_priority_now ?? ""} onChange={(e) => set("goal_priority_now", e.target.value)} />
+        <div className="space-y-1"><Label className="text-xs">Prioridad ahora</Label>
+          <Input className="h-8" value={v?.goal_priority_now ?? ""} onChange={(e) => set("goal_priority_now", e.target.value)} />
         </div>
-        <div className="space-y-1"><Label className="text-sm">Target revenue mensual (USD)</Label>
-          <Input className="h-9" type="number" min={0} step="0.01" value={v?.monthly_revenue_target ?? ""} onChange={(e) => set("monthly_revenue_target", e.target.value ? Number(e.target.value) : null)} />
+        <div className="space-y-1"><Label className="text-xs">Target revenue mensual (USD)</Label>
+          <Input className="h-8" type="number" min={0} step="0.01" value={v?.monthly_revenue_target ?? ""} onChange={(e) => set("monthly_revenue_target", e.target.value ? Number(e.target.value) : null)} />
         </div>
       </div>
     </div>

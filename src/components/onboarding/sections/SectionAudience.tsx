@@ -13,35 +13,41 @@ interface Props { form: UseFormReturn<OnboardingForm> }
 export function SectionAudience({ form }: Props) {
   const v = form.watch("audience");
   const competitors = v?.competitors ?? [];
+  const setComp = (next: typeof competitors) => form.setValue("audience.competitors", next);
+
   return (
-    <div className="space-y-4">
-      <div className="space-y-1"><Label className="text-sm">Audiencia objetivo</Label>
-        <Textarea value={v?.target_audience ?? ""} onChange={(e) => form.setValue("audience.target_audience", e.target.value)} rows={2} /></div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1"><Label className="text-sm">Rango de edad</Label>
-          <Select value={v?.audience_age_range ?? ""} onValueChange={(x) => form.setValue("audience.audience_age_range", x as OnboardingForm["audience"]["audience_age_range"])}>
-            <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
-            <SelectContent>{AUDIENCE_AGE_RANGES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1"><Label className="text-sm">Género</Label>
-          <Select value={v?.audience_gender ?? ""} onValueChange={(x) => form.setValue("audience.audience_gender", x as OnboardingForm["audience"]["audience_gender"])}>
-            <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
-            <SelectContent>{GENDERS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
-          </Select>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-3">
+        <div className="space-y-1"><Label className="text-xs">Audiencia objetivo</Label>
+          <Textarea value={v?.target_audience ?? ""} onChange={(e) => form.setValue("audience.target_audience", e.target.value)} rows={2} className="resize-none" /></div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1"><Label className="text-xs">Rango de edad</Label>
+            <Select value={v?.audience_age_range ?? ""} onValueChange={(x) => form.setValue("audience.audience_age_range", x as OnboardingForm["audience"]["audience_age_range"])}>
+              <SelectTrigger className="h-8"><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent>{AUDIENCE_AGE_RANGES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1"><Label className="text-xs">Género</Label>
+            <Select value={v?.audience_gender ?? ""} onValueChange={(x) => form.setValue("audience.audience_gender", x as OnboardingForm["audience"]["audience_gender"])}>
+              <SelectTrigger className="h-8"><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent>{GENDERS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
       <div className="space-y-2">
-        <Label className="text-sm">Competidores</Label>
-        {competitors.map((c, i) => (
-          <div key={i} className="flex gap-2">
-            <Input className="h-9" placeholder="Nombre" value={c.name} onChange={(e) => { const next = [...competitors]; next[i] = { ...c, name: e.target.value }; form.setValue("audience.competitors", next); }} />
-            <Input className="h-9" placeholder="URL (opcional)" value={c.url ?? ""} onChange={(e) => { const next = [...competitors]; next[i] = { ...c, url: e.target.value }; form.setValue("audience.competitors", next); }} />
-            <Button size="icon" variant="ghost" onClick={() => form.setValue("audience.competitors", competitors.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
-          </div>
-        ))}
-        <Button size="sm" variant="outline" className="gap-1" onClick={() => form.setValue("audience.competitors", [...competitors, { name: "", url: null }])}>
-          <Plus className="h-3.5 w-3.5" />Agregar
+        <h4 className="text-sm font-medium">Competidores ({competitors.length})</h4>
+        <div className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1">
+          {competitors.map((c, i) => (
+            <div key={i} className="flex gap-1.5">
+              <Input className="h-8" placeholder="Nombre" value={c.name} onChange={(e) => { const n = [...competitors]; n[i] = { ...c, name: e.target.value }; setComp(n); }} />
+              <Input className="h-8" placeholder="URL" value={c.url ?? ""} onChange={(e) => { const n = [...competitors]; n[i] = { ...c, url: e.target.value }; setComp(n); }} />
+              <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => setComp(competitors.filter((_, j) => j !== i))}><Trash2 className="h-3.5 w-3.5" /></Button>
+            </div>
+          ))}
+        </div>
+        <Button size="sm" variant="outline" className="gap-1 w-full h-8" onClick={() => setComp([...competitors, { name: "", url: null }])}>
+          <Plus className="h-3.5 w-3.5" />Agregar competidor
         </Button>
       </div>
     </div>

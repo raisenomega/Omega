@@ -13,29 +13,30 @@ export function SectionSamples({ form }: Props) {
   const text = samples.join("\n\n");
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <p className="text-xs text-muted-foreground bg-muted/40 px-3 py-2 rounded">
-        Pega 3-5 ejemplos de tu mejor contenido reciente · O sube un PDF con info de tu negocio (opcional) · ARIA también aprenderá automáticamente de tus próximas aprobaciones.
+        Pega 3-5 ejemplos · o sube PDF · ARIA también aprenderá de tus aprobaciones.
       </p>
       <div className="space-y-1">
-        <Label className="text-sm">Ejemplos de contenido (separa con línea en blanco)</Label>
+        <Label className="text-xs">Ejemplos (línea en blanco separa)</Label>
         <Textarea
-          rows={4}
+          rows={3}
           value={text}
           onChange={(e) => form.setValue(
             "brand_voice_samples",
             e.target.value.split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean),
           )}
           placeholder="Post 1...\n\nPost 2...\n\nPost 3..."
+          className="resize-none"
         />
         <p className="text-xs text-muted-foreground">{samples.length} muestra(s) detectada(s)</p>
       </div>
       <div className="space-y-1">
-        <Label className="text-sm">PDF con info del negocio (opcional · auto-poblar ARIA)</Label>
+        <Label className="text-xs">PDF info del negocio (opcional)</Label>
         <Input
           type="file"
           accept="application/pdf"
-          className="h-9"
+          className="h-8"
           onChange={() => toast({ title: "PDF parsing próximamente", description: "DEBT-039 · Fase 3 · pypdf + Claude Haiku" })}
         />
       </div>

@@ -12,6 +12,8 @@ import type { OnboardingForm } from "@/lib/onboarding-schema";
 
 interface Props { form: UseFormReturn<OnboardingForm> }
 
+const PLACEHOLDER = "¿Qué vendes?\n¿A quién le vendes?\n¿Qué te hace diferente?\nCualquier contexto adicional...";
+
 export function SectionBusiness({ form }: Props) {
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -20,42 +22,35 @@ export function SectionBusiness({ form }: Props) {
 
   const handleFile = (f: File | undefined) => {
     if (!f) return;
-    toast({ title: "Procesando...", description: "Disponible pronto · DEBT-039 · ARIA leerá tu PDF/MD automáticamente" });
+    toast({ title: "Procesando...", description: "Disponible pronto · DEBT-039 · ARIA leerá tu PDF/MD" });
     if (fileRef.current) fileRef.current.value = "";
   };
 
   return (
-    <div className="space-y-4">
-      <div className="border border-dashed border-border rounded-lg p-3 bg-muted/30">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground flex-1">
-            Sube un PDF o .MD con la info de tu negocio · ARIA lo procesará automáticamente (recomendado).
-          </p>
-          <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} className="gap-1 shrink-0">
-            <Upload className="h-3.5 w-3.5" />Subir PDF o .MD
-          </Button>
-          <input ref={fileRef} type="file" accept=".pdf,.md" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
-        </div>
+    <div className="space-y-3">
+      <div className="border border-dashed border-border rounded-lg p-2 bg-muted/30 flex items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground flex-1">Sube PDF/MD · ARIA lo procesará automáticamente.</p>
+        <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} className="gap-1 shrink-0 h-8">
+          <Upload className="h-3.5 w-3.5" />PDF o .MD
+        </Button>
+        <input ref={fileRef} type="file" accept=".pdf,.md" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1"><Label className="text-sm">Nicho</Label><Input className="h-9" value={v?.niche ?? ""} onChange={(e) => set("niche", e.target.value)} /></div>
-        <div className="space-y-1"><Label className="text-sm">Vertical</Label><Input className="h-9" value={v?.vertical ?? ""} onChange={(e) => set("vertical", e.target.value)} /></div>
-        <div className="space-y-1"><Label className="text-sm">Tamaño</Label>
+        <div className="space-y-1"><Label className="text-xs">Nicho</Label><Input className="h-8" value={v?.niche ?? ""} onChange={(e) => set("niche", e.target.value)} /></div>
+        <div className="space-y-1"><Label className="text-xs">Vertical</Label><Input className="h-8" value={v?.vertical ?? ""} onChange={(e) => set("vertical", e.target.value)} /></div>
+        <div className="space-y-1"><Label className="text-xs">Tamaño</Label>
           <Select value={v?.business_size ?? ""} onValueChange={(x) => set("business_size", x as OnboardingForm["business"]["business_size"])}>
-            <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
+            <SelectTrigger className="h-8"><SelectValue placeholder="—" /></SelectTrigger>
             <SelectContent>{BUSINESS_SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        <div className="space-y-1"><Label className="text-sm">Años operando</Label>
-          <Input className="h-9" type="number" min={0} value={v?.years_operating ?? ""} onChange={(e) => set("years_operating", e.target.value ? Number(e.target.value) : null)} />
+        <div className="space-y-1"><Label className="text-xs">Años operando</Label>
+          <Input className="h-8" type="number" min={0} value={v?.years_operating ?? ""} onChange={(e) => set("years_operating", e.target.value ? Number(e.target.value) : null)} />
         </div>
       </div>
-      <div className="space-y-1"><Label className="text-sm">¿Qué vende?</Label>
-        <Textarea value={v?.business_what ?? ""} onChange={(e) => set("business_what", e.target.value)} rows={2} /></div>
-      <div className="space-y-1"><Label className="text-sm">¿A quién?</Label>
-        <Textarea value={v?.business_to_whom ?? ""} onChange={(e) => set("business_to_whom", e.target.value)} rows={2} /></div>
-      <div className="space-y-1"><Label className="text-sm">¿Qué te diferencia?</Label>
-        <Textarea value={v?.business_diff ?? ""} onChange={(e) => set("business_diff", e.target.value)} rows={2} /></div>
+      <div className="space-y-1"><Label className="text-xs">Cuéntanos sobre tu negocio</Label>
+        <Textarea value={v?.business_what ?? ""} onChange={(e) => set("business_what", e.target.value)} rows={4} placeholder={PLACEHOLDER} className="resize-none" />
+      </div>
     </div>
   );
 }
