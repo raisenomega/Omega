@@ -24,8 +24,11 @@ export function ARIADrawer() {
         className="w-full sm:max-w-[380px] flex flex-col p-0 gap-0"
       >
         <SheetHeader className="border-b border-border px-4 py-3">
-          <SheetTitle className="text-base font-semibold">
-            ARIA {chat.ariaLevel}.0
+          <SheetTitle className="flex items-center gap-2 text-base font-semibold">
+            <span>ARIA</span>
+            <span className="text-xs font-normal text-muted-foreground tabular-nums">
+              Modelo {chat.ariaLevel}.0
+            </span>
           </SheetTitle>
         </SheetHeader>
 
