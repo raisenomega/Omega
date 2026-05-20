@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./use-toast";
 import { onboardingSchema, type OnboardingForm } from "@/lib/onboarding-schema";
+import { sectionsFilled, completionPercent } from "@/lib/onboarding-completion";
 
 const DEFAULTS: Partial<OnboardingForm> = {
   business: {} as OnboardingForm["business"],
@@ -24,21 +25,6 @@ export interface UseOnboardingFormResult {
   completionPercent: number;
 }
 
-function calcCompletion(v: Partial<OnboardingForm>): number {
-  let f = 0;
-  if (v.identity?.name && v.identity?.industry && v.identity?.region) f++;
-  if (v.business && Object.values(v.business).some((x) => x)) f++;
-  if (v.audience && (v.audience.target_audience || (v.audience.competitors?.length ?? 0) > 0)) f++;
-  if (v.brand_voice && (v.brand_voice.tone || (v.brand_voice.brand_voice_keywords?.length ?? 0) > 0)) f++;
-  if (v.goals && Object.values(v.goals).some((x) => x)) f++;
-  if (v.content_history && (v.content_history.has_existing_content || v.content_history.best_post_url)) f++;
-  if ((v.social_accounts?.length ?? 0) > 0) f++;
-  if (v.instructions && (v.instructions.custom_instructions || v.instructions.emergency_contact_name)) f++;
-  if (v.brand_assets && (v.brand_assets.primary_color || v.brand_assets.logo_file_id)) f++;
-  if ((v.brand_voice_samples?.length ?? 0) > 0) f++;
-  return Math.round((f / 10) * 100);
-}
-
 export function useOnboardingForm(onSuccess?: (clientId: string) => void): UseOnboardingFormResult {
   const { toast } = useToast();
   const form = useForm<OnboardingForm>({
@@ -48,7 +34,7 @@ export function useOnboardingForm(onSuccess?: (clientId: string) => void): UseOn
   });
 
   const values = form.watch();
-  const completionPercent = calcCompletion(values);
+  const pct = completionPercent(sectionsFilled(values));
 
   const mutation = useMutation({
     mutationFn: async (data: OnboardingForm) => {
@@ -70,6 +56,6 @@ export function useOnboardingForm(onSuccess?: (clientId: string) => void): UseOn
     form,
     submit: form.handleSubmit((data) => mutation.mutate(data)),
     isSubmitting: mutation.isPending,
-    completionPercent,
+    completionPercent: pct,
   };
 }

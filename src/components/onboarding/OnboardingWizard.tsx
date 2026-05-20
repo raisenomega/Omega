@@ -1,59 +1,62 @@
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useCallback, useMemo, useState } from "react";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { StepperLayout } from "./StepperLayout";
-import { SinglePageLayout } from "./SinglePageLayout";
+import { sectionsFilled } from "@/lib/onboarding-completion";
+import { SECTIONS } from "./sections/registry";
+import { WizardHeader } from "./WizardHeader";
+import { HorizontalStepper } from "./HorizontalStepper";
+import { OnboardingLayout } from "./OnboardingLayout";
+import { WizardFooter } from "./WizardFooter";
 
 interface OnboardingWizardProps {
   onComplete?: (clientId: string) => void;
+  onClose?: () => void;
 }
 
-function completionColor(pct: number): string {
-  if (pct >= 80) return "text-emerald-600";
-  if (pct >= 40) return "text-amber-600";
-  return "text-rose-600";
-}
-
-export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+export function OnboardingWizard({ onComplete, onClose }: OnboardingWizardProps) {
   const wizard = useOnboardingForm(onComplete);
+  const [activeIndex, setActiveIndex] = useState(0);
   useTrackOnMount("feature_open", { feature: "onboarding_wizard" });
 
-  const identity = wizard.form.watch("identity");
-  const canSubmit = !!(identity?.name && identity?.industry && identity?.region) && !wizard.isSubmitting;
-  const Layout = isDesktop ? SinglePageLayout : StepperLayout;
+  const values = wizard.form.watch();
+  const filled = useMemo(() => sectionsFilled(values), [values]);
+  const completedIndices = useMemo(
+    () => new Set(filled.map((f, i) => (f ? i : -1)).filter((i) => i >= 0)),
+    [filled],
+  );
+  const identityValid = filled[0];
+
+  const canJumpTo = useCallback(
+    (target: number) => target <= activeIndex || identityValid,
+    [activeIndex, identityValid],
+  );
+
+  const isLast = activeIndex === SECTIONS.length - 1;
+  const canSubmit = identityValid && !wizard.isSubmitting;
 
   return (
-    <div className="flex h-full max-h-[90vh] flex-col">
-      <div className="border-b border-border bg-background/95 px-4 py-3 backdrop-blur sticky top-0 z-10">
-        <div className="flex items-center justify-between gap-3 mb-2">
-          <h2 className="text-lg font-semibold">Nuevo Cliente</h2>
-          <span className={`text-sm font-medium tabular-nums ${completionColor(wizard.completionPercent)}`}>
-            {wizard.completionPercent}%
-          </span>
-        </div>
-        <Progress value={wizard.completionPercent} className="h-1.5" />
-        <p className="text-xs text-muted-foreground mt-1">
-          Has completado {wizard.completionPercent}% · Recomendamos 80% para que ARIA opere mejor desde el primer día
-        </p>
-      </div>
+    <div className="flex h-full flex-col">
+      <WizardHeader completionPercent={wizard.completionPercent} onClose={onClose} />
 
-      <div className="flex-1 overflow-y-auto">
-        <Layout form={wizard.form} />
-      </div>
+      <HorizontalStepper
+        activeIndex={activeIndex}
+        completedIndices={completedIndices}
+        onJump={setActiveIndex}
+        canJumpTo={canJumpTo}
+      />
 
-      <div className="border-t border-border bg-background px-4 py-3 sticky bottom-0">
-        <Button
-          onClick={wizard.submit}
-          disabled={!canSubmit}
-          className="w-full"
-          title={canSubmit ? "" : "Completa nombre, industria y región"}
-        >
-          {wizard.isSubmitting ? "Creando…" : "Crear Cliente"}
-        </Button>
-      </div>
+      <OnboardingLayout form={wizard.form} activeIndex={activeIndex} />
+
+      <WizardFooter
+        activeIndex={activeIndex}
+        totalSections={SECTIONS.length}
+        isLast={isLast}
+        canSubmit={canSubmit}
+        isSubmitting={wizard.isSubmitting}
+        onPrev={() => setActiveIndex((i) => Math.max(0, i - 1))}
+        onNext={() => setActiveIndex((i) => Math.min(SECTIONS.length - 1, i + 1))}
+        onSubmit={wizard.submit}
+      />
     </div>
   );
 }

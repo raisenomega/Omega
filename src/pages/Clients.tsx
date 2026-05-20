@@ -440,13 +440,14 @@ export default function Clients() {
 
       {isDesktop ? (
         <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
-          <DialogContent className="max-w-4xl p-0 gap-0 h-[90vh]">
+          <DialogContent className="max-w-5xl p-0 gap-0 h-[90vh]">
             <OnboardingWizard
               onComplete={(id) => {
                 setWizardOpen(false);
                 queryClient.invalidateQueries({ queryKey: ["clients"] });
                 navigate(`/clients/${id}`);
               }}
+              onClose={() => setWizardOpen(false)}
             />
           </DialogContent>
         </Dialog>
@@ -459,6 +460,7 @@ export default function Clients() {
                 queryClient.invalidateQueries({ queryKey: ["clients"] });
                 navigate(`/clients/${id}`);
               }}
+              onClose={() => setWizardOpen(false)}
             />
           </SheetContent>
         </Sheet>
