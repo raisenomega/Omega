@@ -3,12 +3,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { AUDIENCE_AGE_RANGES, GENDERS } from "@/lib/onboarding-constants";
 import type { OnboardingForm } from "@/lib/onboarding-schema";
+import { PillGroup } from "../PillGroup";
 
 interface Props { form: UseFormReturn<OnboardingForm> }
+
+const GENDER_LABELS = { male: "Hombres", female: "Mujeres", mixed: "Mixto", non_binary: "No binario", any: "Cualquiera" };
 
 export function SectionAudience({ form }: Props) {
   const v = form.watch("audience");
@@ -20,19 +22,22 @@ export function SectionAudience({ form }: Props) {
       <div className="space-y-3">
         <div className="space-y-1"><Label className="text-xs">Audiencia objetivo</Label>
           <Textarea value={v?.target_audience ?? ""} onChange={(e) => form.setValue("audience.target_audience", e.target.value)} rows={2} className="resize-none" /></div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1"><Label className="text-xs">Rango de edad</Label>
-            <Select value={v?.audience_age_range ?? ""} onValueChange={(x) => form.setValue("audience.audience_age_range", x as OnboardingForm["audience"]["audience_age_range"])}>
-              <SelectTrigger className="h-8"><SelectValue placeholder="—" /></SelectTrigger>
-              <SelectContent>{AUDIENCE_AGE_RANGES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1"><Label className="text-xs">Género</Label>
-            <Select value={v?.audience_gender ?? ""} onValueChange={(x) => form.setValue("audience.audience_gender", x as OnboardingForm["audience"]["audience_gender"])}>
-              <SelectTrigger className="h-8"><SelectValue placeholder="—" /></SelectTrigger>
-              <SelectContent>{GENDERS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
+        <div className="space-y-1"><Label className="text-xs">Rango de edad</Label>
+          <PillGroup
+            options={AUDIENCE_AGE_RANGES}
+            value={v?.audience_age_range ?? ""}
+            onChange={(x) => form.setValue("audience.audience_age_range", x as OnboardingForm["audience"]["audience_age_range"])}
+            cols={4}
+          />
+        </div>
+        <div className="space-y-1"><Label className="text-xs">Género</Label>
+          <PillGroup
+            options={GENDERS}
+            labels={GENDER_LABELS}
+            value={v?.audience_gender ?? ""}
+            onChange={(x) => form.setValue("audience.audience_gender", x as OnboardingForm["audience"]["audience_gender"])}
+            cols={3}
+          />
         </div>
       </div>
       <div className="space-y-2">

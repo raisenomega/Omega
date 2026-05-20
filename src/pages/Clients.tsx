@@ -450,7 +450,7 @@ export default function Clients() {
 
       {isDesktop ? (
         <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
-          <DialogContent className="w-screen h-screen max-w-none rounded-none p-0 gap-0 border-0">
+          <DialogContent className="max-w-4xl w-full h-[85vh] p-0 gap-0 border-2 border-warning">
             <OnboardingWizard
               wizard={wizard}
               onClose={() => setWizardOpen(false)}
@@ -459,7 +459,7 @@ export default function Clients() {
         </Dialog>
       ) : (
         <Sheet open={wizardOpen} onOpenChange={setWizardOpen}>
-          <SheetContent side="bottom" className="h-screen rounded-none p-0 border-0">
+          <SheetContent side="bottom" className="h-[90vh] p-0">
             <OnboardingWizard
               wizard={wizard}
               onClose={() => setWizardOpen(false)}
