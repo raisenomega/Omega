@@ -62,6 +62,15 @@ class Settings(BaseSettings):
     stripe_price_basic: str = Field(default="", env="STRIPE_PRICE_BASIC")
     stripe_price_pro: str = Field(default="", env="STRIPE_PRICE_PRO")
     stripe_price_enterprise: str = Field(default="", env="STRIPE_PRICE_ENTERPRISE")
+    # bc_billing/ checkout URLs · default dev local · override en Railway prod
+    stripe_success_url: str = Field(
+        default="http://localhost:5174/dashboard?upgraded=true",
+        env="STRIPE_SUCCESS_URL",
+    )
+    stripe_cancel_url: str = Field(
+        default="http://localhost:5174/dashboard?upgrade_canceled=true",
+        env="STRIPE_CANCEL_URL",
+    )
 
     # Qdrant Vector Store
     QDRANT_HOST: str = Field(default="localhost", env="QDRANT_HOST")

@@ -1,12 +1,14 @@
 import { useClientPlanStatus } from "@/hooks/useClientPlanStatus";
+import { useUpgradePlan } from "@/hooks/useUpgradePlan";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NETWORKS, type Network } from "@/lib/plan-limits";
 import { getNetworkIcon } from "@/lib/network-icons";
@@ -21,6 +23,7 @@ function Divider() {
 
 export function PlanStatusBar({ clientId }: PlanStatusBarProps) {
   const status = useClientPlanStatus(clientId);
+  const upgradeMutation = useUpgradePlan();
 
   if (status.loading) {
     return (
@@ -117,6 +120,30 @@ export function PlanStatusBar({ clientId }: PlanStatusBarProps) {
         <span className="text-muted-foreground whitespace-nowrap sm:ml-auto">
           {renewsInDays !== null ? `Renueva ${renewsInDays}d` : "Sin renovación"}
         </span>
+
+        {/* Upgrade CTA · solo Adopción→Básico o Básico→Pro (DEBT-032b · spec §2 camino natural) */}
+        {(planConfig.code === "adopcion" || planConfig.code === "basic") && (
+          <Button
+            size="sm"
+            className="h-7 whitespace-nowrap"
+            disabled={upgradeMutation.isPending}
+            onClick={() =>
+              upgradeMutation.mutate({
+                clientId,
+                targetPlan: planConfig.code === "adopcion" ? "basic" : "pro",
+              })
+            }
+          >
+            {upgradeMutation.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <>
+                <ArrowUpRight className="h-3.5 w-3.5" />
+                {planConfig.code === "adopcion" ? "Activar BÁSICO" : "Subir a PRO"}
+              </>
+            )}
+          </Button>
+        )}
       </Card>
     </TooltipProvider>
   );
