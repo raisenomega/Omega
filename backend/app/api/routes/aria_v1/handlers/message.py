@@ -57,6 +57,14 @@ async def aria_message(
     p.insert_assistant_message(supabase, user_id, client_id, assistant_text, level)
     if client_id:
         event_id = p.insert_behavioral_event(supabase, user_id, client_id, "aria_message_sent")
-        p.insert_agent_memory(supabase, client_id, assistant_text, event_id)
+        p.insert_agent_memory(
+            supabase=supabase,
+            user_id=user_id,
+            client_id=client_id,
+            user_message=request.content,
+            assistant_response=assistant_text,
+            level=level,
+            source_event_id=event_id,
+        )
 
     return ARIAMessageResponse(content=assistant_text, aria_level=level)

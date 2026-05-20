@@ -33,11 +33,36 @@ def insert_behavioral_event(supabase: SupabaseService, user_id: str, client_id: 
     return resp.data[0]["id"] if resp.data else None
 
 
-def insert_agent_memory(supabase: SupabaseService, client_id: str, content: str, source_event_id: Optional[str]) -> None:
-    """INSERT agent_memory (agent_code='aria', was_correct=null) · cierre a 72h por cron."""
+def insert_agent_memory(
+    supabase: SupabaseService,
+    user_id: str,
+    client_id: Optional[str],
+    user_message: str,
+    assistant_response: str,
+    level: int,
+    source_event_id: Optional[str],
+) -> None:
+    """INSERT agent_memory · schema M1 · cierre was_correct a 72h por cron.
+
+    Mapeo semántico (DDD_REGLAS M1 + BC_COGNITION §7):
+      context     = mensaje del usuario (estímulo)
+      decision    = respuesta de ARIA (decisión del agente)
+      memory_type = 'episodic' (conversación específica en tiempo)
+      confidence  = 7 (P3 threshold · ARIA conversacional sin acción)
+
+    user_id siempre presente · satisface chk_owner_present si client_id es None.
+    """
     supabase.client.table("agent_memory").insert({
-        "client_id": client_id, "agent_code": "aria", "content": content,
-        "was_correct": None, "source_event_id": source_event_id,
+        "user_id": user_id,
+        "client_id": client_id,
+        "agent_code": "aria",
+        "memory_type": "episodic",
+        "context": user_message,
+        "decision": assistant_response,
+        "confidence": 7,
+        "was_correct": None,
+        "source_event_id": source_event_id,
+        "metadata": {"aria_level": level},
     }).execute()
 
 
