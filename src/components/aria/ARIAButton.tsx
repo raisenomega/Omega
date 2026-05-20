@@ -1,27 +1,27 @@
-import { Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useARIA } from "@/contexts/ARIAContext";
 import { useARIAChat } from "@/hooks/useARIAChat";
 
-// ARIAButton · global en AppHeader · siempre visible
-// Texto "ARIA X.0" con icono Sparkles Lucide (NO emojis)
-// Dot pulsante azul como indicador activo · click abre drawer
-
+// ARIAButton · global en AppHeader · siempre visible.
+// Fondo azul · CTA destacado · dot pulsante blanco indicador activo.
+// FIX 3: nivel ARIA NO se elige aquí · sube automático con plan o ARIA Premium.
+// Cero dropdowns/selectores/cascades (regla spec §6).
 export function ARIAButton() {
   const { openARIA } = useARIA();
   const { ariaLevel } = useARIAChat();
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
+    <button
+      type="button"
       onClick={openARIA}
-      className="relative h-9 gap-1.5 px-2.5"
       aria-label={`Abrir ARIA ${ariaLevel}.0`}
+      className="relative inline-flex items-center h-9 px-3 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
     >
-      <span className="text-xs font-semibold tabular-nums">ARIA {ariaLevel}.0</span>
-      <Sparkles className="h-3.5 w-3.5" />
-      <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary animate-pulse" />
-    </Button>
+      <span>ARIA</span>
+      <sup className="text-[10px] opacity-70 ml-1 tabular-nums">{ariaLevel}.0</sup>
+      <span
+        className="absolute top-1 right-1 w-2 h-2 rounded-full bg-white animate-pulse"
+        aria-hidden
+      />
+    </button>
   );
 }
