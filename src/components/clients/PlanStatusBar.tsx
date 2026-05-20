@@ -8,7 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Loader2, ArrowUpRight } from "lucide-react";
+import { Loader2, ArrowUpRight, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NETWORKS, type Network } from "@/lib/plan-limits";
 import { getNetworkIcon } from "@/lib/network-icons";
@@ -56,7 +56,7 @@ export function PlanStatusBar({ clientId }: PlanStatusBarProps) {
         {/* Posts progress */}
         {postsTotal > 0 ? (
           <div className="flex items-center gap-2 whitespace-nowrap">
-            <span className="text-muted-foreground tabular-nums">{postsUsed}/{postsTotal}</span>
+            <span className="text-muted-foreground tabular-nums">{postsUsed}/{postsTotal} posts</span>
             <div className="h-1.5 w-20 rounded-full bg-muted overflow-hidden">
               <div className={cn("h-full transition-all", barColor)} style={{ width: `${percentUsed}%` }} />
             </div>
@@ -89,6 +89,9 @@ export function PlanStatusBar({ clientId }: PlanStatusBarProps) {
               </Tooltip>
             );
           })}
+          <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+            {NETWORKS.filter((n) => accountsByNetwork[n].active).length}/{planConfig.accountsPerNetwork} ctas
+          </span>
         </div>
 
         <Divider />
@@ -115,6 +118,21 @@ export function PlanStatusBar({ clientId }: PlanStatusBarProps) {
             </div>
           </TooltipContent>
         </Tooltip>
+
+        {/* Lock badge · solo plan=basic con features bloqueadas · indicador upgrade */}
+        {planConfig.code === "basic" && features.locked.length > 0 && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground cursor-help tabular-nums">
+                <Lock className="h-3 w-3" />
+                {features.locked.length}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              {features.locked.map((f) => f.label).join(" · ")} — disponibles en PRO
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         {/* Renewal pushed to the right */}
         <span className="text-muted-foreground whitespace-nowrap sm:ml-auto">
