@@ -44,6 +44,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
+import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
@@ -74,6 +75,15 @@ export default function Clients() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  // FIX 4: state del wizard vive AQUÍ (Clients.tsx no se desmonta al
+  // cerrar el Dialog/Sheet · valores del form persisten entre aperturas).
+  const wizard = useOnboardingForm((id) => {
+    setWizardOpen(false);
+    wizard.form.reset();
+    queryClient.invalidateQueries({ queryKey: ["clients"] });
+    navigate(`/clients/${id}`);
+  });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ClientFormData>(emptyForm);
   const [expandedClient, setExpandedClient] = useState<string | null>(null);
@@ -442,11 +452,7 @@ export default function Clients() {
         <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
           <DialogContent className="max-w-5xl p-0 gap-0 h-[90vh]">
             <OnboardingWizard
-              onComplete={(id) => {
-                setWizardOpen(false);
-                queryClient.invalidateQueries({ queryKey: ["clients"] });
-                navigate(`/clients/${id}`);
-              }}
+              wizard={wizard}
               onClose={() => setWizardOpen(false)}
             />
           </DialogContent>
@@ -455,11 +461,7 @@ export default function Clients() {
         <Sheet open={wizardOpen} onOpenChange={setWizardOpen}>
           <SheetContent side="bottom" className="h-[95vh] p-0">
             <OnboardingWizard
-              onComplete={(id) => {
-                setWizardOpen(false);
-                queryClient.invalidateQueries({ queryKey: ["clients"] });
-                navigate(`/clients/${id}`);
-              }}
+              wizard={wizard}
               onClose={() => setWizardOpen(false)}
             />
           </SheetContent>

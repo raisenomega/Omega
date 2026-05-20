@@ -4,7 +4,7 @@ import type { OnboardingForm } from "./onboarding-schema";
 
 export function sectionsFilled(v: Partial<OnboardingForm>): boolean[] {
   return [
-    !!(v.identity?.name && v.identity?.industry && v.identity?.region),
+    !!(v.identity?.name && v.identity?.industry && (v.identity?.regions?.length ?? 0) > 0),
     !!(v.business && Object.values(v.business).some((x) => x)),
     !!(v.audience?.target_audience || (v.audience?.competitors?.length ?? 0) > 0),
     !!(v.brand_voice?.tone || (v.brand_voice?.brand_voice_keywords?.length ?? 0) > 0),

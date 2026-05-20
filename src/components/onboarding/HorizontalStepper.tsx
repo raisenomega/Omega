@@ -6,11 +6,12 @@ interface HorizontalStepperProps {
   activeIndex: number;
   completedIndices: Set<number>;
   onJump: (index: number) => void;
-  canJumpTo: (index: number) => boolean;
 }
 
+// Navegación libre (FIX 3): cualquier dot es clickable · sin gating.
+// El único gate vive en el botón "Crear Cliente" (WizardFooter).
 export function HorizontalStepper({
-  activeIndex, completedIndices, onJump, canJumpTo,
+  activeIndex, completedIndices, onJump,
 }: HorizontalStepperProps) {
   return (
     <div className="border-b border-border bg-background/95 px-4 py-3 overflow-x-auto">
@@ -18,7 +19,6 @@ export function HorizontalStepper({
         {SECTIONS.map((s, i) => {
           const isActive = i === activeIndex;
           const isDone = completedIndices.has(i);
-          const reachable = canJumpTo(i);
           return (
             <li key={s.id} className="flex-1 flex flex-col items-center min-w-[64px] md:min-w-0">
               <div className="flex items-center w-full">
@@ -30,17 +30,15 @@ export function HorizontalStepper({
                 )}
                 <button
                   type="button"
-                  disabled={!reachable}
                   onClick={() => onJump(i)}
                   className={cn(
-                    "h-7 w-7 shrink-0 rounded-full flex items-center justify-center text-xs font-semibold transition",
-                    "disabled:opacity-40 disabled:cursor-not-allowed",
+                    "h-7 w-7 shrink-0 rounded-full flex items-center justify-center text-xs font-semibold transition cursor-pointer",
                     isActive && "bg-primary text-primary-foreground ring-2 ring-primary/30 ring-offset-2 ring-offset-background",
                     !isActive && isDone && "bg-emerald-500 text-white hover:bg-emerald-600",
                     !isActive && !isDone && "bg-muted text-muted-foreground hover:bg-muted/80",
                   )}
                   aria-current={isActive ? "step" : undefined}
-                  aria-label={`Sección ${i + 1}: ${s.title}`}
+                  aria-label={`Ir a sección ${i + 1}: ${s.title}`}
                 >
                   {isDone && !isActive ? <Check className="h-3.5 w-3.5" /> : i + 1}
                 </button>

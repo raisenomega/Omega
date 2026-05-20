@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 class IdentitySection(BaseModel):
     name: str = Field(..., min_length=1, max_length=120)
     industry: str = Field(..., max_length=64)
-    region: str = Field(..., max_length=64)
+    regions: list[str] = Field(..., min_length=1)
 
 
 class BusinessSection(BaseModel):

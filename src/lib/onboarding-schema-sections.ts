@@ -13,7 +13,7 @@ const intMin0 = z.coerce.number().int().min(0);
 export const identitySchema = z.object({
   name: z.string().min(1, "Requerido").max(120),
   industry: z.enum(INDUSTRIES),
-  region: z.enum(REGIONS),
+  regions: z.array(z.enum(REGIONS)).min(1, "Selecciona al menos una"),
 });
 
 export const businessSchema = z.object({

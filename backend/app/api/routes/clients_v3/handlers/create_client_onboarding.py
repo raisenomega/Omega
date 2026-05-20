@@ -45,7 +45,10 @@ async def create_client_onboarding(
     if not reseller_id:
         raise HTTPException(status_code=403, detail="user_has_no_reseller")
 
-    client_id = repo.upsert_client(user_id, reseller_id, payload.identity.model_dump())
+    identity_dict = payload.identity.model_dump()
+    regions = identity_dict.pop("regions")
+    identity_dict["region"] = ",".join(regions)
+    client_id = repo.upsert_client(user_id, reseller_id, identity_dict)
     completion = calc_completion_percent(payload)
     repo.safe_insert("upsert_client_context", repo.upsert_client_context, client_id, _build_context(payload, completion))
     repo.safe_insert("bulk_social", repo.bulk_insert_social_accounts, client_id, [a.model_dump() for a in payload.social_accounts])
@@ -55,7 +58,7 @@ async def create_client_onboarding(
     repo.safe_insert("behavioral", repo.insert_behavioral_event, user_id, client_id, "client_onboarded",
                      {"completion_percent": completion, "social_accounts": len(payload.social_accounts)})
     repo.safe_insert("memory", repo.insert_agent_memory, user_id, client_id,
-                     f"Client onboarded · {payload.identity.industry}/{payload.identity.region}",
+                     f"Client onboarded · {payload.identity.industry}/{','.join(payload.identity.regions)}",
                      f"completion={completion}%", 10)
 
     return OnboardingResponse(client_id=client_id, completion_percent=completion, onboarding_complete=completion >= 80)

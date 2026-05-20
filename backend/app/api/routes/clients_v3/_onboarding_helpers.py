@@ -13,8 +13,11 @@ def validate_payload(p: OnboardingPayload) -> Tuple[bool, Optional[str]]:
     """Result-tuple (A5): (ok, error_code) · valida enums dominio."""
     if p.identity.industry not in INDUSTRIES:
         return (False, "invalid_industry")
-    if p.identity.region not in REGIONS:
-        return (False, "invalid_region")
+    if not p.identity.regions:
+        return (False, "empty_regions")
+    for r in p.identity.regions:
+        if r not in REGIONS:
+            return (False, f"invalid_region:{r}")
     if p.business.business_size is not None and p.business.business_size not in BUSINESS_SIZES:
         return (False, "invalid_business_size")
     if p.brand_voice.tone is not None and p.brand_voice.tone not in TONES:
