@@ -95,11 +95,17 @@ export default {
           from: { opacity: "0", transform: "translateY(8px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        // ARIA button · borde alterna verde↔blanco (flashing CTA)
+        "border-flash": {
+          "0%, 100%": { borderColor: "rgb(34 197 94)" },
+          "50%": { borderColor: "rgb(255 255 255)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.4s ease-out",
+        "border-flash": "border-flash 1.5s ease-in-out infinite",
       },
     },
   },
