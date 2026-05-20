@@ -31,26 +31,33 @@ def insert_assistant_message(supabase: SupabaseService, user_id: str, client_id:
     }).execute()
 
 
-def insert_behavioral_event(supabase: SupabaseService, user_id: str, client_id: str, event_type: str, event_data: Optional[dict] = None) -> Optional[str]:
-    """Retorna event_id (trazabilidad agent_memory.source_event_id)."""
+def insert_behavioral_event(
+    supabase: SupabaseService, user_id: str,
+    client_id: Optional[str], reseller_id: Optional[str],
+    event_type: str, event_data: Optional[dict] = None,
+    session_id: Optional[str] = None,
+) -> Optional[str]:
+    """Persiste signal · cliente O reseller (chk_behavioral_owner_present)."""
     r = supabase.client.table("behavioral_events").insert({
-        "user_id": user_id, "client_id": client_id,
-        "event_type": event_type, "event_data": event_data,
+        "user_id": user_id, "client_id": client_id, "reseller_id": reseller_id,
+        "event_type": event_type, "event_data": event_data, "session_id": session_id,
     }).execute()
     return r.data[0]["id"] if r.data else None
 
 
 def insert_agent_memory(
-    supabase: SupabaseService, user_id: str, client_id: Optional[str],
+    supabase: SupabaseService, user_id: str,
+    client_id: Optional[str], reseller_id: Optional[str],
     user_message: str, assistant_response: str, level: int,
-    source_event_id: Optional[str],
+    source_event_id: Optional[str], was_correct: Optional[bool] = None,
 ) -> None:
-    """INSERT agent_memory schema M1 · was_correct cierra a 72h por cron."""
+    """INSERT agent_memory schema M1 · was_correct=None → cron evalúa 72h."""
     supabase.client.table("agent_memory").insert({
-        "user_id": user_id, "client_id": client_id, "agent_code": "aria",
-        "memory_type": "episodic", "context": user_message,
-        "decision": assistant_response, "confidence": 7, "was_correct": None,
-        "source_event_id": source_event_id, "metadata": {"aria_level": level},
+        "user_id": user_id, "client_id": client_id, "reseller_id": reseller_id,
+        "agent_code": "aria", "memory_type": "episodic",
+        "context": user_message, "decision": assistant_response, "confidence": 7,
+        "was_correct": was_correct, "source_event_id": source_event_id,
+        "metadata": {"aria_level": level},
     }).execute()
 
 

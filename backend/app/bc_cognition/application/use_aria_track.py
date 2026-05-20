@@ -2,6 +2,7 @@
 
 DDD A1 + A9: delegación a aria_repository. Errors swallowed dentro del
 use case · jamás propagan al handler (fire-and-forget per spec §4.3).
+Soporta cliente Y reseller (FIX 3 audit · chk_behavioral_owner_present).
 """
 import logging
 from typing import Optional
@@ -17,16 +18,20 @@ async def use_aria_track(
     event_data: Optional[dict] = None,
     session_id: Optional[str] = None,
 ) -> None:
-    """Persiste behavioral_event si user tiene client_id · silent fail si no."""
+    """Persiste behavioral_event · cliente o reseller · silent fail."""
     try:
         supabase = get_supabase_service()
         client = repo.find_client_by_user(supabase, user_id)
-        if not client:
+        client_id = client["id"] if client else None
+        reseller_id: Optional[str] = None
+        if not client_id:
+            reseller = repo.find_reseller_by_owner(supabase, user_id)
+            reseller_id = reseller["id"] if reseller else None
+        if not client_id and not reseller_id:
             return
-        # session_id se persiste vía event_data si viene (cols simples · no nueva col)
-        data = event_data or {}
-        if session_id:
-            data["session_id"] = session_id
-        repo.insert_behavioral_event(supabase, user_id, client["id"], event_type, data or None)
+        repo.insert_behavioral_event(
+            supabase, user_id, client_id, reseller_id,
+            event_type, event_data, session_id,
+        )
     except Exception as e:
         logger.warning(f"use_aria_track silent fail: {e}")
