@@ -2,7 +2,8 @@
 
 DDD A1 + A9: presentation → application → domain.
 §12 ARIA REGLA #2 + §4.1: persistencia OBLIGATORIA en TODOS los paths
-(happy · Claude fail · reseller). Sin excepción · sin esto no hay moat.
+(happy · Claude fail · reseller). FIX 4 audit: cada INSERT via
+repo.safe_insert · errores logueados pero NUNCA propagan al cliente.
 """
 from typing import Optional, Tuple
 from app.bc_cognition.domain.persona_aria import (
@@ -39,11 +40,11 @@ async def use_aria_message(
     if not role:
         return None, ClaudeError("forbidden", "User no es cliente ni reseller")
 
-    # Persistir user message + signal SIEMPRE antes de llamar Claude
-    repo.insert_user_message(supabase, user_id, client_id, user_message, level)
-    event_id = repo.insert_behavioral_event(
-        supabase, user_id, client_id, reseller_id, "aria_message_sent",
-    )
+    # Pre-Claude · user message + behavioral signal (safe · log si falla)
+    repo.safe_insert("user_message", repo.insert_user_message,
+                     supabase, user_id, client_id, user_message, level)
+    event_id = repo.safe_insert("behavioral_sent", repo.insert_behavioral_event,
+                                 supabase, user_id, client_id, reseller_id, "aria_message_sent")
 
     # Call Claude
     system = build_system_prompt(level, role)
@@ -53,25 +54,23 @@ async def use_aria_message(
         messages=history + [{"role": "user", "content": user_message}], max_tokens=1024,
     )
 
-    # Failure path · persistir failure signal + agent_memory was_correct=False
+    # Failure path · failure signal + agent_memory was_correct=False
     if err or not response:
         code = err.code if err else "unknown"
-        repo.insert_behavioral_event(
-            supabase, user_id, client_id, reseller_id, "aria_message_failed",
-            {"error_code": code},
-        )
-        repo.insert_agent_memory(
-            supabase, user_id, client_id, reseller_id,
-            user_message=user_message, assistant_response=f"[failed:{code}]",
-            level=level, source_event_id=event_id, was_correct=False,
-        )
+        repo.safe_insert("behavioral_failed", repo.insert_behavioral_event,
+                         supabase, user_id, client_id, reseller_id,
+                         "aria_message_failed", {"error_code": code})
+        repo.safe_insert("agent_memory_failed", repo.insert_agent_memory,
+                         supabase, user_id, client_id, reseller_id,
+                         user_message=user_message, assistant_response=f"[failed:{code}]",
+                         level=level, source_event_id=event_id, was_correct=False)
         return None, err or ClaudeError("unknown", "ARIA generate returned None")
 
     # Happy path · assistant message + agent_memory was_correct=None (cron 72h)
-    repo.insert_assistant_message(supabase, user_id, client_id, response.text, level)
-    repo.insert_agent_memory(
-        supabase, user_id, client_id, reseller_id,
-        user_message=user_message, assistant_response=response.text,
-        level=level, source_event_id=event_id, was_correct=None,
-    )
+    repo.safe_insert("assistant_message", repo.insert_assistant_message,
+                     supabase, user_id, client_id, response.text, level)
+    repo.safe_insert("agent_memory_ok", repo.insert_agent_memory,
+                     supabase, user_id, client_id, reseller_id,
+                     user_message=user_message, assistant_response=response.text,
+                     level=level, source_event_id=event_id, was_correct=None)
     return ARIAResult(content=response.text, aria_level=level), None

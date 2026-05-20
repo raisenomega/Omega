@@ -2,9 +2,27 @@
 
 Análogo a memory_repository (BC_COGNITION §3). Use cases (application)
 llaman aquí · jamás SDK Supabase directo en handlers.
+
+safe_insert helper: wrapper best-effort · errores loguean stack trace
+pero NO propagan (FIX 4 audit · persistencia no debe romper respuesta).
 """
-from typing import Any, Optional
+import logging
+from typing import Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import SupabaseService
+
+logger = logging.getLogger(__name__)
+
+P = ParamSpec("P")
+T = TypeVar("T")
+
+
+def safe_insert(label: str, fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> Optional[T]:
+    """Ejecuta fn(*args, **kwargs) silenciando errores · log con stack trace."""
+    try:
+        return fn(*args, **kwargs)
+    except Exception as e:
+        logger.error(f"aria_repository.{label} failed: {e}", exc_info=True)
+        return None
 
 
 def find_client_by_user(supabase: SupabaseService, user_id: str) -> Optional[dict[str, Any]]:
