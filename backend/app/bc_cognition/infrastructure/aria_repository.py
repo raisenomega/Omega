@@ -7,7 +7,7 @@ safe_insert helper: wrapper best-effort · errores loguean stack trace
 pero NO propagan (FIX 4 audit · persistencia no debe romper respuesta).
 """
 import logging
-from typing import Callable, Optional, ParamSpec, TypeVar
+from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
