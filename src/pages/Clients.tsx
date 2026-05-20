@@ -43,6 +43,9 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts";
+import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 interface ClientFormData {
   name: string;
@@ -69,6 +72,8 @@ export default function Clients() {
   const [search, setSearch] = useState("");
   const [filterPlan, setFilterPlan] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ClientFormData>(emptyForm);
   const [expandedClient, setExpandedClient] = useState<string | null>(null);
@@ -200,13 +205,11 @@ export default function Clients() {
             Gestiona tus clientes y sus cuentas sociales
           </p>
         </div>
+        <Button className="gradient-primary" onClick={() => setWizardOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nuevo Cliente
+        </Button>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="gradient-primary" onClick={openNew}>
-              <Plus className="mr-2 h-4 w-4" />
-              Nuevo Cliente
-            </Button>
-          </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>
@@ -433,6 +436,32 @@ export default function Clients() {
             </div>
           ))}
         </div>
+      )}
+
+      {isDesktop ? (
+        <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
+          <DialogContent className="max-w-4xl p-0 gap-0 h-[90vh]">
+            <OnboardingWizard
+              onComplete={(id) => {
+                setWizardOpen(false);
+                queryClient.invalidateQueries({ queryKey: ["clients"] });
+                navigate(`/clients/${id}`);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <Sheet open={wizardOpen} onOpenChange={setWizardOpen}>
+          <SheetContent side="bottom" className="h-[95vh] p-0">
+            <OnboardingWizard
+              onComplete={(id) => {
+                setWizardOpen(false);
+                queryClient.invalidateQueries({ queryKey: ["clients"] });
+                navigate(`/clients/${id}`);
+              }}
+            />
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   );
