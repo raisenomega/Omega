@@ -42,5 +42,16 @@ export const PLATFORM_LABELS: Record<typeof PLATFORMS[number], string> = {
   youtube: "YouTube",
 };
 
+// Colores oficiales por plataforma · usado para dot indicator en
+// SocialAccountList (sección 7). Hex 6-dígit para CSS inline style.
+export const PLATFORM_COLORS: Record<typeof PLATFORMS[number], string> = {
+  instagram: "#E1306C",
+  facebook: "#1877F2",
+  tiktok: "#000000",
+  twitter: "#000000",
+  linkedin: "#0A66C2",
+  youtube: "#FF0000",
+};
+
 export type Tone = typeof TONES[number];
 export type Platform = typeof PLATFORMS[number];

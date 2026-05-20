@@ -19,7 +19,7 @@ export function RegionsMultiSelect({ value, onChange }: RegionsMultiSelectProps)
     <>
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="w-full justify-between font-normal">
+          <Button variant="outline" className="h-9 w-full justify-between font-normal">
             {value.length > 0 ? `${value.length} región(es) seleccionada(s)` : "Selecciona regiones"}
             <ChevronsUpDown className="h-4 w-4 opacity-50" />
           </Button>

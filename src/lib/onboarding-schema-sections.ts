@@ -56,6 +56,7 @@ export const socialAccountSchema = z.object({
   auto_publish_allowed: z.boolean().default(false), approx_followers: opt(intMin0),
   publishing_frequency: opt(z.enum(PUBLISHING_FREQUENCIES)),
   is_business_account: z.boolean().default(false),
+  is_paused: z.boolean().default(false),
 });
 
 export const instructionsSchema = z.object({

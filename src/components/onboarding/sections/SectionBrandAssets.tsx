@@ -13,7 +13,7 @@ export function SectionBrandAssets({ form }: Props) {
     form.setValue("brand_assets", { ...(v ?? {}), [k]: x } as OnboardingForm["brand_assets"]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <p className="text-xs text-muted-foreground bg-muted/40 px-3 py-2 rounded">
         Captura colores y tipografías ahora. Logo y brand guide (PDF) se suben en Configuración después de crear el cliente.
       </p>
@@ -25,23 +25,25 @@ export function SectionBrandAssets({ form }: Props) {
               type="color"
               value={v?.[k] ?? "#000000"}
               onChange={(e) => set(k, e.target.value)}
-              className="h-10 p-1"
+              className="h-9 p-1"
             />
           </div>
         ))}
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label>Font primary</Label>
+          <Label className="text-sm">Font primary</Label>
           <Input
+            className="h-9"
             value={v?.font_primary ?? ""}
             onChange={(e) => set("font_primary", e.target.value)}
             placeholder="ej: Inter, Helvetica"
           />
         </div>
         <div className="space-y-1">
-          <Label>Font secondary</Label>
+          <Label className="text-sm">Font secondary</Label>
           <Input
+            className="h-9"
             value={v?.font_secondary ?? ""}
             onChange={(e) => set("font_secondary", e.target.value)}
             placeholder="ej: Georgia, serif"

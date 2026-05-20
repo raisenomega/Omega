@@ -13,27 +13,28 @@ export function SectionIdentity({ form }: Props) {
   const regions = (v?.regions ?? []) as Region[];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="space-y-1">
-        <Label>Nombre del negocio *</Label>
+        <Label className="text-sm">Nombre del negocio *</Label>
         <Input
+          className="h-9"
           value={v?.name ?? ""}
           onChange={(e) => form.setValue("identity.name", e.target.value, { shouldValidate: true })}
           maxLength={120}
         />
       </div>
       <div className="space-y-1">
-        <Label>Industria *</Label>
+        <Label className="text-sm">Industria *</Label>
         <Select
           value={v?.industry ?? ""}
           onValueChange={(x) => form.setValue("identity.industry", x as OnboardingForm["identity"]["industry"], { shouldValidate: true })}
         >
-          <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+          <SelectTrigger className="h-9"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
           <SelectContent>{INDUSTRIES.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
         </Select>
       </div>
       <div className="space-y-1">
-        <Label>Regiones * (multi-selección)</Label>
+        <Label className="text-sm">Regiones * (multi-selección)</Label>
         <RegionsMultiSelect
           value={regions}
           onChange={(next) => form.setValue("identity.regions", next, { shouldValidate: true })}

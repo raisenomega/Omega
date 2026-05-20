@@ -12,22 +12,30 @@ export function SectionGoals({ form }: Props) {
   const v = form.watch("goals");
   const set = <K extends keyof OnboardingForm["goals"]>(k: K, x: OnboardingForm["goals"][K]) => form.setValue(`goals.${k}`, x);
   return (
-    <div className="space-y-3">
-      <div className="space-y-1"><Label>Objetivo principal</Label>
-        <Select value={v?.primary_goal ?? ""} onValueChange={(x) => set("primary_goal", x as OnboardingForm["goals"]["primary_goal"])}>
-          <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-          <SelectContent>{PRIMARY_GOALS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
-        </Select></div>
-      <div className="space-y-1"><Label>Meta este mes</Label>
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1"><Label className="text-sm">Objetivo principal</Label>
+          <Select value={v?.primary_goal ?? ""} onValueChange={(x) => set("primary_goal", x as OnboardingForm["goals"]["primary_goal"])}>
+            <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
+            <SelectContent>{PRIMARY_GOALS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1"><Label className="text-sm">Métrica de éxito</Label>
+          <Input className="h-9" value={v?.success_metric ?? ""} onChange={(e) => set("success_metric", e.target.value)} placeholder="ej. 30 leads/mes" />
+        </div>
+      </div>
+      <div className="space-y-1"><Label className="text-sm">Meta este mes</Label>
         <Textarea value={v?.goal_this_month ?? ""} onChange={(e) => set("goal_this_month", e.target.value)} rows={2} /></div>
-      <div className="space-y-1"><Label>Meta este trimestre</Label>
+      <div className="space-y-1"><Label className="text-sm">Meta este trimestre</Label>
         <Textarea value={v?.goal_this_quarter ?? ""} onChange={(e) => set("goal_this_quarter", e.target.value)} rows={2} /></div>
-      <div className="space-y-1"><Label>Prioridad ahora</Label>
-        <Input value={v?.goal_priority_now ?? ""} onChange={(e) => set("goal_priority_now", e.target.value)} /></div>
-      <div className="space-y-1"><Label>Métrica de éxito</Label>
-        <Input value={v?.success_metric ?? ""} onChange={(e) => set("success_metric", e.target.value)} /></div>
-      <div className="space-y-1"><Label>Revenue target mensual (USD)</Label>
-        <Input type="number" min={0} step="0.01" value={v?.monthly_revenue_target ?? ""} onChange={(e) => set("monthly_revenue_target", e.target.value ? Number(e.target.value) : null)} /></div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1"><Label className="text-sm">Prioridad ahora</Label>
+          <Input className="h-9" value={v?.goal_priority_now ?? ""} onChange={(e) => set("goal_priority_now", e.target.value)} />
+        </div>
+        <div className="space-y-1"><Label className="text-sm">Target revenue mensual (USD)</Label>
+          <Input className="h-9" type="number" min={0} step="0.01" value={v?.monthly_revenue_target ?? ""} onChange={(e) => set("monthly_revenue_target", e.target.value ? Number(e.target.value) : null)} />
+        </div>
+      </div>
     </div>
   );
 }

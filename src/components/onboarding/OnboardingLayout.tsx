@@ -14,8 +14,8 @@ export function OnboardingLayout({ form, activeIndex }: OnboardingLayoutProps) {
   const section = SECTIONS[activeIndex];
   const Comp = section.Component;
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-5">
-      <div className="max-w-2xl mx-auto space-y-3">
+    <div className="flex-1 overflow-y-auto px-6 py-4">
+      <div className="max-w-2xl mx-auto space-y-4">
         <header className="space-y-1 pb-1">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
             Sección {activeIndex + 1}
