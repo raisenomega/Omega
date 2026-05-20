@@ -2,7 +2,7 @@
 from typing import Optional, Tuple
 from app.domain.client_constants import (
     INDUSTRIES, REGIONS, BUSINESS_SIZES, TONES, EMOJI_USAGE,
-    HASHTAG_STRATEGY, PRIMARY_GOALS, AUDIENCE_AGE_RANGES,
+    HASHTAG_STRATEGY, PRIMARY_GOALS,
     GENDERS, CONTENT_FORMATS, PUBLISHING_FREQUENCIES,
 )
 from app.domain.social_platforms import PLATFORMS
@@ -28,8 +28,6 @@ def validate_payload(p: OnboardingPayload) -> Tuple[bool, Optional[str]]:
         return (False, "invalid_hashtag_strategy")
     if p.goals.primary_goal is not None and p.goals.primary_goal not in PRIMARY_GOALS:
         return (False, "invalid_primary_goal")
-    if p.audience.audience_age_range is not None and p.audience.audience_age_range not in AUDIENCE_AGE_RANGES:
-        return (False, "invalid_age_range")
     if p.audience.audience_gender is not None and p.audience.audience_gender not in GENDERS:
         return (False, "invalid_gender")
     for fmt in p.brand_voice.preferred_formats:

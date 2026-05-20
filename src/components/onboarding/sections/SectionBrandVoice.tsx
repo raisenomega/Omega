@@ -20,7 +20,7 @@ export function SectionBrandVoice({ form }: Props) {
     <div className="space-y-3">
       <div className="space-y-1"><Label className="text-xs">Tono</Label>
         <PillGroup options={TONES} value={v?.tone ?? ""}
-          onChange={(x) => form.setValue("brand_voice.tone", x as BV["tone"])} cols={3} />
+          onChange={(x) => form.setValue("brand_voice.tone", x as BV["tone"])} cols={6} />
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1"><Label className="text-xs">Emojis</Label>
@@ -42,7 +42,7 @@ export function SectionBrandVoice({ form }: Props) {
       </div>
       <div className="space-y-1"><Label className="text-xs">Formatos preferidos</Label>
         <PillGroup options={CONTENT_FORMATS} value={formats} multi
-          onChange={(x) => form.setValue("brand_voice.preferred_formats", x as BV["preferred_formats"])} cols={4} />
+          onChange={(x) => form.setValue("brand_voice.preferred_formats", x as BV["preferred_formats"])} cols={5} />
       </div>
     </div>
   );

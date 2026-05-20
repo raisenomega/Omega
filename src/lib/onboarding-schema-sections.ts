@@ -24,7 +24,7 @@ export const businessSchema = z.object({
 
 export const audienceSchema = z.object({
   target_audience: opt(z.string()),
-  audience_age_range: opt(z.enum(AUDIENCE_AGE_RANGES)),
+  audience_age_range: opt(z.string()),
   audience_gender: opt(z.enum(GENDERS)),
   competitors: z.array(z.object({ name: z.string(), url: opt(z.string()) })).default([]),
 });

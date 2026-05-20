@@ -16,6 +16,7 @@ export interface SectionDef {
   id: string;
   title: string;
   required?: boolean;
+  banner?: string;
   Component: ComponentType<{ form: UseFormReturn<OnboardingForm> }>;
 }
 
@@ -26,7 +27,7 @@ export const SECTIONS: readonly SectionDef[] = [
   { id: "brand_voice", title: "Voz de marca", Component: SectionBrandVoice },
   { id: "goals", title: "Objetivos", Component: SectionGoals },
   { id: "content_history", title: "Historial de contenido", Component: SectionContentHistory },
-  { id: "social_accounts", title: "Cuentas sociales", Component: SectionSocialAccounts },
+  { id: "social_accounts", title: "Cuentas sociales", banner: "Por ahora capturamos tu @handle · OAuth próximamente", Component: SectionSocialAccounts },
   { id: "instructions", title: "Instrucciones especiales", Component: SectionInstructions },
   { id: "brand_assets", title: "Identidad visual", Component: SectionBrandAssets },
   { id: "samples", title: "Ejemplos de contenido", Component: SectionSamples },

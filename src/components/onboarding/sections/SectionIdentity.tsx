@@ -1,16 +1,14 @@
 import type { UseFormReturn } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { INDUSTRIES, type Region } from "@/lib/client-constants";
+import { INDUSTRIES, REGIONS } from "@/lib/client-constants";
 import type { OnboardingForm } from "@/lib/onboarding-schema";
-import { RegionsMultiSelect } from "./RegionsMultiSelect";
 import { PillGroup } from "../PillGroup";
 
 interface Props { form: UseFormReturn<OnboardingForm> }
 
 export function SectionIdentity({ form }: Props) {
   const v = form.watch("identity");
-  const regions = (v?.regions ?? []) as Region[];
 
   return (
     <div className="space-y-3">
@@ -34,9 +32,12 @@ export function SectionIdentity({ form }: Props) {
       </div>
       <div className="space-y-1">
         <Label className="text-xs">Regiones * (multi-selección)</Label>
-        <RegionsMultiSelect
-          value={regions}
-          onChange={(next) => form.setValue("identity.regions", next, { shouldValidate: true })}
+        <PillGroup
+          options={REGIONS}
+          value={v?.regions ?? []}
+          onChange={(x) => form.setValue("identity.regions", x as string[], { shouldValidate: true })}
+          multi
+          cols={4}
         />
       </div>
     </div>

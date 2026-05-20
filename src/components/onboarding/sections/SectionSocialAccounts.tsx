@@ -41,10 +41,7 @@ export function SectionSocialAccounts({ form }: Props) {
   };
 
   return (
-    <div className="space-y-4">
-      <p className="text-xs text-muted-foreground bg-muted/40 px-3 py-2 rounded">
-        Por ahora capturamos tu @handle. Conectaremos tu cuenta vía OAuth en próximos días para publicar directo desde OMEGA.
-      </p>
+    <div className="space-y-3">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <h4 className="text-sm font-medium mb-2">{editingIndex !== null ? "Editar cuenta" : "Nueva cuenta"}</h4>

@@ -12,7 +12,7 @@ import { PillGroup } from "../PillGroup";
 
 interface Props { form: UseFormReturn<OnboardingForm> }
 
-const PLACEHOLDER = "¿Qué vendes?\n¿A quién le vendes?\n¿Qué te hace diferente?\nCualquier contexto adicional...";
+const PLACEHOLDER = "¿Qué vendes? · ¿A quién? · ¿Qué te diferencia? · Contexto adicional...";
 const SIZE_LABELS = { solo: "Solo", pequeno: "2-10", mediano: "11-50", grande: "50+" };
 
 export function SectionBusiness({ form }: Props) {
