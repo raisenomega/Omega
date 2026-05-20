@@ -20,14 +20,18 @@ def validate_payload(p: OnboardingPayload) -> Tuple[bool, Optional[str]]:
             return (False, f"invalid_region:{r}")
     if p.business.business_size is not None and p.business.business_size not in BUSINESS_SIZES:
         return (False, "invalid_business_size")
-    if p.brand_voice.tone is not None and p.brand_voice.tone not in TONES:
-        return (False, "invalid_tone")
+    for t in p.brand_voice.tone:
+        if t not in TONES:
+            return (False, f"invalid_tone:{t}")
     if p.brand_voice.emoji_usage is not None and p.brand_voice.emoji_usage not in EMOJI_USAGE:
         return (False, "invalid_emoji_usage")
     if p.brand_voice.hashtag_strategy is not None and p.brand_voice.hashtag_strategy not in HASHTAG_STRATEGY:
         return (False, "invalid_hashtag_strategy")
-    if p.goals.primary_goal is not None and p.goals.primary_goal not in PRIMARY_GOALS:
-        return (False, "invalid_primary_goal")
+    if len(p.goals.primary_goal) > 3:
+        return (False, "too_many_primary_goals")
+    for g in p.goals.primary_goal:
+        if g not in PRIMARY_GOALS:
+            return (False, f"invalid_primary_goal:{g}")
     if p.audience.audience_gender is not None and p.audience.audience_gender not in GENDERS:
         return (False, "invalid_gender")
     for fmt in p.brand_voice.preferred_formats:
@@ -47,7 +51,7 @@ def validate_payload(p: OnboardingPayload) -> Tuple[bool, Optional[str]]:
 def calc_completion_percent(p: OnboardingPayload) -> int:
     """% de las 10 secciones con al menos 1 campo no-vacío · 0-100."""
     filled = 0
-    if p.identity.name and p.identity.industry and p.identity.region:
+    if p.identity.name and p.identity.industry and p.identity.regions:
         filled += 1
     if any([p.business.niche, p.business.business_what, p.business.business_to_whom, p.business.business_diff]):
         filled += 1

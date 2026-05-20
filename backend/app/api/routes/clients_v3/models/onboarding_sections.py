@@ -27,7 +27,7 @@ class AudienceSection(BaseModel):
 
 
 class BrandVoiceSection(BaseModel):
-    tone: Optional[str] = None
+    tone: list[str] = Field(default_factory=list)
     brand_voice_keywords: list[str] = Field(default_factory=list)
     avoided_topics: Optional[str] = None
     avoided_words: list[str] = Field(default_factory=list)
@@ -37,7 +37,7 @@ class BrandVoiceSection(BaseModel):
 
 
 class GoalsSection(BaseModel):
-    primary_goal: Optional[str] = None
+    primary_goal: list[str] = Field(default_factory=list, max_length=3)
     goal_this_month: Optional[str] = None
     goal_this_quarter: Optional[str] = None
     goal_priority_now: Optional[str] = None

@@ -14,12 +14,16 @@ export function SectionGoals({ form }: Props) {
   const set = <K extends keyof OnboardingForm["goals"]>(k: K, x: OnboardingForm["goals"][K]) => form.setValue(`goals.${k}`, x);
   return (
     <div className="space-y-3">
-      <div className="space-y-1"><Label className="text-xs">Objetivo principal</Label>
+      <div className="space-y-1"><Label className="text-xs">Objetivo principal (máx 3)</Label>
         <PillGroup
           options={PRIMARY_GOALS}
           labels={GOAL_LABELS}
-          value={v?.primary_goal ?? ""}
-          onChange={(x) => set("primary_goal", x as OnboardingForm["goals"]["primary_goal"])}
+          value={v?.primary_goal ?? []}
+          onChange={(x) => {
+            if (Array.isArray(x) && x.length > 3) return;
+            set("primary_goal", x as OnboardingForm["goals"]["primary_goal"]);
+          }}
+          multi
           cols={5}
         />
       </div>

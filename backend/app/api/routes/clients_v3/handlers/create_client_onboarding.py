@@ -15,12 +15,18 @@ router = APIRouter()
 
 
 def _build_context(p: OnboardingPayload, completion: int) -> dict:
+    # tone/primary_goal son list[str] (multi-select) · CSV-join para
+    # columnas text en client_context (mismo patrón que identity.regions).
+    bv = p.brand_voice.model_dump(exclude={"brand_voice_keywords"})
+    bv["tone"] = ",".join(p.brand_voice.tone) if p.brand_voice.tone else None
+    g = p.goals.model_dump()
+    g["primary_goal"] = ",".join(p.goals.primary_goal) if p.goals.primary_goal else None
     return {
-        **p.business.model_dump(exclude_unset=False),
+        **p.business.model_dump(),
         **p.audience.model_dump(),
-        **p.brand_voice.model_dump(exclude={"brand_voice_keywords"}),
+        **bv,
         "brand_voice": {"keywords": p.brand_voice.brand_voice_keywords},
-        **p.goals.model_dump(),
+        **g,
         **p.content_history.model_dump(),
         **p.instructions.model_dump(),
         "onboarding_completion_percent": completion,

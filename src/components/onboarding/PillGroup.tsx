@@ -6,14 +6,15 @@ interface PillGroupProps {
   value: string | string[];
   onChange: (v: string | string[]) => void;
   multi?: boolean;
-  cols?: 3 | 4 | 5 | 6;
+  cols?: 3 | 4 | 5 | 6 | 7;
 }
 
-const COLS_MAP: Record<3 | 4 | 5 | 6, string> = {
+const COLS_MAP: Record<3 | 4 | 5 | 6 | 7, string> = {
   3: "grid-cols-3",
   4: "grid-cols-4",
   5: "grid-cols-5",
   6: "grid-cols-6",
+  7: "grid-cols-7",
 };
 
 function isSelected(value: string | string[], option: string): boolean {

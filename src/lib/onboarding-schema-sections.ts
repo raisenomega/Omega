@@ -30,7 +30,7 @@ export const audienceSchema = z.object({
 });
 
 export const brandVoiceSchema = z.object({
-  tone: opt(z.enum(TONES)),
+  tone: z.array(z.enum(TONES)).default([]),
   brand_voice_keywords: z.array(z.string()).default([]),
   avoided_topics: opt(z.string()), avoided_words: z.array(z.string()).default([]),
   preferred_formats: z.array(z.enum(CONTENT_FORMATS)).default([]),
@@ -38,7 +38,7 @@ export const brandVoiceSchema = z.object({
 });
 
 export const goalsSchema = z.object({
-  primary_goal: opt(z.enum(PRIMARY_GOALS)),
+  primary_goal: z.array(z.enum(PRIMARY_GOALS)).max(3).default([]),
   goal_this_month: opt(z.string()), goal_this_quarter: opt(z.string()),
   goal_priority_now: opt(z.string()), success_metric: opt(z.string()),
   monthly_revenue_target: opt(z.coerce.number().min(0)),

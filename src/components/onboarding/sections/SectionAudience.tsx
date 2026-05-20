@@ -28,7 +28,7 @@ export function SectionAudience({ form }: Props) {
           <Textarea value={v?.target_audience ?? ""} onChange={(e) => form.setValue("audience.target_audience", e.target.value)} rows={2} className="resize-none" /></div>
         <div className="space-y-1"><Label className="text-xs">Rango de edad</Label>
           <PillGroup options={AUDIENCE_AGE_RANGES} value={isCanonicalAge ? ageVal : ""}
-            onChange={(x) => form.setValue("audience.audience_age_range", (x as string) || null)} cols={4} />
+            onChange={(x) => form.setValue("audience.audience_age_range", (x as string) || null)} cols={7} />
         </div>
         <div className="space-y-1"><Label className="text-xs">O escribe un rango personalizado</Label>
           <Input className="h-8 text-xs" placeholder="Rango personalizado ej: 24-55"
@@ -37,7 +37,7 @@ export function SectionAudience({ form }: Props) {
         </div>
         <div className="space-y-1"><Label className="text-xs">Género</Label>
           <PillGroup options={GENDERS} labels={GENDER_LABELS} value={v?.audience_gender ?? ""}
-            onChange={(x) => form.setValue("audience.audience_gender", x as OnboardingForm["audience"]["audience_gender"])} cols={3} />
+            onChange={(x) => form.setValue("audience.audience_gender", x as OnboardingForm["audience"]["audience_gender"])} cols={5} />
         </div>
       </div>
       <div className="space-y-2">

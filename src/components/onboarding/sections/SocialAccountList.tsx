@@ -22,7 +22,7 @@ export function SocialAccountList({ accounts, onEdit, onTogglePause, onRemove }:
     );
   }
   return (
-    <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+    <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
       {accounts.map((a, i) => (
         <div key={i} className={`border border-border rounded-lg p-2.5 flex items-start gap-2 ${a.is_paused ? "opacity-60" : ""}`}>
           <span

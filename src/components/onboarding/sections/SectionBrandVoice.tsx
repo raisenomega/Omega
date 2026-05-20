@@ -1,7 +1,6 @@
 import type { UseFormReturn } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { TONES, EMOJI_USAGE, HASHTAG_STRATEGY, CONTENT_FORMATS } from "@/lib/onboarding-constants";
 import type { OnboardingForm } from "@/lib/onboarding-schema";
 import { PillGroup } from "../PillGroup";
@@ -13,13 +12,14 @@ const HASHTAG_LABELS = { minimal: "Mínimos", balanced: "Balanceados", many: "Mu
 
 export function SectionBrandVoice({ form }: Props) {
   const v = form.watch("brand_voice");
+  const tones = v?.tone ?? [];
   const formats = v?.preferred_formats ?? [];
   type BV = OnboardingForm["brand_voice"];
 
   return (
     <div className="space-y-3">
       <div className="space-y-1"><Label className="text-xs">Tono</Label>
-        <PillGroup options={TONES} value={v?.tone ?? ""}
+        <PillGroup options={TONES} value={tones} multi
           onChange={(x) => form.setValue("brand_voice.tone", x as BV["tone"])} cols={6} />
       </div>
       <div className="grid grid-cols-2 gap-2">
@@ -37,8 +37,9 @@ export function SectionBrandVoice({ form }: Props) {
           onChange={(e) => form.setValue("brand_voice.brand_voice_keywords", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} />
       </div>
       <div className="space-y-1"><Label className="text-xs">Temas a evitar</Label>
-        <Textarea value={v?.avoided_topics ?? ""}
-          onChange={(e) => form.setValue("brand_voice.avoided_topics", e.target.value)} rows={2} className="resize-none" />
+        <Input className="h-8" placeholder="ej: política, religión, competidores..."
+          value={v?.avoided_topics ?? ""}
+          onChange={(e) => form.setValue("brand_voice.avoided_topics", e.target.value)} />
       </div>
       <div className="space-y-1"><Label className="text-xs">Formatos preferidos</Label>
         <PillGroup options={CONTENT_FORMATS} value={formats} multi
