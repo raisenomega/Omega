@@ -194,11 +194,12 @@ assert LIMITS_OMEGA["MIN_CONFIDENCE_TO_ACT"] >= 7    # self-check al importar
 
 ## 4. AGENTES OPERATIVOS DE OMEGARAISEN
 
-OmegaRaisen tiene **37 agentes IA activos** (seedeados en migración SQL 00003)
-y **45 agentes organizacionales** (NOVA, ATLAS, LUNA, etc.) que son personas
-de orquestación, no ejecutores.
+OmegaRaisen tiene **41 agentes IA activos** (37 seedeados en migración SQL
+00003 + 4 ARIA codes vivos en `routing_table.py`) y **45 agentes
+organizacionales** (NOVA, ATLAS, LUNA, etc.) que son personas de
+orquestación, no ejecutores.
 
-### 4.1 Estado de migración a bc_cognition V3 (al 17 may 2026)
+### 4.1 Estado de migración a bc_cognition V3 (al 20 may 2026)
 
 | Tier | Agente | Persona | Limits | Adapter | UseCase | Router | Fuente Python |
 |------|--------|:------:|:------:|:------:|:------:|:------:|---------------|
@@ -211,6 +212,9 @@ de orquestación, no ejecutores.
 | **Opus** | ab_testing_analysis | ⏳ | ✅ | ⏳ | ⏳ | ⏳ | `agents/ab_testing_agent.py` |
 | **Opus** | audit_reviewer | ⏳ | ✅ | ⏳ | ⏳ | ⏳ | nuevo (V3) |
 | **Opus** | growth_hacker | ⏳ | ✅ | ⏳ | ⏳ | ⏳ | `agents/growth_hacker_agent.py` |
+| **Sonnet** | aria_2 | ✅ | ✅ | ✅ | ✅ | ✅ | `bc_cognition/application/use_aria_message.py` (Fase 1 live) |
+| **Sonnet** | aria_3 | ✅ | ✅ | ✅ | ✅ | ✅ | `bc_cognition/application/use_aria_message.py` (Fase 1 live) |
+| **Sonnet** | aria_4 | ✅ | ✅ | ✅ | ✅ | ✅ | `bc_cognition/application/use_aria_message.py` (Fase 1 live) |
 | **Sonnet** | content_creator | ⏳ | ✅ | ⏳ | ⏳ | ⏳ | `api/routes/content_lab/handlers/*` |
 | **Sonnet** | strategy | ⏳ | ✅ | ⏳ | ⏳ | ⏳ | `agents/strategy_agent.py` |
 | **Sonnet** | brand_voice | ⏳ | ✅ | ⏳ | ⏳ | ⏳ | `agents/brand_voice_agent.py` |
@@ -230,6 +234,7 @@ de orquestación, no ejecutores.
 | **Sonnet** | quality_control | ⏳ | ✅ | ⏳ | ⏳ | ⏳ | nuevo (V3) |
 | **Sonnet** | news_monitor | ⏳ | ✅ | ⏳ | ⏳ | ⏳ | `workers/news_monitor_worker.py` |
 | **Sonnet** | competitor_tracker | ⏳ | ✅ | ⏳ | ⏳ | ⏳ | `workers/competitor_tracker_worker.py` |
+| **Haiku** | aria_1 | ✅ | ✅ | ✅ | ✅ | ✅ | `bc_cognition/application/use_aria_message.py` (Fase 1 live) |
 | **Haiku** | hashtag_generator | ⏳ | ✅ | ⏳ | ⏳ | ⏳ | parte de `content_creator` |
 | **Haiku** | emoji_suggestor | ⏳ | ✅ | ⏳ | ⏳ | ⏳ | parte de `content_creator` |
 | **Haiku** | caption_optimizer | ⏳ | ✅ | ⏳ | ⏳ | ⏳ | parte de `content_creator` |
@@ -240,8 +245,10 @@ de orquestación, no ejecutores.
 | **Haiku** | url_extractor | ⏳ | ✅ | ⏳ | ⏳ | ⏳ | nuevo (V3) |
 | **Haiku** | pdf_extractor | ⏳ | ✅ | ⏳ | ⏳ | ⏳ | parte de `infrastructure/tools` |
 
-**Estado al 17 may 2026:** 1/37 con adapter (`nova_chat`) · resto pendiente
-de migración progresiva en Fase 3 del MIGRATION_PLAN (4-6 semanas)
+**Estado al 20 may 2026:** 5/41 con adapter completo (`nova_chat` + 4
+ARIA codes via Fase 1 live) · 36/41 pendientes de migración progresiva en
+Fase 3 del MIGRATION_PLAN (4-6 semanas). Las 4 entradas ARIA usan el
+adapter compartido `anthropic_adapter` con `cache_control: ephemeral` (I3).
 
 ### 4.2 Personas organizacionales (45 agentes seedeados)
 

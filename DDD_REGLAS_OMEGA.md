@@ -258,6 +258,7 @@ TABLA OBLIGATORIA OMEGA:
   caption_optimizer            Haiku 4.5           Iteración corta
   sentiment_analyzer           Haiku 4.5           Clasificación
   bio_generator                Haiku 4.5           Texto corto
+  aria_1                       Haiku 4.5           Conversacional básico (Adopción)
 
   content_creator              Sonnet 4.6          Generación creativa default
   strategy                     Sonnet 4.6          Planificación táctica
@@ -268,6 +269,9 @@ TABLA OBLIGATORIA OMEGA:
   trend_hunter                 Sonnet 4.6          Detección + síntesis
   competitive_intelligence     Sonnet 4.6          Análisis competitivo
   monitor                      Sonnet 4.6          Salud + alertas
+  aria_2                       Sonnet 4.6          Conversacional estándar (Básico)
+  aria_3                       Sonnet 4.6          Conversacional avanzado (Pro)
+  aria_4                       Sonnet 4.6          near-NOVA context (Pro+addons)
 
   orchestrator                 Opus 4.7            Coordinación multi-agente
   crisis_manager               Opus 4.7            Decisión crítica reputacional
