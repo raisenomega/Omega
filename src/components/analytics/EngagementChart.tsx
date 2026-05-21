@@ -26,6 +26,16 @@ function colorFor(platform: string): string {
 }
 
 export function EngagementChart({ data }: EngagementChartProps) {
+  if (data.length === 0) {
+    return (
+      <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Engagement por plataforma</CardTitle></CardHeader>
+        <CardContent className="flex items-center justify-center h-56 text-xs text-muted-foreground text-center">
+          Sin engagement aún · publica contenido para ver métricas
+        </CardContent>
+      </Card>
+    );
+  }
   return (
     <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
       <CardHeader className="pb-2">

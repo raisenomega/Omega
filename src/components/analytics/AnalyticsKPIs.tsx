@@ -2,10 +2,10 @@ import { Users, TrendingUp, Clock, FileText, type LucideIcon } from "lucide-reac
 import { Card, CardContent } from "@/components/ui/card";
 
 interface AnalyticsKPIsProps {
-  followers: number;
-  engagement: number;
-  bestHour: string;
-  posts: number;
+  followers: number | null;
+  engagement: number | null;
+  bestHour: string | null;
+  posts: number | null;
 }
 
 interface KPI {
@@ -14,16 +14,23 @@ interface KPI {
   icon: LucideIcon;
 }
 
-function fmtNumber(n: number): string {
+const EMPTY = "—";
+
+function fmtNumber(n: number | null): string {
+  if (n === null) return EMPTY;
   if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
   return String(n);
+}
+
+function fmtPct(n: number | null): string {
+  return n === null ? EMPTY : `${n.toFixed(2)}%`;
 }
 
 export function AnalyticsKPIs({ followers, engagement, bestHour, posts }: AnalyticsKPIsProps) {
   const kpis: KPI[] = [
     { label: "Seguidores", value: fmtNumber(followers), icon: Users },
-    { label: "Engagement", value: `${engagement.toFixed(2)}%`, icon: TrendingUp },
-    { label: "Mejor hora", value: bestHour, icon: Clock },
+    { label: "Engagement", value: fmtPct(engagement), icon: TrendingUp },
+    { label: "Mejor hora", value: bestHour ?? EMPTY, icon: Clock },
     { label: "Posts", value: fmtNumber(posts), icon: FileText },
   ];
 

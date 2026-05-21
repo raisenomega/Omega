@@ -25,7 +25,8 @@ export default function Analytics() {
     );
   }
 
-  const postsCount = engagementData.reduce((s, e) => s + e.likes + e.comments + e.shares, 0);
+  const hasEngagement = engagementData.length > 0;
+  const postsCount = hasEngagement ? engagementData.reduce((s, e) => s + e.likes + e.comments + e.shares, 0) : null;
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-6 space-y-4">
@@ -55,7 +56,7 @@ export default function Analytics() {
         <span>Datos de ejemplo · Conecta tus cuentas para ver métricas reales (DEBT-034)</span>
       </div>
 
-      <AnalyticsKPIs followers={totalFollowers} engagement={avgEngagement} bestHour="19:00 – 21:00" posts={postsCount} />
+      <AnalyticsKPIs followers={totalFollowers} engagement={avgEngagement} bestHour={heatmapData.length > 0 ? "19:00 – 21:00" : null} posts={postsCount} />
 
       <div className="grid gap-3 lg:grid-cols-2">
         <GrowthChart data={growthData} />

@@ -11,13 +11,23 @@ const chartConfig = {
 };
 
 export function GrowthChart({ data }: GrowthChartProps) {
+  if (data.length === 0) {
+    return (
+      <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Crecimiento de seguidores</CardTitle></CardHeader>
+        <CardContent className="flex items-center justify-center h-56 text-xs text-muted-foreground text-center">
+          Sin historial aún · conecta tus cuentas sociales para ver crecimiento
+        </CardContent>
+      </Card>
+    );
+  }
   return (
     <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="text-base">Crecimiento de Seguidores</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">Crecimiento de seguidores</CardTitle>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px] w-full">
+      <CardContent className="pt-2">
+        <ChartContainer config={chartConfig} className="h-56 w-full">
           <AreaChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="growthGrad" x1="0" y1="0" x2="0" y2="1">
