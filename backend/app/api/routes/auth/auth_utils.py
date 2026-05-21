@@ -1,41 +1,37 @@
-"""Auth Helper Utilities · valida JWT de Supabase O JWT local legacy.
-
-Producción: el frontend usa supabase.auth.getSession() · el token está
-firmado con SUPABASE_JWT_SECRET (HS256 default Supabase Auth).
-Dev local sin Supabase JWT: cae al JWT_SECRET_KEY local emitido por
-/api/v1/auth/login (claim type='access' obligatorio).
-"""
+"""Auth · Supabase JWT (ES256/RS256 via JWKS) primero · fallback local HS256."""
 from typing import Optional, Dict, Any
 from fastapi import HTTPException
 import jwt
+from jwt import PyJWKClient
 import logging
 
 from app.config import settings
 
 logger = logging.getLogger(__name__)
-JWT_ALGORITHM = "HS256"
+JWT_LOCAL_ALG = "HS256"
+
+# JWKS client cached at module level · PyJWKClient cachea las signing keys
+# internamente (cache_keys=True default, lifespan 300s).
+SUPABASE_JWKS_URL = f"{settings.supabase_url}/auth/v1/.well-known/jwks.json"
+_jwks_client = PyJWKClient(SUPABASE_JWKS_URL)
 
 
 def _decode_supabase(token: str) -> Optional[Dict[str, Any]]:
-    """Intenta decodificar con SUPABASE_JWT_SECRET · None si no aplica."""
-    if not settings.supabase_jwt_secret:
-        return None
+    """Verifica con clave pública Supabase via JWKS · ES256 actual + RS256 fallback."""
     try:
-        return jwt.decode(
-            token, settings.supabase_jwt_secret,
-            algorithms=[JWT_ALGORITHM],
-            options={"verify_aud": False},
-        )
+        signing_key = _jwks_client.get_signing_key_from_jwt(token)
+        return jwt.decode(token, signing_key.key, algorithms=["ES256", "RS256"], options={"verify_aud": False})
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
-        return None  # firma no matchea · probar JWT local
+    except Exception as e:
+        logger.debug(f"Supabase JWT decode failed (probará local): {e}")
+        return None
 
 
 def _decode_local(token: str) -> Dict[str, Any]:
     """Decodifica con JWT_SECRET_KEY local · requiere claim type='access'."""
     try:
-        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[JWT_LOCAL_ALG])
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Access token expired")
     except jwt.InvalidTokenError as e:
@@ -47,7 +43,7 @@ def _decode_local(token: str) -> Dict[str, Any]:
 
 
 async def get_current_user(authorization: Optional[str]) -> Dict[str, Any]:
-    """Extrae user desde Authorization Bearer · Supabase first, local fallback."""
+    """Extrae user desde Authorization Bearer · Supabase RS256 first, local HS256 fallback."""
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization header missing")
     if not authorization.startswith("Bearer "):
