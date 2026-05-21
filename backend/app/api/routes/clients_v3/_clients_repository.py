@@ -1,8 +1,4 @@
-"""Repository clients_v3 · única capa que toca Supabase (DDD A1/A9).
-
-safe_insert wrapper best-effort (audit FIX 4 pattern) · errores loguean
-stack trace pero NO propagan al cliente.
-"""
+"""Repository clients_v3 · única capa de WRITES Supabase (DDD A1/A9)."""
 import logging
 from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import get_supabase_service
@@ -12,6 +8,7 @@ P = ParamSpec("P"); T = TypeVar("T")
 
 
 def safe_insert(label: str, fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> Optional[T]:
+    """Best-effort wrapper (audit FIX 4 pattern) · errores loguean stack y NO propagan."""
     try:
         return fn(*args, **kwargs)
     except Exception as e:
@@ -67,3 +64,11 @@ def insert_agent_memory(user_id: str, client_id: str, context: str, decision: st
 def resolve_reseller_for_user(user_id: str) -> Optional[str]:
     r = _sb().table("clients").select("reseller_id").eq("user_id", user_id).limit(1).execute()
     return str(r.data[0]["reseller_id"]) if r.data else None
+
+
+def update_client_by_id(client_id: str, fields: dict[str, Any]) -> None:
+    _sb().table("clients").update(fields).eq("id", client_id).execute()
+
+
+def delete_social_accounts(client_id: str) -> None:
+    _sb().table("social_accounts").delete().eq("client_id", client_id).execute()

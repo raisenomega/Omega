@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import type { UseOnboardingFormResult } from "@/hooks/useOnboardingForm";
 import { sectionsFilled } from "@/lib/onboarding-completion";
@@ -33,24 +34,26 @@ export function OnboardingWizard({ wizard, onClose }: OnboardingWizardProps) {
   const isLast = activeIndex === SECTIONS.length - 1;
   const canSubmit = identityValid && !wizard.isSubmitting;
 
+  if (wizard.isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full flex-col">
-      <WizardHeader completionPercent={wizard.completionPercent} onClose={onClose} />
-
-      <HorizontalStepper
-        activeIndex={activeIndex}
-        completedIndices={completedIndices}
-        onJump={setActiveIndex}
-      />
-
+      <WizardHeader completionPercent={wizard.completionPercent} isEditing={wizard.isEditing} onClose={onClose} />
+      <HorizontalStepper activeIndex={activeIndex} completedIndices={completedIndices} onJump={setActiveIndex} />
       <OnboardingLayout form={wizard.form} activeIndex={activeIndex} />
-
       <WizardFooter
         activeIndex={activeIndex}
         totalSections={SECTIONS.length}
         isLast={isLast}
         canSubmit={canSubmit}
         isSubmitting={wizard.isSubmitting}
+        isEditing={wizard.isEditing}
         onPrev={() => setActiveIndex((i) => Math.max(0, i - 1))}
         onNext={() => setActiveIndex((i) => Math.min(SECTIONS.length - 1, i + 1))}
         onSubmit={wizard.submit}

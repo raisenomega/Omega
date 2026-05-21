@@ -7,6 +7,7 @@ interface WizardFooterProps {
   isLast: boolean;
   canSubmit: boolean;
   isSubmitting: boolean;
+  isEditing?: boolean;
   onPrev: () => void;
   onNext: () => void;
   onSubmit: () => void;
@@ -14,8 +15,10 @@ interface WizardFooterProps {
 
 export function WizardFooter({
   activeIndex, totalSections, isLast,
-  canSubmit, isSubmitting, onPrev, onNext, onSubmit,
+  canSubmit, isSubmitting, isEditing, onPrev, onNext, onSubmit,
 }: WizardFooterProps) {
+  const submittingLabel = isEditing ? "Guardando…" : "Creando…";
+  const submitLabel = isEditing ? "Guardar Cambios" : "Crear Cliente";
   return (
     <div className="border-t border-border bg-background px-4 py-3 flex items-center gap-3">
       <Button
@@ -38,7 +41,7 @@ export function WizardFooter({
           disabled={!canSubmit}
           title={canSubmit ? "" : "Completa nombre, industria y región"}
         >
-          {isSubmitting ? "Creando…" : "Crear Cliente"}
+          {isSubmitting ? submittingLabel : submitLabel}
         </Button>
       ) : (
         <Button onClick={onNext} className="gap-1">

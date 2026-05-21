@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 
 interface WizardHeaderProps {
   completionPercent: number;
+  isEditing?: boolean;
   onClose?: () => void;
 }
 
@@ -13,11 +14,11 @@ function completionColor(pct: number): string {
   return "text-rose-600";
 }
 
-export function WizardHeader({ completionPercent, onClose }: WizardHeaderProps) {
+export function WizardHeader({ completionPercent, isEditing, onClose }: WizardHeaderProps) {
   return (
     <div className="border-b border-border bg-background/95 px-4 py-3 backdrop-blur sticky top-0 z-10">
       <div className="flex items-center justify-between gap-3 mb-2">
-        <h2 className="text-lg font-semibold">Nuevo Cliente</h2>
+        <h2 className="text-lg font-semibold">{isEditing ? "Editar Cliente" : "Nuevo Cliente"}</h2>
         <div className="flex items-center gap-3">
           <span className={`text-sm font-medium tabular-nums ${completionColor(completionPercent)}`}>
             {completionPercent}%
