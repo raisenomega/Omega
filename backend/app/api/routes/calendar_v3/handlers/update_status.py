@@ -1,0 +1,40 @@
+"""PATCH /api/v1/calendar/{post_id}/status · transiciones user-iniciadas.
+
+Permitidas: pending<->cancelled (cancelar/reactivar).
+Bloqueadas: cualquier otra (publishing/published/failed son sistema · DEBT futura).
+INSERT behavioral_events('post_status_changed') best-effort.
+"""
+from typing import Optional
+from fastapi import APIRouter, Header, HTTPException
+from app.api.routes.auth.auth_utils import get_current_user
+from app.api.routes.calendar_v3 import _calendar_reader as reader, _calendar_repository as repo
+from app.api.routes.calendar_v3.models.calendar_models import UpdateStatusRequest
+
+router = APIRouter()
+
+ALLOWED_TRANSITIONS = {("pending", "cancelled"), ("cancelled", "pending")}
+
+
+@router.patch("/{post_id}/status")
+async def update_post_status(
+    post_id: str,
+    request: UpdateStatusRequest,
+    authorization: Optional[str] = Header(None),
+) -> dict:
+    user = await get_current_user(authorization)
+    post = reader.get_scheduled_post(post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="post_not_found")
+    accessible = reader.get_accessible_client_ids(user["id"])
+    if str(post.get("client_id")) not in accessible:
+        raise HTTPException(status_code=403, detail="access_denied")
+
+    current = str(post.get("status") or "")
+    new = request.status
+    if (current, new) not in ALLOWED_TRANSITIONS:
+        raise HTTPException(status_code=422, detail=f"invalid_transition:{current}->{new}")
+
+    repo.safe_insert("update_status", repo.update_status, post_id, new)
+    repo.safe_insert("behavioral", repo.insert_behavioral_status_change,
+                     user["id"], str(post["client_id"]), post_id, current, new)
+    return {"id": post_id, "status": new}
