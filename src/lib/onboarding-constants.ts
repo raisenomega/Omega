@@ -33,6 +33,17 @@ export const PLATFORMS = [
   "instagram", "facebook", "tiktok", "twitter", "linkedin", "youtube",
 ] as const;
 
+export const REGION_LABELS: Record<string, string> = {
+  PR: "Puerto Rico",
+  USA: "Estados Unidos",
+  DO: "Rep. Dominicana",
+  MX: "México",
+  CO: "Colombia",
+  AR: "Argentina",
+  ES: "España",
+  otros: "Otros",
+};
+
 export const PLATFORM_LABELS: Record<typeof PLATFORMS[number], string> = {
   instagram: "Instagram",
   facebook: "Facebook",

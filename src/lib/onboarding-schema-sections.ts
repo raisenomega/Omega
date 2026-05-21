@@ -71,4 +71,5 @@ export const brandAssetsSchema = z.object({
   primary_color: opt(hex), secondary_color: opt(hex), accent_color: opt(hex),
   font_primary: opt(z.string()), font_secondary: opt(z.string()),
   logo_file_id: opt(z.string().uuid()), brand_guide_file_id: opt(z.string().uuid()),
+  logo_files: z.array(z.instanceof(File)).max(3).optional(),
 });

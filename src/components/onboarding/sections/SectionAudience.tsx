@@ -4,22 +4,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
-import { AUDIENCE_AGE_RANGES, GENDERS } from "@/lib/onboarding-constants";
+import { GENDERS } from "@/lib/onboarding-constants";
 import type { OnboardingForm } from "@/lib/onboarding-schema";
 import { PillGroup } from "../PillGroup";
 
 interface Props { form: UseFormReturn<OnboardingForm> }
 
 const GENDER_LABELS = { male: "Hombres", female: "Mujeres", mixed: "Mixto", non_binary: "No binario", any: "Cualquiera" };
-const CANONICAL_AGES = new Set<string>(AUDIENCE_AGE_RANGES);
 
 export function SectionAudience({ form }: Props) {
   const v = form.watch("audience");
   const competitors = v?.competitors ?? [];
   const setComp = (next: typeof competitors) => form.setValue("audience.competitors", next);
-  const ageVal = v?.audience_age_range ?? "";
-  const isCanonicalAge = CANONICAL_AGES.has(ageVal);
-  const customAge = isCanonicalAge ? "" : ageVal;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -27,12 +23,8 @@ export function SectionAudience({ form }: Props) {
         <div className="space-y-1"><Label className="text-xs">Audiencia objetivo</Label>
           <Textarea value={v?.target_audience ?? ""} onChange={(e) => form.setValue("audience.target_audience", e.target.value)} rows={2} className="resize-none" /></div>
         <div className="space-y-1"><Label className="text-xs">Rango de edad</Label>
-          <PillGroup options={AUDIENCE_AGE_RANGES} value={isCanonicalAge ? ageVal : ""}
-            onChange={(x) => form.setValue("audience.audience_age_range", (x as string) || null)} cols={7} />
-        </div>
-        <div className="space-y-1"><Label className="text-xs">O escribe un rango personalizado</Label>
-          <Input className="h-8 text-xs" placeholder="Rango personalizado ej: 24-55"
-            value={customAge} disabled={isCanonicalAge}
+          <Input className="h-8" placeholder="ej: 18-45, o 25-55, o 13-24..."
+            value={v?.audience_age_range ?? ""}
             onChange={(e) => form.setValue("audience.audience_age_range", e.target.value || null)} />
         </div>
         <div className="space-y-1"><Label className="text-xs">Género</Label>

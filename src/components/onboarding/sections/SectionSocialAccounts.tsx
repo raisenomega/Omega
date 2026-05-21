@@ -44,12 +44,12 @@ export function SectionSocialAccounts({ form }: Props) {
     <div className="space-y-3">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <h4 className="text-sm font-medium mb-2">Cuentas agregadas ({list.length})</h4>
-          <SocialAccountList accounts={list} onEdit={handleEdit} onTogglePause={handleTogglePause} onRemove={handleRemove} />
-        </div>
-        <div>
           <h4 className="text-sm font-medium mb-2">{editingIndex !== null ? "Editar cuenta" : "Nueva cuenta"}</h4>
           <SocialAccountForm value={draft} onChange={updateDraft} onSubmit={handleSubmit} isEditing={editingIndex !== null} />
+        </div>
+        <div>
+          <h4 className="text-sm font-medium mb-2">Cuentas agregadas ({list.length})</h4>
+          <SocialAccountList accounts={list} onEdit={handleEdit} onTogglePause={handleTogglePause} onRemove={handleRemove} />
         </div>
       </div>
     </div>

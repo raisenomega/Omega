@@ -2,6 +2,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { INDUSTRIES, REGIONS } from "@/lib/client-constants";
+import { REGION_LABELS } from "@/lib/onboarding-constants";
 import type { OnboardingForm } from "@/lib/onboarding-schema";
 import { PillGroup } from "../PillGroup";
 
@@ -34,6 +35,7 @@ export function SectionIdentity({ form }: Props) {
         <Label className="text-xs">Regiones * (multi-selección)</Label>
         <PillGroup
           options={REGIONS}
+          labels={REGION_LABELS}
           value={v?.regions ?? []}
           onChange={(x) => form.setValue("identity.regions", x as string[], { shouldValidate: true })}
           multi

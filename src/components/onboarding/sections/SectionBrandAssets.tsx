@@ -1,6 +1,10 @@
+import { useRef } from "react";
 import type { UseFormReturn } from "react-hook-form";
+import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import type { OnboardingForm } from "@/lib/onboarding-schema";
 
 interface Props { form: UseFormReturn<OnboardingForm> }
@@ -8,47 +12,55 @@ interface Props { form: UseFormReturn<OnboardingForm> }
 type Assets = NonNullable<OnboardingForm["brand_assets"]>;
 
 export function SectionBrandAssets({ form }: Props) {
+  const { toast } = useToast();
+  const fileRef = useRef<HTMLInputElement>(null);
   const v = form.watch("brand_assets") ?? null;
+  const files = v?.logo_files ?? [];
   const set = <K extends keyof Assets>(k: K, x: Assets[K]) =>
     form.setValue("brand_assets", { ...(v ?? {}), [k]: x } as OnboardingForm["brand_assets"]);
 
+  const handleFiles = (selected: FileList | null) => {
+    if (!selected) return;
+    const arr = Array.from(selected);
+    if (arr.length > 3) { toast({ title: "Máximo 3 archivos", variant: "destructive" }); return; }
+    set("logo_files", arr);
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground bg-muted/40 px-3 py-2 rounded">
-        Colores y tipografías ahora. Logo y brand guide se suben en Configuración después.
-      </p>
       <div className="grid grid-cols-3 gap-2">
         {(["primary_color", "secondary_color", "accent_color"] as const).map((k) => (
           <div key={k} className="space-y-1">
             <Label className="text-xs capitalize">{k.replace("_", " ")}</Label>
-            <Input
-              type="color"
-              value={v?.[k] ?? "#000000"}
-              onChange={(e) => set(k, e.target.value)}
-              className="h-8 p-1"
-            />
+            <Input type="color" value={v?.[k] ?? "#000000"} onChange={(e) => set(k, e.target.value)} className="h-8 p-1" />
           </div>
         ))}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <Label className="text-xs">Font primary</Label>
-          <Input
-            className="h-8"
-            value={v?.font_primary ?? ""}
-            onChange={(e) => set("font_primary", e.target.value)}
-            placeholder="ej: Inter, Helvetica"
-          />
+        <div className="space-y-1"><Label className="text-xs">Font primary</Label>
+          <Input className="h-8" value={v?.font_primary ?? ""} onChange={(e) => set("font_primary", e.target.value)} placeholder="ej: Inter" />
         </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Font secondary</Label>
-          <Input
-            className="h-8"
-            value={v?.font_secondary ?? ""}
-            onChange={(e) => set("font_secondary", e.target.value)}
-            placeholder="ej: Georgia, serif"
-          />
+        <div className="space-y-1"><Label className="text-xs">Font secondary</Label>
+          <Input className="h-8" value={v?.font_secondary ?? ""} onChange={(e) => set("font_secondary", e.target.value)} placeholder="ej: Georgia" />
         </div>
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs">Logo e imágenes de marca</Label>
+        <p className="text-[10px] text-muted-foreground">Sube hasta 3 archivos · cualquier formato (PNG, JPG, PDF, SVG, AI...)</p>
+        <Input ref={fileRef} type="file" multiple accept="*/*" className="h-8" onChange={(e) => handleFiles(e.target.files)} />
+        {files.length > 0 && (
+          <ul className="space-y-1 mt-1">
+            {files.map((f, i) => (
+              <li key={i} className="flex items-center gap-2 text-xs bg-muted/40 rounded px-2 py-1">
+                <span className="truncate flex-1">{f.name}</span>
+                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => set("logo_files", files.filter((_, j) => j !== i))}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
