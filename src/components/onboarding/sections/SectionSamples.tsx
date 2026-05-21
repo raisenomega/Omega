@@ -26,7 +26,7 @@ export function SectionSamples({ form }: Props) {
             "brand_voice_samples",
             e.target.value.split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean),
           )}
-          placeholder="Post 1...\n\nPost 2...\n\nPost 3..."
+          placeholder="Pega aquí tus mejores posts, uno por párrafo..."
           className="resize-none"
         />
         <p className="text-xs text-muted-foreground">{samples.length} muestra(s) detectada(s)</p>
