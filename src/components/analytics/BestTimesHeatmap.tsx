@@ -1,62 +1,62 @@
+import { Star } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface HeatmapCell { day: string; hour: number; value: number }
 interface BestTimesHeatmapProps { data: HeatmapCell[] }
 
-const DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] as const;
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
+// 12 horas pico (6am-9pm) · selección para layout compact.
+const PEAK_HOURS = [6, 8, 10, 11, 12, 13, 14, 15, 16, 18, 20, 21];
 
-function cellColor(value: number, max: number): string {
-  if (value <= 0 || max <= 0) return "rgba(148, 163, 184, 0.15)"; // slate-400/15 gris claro
-  const intensity = Math.min(value / max, 1);
-  return `rgba(16, 185, 129, ${0.15 + intensity * 0.75})`; // emerald-500 scale
+function fmtHour(h: number): string {
+  if (h === 0) return "12am";
+  if (h < 12) return `${h}am`;
+  if (h === 12) return "12pm";
+  return `${h - 12}pm`;
 }
 
 export function BestTimesHeatmap({ data }: BestTimesHeatmapProps) {
-  const max = data.reduce((m, d) => Math.max(m, d.value), 0);
-  const lookup = new Map<string, number>();
-  for (const d of data) lookup.set(`${d.day}|${d.hour}`, d.value);
+  const byHour = new Map<number, number[]>();
+  for (const d of data) {
+    const arr = byHour.get(d.hour) ?? [];
+    arr.push(d.value);
+    byHour.set(d.hour, arr);
+  }
+  const hours = PEAK_HOURS.map((h) => {
+    const vals = byHour.get(h) ?? [0];
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    return { hour: h, value: Math.round(avg) };
+  });
+  const max = hours.reduce((m, h) => Math.max(m, h.value), 1);
+  const top3 = new Set([...hours].sort((a, b) => b.value - a.value).slice(0, 3).map((h) => h.hour));
 
   return (
     <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Mejores horarios (engagement por hora)</CardTitle>
+        <CardTitle className="text-sm">Mejores horas para publicar</CardTitle>
       </CardHeader>
-      <CardContent className="pt-2 max-h-64 overflow-hidden">
-        <div className="space-y-1">
-          <div className="flex gap-0.5 pl-7">
-            {HOURS.map((h) => (
-              <span key={h} className="flex-1 text-center text-[8px] text-muted-foreground tabular-nums">
-                {h % 6 === 0 ? h : ""}
-              </span>
-            ))}
-          </div>
-          {DAYS.map((day) => (
-            <div key={day} className="flex items-center gap-0.5">
-              <span className="w-7 text-[10px] text-muted-foreground shrink-0">{day}</span>
-              {HOURS.map((h) => {
-                const v = lookup.get(`${day}|${h}`) ?? 0;
-                return (
-                  <div
-                    key={h}
-                    className="flex-1 aspect-square rounded-sm"
-                    style={{ background: cellColor(v, max) }}
-                    title={`${day} ${h}h: ${v}`}
-                  />
-                );
-              })}
+      <CardContent className="pt-2 max-h-72 overflow-y-auto space-y-1.5">
+        {hours.map(({ hour, value }) => {
+          const pct = Math.round((value / max) * 100);
+          const isTop = top3.has(hour);
+          return (
+            <div key={hour} className="flex items-center gap-2 text-xs">
+              <span className="w-10 shrink-0 tabular-nums text-muted-foreground">{fmtHour(hour)}</span>
+              <div className="flex-1 h-5 rounded bg-muted/40 overflow-hidden">
+                <div
+                  className={`h-full rounded transition-all ${isTop ? "bg-primary" : "bg-muted-foreground/40"}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <span className="w-10 shrink-0 tabular-nums text-right text-muted-foreground">{pct}%</span>
+              {isTop ? (
+                <Badge variant="secondary" className="h-5 px-1.5 text-[10px] gap-0.5 shrink-0">
+                  <Star className="h-3 w-3" />Mejor
+                </Badge>
+              ) : <span className="w-12 shrink-0" />}
             </div>
-          ))}
-          <div className="flex items-center gap-2 pt-1 text-[10px] text-muted-foreground">
-            <span>Menos</span>
-            <div className="flex gap-0.5">
-              {[0.15, 0.35, 0.55, 0.75, 0.9].map((o) => (
-                <div key={o} className="h-2 w-3 rounded-sm" style={{ background: `rgba(16, 185, 129, ${o})` }} />
-              ))}
-            </div>
-            <span>Más</span>
-          </div>
-        </div>
+          );
+        })}
       </CardContent>
     </Card>
   );

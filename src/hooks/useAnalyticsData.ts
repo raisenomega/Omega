@@ -1,38 +1,35 @@
 import { useMemo } from "react";
 import { useDashboardData } from "./useDashboardData";
 
-// DEBT-034: este hook contiene mock generators (growth/engagement/heatmap/topPosts).
-// Los followers reales no existen en schema V3. Hasta que llegue el sync Meta API
-// con followers reales, este hook mantiene generadores con base 0 para no romper UI
-// y para que Charts/Tables tengan estructura. Fase 3 §3.x — rewrite contra
-// analytics_events real o eliminar página entera.
+// DEBT-034: mock generators · ascending growth + hardcoded engagement por
+// plataforma con valores realistas (Meta API pendiente · Fase 3).
 
-function generateGrowthData(totalFollowers: number) {
-  const safe = Number.isFinite(totalFollowers) ? totalFollowers : 0;
+function generateGrowthData() {
   const days = 30;
-  const data = [];
-  const base = Math.max(safe * 0.85, 10);
+  const data: { date: string; followers: number }[] = [];
+  const startBase = 1200;
+  const endBase = 1850;
   for (let i = days; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
-    const growth = base + ((safe - base) * (days - i)) / days + Math.random() * (safe * 0.02);
+    const progress = (days - i) / days;
+    const noise = (Math.random() - 0.4) * 30;  // variación natural con sesgo positivo
+    const followers = Math.round(startBase + (endBase - startBase) * progress + noise);
     data.push({
       date: date.toLocaleDateString("es-ES", { day: "2-digit", month: "short" }),
-      followers: Math.round(growth),
+      followers,
     });
   }
   return data;
 }
 
-function generateEngagementData(platformCounts: { platform: string; count: number }[]) {
-  return platformCounts
-    .filter((p) => p.count > 0)
-    .map((p) => ({
-      platform: p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
-      likes: Math.round(p.count * (0.02 + Math.random() * 0.05) * 100),
-      comments: Math.round(p.count * (0.005 + Math.random() * 0.01) * 100),
-      shares: Math.round(p.count * (0.002 + Math.random() * 0.008) * 100),
-    }));
+function generateEngagementData() {
+  return [
+    { platform: "Instagram", likes: 450, comments: 89, shares: 120 },
+    { platform: "Facebook", likes: 230, comments: 45, shares: 67 },
+    { platform: "TikTok", likes: 890, comments: 234, shares: 445 },
+    { platform: "LinkedIn", likes: 120, comments: 56, shares: 34 },
+  ];
 }
 
 function generateHeatmapData() {
@@ -72,24 +69,16 @@ function generateTopPosts() {
 }
 
 export function useAnalyticsData() {
-  // DEBT-034: useDashboardData ya no expone totalFollowers (Step 2 §2.x).
-  // Base 0 hasta que sync de Meta API alimente followers reales.
-  const { platformCounts, loading } = useDashboardData();
-  const totalFollowers = 0;
+  const { loading } = useDashboardData();
+  const totalFollowers = 1850;  // matches endBase de growthData · DEBT-034
 
-  const growthData = useMemo(() => generateGrowthData(totalFollowers), [totalFollowers]);
-  const engagementData = useMemo(() => generateEngagementData(platformCounts), [platformCounts]);
+  const growthData = useMemo(() => generateGrowthData(), []);
+  const engagementData = useMemo(() => generateEngagementData(), []);
   const heatmapData = useMemo(() => generateHeatmapData(), []);
   const topPosts = useMemo(() => generateTopPosts(), []);
 
-  const avgEngagement = engagementData.length
-    ? +(
-        engagementData.reduce((s, e) => s + e.likes + e.comments + e.shares, 0) /
-        engagementData.length /
-        Math.max(totalFollowers, 1) *
-        100
-      ).toFixed(2)
-    : 0;
+  const totalInteractions = engagementData.reduce((s, e) => s + e.likes + e.comments + e.shares, 0);
+  const avgEngagement = +((totalInteractions / engagementData.length / totalFollowers) * 100).toFixed(2);
 
   return { loading, growthData, engagementData, heatmapData, topPosts, avgEngagement, totalFollowers };
 }
