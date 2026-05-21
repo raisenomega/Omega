@@ -1,10 +1,9 @@
-"""PATCH /api/v1/content/{id}/save · toggle is_saved + aprendizaje ARIA.
+"""PATCH /api/v1/content/{id}/save · is_saved bool API <-> status DB (draft/approved).
 
-Transición false->true:
-  · update is_saved=true
+Transición draft->approved dispara aprendizaje ARIA:
   · safe_insert agent_memory (brand_voice · approved_by_client · conf=10)
   · safe_insert brand_voice_corpus (source=approved_draft)
-Transición true->false: solo toggle (preserva señal histórica).
+approved->draft: solo cambio de status (preserva señal histórica).
 DDD A1/A9: handler -> repo + reader.
 """
 from typing import Optional
@@ -30,11 +29,12 @@ async def save_content(
     if str(item.get("client_id")) not in accessible:
         raise HTTPException(status_code=403, detail="access_denied")
 
-    was_saved = bool(item.get("is_saved"))
-    repo.safe_insert("update_is_saved", repo.update_is_saved, content_id, request.is_saved)
+    was_approved = item.get("status") == "approved"
+    new_status = "approved" if request.is_saved else "draft"
+    repo.safe_insert("update_status", repo.update_status, content_id, new_status)
 
-    if request.is_saved and not was_saved:
-        text = item.get("content") or ""
+    if request.is_saved and not was_approved:
+        text = item.get("generated_text") or ""  # col real
         client_id = str(item["client_id"])
         repo.safe_insert("corpus", repo.insert_brand_voice_corpus_approved, client_id, text, None)
         repo.safe_insert("memory", repo.insert_agent_memory_approved, user["id"], client_id, text)

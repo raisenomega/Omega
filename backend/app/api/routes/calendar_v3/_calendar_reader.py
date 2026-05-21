@@ -50,7 +50,7 @@ def list_scheduled_posts(client_ids: list[str], month: Optional[str], status: Op
         ar = sb.table("social_accounts").select("id, platform").in_("id", sa_ids).execute()
         sa_map = {str(a["id"]): a for a in (ar.data or [])}
     if c_ids:
-        cr = sb.table("content_lab_generated").select("id, content").in_("id", c_ids).execute()
+        cr = sb.table("content_lab_generated").select("id, generated_text").in_("id", c_ids).execute()
         c_map = {str(c["id"]): c for c in (cr.data or [])}
     for p in posts:
         sa_id = p.get("social_account_id")

@@ -24,7 +24,7 @@ def _to_item(row: dict) -> CalendarPost:
     sa = row.get("social_accounts")
     platform = sa.get("platform") if isinstance(sa, dict) else None
     cl = row.get("content_lab_generated")
-    preview = (cl.get("content") or "") if isinstance(cl, dict) else ""
+    preview = (cl.get("generated_text") or "") if isinstance(cl, dict) else ""
     return CalendarPost(
         id=str(row["id"]),
         client_id=str(row["client_id"]),

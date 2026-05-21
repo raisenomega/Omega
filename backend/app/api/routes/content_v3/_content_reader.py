@@ -20,36 +20,24 @@ def get_accessible_client_ids(user_id: str) -> list[str]:
     return list(ids)
 
 
-def list_content(client_ids: list[str], is_saved: Optional[bool], content_type: Optional[str], limit: int, offset: int) -> list[dict[str, Any]]:
-    """Fetch content + merge platform en Python (evita FK ambiguity PostgREST embed)."""
+def list_content(client_ids: list[str], status: Optional[str], content_type: Optional[str], limit: int, offset: int) -> list[dict[str, Any]]:
+    """Fetch content · sin JOIN (schema real no tiene social_account_id ni cols esperadas)."""
     if not client_ids:
         return []
-    sb = _sb()
-    q = sb.table("content_lab_generated").select("*").in_("client_id", client_ids)
-    if is_saved is not None:
-        q = q.eq("is_saved", is_saved)
+    q = _sb().table("content_lab_generated").select("*").in_("client_id", client_ids)
+    if status is not None:
+        q = q.eq("status", status)
     if content_type:
         q = q.eq("content_type", content_type)
-    items = q.order("created_at", desc=True).range(offset, offset + limit - 1).execute().data or []
-    if not items:
-        return []
-    sa_ids = list({i["social_account_id"] for i in items if i.get("social_account_id")})
-    sa_map: dict[str, dict] = {}
-    if sa_ids:
-        ar = sb.table("social_accounts").select("id, platform").in_("id", sa_ids).execute()
-        sa_map = {str(a["id"]): a for a in (ar.data or [])}
-    for i in items:
-        sa_id = i.get("social_account_id")
-        i["social_accounts"] = sa_map.get(str(sa_id)) if sa_id else None
-    return items
+    return q.order("created_at", desc=True).range(offset, offset + limit - 1).execute().data or []
 
 
-def count_content(client_ids: list[str], is_saved: Optional[bool], content_type: Optional[str]) -> int:
+def count_content(client_ids: list[str], status: Optional[str], content_type: Optional[str]) -> int:
     if not client_ids:
         return 0
     q = _sb().table("content_lab_generated").select("id", count="exact").in_("client_id", client_ids)
-    if is_saved is not None:
-        q = q.eq("is_saved", is_saved)
+    if status is not None:
+        q = q.eq("status", status)
     if content_type:
         q = q.eq("content_type", content_type)
     r = q.execute()

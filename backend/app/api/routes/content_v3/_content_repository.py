@@ -20,8 +20,9 @@ def _sb():
     return get_supabase_service().client
 
 
-def update_is_saved(content_id: str, value: bool) -> None:
-    _sb().table("content_lab_generated").update({"is_saved": value}).eq("id", content_id).execute()
+def update_status(content_id: str, value: str) -> None:
+    """Update content_lab_generated.status · valores: draft/approved/rejected/scheduled/published."""
+    _sb().table("content_lab_generated").update({"status": value}).eq("id", content_id).execute()
 
 
 def insert_brand_voice_corpus_approved(client_id: str, text: str, platform: Optional[str]) -> None:
