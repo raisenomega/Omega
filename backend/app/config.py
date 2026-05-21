@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     supabase_url: str = Field(..., env="SUPABASE_URL")
     supabase_anon_key: str = Field(..., env="SUPABASE_ANON_KEY")
     supabase_service_role_key: str = Field(..., env="SUPABASE_SERVICE_ROLE_KEY")
+    # Supabase JWT Secret · firma de los tokens emitidos por Supabase Auth.
+    # Default vacío para no romper dev local · si vacío, get_current_user
+    # cae al JWT_SECRET_KEY local (legacy /auth/login).
+    supabase_jwt_secret: str = Field(default="", env="SUPABASE_JWT_SECRET")
 
     # Anthropic Claude
     anthropic_api_key: str = Field(..., env="ANTHROPIC_API_KEY")
