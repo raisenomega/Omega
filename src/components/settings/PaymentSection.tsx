@@ -1,9 +1,9 @@
-import { CreditCard } from "lucide-react";
+import { CreditCard, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
-// DEBT-038: Stripe Customer Portal embed pendiente · Fase 3 §3.x.
-// Hoy: placeholder · no expone método de pago ni invoices.
 export function PaymentSection() {
   return (
     <Card>
@@ -12,11 +12,32 @@ export function PaymentSection() {
           <CreditCard className="h-4 w-4" />Método de pago
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 text-sm text-muted-foreground">
-        <p>La gestión del método de pago y descarga de facturas se realiza vía Stripe Customer Portal. Integración pendiente (DEBT-038).</p>
-        <Button disabled variant="outline" className="w-full" title="DEBT-038 · pendiente Stripe Customer Portal">
-          Próximamente
+      <CardContent className="space-y-3">
+        <div className="space-y-1">
+          <Label className="text-xs">Nombre del titular</Label>
+          <Input className="h-9" disabled placeholder="Como aparece en la tarjeta" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Número de tarjeta</Label>
+          <Input className="h-9" disabled placeholder="•••• •••• •••• ••••" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Vencimiento</Label>
+            <Input className="h-9" disabled placeholder="MM/AA" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">CVV</Label>
+            <Input className="h-9" disabled placeholder="•••" />
+          </div>
+        </div>
+        <Button disabled variant="outline" className="w-full" title="DEBT-038 · Stripe Customer Portal pendiente">
+          Agregar tarjeta · Próximamente
         </Button>
+        <div className="flex items-start gap-2 text-xs text-muted-foreground pt-1">
+          <ShieldCheck className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+          <span>Tu tarjeta se usará para renovaciones automáticas del plan. Procesado con seguridad via Stripe.</span>
+        </div>
       </CardContent>
     </Card>
   );

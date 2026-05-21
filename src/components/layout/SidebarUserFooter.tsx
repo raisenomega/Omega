@@ -1,7 +1,7 @@
 import { LogOut, User as UserIcon, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +29,7 @@ export function SidebarUserFooter() {
     email[0]?.toUpperCase() ||
     "U";
   const displayName = fullName || email.split("@")[0];
+  const avatarUrl = user.user_metadata?.avatar_url as string | undefined;
 
   return (
     <DropdownMenu>
@@ -38,6 +39,7 @@ export function SidebarUserFooter() {
           className="data-[state=open]:bg-sidebar-accent group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:justify-center"
         >
           <Avatar className="h-8 w-8 rounded-lg shrink-0">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />}
             <AvatarFallback className="rounded-lg gradient-primary text-xs font-bold text-primary-foreground">
               {initials}
             </AvatarFallback>

@@ -1,55 +1,54 @@
-import { useEffect, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { INDUSTRIES, REGIONS } from "@/lib/client-constants";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { PillGroup } from "@/components/onboarding/PillGroup";
+import { AvatarUpload } from "./AvatarUpload";
 
-interface ProfileData { id: string; name: string | null; industry: string | null; region: string | null; }
-
-async function authFetch(path: string, init: RequestInit = {}): Promise<Response> {
-  const { data: { session } } = await supabase.auth.getSession();
-  const base = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1";
-  return fetch(`${base}${path}`, { ...init, headers: { "Content-Type": "application/json", ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}), ...init.headers } });
-}
+const PROFESSIONS = ["community_manager", "marketing_manager", "owner", "agency", "other"] as const;
+const PROFESSION_LABELS: Record<string, string> = {
+  community_manager: "Community Manager", marketing_manager: "Marketing Manager",
+  owner: "Dueño del negocio", agency: "Agencia / Freelancer", other: "Otro",
+};
 
 export function ProfileSection() {
-  const qc = useQueryClient();
   const { toast } = useToast();
-  const [name, setName] = useState(""); const [industry, setIndustry] = useState(""); const [region, setRegion] = useState("");
+  const { user } = useAuth();
+  const meta = (user?.user_metadata ?? {}) as { full_name?: string; role?: string; avatar_url?: string };
+  const [fullName, setFullName] = useState(meta.full_name ?? "");
+  const [role, setRole] = useState(meta.role ?? "");
+  const [avatarUrl, setAvatarUrl] = useState(meta.avatar_url ?? "");
+  const [saving, setSaving] = useState(false);
 
-  const q = useQuery<ProfileData>({ queryKey: ["client_profile"], queryFn: async () => { const r = await authFetch("/clients/profile"); if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); } });
-  useEffect(() => { if (q.data) { setName(q.data.name ?? ""); setIndustry(q.data.industry ?? ""); setRegion(q.data.region ?? ""); } }, [q.data]);
+  const handleSave = async () => {
+    setSaving(true);
+    const { error } = await supabase.auth.updateUser({ data: { full_name: fullName, role, avatar_url: avatarUrl } });
+    setSaving(false);
+    if (error) { toast({ title: "Error guardando", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Perfil actualizado" });
+  };
 
-  const m = useMutation({
-    mutationFn: async () => {
-      const r = await authFetch("/clients/profile", { method: "PATCH", body: JSON.stringify({ name: name || null, industry: industry || null, region: region || null }) });
-      if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(typeof e.detail === "string" ? e.detail : `HTTP ${r.status}`); }
-      return r.json();
-    },
-    onSuccess: () => { toast({ title: "Perfil actualizado" }); qc.invalidateQueries({ queryKey: ["client_profile"] }); },
-    onError: (e: Error) => toast({ title: "No se pudo guardar", description: e.message, variant: "destructive" }),
-  });
+  if (!user) return null;
 
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Perfil del negocio</CardTitle></CardHeader>
-      <CardContent className="space-y-3">
-        <div className="space-y-1"><label className="text-xs text-muted-foreground">Nombre</label><Input value={name} onChange={(e) => setName(e.target.value)} disabled={q.isLoading} maxLength={120} /></div>
-        <div className="space-y-1"><label className="text-xs text-muted-foreground">Industria</label>
-          <Select value={industry} onValueChange={setIndustry} disabled={q.isLoading}>
-            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-            <SelectContent>{INDUSTRIES.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
-          </Select></div>
-        <div className="space-y-1"><label className="text-xs text-muted-foreground">Región</label>
-          <Select value={region} onValueChange={setRegion} disabled={q.isLoading}>
-            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-            <SelectContent>{REGIONS.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
-          </Select></div>
-        <Button onClick={() => m.mutate()} disabled={m.isPending || q.isLoading} className="w-full">{m.isPending ? "Guardando…" : "Guardar cambios"}</Button>
+      <CardHeader><CardTitle className="text-base">Perfil del operador</CardTitle></CardHeader>
+      <CardContent className="space-y-4">
+        <AvatarUpload userId={user.id} fullName={fullName} email={user.email ?? ""} avatarUrl={avatarUrl} onUpload={setAvatarUrl} />
+        <div className="space-y-1"><Label className="text-xs">Nombre completo</Label>
+          <Input className="h-9" value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={120} />
+        </div>
+        <div className="space-y-1"><Label className="text-xs">Profesión / Rol</Label>
+          <PillGroup options={PROFESSIONS} labels={PROFESSION_LABELS} value={role} onChange={(x) => setRole(x as string)} cols={3} />
+        </div>
+        <div className="space-y-1"><Label className="text-xs">Email</Label>
+          <Input className="h-9" value={user.email ?? ""} disabled />
+        </div>
+        <Button onClick={handleSave} disabled={saving} className="w-full">{saving ? "Guardando…" : "Guardar"}</Button>
       </CardContent>
     </Card>
   );

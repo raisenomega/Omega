@@ -93,3 +93,8 @@ def load_history_for_endpoint(supabase: SupabaseService, user_id: str, limit: in
         "role, content, aria_level, created_at"
     ).eq("user_id", user_id).order("created_at", desc=False).limit(limit).execute()
     return r.data or []
+
+
+def delete_aria_history(supabase: SupabaseService, user_id: str) -> None:
+    """DELETE aria_conversations WHERE user_id · usado por Settings ARIA tab."""
+    supabase.client.table("aria_conversations").delete().eq("user_id", user_id).execute()

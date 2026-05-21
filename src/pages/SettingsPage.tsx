@@ -1,27 +1,61 @@
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { useMyPlanStatus } from "@/hooks/useMyPlanStatus";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import { ProfileSection } from "@/components/settings/ProfileSection";
 import { PlanSection } from "@/components/settings/PlanSection";
 import { PaymentSection } from "@/components/settings/PaymentSection";
+import { ARIASection } from "@/components/settings/ARIASection";
+import { SocialAccountsSection } from "@/components/settings/SocialAccountsSection";
+import { SecuritySection } from "@/components/settings/SecuritySection";
+import { NotificationsSection } from "@/components/settings/NotificationsSection";
 
-// DEBT-033 parcial: SettingsPage V3 reescrita · sustituye ComingSoon.
-// Cubre: Profile (name/industry/region · PATCH /clients/profile) + Plan
-// (useClientPlanStatus + useUpgradePlan reusados) + Payment (placeholder
-// DEBT-038). NO usa profiles/organizations/user_roles/audit_logs.
+type TabId = "perfil" | "plan" | "aria" | "cuentas" | "seguridad" | "notificaciones";
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: "perfil", label: "Perfil" },
+  { id: "plan", label: "Plan" },
+  { id: "aria", label: "ARIA" },
+  { id: "cuentas", label: "Cuentas" },
+  { id: "seguridad", label: "Seguridad" },
+  { id: "notificaciones", label: "Notificaciones" },
+];
+
 export default function SettingsPage() {
   const my = useMyPlanStatus();
+  const [active, setActive] = useState<TabId>("perfil");
   useTrackOnMount("feature_open", { feature: "settings" });
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-8 space-y-6">
+    <div className="container mx-auto max-w-3xl px-4 py-6 space-y-4">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold">Configuración</h1>
-        <p className="text-sm text-muted-foreground">Perfil del negocio, plan y método de pago.</p>
       </header>
 
-      <ProfileSection />
-      <PlanSection clientId={my.clientId} />
-      <PaymentSection />
+      <div className="flex flex-wrap gap-2">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setActive(t.id)}
+            className={cn(
+              "rounded-full px-3 py-1 text-xs border transition cursor-pointer",
+              active === t.id
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-muted/40 text-muted-foreground border-border/50 hover:bg-muted/60",
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {active === "perfil" && <ProfileSection />}
+      {active === "plan" && (<div className="space-y-4"><PlanSection clientId={my.clientId} /><PaymentSection /></div>)}
+      {active === "aria" && <ARIASection />}
+      {active === "cuentas" && <SocialAccountsSection clientId={my.clientId} />}
+      {active === "seguridad" && <SecuritySection />}
+      {active === "notificaciones" && <NotificationsSection clientId={my.clientId} />}
     </div>
   );
 }
