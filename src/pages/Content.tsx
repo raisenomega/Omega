@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Loader2, AlertCircle, FileText } from "lucide-react";
+import { Loader2, AlertCircle, FileText, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useContentList, type ContentStatus } from "@/hooks/useContentActions";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import { ContentFilters } from "@/components/content/ContentFilters";
 import { ContentCard } from "@/components/content/ContentCard";
+import { GenerateContentSheet } from "@/components/content/GenerateContentSheet";
 
 const EMPTY_TITLES: Record<ContentStatus, string> = {
   pending: "Sin contenido pendiente",
@@ -16,18 +17,25 @@ const EMPTY_TITLES: Record<ContentStatus, string> = {
 export default function Content() {
   const [status, setStatus] = useState<ContentStatus>("pending");
   const [contentType, setContentType] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   useTrackOnMount("feature_open", { feature: "content" });
 
   const q = useContentList({ status, contentType });
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-6 space-y-4">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold">Contenido</h1>
-        <p className="text-sm text-muted-foreground">
-          Contenido generado por los agentes · aprueba para que ARIA aprenda tu voz.
-        </p>
+      <header className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold">Contenido</h1>
+          <p className="text-sm text-muted-foreground">
+            Contenido generado por los agentes · aprueba para que ARIA aprenda tu voz.
+          </p>
+        </div>
+        <Button onClick={() => setSheetOpen(true)} className="gap-1 bg-amber-500 hover:bg-amber-600 text-white">
+          <Sparkles className="h-4 w-4" />Generar contenido
+        </Button>
       </header>
+      <GenerateContentSheet open={sheetOpen} onOpenChange={setSheetOpen} />
 
       <ContentFilters
         status={status}
