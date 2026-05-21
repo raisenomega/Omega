@@ -1,23 +1,17 @@
-"""Repository ARIA · única capa que toca Supabase para ARIA reads/writes.
+"""Repository ARIA · capa Supabase para conversación + behavioral · DDD A1/A9.
 
-Análogo a memory_repository (BC_COGNITION §3). Use cases (application)
-llaman aquí · jamás SDK Supabase directo en handlers.
-
-safe_insert helper: wrapper best-effort · errores loguean stack trace
-pero NO propagan (FIX 4 audit · persistencia no debe romper respuesta).
+safe_insert: best-effort wrapper · log + return None (FIX 4 audit).
+Memory + delete history: ver aria_memory_repository (C4 split).
 """
 import logging
 from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
-
-P = ParamSpec("P")
-T = TypeVar("T")
+P = ParamSpec("P"); T = TypeVar("T")
 
 
 def safe_insert(label: str, fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> Optional[T]:
-    """Ejecuta fn(*args, **kwargs) silenciando errores · log con stack trace."""
     try:
         return fn(*args, **kwargs)
     except Exception as e:
@@ -55,7 +49,7 @@ def insert_behavioral_event(
     event_type: str, event_data: Optional[dict] = None,
     session_id: Optional[str] = None,
 ) -> Optional[str]:
-    """Persiste signal · cliente O reseller (chk_behavioral_owner_present)."""
+    """Persiste signal · client_id OR reseller_id (chk_behavioral_owner_present)."""
     r = supabase.client.table("behavioral_events").insert({
         "user_id": user_id, "client_id": client_id, "reseller_id": reseller_id,
         "event_type": event_type, "event_data": event_data, "session_id": session_id,
@@ -63,24 +57,7 @@ def insert_behavioral_event(
     return r.data[0]["id"] if r.data else None
 
 
-def insert_agent_memory(
-    supabase: SupabaseService, user_id: str,
-    client_id: Optional[str], reseller_id: Optional[str],
-    user_message: str, assistant_response: str, level: int,
-    source_event_id: Optional[str], was_correct: Optional[bool] = None,
-) -> None:
-    """INSERT agent_memory schema M1 · was_correct=None → cron evalúa 72h."""
-    supabase.client.table("agent_memory").insert({
-        "user_id": user_id, "client_id": client_id, "reseller_id": reseller_id,
-        "agent_code": "aria", "memory_type": "episodic",
-        "context": user_message, "decision": assistant_response, "confidence": 7,
-        "was_correct": was_correct, "source_event_id": source_event_id,
-        "metadata": {"aria_level": level},
-    }).execute()
-
-
 def load_recent_history(supabase: SupabaseService, user_id: str, window: int) -> list[dict[str, str]]:
-    """Últimos N mensajes (ASC) para context window de Claude."""
     r = supabase.client.table("aria_conversations").select(
         "role, content, created_at"
     ).eq("user_id", user_id).order("created_at", desc=True).limit(window).execute()
@@ -88,13 +65,7 @@ def load_recent_history(supabase: SupabaseService, user_id: str, window: int) ->
 
 
 def load_history_for_endpoint(supabase: SupabaseService, user_id: str, limit: int = 50) -> list[dict[str, Any]]:
-    """Historial completo ASC para GET /history endpoint."""
     r = supabase.client.table("aria_conversations").select(
         "role, content, aria_level, created_at"
     ).eq("user_id", user_id).order("created_at", desc=False).limit(limit).execute()
     return r.data or []
-
-
-def delete_aria_history(supabase: SupabaseService, user_id: str) -> None:
-    """DELETE aria_conversations WHERE user_id · usado por Settings ARIA tab."""
-    supabase.client.table("aria_conversations").delete().eq("user_id", user_id).execute()

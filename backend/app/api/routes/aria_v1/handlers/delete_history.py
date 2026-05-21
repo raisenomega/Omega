@@ -6,7 +6,7 @@ DDD A1/A9: handler -> aria_repository. Best-effort behavioral_event
 from typing import Optional
 from fastapi import APIRouter, Header
 from app.api.routes.auth.auth_utils import get_current_user
-from app.bc_cognition.infrastructure import aria_repository as repo
+from app.bc_cognition.infrastructure import aria_repository as repo, aria_memory_repository as mem
 from app.infrastructure.supabase_service import get_supabase_service
 
 router = APIRouter()
@@ -18,7 +18,7 @@ async def delete_aria_history(
 ) -> dict:
     user = await get_current_user(authorization)
     sb = get_supabase_service()
-    repo.safe_insert("delete_history", repo.delete_aria_history, sb, user["id"])
+    repo.safe_insert("delete_history", mem.delete_aria_history, sb, user["id"])
 
     client = repo.safe_insert("find_client", repo.find_client_by_user, sb, user["id"])
     reseller = repo.safe_insert("find_reseller", repo.find_reseller_by_owner, sb, user["id"])

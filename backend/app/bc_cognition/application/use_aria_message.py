@@ -10,7 +10,7 @@ from app.bc_cognition.domain.persona_aria import (
     build_system_prompt, get_agent_code_for_level, get_history_window,
 )
 from app.bc_cognition.infrastructure.anthropic_adapter import generate
-from app.bc_cognition.infrastructure import aria_repository as repo
+from app.bc_cognition.infrastructure import aria_repository as repo, aria_memory_repository as mem
 from app.bc_cognition.infrastructure._anthropic_types import ClaudeError
 from app.infrastructure.supabase_service import get_supabase_service
 
@@ -60,7 +60,7 @@ async def use_aria_message(
         repo.safe_insert("behavioral_failed", repo.insert_behavioral_event,
                          supabase, user_id, client_id, reseller_id,
                          "aria_message_failed", {"error_code": code})
-        repo.safe_insert("agent_memory_failed", repo.insert_agent_memory,
+        repo.safe_insert("agent_memory_failed", mem.insert_agent_memory,
                          supabase, user_id, client_id, reseller_id,
                          user_message=user_message, assistant_response=f"[failed:{code}]",
                          level=level, source_event_id=event_id, was_correct=False)
@@ -69,7 +69,7 @@ async def use_aria_message(
     # Happy path · assistant message + agent_memory was_correct=None (cron 72h)
     repo.safe_insert("assistant_message", repo.insert_assistant_message,
                      supabase, user_id, client_id, response.text, level)
-    repo.safe_insert("agent_memory_ok", repo.insert_agent_memory,
+    repo.safe_insert("agent_memory_ok", mem.insert_agent_memory,
                      supabase, user_id, client_id, reseller_id,
                      user_message=user_message, assistant_response=response.text,
                      level=level, source_event_id=event_id, was_correct=None)
