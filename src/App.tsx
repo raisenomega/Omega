@@ -17,6 +17,8 @@ import Content from "./pages/Content";
 import CalendarPage from "./pages/Calendar";
 import Media from "./pages/Media";
 import Analytics from "./pages/Analytics";
+import BrandVoicePage from "./pages/BrandVoicePage";
+import CrisisPage from "./pages/CrisisPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
@@ -88,6 +90,22 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <AppLayout><Analytics /></AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/brand-voice"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout><BrandVoicePage /></AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/crisis"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout><CrisisPage /></AppLayout>
                   </ProtectedRoute>
                 }
               />
