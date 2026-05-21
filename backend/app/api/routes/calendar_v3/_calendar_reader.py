@@ -29,18 +29,35 @@ def month_to_range(month: str) -> tuple[str, str]:
 
 
 def list_scheduled_posts(client_ids: list[str], month: Optional[str], status: Optional[str]) -> list[dict[str, Any]]:
+    """Fetch posts + merge platform/content en Python (evita FK ambiguity de PostgREST)."""
     if not client_ids:
         return []
-    q = _sb().table("scheduled_posts").select(
-        "*, social_accounts(platform), content_lab_generated(content)"
-    ).in_("client_id", client_ids)
+    sb = _sb()
+    q = sb.table("scheduled_posts").select("*").in_("client_id", client_ids)
     if month:
         start, end = month_to_range(month)
         q = q.gte("scheduled_for", start).lt("scheduled_for", end)
     if status:
         q = q.eq("status", status)
-    r = q.order("scheduled_for", desc=False).execute()
-    return r.data or []
+    posts = q.order("scheduled_for", desc=False).execute().data or []
+    if not posts:
+        return []
+    sa_ids = list({p["social_account_id"] for p in posts if p.get("social_account_id")})
+    c_ids = list({p["content_id"] for p in posts if p.get("content_id")})
+    sa_map: dict[str, dict] = {}
+    c_map: dict[str, dict] = {}
+    if sa_ids:
+        ar = sb.table("social_accounts").select("id, platform").in_("id", sa_ids).execute()
+        sa_map = {str(a["id"]): a for a in (ar.data or [])}
+    if c_ids:
+        cr = sb.table("content_lab_generated").select("id, content").in_("id", c_ids).execute()
+        c_map = {str(c["id"]): c for c in (cr.data or [])}
+    for p in posts:
+        sa_id = p.get("social_account_id")
+        ci = p.get("content_id")
+        p["social_accounts"] = sa_map.get(str(sa_id)) if sa_id else None
+        p["content_lab_generated"] = c_map.get(str(ci)) if ci else None
+    return posts
 
 
 def get_scheduled_post(post_id: str) -> Optional[dict[str, Any]]:
