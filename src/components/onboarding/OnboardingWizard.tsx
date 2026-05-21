@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import type { UseOnboardingFormResult } from "@/hooks/useOnboardingForm";
 import { sectionsFilled } from "@/lib/onboarding-completion";
@@ -35,9 +36,18 @@ export function OnboardingWizard({ wizard, onClose }: OnboardingWizardProps) {
   const canSubmit = identityValid && !wizard.isSubmitting;
 
   if (wizard.isLoading) {
+    return <div className="flex h-full items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+  }
+  if (wizard.isError) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+        <AlertCircle className="h-10 w-10 text-destructive" />
+        <p className="text-sm font-medium">No se pudo cargar el cliente</p>
+        {wizard.errorMessage && <p className="text-xs text-muted-foreground max-w-md">{wizard.errorMessage}</p>}
+        <div className="flex gap-2 mt-2">
+          <Button variant="outline" size="sm" onClick={wizard.retry}>Reintentar</Button>
+          {onClose && <Button variant="ghost" size="sm" onClick={onClose}>Cerrar</Button>}
+        </div>
       </div>
     );
   }

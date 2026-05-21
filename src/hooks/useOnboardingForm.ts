@@ -23,6 +23,7 @@ export interface UseOnboardingFormOptions { clientId?: string | null; onSuccess?
 export interface UseOnboardingFormResult {
   form: UseFormReturn<OnboardingForm>; submit: () => void;
   isSubmitting: boolean; isLoading: boolean; isEditing: boolean; completionPercent: number;
+  isError: boolean; errorMessage: string | null; retry: () => void;
 }
 
 export function useOnboardingForm(opts: UseOnboardingFormOptions = {}): UseOnboardingFormResult {
@@ -40,6 +41,7 @@ export function useOnboardingForm(opts: UseOnboardingFormOptions = {}): UseOnboa
     queryKey: ["client_onboarding_data", clientId],
     queryFn: () => fetchOnboardingData(clientId!),
     enabled: isEditing,
+    retry: 1,
   });
 
   useEffect(() => {
@@ -64,5 +66,8 @@ export function useOnboardingForm(opts: UseOnboardingFormOptions = {}): UseOnboa
     isLoading: isEditing && dataQuery.isLoading,
     isEditing,
     completionPercent: pct,
+    isError: isEditing && dataQuery.isError,
+    errorMessage: dataQuery.error instanceof Error ? dataQuery.error.message : null,
+    retry: () => dataQuery.refetch(),
   };
 }
