@@ -21,15 +21,27 @@ def get_accessible_client_ids(user_id: str) -> list[str]:
 
 
 def list_content(client_ids: list[str], is_saved: Optional[bool], content_type: Optional[str], limit: int, offset: int) -> list[dict[str, Any]]:
+    """Fetch content + merge platform en Python (evita FK ambiguity PostgREST embed)."""
     if not client_ids:
         return []
-    q = _sb().table("content_lab_generated").select("*, social_accounts(platform)").in_("client_id", client_ids)
+    sb = _sb()
+    q = sb.table("content_lab_generated").select("*").in_("client_id", client_ids)
     if is_saved is not None:
         q = q.eq("is_saved", is_saved)
     if content_type:
         q = q.eq("content_type", content_type)
-    r = q.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
-    return r.data or []
+    items = q.order("created_at", desc=True).range(offset, offset + limit - 1).execute().data or []
+    if not items:
+        return []
+    sa_ids = list({i["social_account_id"] for i in items if i.get("social_account_id")})
+    sa_map: dict[str, dict] = {}
+    if sa_ids:
+        ar = sb.table("social_accounts").select("id, platform").in_("id", sa_ids).execute()
+        sa_map = {str(a["id"]): a for a in (ar.data or [])}
+    for i in items:
+        sa_id = i.get("social_account_id")
+        i["social_accounts"] = sa_map.get(str(sa_id)) if sa_id else None
+    return items
 
 
 def count_content(client_ids: list[str], is_saved: Optional[bool], content_type: Optional[str]) -> int:
