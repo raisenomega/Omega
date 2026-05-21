@@ -58,16 +58,15 @@ app = FastAPI(
     docs_url="/docs", redoc_url="/redoc",
 )
 
-# Configure CORS
+# Configure CORS · lee BACKEND_CORS_ORIGINS (CSV) via settings.cors_origins_list.
+# Fallback ["*"] solo si la env var está vacía (dev local). El browser rechaza
+# allow_credentials=True con wildcard "*" · por eso se desactiva en ese caso.
+_cors_origins = settings.cors_origins_list or ["*"]
+_allow_creds = _cors_origins != ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://r-omega.agency",
-        "https://www.r-omega.agency",
-        "http://localhost:5173",
-        "http://localhost:3000",
-    ],
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    allow_credentials=_allow_creds,
     allow_methods=["*"],
     allow_headers=["*"],
 )
