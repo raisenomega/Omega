@@ -1,9 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Cell } from "recharts";
+import { PLATFORM_COLORS, type Platform } from "@/lib/onboarding-constants";
+
+interface EngagementRow {
+  platform: string;
+  likes: number;
+  comments: number;
+  shares: number;
+}
 
 interface EngagementChartProps {
-  data: { platform: string; likes: number; comments: number; shares: number }[];
+  data: EngagementRow[];
 }
 
 const chartConfig = {
@@ -12,22 +20,29 @@ const chartConfig = {
   shares: { label: "Compartidos", color: "hsl(var(--chart-3))" },
 };
 
+function colorFor(platform: string): string {
+  const key = platform.toLowerCase() as Platform;
+  return key in PLATFORM_COLORS ? PLATFORM_COLORS[key] : "#9CA3AF";
+}
+
 export function EngagementChart({ data }: EngagementChartProps) {
   return (
     <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="text-base">Engagement por Plataforma</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">Engagement por plataforma</CardTitle>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px] w-full">
+      <CardContent className="pt-2">
+        <ChartContainer config={chartConfig} className="h-64 w-full">
           <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
-            <XAxis dataKey="platform" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-            <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={50} />
+            <XAxis dataKey="platform" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+            <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} width={40} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="likes" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="comments" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="shares" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="likes" radius={[4, 4, 0, 0]}>
+              {data.map((d, i) => <Cell key={i} fill={colorFor(d.platform)} />)}
+            </Bar>
+            <Bar dataKey="comments" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} fillOpacity={0.7} />
+            <Bar dataKey="shares" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} fillOpacity={0.5} />
           </BarChart>
         </ChartContainer>
       </CardContent>

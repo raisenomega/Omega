@@ -1,81 +1,68 @@
 import { useState } from "react";
-import { Loader2, TrendingUp, Heart, Clock } from "lucide-react";
+import { Info, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
-import { useDashboardData } from "@/hooks/useDashboardData";
-import { StatsCard } from "@/components/dashboard/StatsCard";
+import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
+import { AnalyticsKPIs } from "@/components/analytics/AnalyticsKPIs";
 import { GrowthChart } from "@/components/analytics/GrowthChart";
 import { EngagementChart } from "@/components/analytics/EngagementChart";
-import { ScheduleHeatmap } from "@/components/analytics/ScheduleHeatmap";
-import { TopPostsTable } from "@/components/analytics/TopPostsTable";
-import { AnalyticsFilters } from "@/components/analytics/AnalyticsFilters";
+import { BestTimesHeatmap } from "@/components/analytics/BestTimesHeatmap";
+
+type Period = "7d" | "30d" | "90d";
 
 export default function Analytics() {
   const [selectedClient, setSelectedClient] = useState("all");
-  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
-    from: undefined,
-    to: undefined,
-  });
+  const [period, setPeriod] = useState<Period>("30d");
+  useTrackOnMount("feature_open", { feature: "analytics" });
 
-  const { loading, growthData, engagementData, heatmapData, topPosts, avgEngagement, totalFollowers } =
-    useAnalyticsData();
-  const { clients } = useDashboardData();
+  const { loading, growthData, engagementData, heatmapData, avgEngagement, totalFollowers } = useAnalyticsData();
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
+  const postsCount = engagementData.reduce((s, e) => s + e.likes + e.comments + e.shares, 0);
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-display font-bold tracking-tight">Analytics</h1>
-        <p className="text-muted-foreground">Métricas y reportes de rendimiento</p>
+    <div className="container mx-auto max-w-6xl px-4 py-6 space-y-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-semibold">Analytics</h1>
+          <p className="text-sm text-muted-foreground">Métricas y reportes de rendimiento</p>
+        </div>
+        <div className="flex gap-2">
+          <Select value={selectedClient} onValueChange={setSelectedClient}>
+            <SelectTrigger className="h-8 w-44 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="all">Todos los clientes</SelectItem></SelectContent>
+          </Select>
+          <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+            <SelectTrigger className="h-8 w-36 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7d">Últimos 7d</SelectItem>
+              <SelectItem value="30d">Últimos 30d</SelectItem>
+              <SelectItem value="90d">Últimos 90d</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <AnalyticsFilters
-        clients={clients.map((c) => ({ id: c.id, name: c.name }))}
-        selectedClient={selectedClient}
-        onClientChange={setSelectedClient}
-        dateRange={dateRange}
-        onDateRangeChange={setDateRange}
-      />
-
-      {/* KPI row */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatsCard
-          title="Seguidores Totales"
-          value={(totalFollowers ?? 0).toLocaleString()}
-          icon={TrendingUp}
-          subtitle="Todas las plataformas"
-        />
-        <StatsCard
-          title="Engagement Promedio"
-          value={`${avgEngagement}%`}
-          icon={Heart}
-          subtitle="Likes + comentarios + shares"
-        />
-        <StatsCard
-          title="Mejor Horario"
-          value="19:00 – 21:00"
-          icon={Clock}
-          subtitle="Mayor interacción"
-        />
+      <div className="flex items-center gap-2 bg-muted/40 rounded px-3 py-2 text-xs text-muted-foreground">
+        <Info className="h-3.5 w-3.5 shrink-0" />
+        <span>Datos de ejemplo · Conecta tus cuentas para ver métricas reales (DEBT-034)</span>
       </div>
 
-      {/* Charts row */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <AnalyticsKPIs followers={totalFollowers} engagement={avgEngagement} bestHour="19:00 – 21:00" posts={postsCount} />
+
+      <div className="grid gap-3 lg:grid-cols-2">
         <GrowthChart data={growthData} />
         <EngagementChart data={engagementData} />
       </div>
 
-      {/* Heatmap */}
-      <ScheduleHeatmap data={heatmapData} />
-
-      {/* Top Posts */}
-      <TopPostsTable posts={topPosts} />
+      <BestTimesHeatmap data={heatmapData} />
     </div>
   );
 }
