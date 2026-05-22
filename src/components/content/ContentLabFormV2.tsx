@@ -40,8 +40,8 @@ export function ContentLabFormV2({ clientList, form, setForm, variations, setVar
 
   return (
     <div className="space-y-3">
-      {/* BARRA UNIFICADA · Verde (form) | Azul (research) · duotone hard transition */}
-      <div className="rounded-lg border overflow-hidden flex flex-wrap md:flex-nowrap">
+      {/* BARRA UNIFICADA · Verde (form) | Azul (research) · duotone edge-to-edge */}
+      <div className="flex flex-wrap md:flex-nowrap">
         <div className="bg-green-50 dark:bg-green-950/30 p-3 flex flex-wrap gap-2 items-center flex-1 min-w-0">
           <select value={form.clientId} onChange={(e) => update("clientId", e.target.value)}
             className="px-2 py-1.5 text-sm rounded-md border bg-background flex-1 min-w-[140px]">

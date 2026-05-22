@@ -56,19 +56,21 @@ export default function ContentLabPageV2() {
   };
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-6 space-y-4">
+    <div className="space-y-4">
       <header className="flex items-center gap-2">
         <Sparkles className="h-5 w-5 text-amber-500" />
         <h1 className="text-2xl font-semibold">Content Lab V2</h1>
         <span className="text-xs text-muted-foreground">(mock · iteración visual)</span>
       </header>
-      <ContentLabFormV2
-        clientList={clientList ?? []}
-        form={form} setForm={setForm}
-        variations={variations} setVariations={setVariations}
-        onGenerate={handleGenerate}
-        onResearch={() => toast({ title: "Brave Research en futuro Sprint" })}
-      />
+      <div className="sticky top-0 z-10 -mx-6">
+        <ContentLabFormV2
+          clientList={clientList ?? []}
+          form={form} setForm={setForm}
+          variations={variations} setVariations={setVariations}
+          onGenerate={handleGenerate}
+          onResearch={() => toast({ title: "Brave Research en futuro Sprint" })}
+        />
+      </div>
       <ResultGridV2 results={results} onAgendar={handleAgendar} onSave={handleSave} onDownload={handleDownload} />
       <ScheduleModalV2
         state={modalState} block={block} scheduledAt={scheduledAt} setScheduledAt={setScheduledAt}
