@@ -40,23 +40,24 @@ export function ContentLabFormV2({ clientList, form, setForm, variations, setVar
 
   return (
     <div className="space-y-3">
-      {/* BARRA VERDE · Cliente + Plataforma + Tipo + Tono */}
-      <div className="bg-green-50 dark:bg-green-950/30 border border-green-300 dark:border-green-700 rounded-lg p-3 flex flex-wrap gap-2 items-center">
-        <select value={form.clientId} onChange={(e) => update("clientId", e.target.value)}
-          className="px-2 py-1.5 text-sm rounded-md border bg-background flex-1 min-w-[140px]">
-          <option value="">— Cliente —</option>
-          {clientList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-        <Select value={form.platform} onChange={(v) => update("platform", v)} options={PLATFORMS} labels={PLATFORM_LABELS} />
-        <Select value={form.type} onChange={(v) => update("type", v)} options={TYPES} labels={TYPE_LABELS} />
-        <Select value={form.tone} onChange={(v) => update("tone", v)} options={TONES} labels={TONE_LABELS} />
-      </div>
-      {/* BANDA AZUL · Brave Research */}
-      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-300 dark:border-blue-700 rounded-lg p-3 flex gap-2 items-center">
-        <Search className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
-        <Input value={form.braveQuery} onChange={(e) => update("braveQuery", e.target.value)}
-          placeholder="¿Qué querés que ARIA investigue antes de generar?" className="flex-1 h-8 text-sm" />
-        <Button size="sm" variant="outline" onClick={onResearch} className="h-8 text-xs">Research</Button>
+      {/* BARRA UNIFICADA · Verde (form) | Azul (research) · duotone hard transition */}
+      <div className="rounded-lg border overflow-hidden flex flex-wrap md:flex-nowrap">
+        <div className="bg-green-50 dark:bg-green-950/30 p-3 flex flex-wrap gap-2 items-center flex-1 min-w-0">
+          <select value={form.clientId} onChange={(e) => update("clientId", e.target.value)}
+            className="px-2 py-1.5 text-sm rounded-md border bg-background flex-1 min-w-[140px]">
+            <option value="">— Cliente —</option>
+            {clientList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <Select value={form.platform} onChange={(v) => update("platform", v)} options={PLATFORMS} labels={PLATFORM_LABELS} />
+          <Select value={form.type} onChange={(v) => update("type", v)} options={TYPES} labels={TYPE_LABELS} />
+          <Select value={form.tone} onChange={(v) => update("tone", v)} options={TONES} labels={TONE_LABELS} />
+        </div>
+        <div className="bg-blue-50 dark:bg-blue-950/30 p-3 flex gap-2 items-center flex-1 min-w-0">
+          <Search className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+          <Input value={form.braveQuery} onChange={(e) => update("braveQuery", e.target.value)}
+            placeholder="¿Qué querés que ARIA investigue antes de generar?" className="flex-1 h-8 text-sm" />
+          <Button size="sm" variant="outline" onClick={onResearch} className="h-8 text-xs">Research</Button>
+        </div>
       </div>
       {/* CAJÓN AMARILLO · Prompt principal */}
       <div className="bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-500 dark:border-amber-600 rounded-lg p-3">
