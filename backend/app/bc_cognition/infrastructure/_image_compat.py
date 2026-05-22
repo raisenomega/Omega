@@ -1,18 +1,20 @@
-"""OmegaRaisen — Image Generation Compat Layer (Fase 2 §2.4 + §2.6).
+"""OmegaRaisen — Image Generation Compat Layer (Fase 2 §2.4 + §2.6 + Sprint 2 P1).
 
 Mediates between Lovable callers expecting `List[str]` of URLs (DALL-E 3
-shape) and the Nano Banana V3 adapter which returns base64 inline. This
-layer currently returns data URIs; production deployment requires uploading
-to Supabase Storage and returning public URLs (see DEBT-018).
+shape) and the Nano Banana V3 adapter which returns base64 inline. Decodes
+base64 → bytes → uploads to Supabase Storage via _storage_uploader →
+returns public URLs persistentes (cierra DEBT-018 · 22 may 2026).
 
 Supports `reference_images_b64` for edit mode (post §2.6 swap of FAL Flux
 Kontext to Nano Banana refs · cierra DEBT-022).
 """
 from __future__ import annotations
 
+import base64
 from typing import List, Optional
 
 from app.bc_cognition.infrastructure._nano_banana_types import ImageRoute
+from app.bc_cognition.infrastructure._storage_uploader import upload_image_bytes
 from app.bc_cognition.infrastructure.nano_banana_adapter import (
     generate as _nano_banana_generate,
 )
@@ -37,15 +39,19 @@ async def generate_image_compat(
     quality: str = "standard",
     n: int = 1,
     reference_images_b64: Optional[List[str]] = None,
+    client_id: Optional[str] = None,
 ) -> List[str]:
-    """Lovable-compatible image generation backed by Nano Banana.
+    """Lovable-compatible image generation backed by Nano Banana + Supabase Storage.
 
-    Returns a list of data URIs (`data:<mime>;base64,<payload>`). For
-    production deployment these should be uploaded to Supabase Storage
-    and replaced with public URLs (DEBT-018).
+    Returns una lista de URLs públicas persistidas (post DEBT-018 · ya no data URIs).
+    Imágenes van a bucket 'generated-images/{client_id|shared}/{uuid}.{ext}'.
 
-    If `reference_images_b64` is provided, Nano Banana uses them as visual
-    context (edit mode · max 20 images per Nano Banana adapter limit).
+    Si `client_id` se provee (V3 handlers), las imágenes van al folder del tenant.
+    Sin client_id (legacy callers · LV1 handler · content_creator agent), van a
+    'shared/'. No breaking change para callers existentes.
+
+    Si `reference_images_b64` se provee, Nano Banana las usa como contexto visual
+    (edit mode · max 20 imágenes per Nano Banana adapter limit).
     """
     aspect_ratio = _SIZE_TO_ASPECT.get(size, _DEFAULT_ASPECT)
     route = _QUALITY_TO_ROUTE.get(quality, _DEFAULT_ROUTE)
@@ -64,7 +70,7 @@ async def generate_image_compat(
             raise RuntimeError(
                 f"Nano Banana generation failed: {code} · {message}"
             )
-        data_uris.append(
-            f"data:{response.mime_type};base64,{response.image_b64}"
-        )
+        image_bytes = base64.b64decode(response.image_b64)
+        url = upload_image_bytes(image_bytes, response.mime_type, client_id=client_id)
+        data_uris.append(url)
     return data_uris
