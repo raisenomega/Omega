@@ -1,4 +1,5 @@
-"""Pydantic models · POST /content-lab/generate + /content-lab/generate-image."""
+"""Pydantic models · POST /content-lab/generate + /generate-image + /generate-video."""
+from typing import Optional
 from pydantic import BaseModel, Field
 
 
@@ -37,3 +38,21 @@ class GenerateImageResponse(BaseModel):
     id: str
     content_type: str  # "image"
     generated_text: str  # URL pública generated-images/{client_id}/{uuid}.{ext}
+
+
+class GenerateVideoRequest(BaseModel):
+    prompt: str = Field(..., min_length=1, max_length=2000)
+    ratio: str = Field(default="1280:768", max_length=32)  # 1280:768|768:1280
+
+
+class VideoJobStartResponse(BaseModel):
+    job_id: str
+    status: str  # "pending"
+
+
+class VideoJobStatusResponse(BaseModel):
+    job_id: str
+    status: str  # pending|running|completed|failed
+    video_url: Optional[str] = None
+    error: Optional[str] = None
+    metadata: dict = {}
