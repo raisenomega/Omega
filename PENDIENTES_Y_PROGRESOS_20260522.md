@@ -338,4 +338,48 @@ Después del rediseño completo del Content Lab V2 (commit `e447903` redesign + 
 
 ---
 
+## CIERRE DE SESIÓN PM — 2026-05-22 · ~19:30 AST
+
+### Content Lab UI V2 · visualmente completa · deployada en omegaraisen.agency
+
+Tras la sesión AM (cierre 02:54 con DEBTs 018/019/020/044 cerradas + DEBT-045 abierta), la sesión PM se enfocó 100% en construcción visual del Content Lab V2.
+
+#### Commits UI · sesión PM (desde e447903 hasta cierre)
+| Hash | Tema |
+|---|---|
+| `e447903` | feat(content-lab): rediseño layout grid · modal de expansión · cards clicables |
+| `682b27e` | feat(content-lab): proporciones grid iguales · botón X eliminar · nota mock→backend |
+| `8945c8c` | style(content-lab): celdas grid con altura fija 220px · placeholders con borde visible |
+| `a0c632e` | style(content-lab): prompt limpio · botones verdes · dropdowns compactos |
+| `849a823` | style(content-lab): fondo prompt bg-background (paridad con la página) |
+
+#### Estado UI · live en producción
+- Layout grid 3 cols × 2 rows · cards 220px de altura fija · 280px de ancho el form
+- Header inline título + barra duotone (border verde · sin fondo sólido)
+- Botones CTA: **verde** (Research + Generar con ARIA) vs **amber** (Agendar al calendario)
+- Cards clicables → modal de expansión `max-w-lg` con texto completo
+- Botón X en cada card · eliminar resultado individual del grid
+- Placeholders bordeados "próximo resultado" · `h-full` · misma altura que cards reales
+- Prompt textarea sin label · sin placeholder · bg transparente · cero focus ring
+
+### Dominio · LIVE
+`omegaraisen.agency` configurado y sirviendo el frontend desde Vercel · backend en Railway.
+
+### Próxima sesión · conectar backend real (~3h dev + 1h QA)
+
+#### Plan principal
+1. **Crear hook `useContentLabGenerate(type)`** que rutee al endpoint correcto según `form.type`:
+   - `text` / `caption` / `hashtags` → `/api/content-lab/generate-text` (Anthropic + virality score real)
+   - `image` → `/api/content-lab/generate-image` (Nano Banana → Supabase Storage URL)
+   - `video` → `/api/content-lab/generate-video` (Veo3 background job + polling)
+2. **Reemplazar `handleGenerate` mock** en `ContentLabPageV2.tsx` por mutación real
+3. **Video polling**: recrear `useVideoJobPolling.ts` (borrado en cleanup commit `57a0a34`) o adaptar de DEBT-020 background jobs
+4. **Imagen renderiza automático** cuando backend devuelve URL de Supabase Storage en `generated_text` · cero cambio frontend · `<img>` ya está en branch `isImage`
+
+#### Fix pendientes pequeños antes del backend (~30 min)
+- **Toast del botón Research**: actualmente solo muestra `toast({ title: "Brave Research en futuro Sprint" })` · cuando se conecte, disparar mutation al endpoint Brave Search
+- **Modal Agendar con date picker real**: `ScheduleModalV2` es block builder con minimize · agregar input `type="datetime-local"` funcional (1 línea de cambio)
+
+---
+
 🐢💎 No velocity. Only precision.
