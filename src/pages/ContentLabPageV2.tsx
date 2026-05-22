@@ -73,8 +73,8 @@ export default function ContentLabPageV2() {
             onResearch={() => toast({ title: "Brave Research en futuro Sprint" })} />
         </div>
       </div>
-      <div className="grid grid-cols-[260px_1fr_1fr] auto-rows-fr items-stretch gap-2 min-h-[420px]">
-        <div className="row-span-full">
+      <div className="grid grid-cols-[280px_1fr_1fr] grid-rows-[220px_220px] items-stretch gap-3">
+        <div className="row-span-full h-full">
           <ContentLabFormV2 form={form} setForm={setForm}
             variations={variations} setVariations={setVariations} onGenerate={handleGenerate} />
         </div>
@@ -84,7 +84,7 @@ export default function ContentLabPageV2() {
             <ResultCardV2 key={r.id} result={r} onExpand={setExpandedResult} onAgendar={handleAgendar}
               onSave={handleSave} onDownload={handleDownload} onRemove={(id) => setResults(p => p.filter(x => x.id !== id))} />
           ) : (
-            <Card key={`empty-${i}`} className="border-dashed border-muted/50 flex items-center justify-center h-full min-h-[140px]">
+            <Card key={`empty-${i}`} className="h-full min-h-full border border-dashed border-muted-foreground/30 flex items-center justify-center bg-card/40">
               <p className="text-xs text-muted-foreground">próximo resultado</p>
             </Card>
           );

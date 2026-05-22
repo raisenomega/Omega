@@ -39,7 +39,7 @@ export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, 
 
   return (
     <Card onClick={() => onExpand(result)}
-      className="relative border-amber-500/30 cursor-pointer hover:border-amber-500 hover:shadow-md transition group">
+      className="relative h-full border-amber-500/30 cursor-pointer hover:border-amber-500 hover:shadow-md transition group">
       <button onClick={(e) => { e.stopPropagation(); onRemove(result.id); }}
         className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition z-10"
         aria-label="Eliminar resultado">
