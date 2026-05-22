@@ -425,16 +425,16 @@ ENFORCE       scripts/verify-personas.sh
 RAZÓN         La identidad del CEO virtual no muta sin aprobación owner
 ```
 
-## X3 · 8 Cron Workers Verificados Post-Deploy
+## X3 · 9 Cron Workers Verificados Post-Deploy
 
 ```
-REGLA         Después de cada deploy: verificar que los 8 cron jobs
+REGLA         Después de cada deploy: verificar que los 9 cron jobs
               están activos en APScheduler
 JOBS          vault_scan (2 AM) · db_guardian (5 AM) · sentinel_brief (7 AM)
               pulse_monitor (cada 5 min) · oracle_weekly_brief (lun 7 AM)
               news_monitor (cada 2h) · competitor_tracker (cada 6h)
-              trend_spotter (cada 12h)
-ENFORCE       Endpoint /api/v1/system/cron-status debe retornar 8/8 active
+              trend_spotter (cada 12h) · brand_dna_refresh (3 AM diario)
+ENFORCE       Endpoint /api/v1/system/cron-status debe retornar 9/9 active
 ```
 
 ## X4 · Stripe Connect Webhooks Idempotentes

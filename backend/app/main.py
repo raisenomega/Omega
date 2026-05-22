@@ -94,8 +94,11 @@ async def startup_event():
     scheduler.add_job(competitor_worker.run_all_clients, 'interval', hours=6, id='competitor_tracker', max_instances=1)
     trend_worker = TrendSpotterWorker()
     scheduler.add_job(trend_worker.run_all_clients, 'interval', hours=12, id='trend_spotter', max_instances=1)
+    # BRAND DNA refresh (DEBT-044 Sprint 2 · 9no cron job)
+    from app.bc_cognition.application.use_brand_dna import refresh_all_brand_dna
+    scheduler.add_job(refresh_all_brand_dna, 'cron', hour=3, minute=0, id='brand_dna_refresh')
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA workers activos — 8 jobs registrados")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA workers activos — 9 jobs registrados")
 
 @app.on_event("shutdown")
 async def shutdown_event():

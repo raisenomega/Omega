@@ -35,3 +35,26 @@ class BrandDNA:
     @staticmethod
     def empty() -> "BrandDNA":
         return BrandDNA([], [], 0, [], 0, 0.0)
+
+    def to_dict(self) -> dict:
+        """Serializa a dict JSON-able (tuples → lists). Para jsonb storage."""
+        return {
+            "tone": list(self.tone),
+            "keywords": [list(kw) for kw in self.keywords],
+            "avg_length_words": self.avg_length_words,
+            "top_post_excerpts": list(self.top_post_excerpts),
+            "corpus_size": self.corpus_size,
+            "score": self.score,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "BrandDNA":
+        """Deserializa desde dict (jsonb de Supabase). Listas [w, n] → tuples."""
+        return cls(
+            tone=list(d.get("tone") or []),
+            keywords=[tuple(kw) for kw in (d.get("keywords") or [])],
+            avg_length_words=int(d.get("avg_length_words", 0)),
+            top_post_excerpts=list(d.get("top_post_excerpts") or []),
+            corpus_size=int(d.get("corpus_size", 0)),
+            score=float(d.get("score", 0.0)),
+        )
