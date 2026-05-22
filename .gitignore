@@ -134,6 +134,10 @@ PROGRESOS_*.md
 INFO_PRESIDENCIAL*.md
 APROBACIONES_VIVAS*.md
 
+# Docs estratégicos internos (NO COMMITEAR · NO PUSHEAR)
+CONTENT_LAB_OMEGA_MASTER.md
+OMEGA_AGENT_SYSTEM.md
+
 # Lovable artifacts (deprecado)
 .lovable/
 lovable-*.json
