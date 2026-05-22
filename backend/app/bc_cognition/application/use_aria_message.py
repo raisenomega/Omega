@@ -6,6 +6,7 @@ DDD A1 + A9: presentation → application → domain.
 repo.safe_insert · errores logueados pero NUNCA propagan al cliente.
 """
 from typing import Optional, Tuple
+from app.bc_cognition.application._aria_memory_context import load_and_format_memory
 from app.bc_cognition.domain.persona_aria import (
     build_system_prompt, get_agent_code_for_level, get_history_window,
 )
@@ -46,8 +47,10 @@ async def use_aria_message(
     event_id = repo.safe_insert("behavioral_sent", repo.insert_behavioral_event,
                                  supabase, user_id, client_id, reseller_id, "aria_message_sent")
 
-    # Call Claude
-    system = build_system_prompt(level, role)
+    # Call Claude · system = persona + memoria reciente (T4 · close P5 loop)
+    memory_block = load_and_format_memory(supabase, client_id, reseller_id)
+    base = build_system_prompt(level, role)
+    system = f"{base}\n\n{memory_block}" if memory_block else base
     history = repo.load_recent_history(supabase, user_id, get_history_window(level))
     response, err = await generate(
         agent_code=get_agent_code_for_level(level), system=system,
