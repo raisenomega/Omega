@@ -14,7 +14,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.config import settings
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from app.services.sentinel_service import SentinelService
 from app.services.oracle_service import OracleService
 from app.workers.news_monitor_worker import NewsMonitorWorker
@@ -51,10 +50,11 @@ from app.api.routes.clients.feature_usage_router import router as feature_usage_
 # Services & scheduler
 sentinel_service = SentinelService()
 oracle_service = OracleService()
-scheduler = AsyncIOScheduler(
-    jobstores={"default": SQLAlchemyJobStore(url=settings.database_url)},
-    timezone="America/Puerto_Rico",
-)  # DEBT-045: persistent jobstore · jobs sobreviven Railway restarts
+scheduler = AsyncIOScheduler(timezone="America/Puerto_Rico")
+# DEBT-045: persistent jobstore REVERTED 22 may 2026 · SQLAlchemy 2.0.25 incompat
+# con Python 3.13.13 de Railway (AssertionError SQLCoreOperations TypingOnly).
+# Cron cleanup orphan_video_jobs sigue funcional vía memory store.
+# Persistent jobstore real: DEBT-047 (requiere bump sqlalchemy >=2.0.32 O pin Python 3.11).
 
 # Create FastAPI application
 app = FastAPI(
