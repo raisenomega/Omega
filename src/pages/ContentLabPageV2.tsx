@@ -4,6 +4,7 @@ import { Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ContentLabFormV2, VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
+import { ContentLabFormBar } from "@/components/content/ContentLabFormBar";
 import { ResultGridV2 } from "@/components/content/ResultGridV2";
 import { ScheduleModalV2 } from "@/components/content/ScheduleModalV2";
 import type { ResultV2, BlockState, ModalState } from "@/components/content/ResultCardV2";
@@ -57,22 +58,25 @@ export default function ContentLabPageV2() {
 
   return (
     <div className="space-y-4">
-      {/* Header inline · patrón Dashboard exacto · sin sticky, sin bleed */}
+      {/* Header inline · título + barra duotone delgada (patrón Dashboard) */}
       <div className="flex items-center justify-between gap-6 flex-wrap">
         <div className="shrink-0 flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-amber-500" />
           <h1 className="text-2xl font-semibold">Content Lab</h1>
         </div>
         <div className="flex-1 min-w-[420px]">
-          <ContentLabFormV2
+          <ContentLabFormBar
             clientList={clientList ?? []}
             form={form} setForm={setForm}
-            variations={variations} setVariations={setVariations}
-            onGenerate={handleGenerate}
             onResearch={() => toast({ title: "Brave Research en futuro Sprint" })}
           />
         </div>
       </div>
+      <ContentLabFormV2
+        form={form} setForm={setForm}
+        variations={variations} setVariations={setVariations}
+        onGenerate={handleGenerate}
+      />
       <ResultGridV2 results={results} onAgendar={handleAgendar} onSave={handleSave} onDownload={handleDownload} />
       <ScheduleModalV2
         state={modalState} block={block} scheduledAt={scheduledAt} setScheduledAt={setScheduledAt}
