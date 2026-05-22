@@ -58,12 +58,12 @@ export default function ContentLabPageV2() {
   return (
     <div className="space-y-4">
       {/* Header inline · título izq + barra duotone derecha (flex-1) · sticky bleed */}
-      <div className="sticky top-0 z-10 -mx-6 bg-background flex items-center gap-6 flex-wrap pl-6">
-        <div className="shrink-0 flex items-center gap-2 py-2">
+      <div className="sticky top-0 z-10 -mx-6 bg-background flex items-center justify-between pl-6">
+        <div className="shrink-0 flex items-center gap-2 py-3">
           <Sparkles className="h-5 w-5 text-amber-500" />
           <h1 className="text-2xl font-semibold">Content Lab</h1>
         </div>
-        <div className="flex-1 min-w-[560px]">
+        <div className="flex-1 ml-6 min-w-0">
           <ContentLabFormV2
             clientList={clientList ?? []}
             form={form} setForm={setForm}
