@@ -57,19 +57,21 @@ export default function ContentLabPageV2() {
 
   return (
     <div className="space-y-4">
-      {/* Header inline · grid bulletproof · col auto (título) + col 1fr (barra) */}
-      <div className="sticky top-0 z-10 -mx-6 bg-background grid grid-cols-[auto_1fr] items-center pl-6 pr-0">
-        <div className="flex items-center gap-2 py-3 pr-6 shrink-0">
+      {/* Header inline · patrón Dashboard exacto · sin sticky, sin bleed */}
+      <div className="flex items-center justify-between gap-6 flex-wrap">
+        <div className="shrink-0 flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-amber-500" />
-          <h1 className="text-2xl font-semibold whitespace-nowrap">Content Lab</h1>
+          <h1 className="text-2xl font-semibold">Content Lab</h1>
         </div>
-        <ContentLabFormV2
-          clientList={clientList ?? []}
-          form={form} setForm={setForm}
-          variations={variations} setVariations={setVariations}
-          onGenerate={handleGenerate}
-          onResearch={() => toast({ title: "Brave Research en futuro Sprint" })}
-        />
+        <div className="flex-1 min-w-[420px]">
+          <ContentLabFormV2
+            clientList={clientList ?? []}
+            form={form} setForm={setForm}
+            variations={variations} setVariations={setVariations}
+            onGenerate={handleGenerate}
+            onResearch={() => toast({ title: "Brave Research en futuro Sprint" })}
+          />
+        </div>
       </div>
       <ResultGridV2 results={results} onAgendar={handleAgendar} onSave={handleSave} onDownload={handleDownload} />
       <ScheduleModalV2
