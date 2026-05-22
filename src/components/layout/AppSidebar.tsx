@@ -31,6 +31,7 @@ const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Clientes", url: "/clients", icon: Users },
   { title: "Content Lab", url: "/content-lab", icon: Sparkles },
+  { title: "Content Lab V2", url: "/content-lab-v2", icon: Sparkles },
   { title: "Contenido", url: "/content", icon: FileText },
   { title: "Calendario", url: "/calendar", icon: CalendarDays },
   { title: "Media", url: "/media", icon: ImageIcon },
