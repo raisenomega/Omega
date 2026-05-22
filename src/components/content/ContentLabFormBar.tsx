@@ -15,7 +15,7 @@ interface Props {
 function Sel({ value, onChange, options, labels }: { value: string; onChange: (v: string) => void; options: readonly string[]; labels: Record<string, string> }) {
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)}
-      className="px-2 py-1 text-sm rounded-md border bg-background flex-1 min-w-0">
+      className="px-2 py-1 text-sm rounded-md border bg-background min-w-0 w-[110px] flex-none">
       {options.map(o => <option key={o} value={o}>{labels[o] ?? o}</option>)}
     </select>
   );
@@ -26,7 +26,7 @@ export function ContentLabFormBar({ clientList, form, setForm, onResearch }: Pro
   return (
     <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-2 border-green-500 rounded-lg bg-card/80 backdrop-blur-sm">
       <select value={form.clientId} onChange={(e) => update("clientId", e.target.value)}
-        className="px-2 py-1 text-sm rounded-md border bg-background flex-1 min-w-[120px]">
+        className="px-2 py-1 text-sm rounded-md border bg-background min-w-0 w-[110px] flex-none">
         <option value="">— Cliente —</option>
         {clientList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
       </select>
@@ -35,9 +35,9 @@ export function ContentLabFormBar({ clientList, form, setForm, onResearch }: Pro
       <Sel value={form.tone} onChange={(v) => update("tone", v)} options={TONES} labels={TONE_LABELS} />
       <div className="h-6 w-px bg-border/60 hidden sm:block" aria-hidden />
       <Input value={form.braveQuery} onChange={(e) => update("braveQuery", e.target.value)}
-        placeholder="¿Qué querés que ARIA investigue?" className="flex-1 h-8 text-sm min-w-[180px]" />
+        placeholder="¿Qué querés que ARIA investigue?" className="flex-1 h-8 text-sm min-w-[240px]" />
       <Button size="sm" onClick={onResearch}
-        className="bg-amber-500 hover:bg-amber-600 text-white font-semibold gap-1.5 h-8 text-xs px-4 rounded-md">
+        className="bg-green-600 hover:bg-green-700 text-white font-semibold gap-1.5 h-8 text-xs px-4 rounded-md">
         <Search className="h-3.5 w-3.5" />
         Research
       </Button>

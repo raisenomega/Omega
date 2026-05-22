@@ -28,10 +28,8 @@ export function ContentLabFormV2({ form, setForm, variations, setVariations, onG
     <div className="space-y-3 h-full flex flex-col">
       {/* CAJÓN AMARILLO · Prompt principal (flex-1 ocupa altura disponible) */}
       <div className="bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-500 dark:border-amber-600 rounded-lg p-3 flex-1 flex flex-col">
-        <Label className="text-xs font-semibold text-amber-900 dark:text-amber-200">Prompt principal</Label>
         <Textarea value={form.topic} onChange={(e) => update("topic", e.target.value)}
-          placeholder="Describe el contenido · qué quiere comunicar · audiencia · CTA"
-          className="mt-2 resize-none bg-background border-amber-300 dark:border-amber-700 flex-1 min-h-[120px]" />
+          className="bg-transparent border-none outline-none resize-none w-full h-full focus:ring-0 focus-visible:ring-0 flex-1 min-h-[120px]" />
       </div>
       {/* CHECKBOXES VARIACIONES · flex-wrap para columna estrecha */}
       <div className="flex flex-wrap gap-3 items-center justify-center py-1">
@@ -44,7 +42,7 @@ export function ContentLabFormV2({ form, setForm, variations, setVariations, onG
       </div>
       {/* BOTÓN GENERAR */}
       <Button onClick={onGenerate} disabled={isPending || !form.topic.trim() || !hasVar}
-        className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-white h-11">
+        className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white h-11">
         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
         {isPending ? "Generando…" : "Generar con ARIA"}
       </Button>
