@@ -137,6 +137,7 @@ APROBACIONES_VIVAS*.md
 # Docs estratégicos internos (NO COMMITEAR · NO PUSHEAR)
 CONTENT_LAB_OMEGA_MASTER.md
 OMEGA_AGENT_SYSTEM.md
+CONTENT_LAB_UI_V2.md
 
 # Lovable artifacts (deprecado)
 .lovable/
