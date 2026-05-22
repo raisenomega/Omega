@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Loader2, Sparkles, Check, RefreshCw } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import { supabase } from "@/integrations/supabase/client";
 import { PillGroup } from "@/components/onboarding/PillGroup";
 import { PLATFORMS, PLATFORM_LABELS } from "@/lib/onboarding-constants";
 import { useSaveContent } from "@/hooks/useContentActions";
+import { ResultCard, Result } from "@/components/content/ResultCard";
 
 const TYPES = ["caption", "hashtags", "video_script", "image"] as const;
 const TONES = ["profesional", "casual", "inspirador", "educativo", "divertido"] as const;
@@ -19,7 +21,6 @@ const STYLES = ["realistic", "cartoon", "minimal"] as const;
 const TYPE_LABELS = { caption: "Caption", hashtags: "Hashtags", video_script: "Video Script", image: "Imagen" } as const;
 const TONE_LABELS = { profesional: "Profesional", casual: "Casual", inspirador: "Inspirador", educativo: "Educativo", divertido: "Divertido" } as const;
 const STYLE_LABELS = { realistic: "Realista", cartoon: "Cartoon", minimal: "Minimal" } as const;
-interface Result { id: string; generated_text: string; content_type: string; virality_score?: number; virality_estimated?: boolean }
 
 async function apiPost<T>(path: string, body: unknown): Promise<T> {
   const { data: { session } } = await supabase.auth.getSession();
@@ -29,7 +30,7 @@ async function apiPost<T>(path: string, body: unknown): Promise<T> {
   return r.json();
 }
 
-const generateText = (b: { platform: string; content_type: string; topic: string; tone: string }) => apiPost<Result>("/content-lab/generate", b);
+const generateText = (b: { platform: string; content_type: string; topic: string; tone: string; variations: number }) => apiPost<Result>("/content-lab/generate", b);
 const generateImage = (b: { prompt: string; style: string }) => apiPost<Result>("/content-lab/generate-image", b);
 
 export default function ContentLabPage() {
@@ -37,13 +38,17 @@ export default function ContentLabPage() {
   useTrackOnMount("feature_open", { feature: "content_lab" });
   const [platform, setPlatform] = useState<string>("instagram"), [type, setType] = useState<string>("caption");
   const [topic, setTopic] = useState(""), [tone, setTone] = useState<string>("casual"), [style, setStyle] = useState<string>("realistic");
+  const [variationsOn, setVariationsOn] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const save = useSaveContent();
   const isImage = type === "image";
   const m = useMutation({
-    mutationFn: () => isImage ? generateImage({ prompt: topic, style }) : generateText({ platform, content_type: type, topic, tone }),
-    onSuccess: (r) => { setResult(r); toast({ title: isImage ? "Imagen generada" : "Contenido generado" }); },
-    onError: (e: Error) => toast({ title: "No se pudo generar", description: e.message, variant: "destructive" }),
+    mutationFn: () => isImage ? generateImage({ prompt: topic, style }) : generateText({ platform, content_type: type, topic, tone, variations: variationsOn ? 3 : 1 }),
+    onSuccess: (r) => { setResult(r); toast({ title: isImage ? "Imagen generada" : (variationsOn ? "3 variaciones generadas" : "Contenido generado") }); },
+    onError: (e: Error) => {
+      const isProGate = e.message.includes("variations_require_pro");
+      toast({ title: isProGate ? "Plan PRO requerido" : "No se pudo generar", description: isProGate ? "Las 3 variaciones requieren plan PRO. Actualizá en Configuración." : e.message, variant: "destructive" });
+    },
   });
 
   return (
@@ -64,32 +69,20 @@ export default function ContentLabPage() {
           <div className="space-y-1"><Label className="text-xs">Estilo</Label>
             <PillGroup options={STYLES} labels={STYLE_LABELS} value={style} onChange={(x) => setStyle(x as string)} cols={3} /></div>
         ) : (
-          <div className="space-y-1"><Label className="text-xs">Tono</Label>
-            <PillGroup options={TONES} labels={TONE_LABELS} value={tone} onChange={(x) => setTone(x as string)} cols={3} /></div>
+          <>
+            <div className="space-y-1"><Label className="text-xs">Tono</Label>
+              <PillGroup options={TONES} labels={TONE_LABELS} value={tone} onChange={(x) => setTone(x as string)} cols={3} /></div>
+            <div className="flex items-center gap-2 pt-1">
+              <Switch checked={variationsOn} onCheckedChange={setVariationsOn} id="variations-switch" />
+              <Label htmlFor="variations-switch" className="text-xs cursor-pointer">Generar 3 variaciones A/B/C <Badge variant="outline" className="ml-1 h-4 text-[9px]">PRO</Badge></Label>
+            </div>
+          </>
         )}
         <Button onClick={() => m.mutate()} disabled={m.isPending || !topic.trim()} className="w-full gap-1 bg-amber-500 hover:bg-amber-600 text-white">
           {m.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}{m.isPending ? "Generando…" : "Generar con ARIA"}
         </Button>
       </CardContent></Card>
-      {result && (
-        <Card className="border-amber-500/30"><CardContent className="p-4 space-y-3">
-          {result.content_type === "image" ? (
-            <img src={result.generated_text} alt="Imagen generada" className="rounded-md w-full" />
-          ) : (
-            <p className="text-sm whitespace-pre-wrap">{result.generated_text}</p>
-          )}
-          {result.content_type !== "image" && result.virality_score != null && result.virality_score > 0 && (
-            <div className="flex items-center gap-2">
-              <Badge className="gap-1 bg-amber-500 text-white">🔥 {result.virality_score}/100 virality</Badge>
-              {result.virality_estimated && <Badge variant="outline" className="text-[10px]">Estimado</Badge>}
-            </div>
-          )}
-          <div className="flex gap-2">
-            <Button size="sm" onClick={() => save.mutate({ id: result.id, is_saved: true })} disabled={save.isPending} className="gap-1"><Check className="h-4 w-4" />Guardar</Button>
-            <Button size="sm" variant="outline" onClick={() => m.mutate()} disabled={m.isPending} className="gap-1"><RefreshCw className="h-4 w-4" />Regenerar</Button>
-          </div>
-        </CardContent></Card>
-      )}
+      {result && <ResultCard result={result} onSave={(id) => save.mutate({ id, is_saved: true })} onRegenerate={() => m.mutate()} isSaving={save.isPending} isPending={m.isPending} />}
     </div>
   );
 }

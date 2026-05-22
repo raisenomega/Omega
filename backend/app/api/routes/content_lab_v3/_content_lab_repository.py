@@ -37,3 +37,9 @@ def insert_generated_content(client_id: str, payload: dict[str, Any]) -> Optiona
     """INSERT content_lab_generated · retorna id del nuevo draft."""
     r = _sb().table("content_lab_generated").insert({**payload, "client_id": client_id}).execute()
     return str(r.data[0]["id"]) if r.data else None
+
+
+def find_client_plan(client_id: str) -> str:
+    """Retorna 'adopcion'|'basic'|'pro'|'enterprise' · default 'adopcion' si no row."""
+    r = _sb().table("client_plans").select("plan").eq("client_id", client_id).limit(1).execute()
+    return r.data[0]["plan"] if r.data else "adopcion"
