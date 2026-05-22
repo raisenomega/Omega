@@ -32,6 +32,8 @@ class Settings(BaseSettings):
         """Lista parseada desde BACKEND_CORS_ORIGINS CSV. DEBT-026."""
         return [o.strip() for o in self.backend_cors_origins.split(",") if o.strip()]
 
+    database_url: str = Field(..., env="DATABASE_URL")  # DEBT-045 SQLAlchemyJobStore + DEBT-029 partial
+
     # Supabase
     supabase_url: str = Field(..., env="SUPABASE_URL")
     supabase_anon_key: str = Field(..., env="SUPABASE_ANON_KEY")

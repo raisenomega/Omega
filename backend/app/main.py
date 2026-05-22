@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.config import settings
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from app.services.sentinel_service import SentinelService
 from app.services.oracle_service import OracleService
 from app.workers.news_monitor_worker import NewsMonitorWorker
@@ -50,7 +51,10 @@ from app.api.routes.clients.feature_usage_router import router as feature_usage_
 # Services & scheduler
 sentinel_service = SentinelService()
 oracle_service = OracleService()
-scheduler = AsyncIOScheduler(timezone="America/Puerto_Rico")
+scheduler = AsyncIOScheduler(
+    jobstores={"default": SQLAlchemyJobStore(url=settings.database_url)},
+    timezone="America/Puerto_Rico",
+)  # DEBT-045: persistent jobstore · jobs sobreviven Railway restarts
 
 # Create FastAPI application
 app = FastAPI(
@@ -97,8 +101,11 @@ async def startup_event():
     # BRAND DNA refresh (DEBT-044 Sprint 2 · 9no cron job)
     from app.bc_cognition.application.use_brand_dna import refresh_all_brand_dna
     scheduler.add_job(refresh_all_brand_dna, 'cron', hour=3, minute=0, id='brand_dna_refresh')
+    # VIDEO ORPHAN cleanup (DEBT-045 Sprint 3 · 10mo cron job)
+    from app.bc_cognition.application.cleanup_orphan_video_jobs import cleanup_orphan_video_jobs
+    scheduler.add_job(cleanup_orphan_video_jobs, 'interval', hours=1, id='video_jobs_orphan_cleanup', max_instances=1)
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA workers activos — 9 jobs registrados")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP workers activos — 10 jobs registrados")
 
 @app.on_event("shutdown")
 async def shutdown_event():

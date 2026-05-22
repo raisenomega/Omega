@@ -13,6 +13,7 @@ _DUMMIES = {
     "ANTHROPIC_API_KEY": "test_anthropic",
     "JWT_SECRET_KEY": "test_jwt_secret",
     "SECRET_KEY": "test_secret",
+    "DATABASE_URL": "postgresql://test:test@localhost/test",  # DEBT-045
 }
 for _k, _v in _DUMMIES.items():
     os.environ.setdefault(_k, _v)
