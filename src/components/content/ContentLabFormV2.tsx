@@ -25,7 +25,7 @@ export function ContentLabFormV2({ form, setForm, variations, setVariations, onG
   const hasVar = Object.values(variations).some(Boolean);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 max-w-3xl mx-auto">
       {/* CAJÓN AMARILLO · Prompt principal */}
       <div className="bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-500 dark:border-amber-600 rounded-lg p-3">
         <Label className="text-xs font-semibold text-amber-900 dark:text-amber-200">Prompt principal</Label>
