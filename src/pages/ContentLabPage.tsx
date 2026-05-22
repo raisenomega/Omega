@@ -15,15 +15,10 @@ import { useSaveContent } from "@/hooks/useContentActions";
 import { ResultCard, Result } from "@/components/content/ResultCard";
 import { useVideoJobPolling } from "@/hooks/useVideoJobPolling";
 import { generateText, generateImage, generateVideo } from "@/lib/content-lab-api";
-
-const TYPES = ["caption", "hashtags", "video_script", "image", "video"] as const;
-const TONES = ["profesional", "casual", "inspirador", "educativo", "divertido"] as const;
-const STYLES = ["realistic", "cartoon", "minimal"] as const;
-const RATIOS = ["1280:768", "768:1280"] as const;
-const TYPE_LABELS = { caption: "Caption", hashtags: "Hashtags", video_script: "Video Script", image: "Imagen", video: "Video" } as const;
-const TONE_LABELS = { profesional: "Profesional", casual: "Casual", inspirador: "Inspirador", educativo: "Educativo", divertido: "Divertido" } as const;
-const STYLE_LABELS = { realistic: "Realista", cartoon: "Cartoon", minimal: "Minimal" } as const;
-const RATIO_LABELS = { "1280:768": "Horizontal 16:9", "768:1280": "Vertical 9:16" } as const;
+import {
+  TYPES, TONES, STYLES, RATIOS,
+  TYPE_LABELS, TONE_LABELS, STYLE_LABELS, RATIO_LABELS,
+} from "@/lib/content-lab-constants";
 
 export default function ContentLabPage() {
   const { toast } = useToast();
