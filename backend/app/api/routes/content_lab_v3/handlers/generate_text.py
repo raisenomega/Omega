@@ -14,6 +14,7 @@ from app.api.routes.content_lab_v3.models.content_lab_models import (
     GenerateTextRequest, GenerateTextResponse,
 )
 from app.bc_cognition.application import use_brand_dna
+from app.bc_cognition.domain.virality_score import compute_virality_score
 from app.bc_cognition.infrastructure.anthropic_adapter import generate
 
 router = APIRouter()
@@ -45,6 +46,7 @@ async def generate_text(
     if err is not None or resp is None:
         raise HTTPException(status_code=503, detail=f"claude_error:{err.code if err else 'unknown'}")
 
+    virality = compute_virality_score(resp.text, dna, request.platform)
     db_type = UI_TO_DB_TYPE.get(request.content_type, "text")
     content_id = repo.safe_insert("insert_generated", repo.insert_generated_content, client_id, {
         "agent_code": "content_creator", "content_type": db_type,
@@ -54,9 +56,11 @@ async def generate_text(
             "cost_usd": resp.cost_usd, "ui_type": request.content_type,
             "platform": request.platform, "tone": request.tone,
             "brand_dna_score": dna.score, "brand_dna_label": dna.confidence_label(),
+            "virality_score": virality["score"], "virality_breakdown": virality["breakdown"],
         },
         "confidence": 8, "status": "draft", "compliance_passed": True,
     })
     return GenerateTextResponse(
         id=content_id or "", content_type=request.content_type, generated_text=resp.text,
+        virality_score=virality["score"], virality_estimated=virality["estimated"],
     )

@@ -13,6 +13,8 @@ class GenerateTextResponse(BaseModel):
     id: str
     content_type: str
     generated_text: str
+    virality_score: int = 0          # 0-100 · 0 = no aplica (e.g., imágenes)
+    virality_estimated: bool = True  # P1 · True hasta Meta API real (Sprint 3+)
 
 
 class GenerateImageRequest(BaseModel):

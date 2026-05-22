@@ -19,7 +19,7 @@ const STYLES = ["realistic", "cartoon", "minimal"] as const;
 const TYPE_LABELS = { caption: "Caption", hashtags: "Hashtags", video_script: "Video Script", image: "Imagen" } as const;
 const TONE_LABELS = { profesional: "Profesional", casual: "Casual", inspirador: "Inspirador", educativo: "Educativo", divertido: "Divertido" } as const;
 const STYLE_LABELS = { realistic: "Realista", cartoon: "Cartoon", minimal: "Minimal" } as const;
-interface Result { id: string; generated_text: string; content_type: string }
+interface Result { id: string; generated_text: string; content_type: string; virality_score?: number; virality_estimated?: boolean }
 
 async function apiPost<T>(path: string, body: unknown): Promise<T> {
   const { data: { session } } = await supabase.auth.getSession();
@@ -77,6 +77,12 @@ export default function ContentLabPage() {
             <img src={result.generated_text} alt="Imagen generada" className="rounded-md w-full" />
           ) : (
             <p className="text-sm whitespace-pre-wrap">{result.generated_text}</p>
+          )}
+          {result.content_type !== "image" && result.virality_score != null && result.virality_score > 0 && (
+            <div className="flex items-center gap-2">
+              <Badge className="gap-1 bg-amber-500 text-white">🔥 {result.virality_score}/100 virality</Badge>
+              {result.virality_estimated && <Badge variant="outline" className="text-[10px]">Estimado</Badge>}
+            </div>
           )}
           <div className="flex gap-2">
             <Button size="sm" onClick={() => save.mutate({ id: result.id, is_saved: true })} disabled={save.isPending} className="gap-1"><Check className="h-4 w-4" />Guardar</Button>
