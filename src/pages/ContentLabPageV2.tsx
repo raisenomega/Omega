@@ -73,7 +73,7 @@ export default function ContentLabPageV2() {
             onResearch={() => toast({ title: "Brave Research en futuro Sprint" })} />
         </div>
       </div>
-      <div className="grid grid-cols-[260px_1fr_1fr] gap-2 min-h-[420px]">
+      <div className="grid grid-cols-[260px_1fr_1fr] auto-rows-fr items-stretch gap-2 min-h-[420px]">
         <div className="row-span-full">
           <ContentLabFormV2 form={form} setForm={setForm}
             variations={variations} setVariations={setVariations} onGenerate={handleGenerate} />
@@ -81,10 +81,10 @@ export default function ContentLabPageV2() {
         {Array.from({ length: slots }).map((_, i) => {
           const r = results[i];
           return r ? (
-            <ResultCardV2 key={r.id} result={r} onExpand={setExpandedResult}
-              onAgendar={handleAgendar} onSave={handleSave} onDownload={handleDownload} />
+            <ResultCardV2 key={r.id} result={r} onExpand={setExpandedResult} onAgendar={handleAgendar}
+              onSave={handleSave} onDownload={handleDownload} onRemove={(id) => setResults(p => p.filter(x => x.id !== id))} />
           ) : (
-            <Card key={`empty-${i}`} className="border-dashed border-muted/50 flex items-center justify-center min-h-[140px]">
+            <Card key={`empty-${i}`} className="border-dashed border-muted/50 flex items-center justify-center h-full min-h-[140px]">
               <p className="text-xs text-muted-foreground">próximo resultado</p>
             </Card>
           );

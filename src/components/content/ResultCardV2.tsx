@@ -1,4 +1,4 @@
-import { Calendar, Save, Download, Check } from "lucide-react";
+import { Calendar, Save, Download, Check, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,13 +23,14 @@ interface Props {
   onAgendar: (r: ResultV2) => void;
   onSave: (id: string) => void;
   onDownload: (r: ResultV2) => void;
+  onRemove: (id: string) => void;
 }
 
 const LABEL_COLORS: Record<string, string> = {
   Conservadora: "bg-slate-500", Balanceada: "bg-blue-500", Atrevida: "bg-rose-500",
 };
 
-export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload }: Props) {
+export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, onRemove }: Props) {
   const isImage = result.content_type === "image";
   const isVideo = result.content_type === "video";
   const score = result.virality_score ?? 0;
@@ -38,8 +39,13 @@ export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload }
 
   return (
     <Card onClick={() => onExpand(result)}
-      className="border-amber-500/30 cursor-pointer hover:border-amber-500 hover:shadow-md transition group">
-      <CardContent className="p-3 space-y-2">
+      className="relative border-amber-500/30 cursor-pointer hover:border-amber-500 hover:shadow-md transition group">
+      <button onClick={(e) => { e.stopPropagation(); onRemove(result.id); }}
+        className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition z-10"
+        aria-label="Eliminar resultado">
+        <X className="h-3.5 w-3.5" />
+      </button>
+      <CardContent className="p-3 pr-8 space-y-2">
         <div className="flex items-center justify-between gap-2">
           <Badge variant="outline" className="text-[10px]">{typeLabel}</Badge>
           {result.variation_label && (

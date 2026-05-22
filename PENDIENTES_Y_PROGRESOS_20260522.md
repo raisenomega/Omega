@@ -315,4 +315,27 @@ Deuda total:      628h
 Sistema:          UP en Railway + Vercel
 ```
 
+---
+
+## Pendientes UI Mock → Backend Real (22 may 2026 sesión PM)
+
+Después del rediseño completo del Content Lab V2 (commit `e447903` redesign + fixes posteriores), el mock está visualmente terminado pero requiere conexión backend real:
+
+### Gap 1 · Mock no diferencia por `content_type`
+`MOCK_TEXTS` en `ContentLabPageV2.tsx:13-16` genera el mismo string para todos los tipos (caption/image/hashtags/video/etc). La generación real debe rutear por tipo:
+- `text` / `caption` / `hashtags` → `/api/content-lab/generate-text` (Anthropic + virality score real)
+- `image` → `/api/content-lab/generate-image` (Nano Banana → Storage URL)
+- `video` → `/api/content-lab/generate-video` (Veo3 background job + polling)
+
+### Gap 2 · Imagen no renderiza
+`ResultCardV2.tsx` ya tiene branch `isImage ? <img src={...} />` pero el mock pasa texto en `generated_text` (no URL). Cuando se conecte el endpoint real, el backend devuelve la URL de Supabase Storage en `generated_text` y el `<img>` renderiza automático. **Cero cambio frontend necesario** · solo conectar el endpoint.
+
+### Próxima sesión · plan tentativo
+1. Crear hook `useContentLabGenerate(type)` que llama el endpoint correcto según `form.type`
+2. Reemplazar `handleGenerate` mock en `ContentLabPageV2.tsx` por mutación real
+3. Video: integrar polling (puede reusar lógica de DEBT-020 background jobs)
+4. Estimado: ~3h dev + 1h QA E2E
+
+---
+
 🐢💎 No velocity. Only precision.
