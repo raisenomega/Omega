@@ -31,7 +31,8 @@ function Actions({ id, onSave, onRegenerate, isSaving, isPending }: { id: string
 export function ResultCard({ result, onSave, onRegenerate, isSaving, isPending }: Props) {
   const vs = result.variations ?? [];
   const isImage = result.content_type === "image";
-  const hasMulti = !isImage && vs.length > 1;
+  const isVideo = result.content_type === "video";
+  const hasMulti = !isImage && !isVideo && vs.length > 1;
 
   return (
     <Card className="border-amber-500/30"><CardContent className="p-4 space-y-3">
@@ -39,7 +40,11 @@ export function ResultCard({ result, onSave, onRegenerate, isSaving, isPending }
         <img src={result.generated_text} alt="Imagen generada" className="rounded-md w-full" />
         <Actions id={result.id} onSave={onSave} onRegenerate={onRegenerate} isSaving={isSaving} isPending={isPending} />
       </>)}
-      {!isImage && !hasMulti && (<>
+      {isVideo && (<>
+        <video src={result.generated_text} controls className="rounded-md w-full" />
+        <Actions id={result.id} onSave={onSave} onRegenerate={onRegenerate} isSaving={isSaving} isPending={isPending} />
+      </>)}
+      {!isImage && !isVideo && !hasMulti && (<>
         <p className="text-sm whitespace-pre-wrap">{result.generated_text}</p>
         <Virality score={result.virality_score} estimated={result.virality_estimated} />
         <Actions id={result.id} onSave={onSave} onRegenerate={onRegenerate} isSaving={isSaving} isPending={isPending} />
