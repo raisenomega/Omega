@@ -27,7 +27,7 @@ export function ContentLabFormV2({ form, setForm, variations, setVariations, onG
   return (
     <div className="space-y-3 h-full flex flex-col">
       {/* CAJÓN AMARILLO · Prompt principal (flex-1 ocupa altura disponible) */}
-      <div className="bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-500 dark:border-amber-600 rounded-lg p-3 flex-1 flex flex-col">
+      <div className="bg-background border-2 border-amber-500 rounded-lg p-3 flex-1 flex flex-col">
         <Textarea value={form.topic} onChange={(e) => update("topic", e.target.value)}
           className="bg-transparent border-none outline-none resize-none w-full h-full focus:ring-0 focus-visible:ring-0 flex-1 min-h-[120px]" />
       </div>
