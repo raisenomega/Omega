@@ -3,9 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
 import { ContentLabFormV2, VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
 import { ContentLabFormBar } from "@/components/content/ContentLabFormBar";
-import { ResultGridV2 } from "@/components/content/ResultGridV2";
+import { ResultCardV2 } from "@/components/content/ResultCardV2";
+import { ResultExpandedModal } from "@/components/content/ResultExpandedModal";
 import { ScheduleModalV2 } from "@/components/content/ScheduleModalV2";
 import type { ResultV2, BlockState, ModalState } from "@/components/content/ResultCardV2";
 
@@ -26,6 +28,7 @@ export default function ContentLabPageV2() {
   const [block, setBlock] = useState<BlockState>(INITIAL_BLOCK);
   const [modalState, setModalState] = useState<ModalState>("closed");
   const [scheduledAt, setScheduledAt] = useState("");
+  const [expandedResult, setExpandedResult] = useState<ResultV2 | null>(null);
 
   const { data: clientList } = useQuery({
     queryKey: ["lab_clients_v2"],
@@ -46,7 +49,7 @@ export default function ContentLabPageV2() {
   };
 
   const slotFor = (t: string): keyof BlockState => t === "image" ? "image" : t === "hashtags" ? "hashtags" : "caption";
-  const handleAgendar = (r: ResultV2) => { setBlock(prev => ({ ...prev, [slotFor(r.content_type)]: r })); setModalState("open"); };
+  const handleAgendar = (r: ResultV2) => { setBlock(prev => ({ ...prev, [slotFor(r.content_type)]: r })); setModalState("open"); setExpandedResult(null); };
   const handleSave = (id: string) => { setResults(prev => prev.map(r => r.id === id ? { ...r, saved: true } : r)); toast({ title: "Guardado (mock V2)" }); };
   const handleDownload = (r: ResultV2) => toast({ title: `Descargar mock V2 · tipo: ${r.content_type}` });
   const handleConfirm = () => {
@@ -56,33 +59,42 @@ export default function ContentLabPageV2() {
     toast({ title: `✅ Bloque programado para ${scheduledAt} (mock V2)` });
   };
 
+  const slots = Math.max(4, results.length);
+
   return (
     <div className="space-y-4">
-      {/* Header inline · título + barra duotone delgada (patrón Dashboard) */}
       <div className="flex items-center justify-between gap-6 flex-wrap">
         <div className="shrink-0 flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-amber-500" />
           <h1 className="text-2xl font-semibold">Content Lab</h1>
         </div>
         <div className="flex-1 min-w-[420px]">
-          <ContentLabFormBar
-            clientList={clientList ?? []}
-            form={form} setForm={setForm}
-            onResearch={() => toast({ title: "Brave Research en futuro Sprint" })}
-          />
+          <ContentLabFormBar clientList={clientList ?? []} form={form} setForm={setForm}
+            onResearch={() => toast({ title: "Brave Research en futuro Sprint" })} />
         </div>
       </div>
-      <ContentLabFormV2
-        form={form} setForm={setForm}
-        variations={variations} setVariations={setVariations}
-        onGenerate={handleGenerate}
-      />
-      <ResultGridV2 results={results} onAgendar={handleAgendar} onSave={handleSave} onDownload={handleDownload} />
-      <ScheduleModalV2
-        state={modalState} block={block} scheduledAt={scheduledAt} setScheduledAt={setScheduledAt}
+      <div className="grid grid-cols-[260px_1fr_1fr] gap-2 min-h-[420px]">
+        <div className="row-span-full">
+          <ContentLabFormV2 form={form} setForm={setForm}
+            variations={variations} setVariations={setVariations} onGenerate={handleGenerate} />
+        </div>
+        {Array.from({ length: slots }).map((_, i) => {
+          const r = results[i];
+          return r ? (
+            <ResultCardV2 key={r.id} result={r} onExpand={setExpandedResult}
+              onAgendar={handleAgendar} onSave={handleSave} onDownload={handleDownload} />
+          ) : (
+            <Card key={`empty-${i}`} className="border-dashed border-muted/50 flex items-center justify-center min-h-[140px]">
+              <p className="text-xs text-muted-foreground">próximo resultado</p>
+            </Card>
+          );
+        })}
+      </div>
+      <ResultExpandedModal result={expandedResult} onClose={() => setExpandedResult(null)}
+        onAgendar={handleAgendar} onSave={handleSave} onDownload={handleDownload} />
+      <ScheduleModalV2 state={modalState} block={block} scheduledAt={scheduledAt} setScheduledAt={setScheduledAt}
         onMinimize={() => setModalState("minimized")} onRestore={() => setModalState("open")}
-        onClose={() => setModalState("closed")} onConfirm={handleConfirm}
-      />
+        onClose={() => setModalState("closed")} onConfirm={handleConfirm} />
     </div>
   );
 }

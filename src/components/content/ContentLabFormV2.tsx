@@ -25,20 +25,20 @@ export function ContentLabFormV2({ form, setForm, variations, setVariations, onG
   const hasVar = Object.values(variations).some(Boolean);
 
   return (
-    <div className="space-y-3 max-w-3xl mx-auto">
-      {/* CAJÓN AMARILLO · Prompt principal */}
-      <div className="bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-500 dark:border-amber-600 rounded-lg p-3">
+    <div className="space-y-3 h-full flex flex-col">
+      {/* CAJÓN AMARILLO · Prompt principal (flex-1 ocupa altura disponible) */}
+      <div className="bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-500 dark:border-amber-600 rounded-lg p-3 flex-1 flex flex-col">
         <Label className="text-xs font-semibold text-amber-900 dark:text-amber-200">Prompt principal</Label>
-        <Textarea value={form.topic} onChange={(e) => update("topic", e.target.value)} rows={6}
-          placeholder="Describe el contenido · qué quiere comunicar · audiencia · CTA esperado"
-          className="mt-2 resize-none bg-background border-amber-300 dark:border-amber-700" />
+        <Textarea value={form.topic} onChange={(e) => update("topic", e.target.value)}
+          placeholder="Describe el contenido · qué quiere comunicar · audiencia · CTA"
+          className="mt-2 resize-none bg-background border-amber-300 dark:border-amber-700 flex-1 min-h-[120px]" />
       </div>
-      {/* CHECKBOXES VARIACIONES */}
-      <div className="flex gap-4 items-center justify-center py-2">
+      {/* CHECKBOXES VARIACIONES · flex-wrap para columna estrecha */}
+      <div className="flex flex-wrap gap-3 items-center justify-center py-1">
         {VARIATIONS.map(v => (
-          <div key={v} className="flex items-center gap-2">
+          <div key={v} className="flex items-center gap-1.5">
             <Checkbox id={`var-${v}`} checked={variations[v]} onCheckedChange={(c) => setVariations(prev => ({ ...prev, [v]: !!c }))} />
-            <Label htmlFor={`var-${v}`} className="text-sm cursor-pointer">{v}</Label>
+            <Label htmlFor={`var-${v}`} className="text-xs cursor-pointer">{v}</Label>
           </div>
         ))}
       </div>

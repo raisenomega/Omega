@@ -1,0 +1,53 @@
+import { X, Calendar, Save, Download, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { TYPE_LABELS } from "@/lib/content-lab-constants";
+import type { ResultV2 } from "./ResultCardV2";
+
+interface Props {
+  result: ResultV2 | null;
+  onClose: () => void;
+  onAgendar: (r: ResultV2) => void;
+  onSave: (id: string) => void;
+  onDownload: (r: ResultV2) => void;
+}
+
+export function ResultExpandedModal({ result, onClose, onAgendar, onSave, onDownload }: Props) {
+  if (!result) return null;
+  const isImage = result.content_type === "image";
+  const isVideo = result.content_type === "video";
+  const typeLabel = TYPE_LABELS[result.content_type] ?? result.content_type;
+
+  return (
+    <div onClick={onClose} className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+      <div onClick={(e) => e.stopPropagation()}
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border space-y-3 p-4">
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold flex-1">{typeLabel}</h2>
+          {result.variation_label && <Badge>{result.variation_label}</Badge>}
+          <button onClick={onClose} aria-label="Cerrar" className="text-muted-foreground hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="max-h-[60vh] overflow-y-auto">
+          {isImage ? <img src={result.generated_text} alt="" className="rounded-md w-full" />
+            : isVideo ? <video src={result.generated_text} controls className="rounded-md w-full" />
+            : <p className="text-sm whitespace-pre-wrap leading-relaxed">{result.generated_text}</p>}
+        </div>
+        <div className="grid grid-cols-3 gap-2 pt-2">
+          <Button onClick={() => onAgendar(result)}
+            className="bg-amber-500 hover:bg-amber-600 text-white gap-1.5 font-semibold">
+            <Calendar className="h-4 w-4" /> Agendar
+          </Button>
+          <Button variant="outline" onClick={() => onSave(result.id)} className="gap-1.5">
+            {result.saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+            {result.saved ? "Guardado" : "Guardar"}
+          </Button>
+          <Button variant="outline" onClick={() => onDownload(result)} className="gap-1.5">
+            <Download className="h-4 w-4" /> Descargar
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
