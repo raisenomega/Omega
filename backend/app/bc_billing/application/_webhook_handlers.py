@@ -2,6 +2,7 @@
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from app.bc_billing.application._addon_handlers import handle_addon_activation, handle_addon_deactivation
 from app.bc_billing.infrastructure.stripe_adapter import get_stripe_adapter
 from app.infrastructure.supabase_service import SupabaseService
 
@@ -9,12 +10,20 @@ logger = logging.getLogger(__name__)
 
 
 async def on_checkout_completed(event: dict, supabase: SupabaseService) -> None:
-    """Persistir clients.stripe_customer_id + client_plans con plan target."""
+    """Persistir plan upgrade (target_plan) o addon activation (addon_code) según metadata."""
     session = event["data"]["object"]
-    client_id = session.get("metadata", {}).get("client_id")
-    target_plan = session.get("metadata", {}).get("target_plan")
+    metadata = session.get("metadata", {})
+    client_id = metadata.get("client_id")
     sub_id = session.get("subscription")
     customer_id = session.get("customer")
+    addon_code = metadata.get("addon_code")
+    if addon_code:
+        if not all([client_id, sub_id, addon_code]):
+            logger.warning(f"addon checkout.completed con data faltante: {session.get('id')}")
+            return
+        await handle_addon_activation(client_id, addon_code, sub_id, supabase)
+        return
+    target_plan = metadata.get("target_plan")
     if not all([client_id, target_plan, sub_id, customer_id]):
         logger.warning(f"checkout.session.completed con data faltante: {session.get('id')}")
         return
@@ -48,8 +57,11 @@ async def on_subscription_updated(event: dict, supabase: SupabaseService) -> Non
 
 
 async def on_subscription_deleted(event: dict, supabase: SupabaseService) -> None:
-    """Downgrade graceful → Adopción 7d (decisión #2 · spec §3)."""
+    """Si la sub es de un addon → handle_addon_deactivation. Else plan downgrade → Adopción 7d."""
     sub = event["data"]["object"]
+    # DEBT-037: probar primero si es addon (lookup por subscription_id en addons jsonb)
+    if await handle_addon_deactivation(sub.get("id"), supabase):
+        return
     client = _lookup_client_by_customer(supabase, sub.get("customer"))
     if not client:
         return

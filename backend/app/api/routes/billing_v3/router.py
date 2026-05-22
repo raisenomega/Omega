@@ -1,8 +1,10 @@
-"""Main router de billing_v3 · agrupa checkout + webhook bajo /billing prefix."""
+"""Main router de billing_v3 · agrupa checkout + webhook + upgrade-aria bajo /billing prefix."""
 from fastapi import APIRouter
 from app.api.routes.billing_v3.handlers.create_checkout import router as checkout_router
 from app.api.routes.billing_v3.handlers.stripe_webhook import router as webhook_router
+from app.api.routes.billing_v3.handlers.upgrade_aria import router as upgrade_aria_router
 
 router = APIRouter(prefix="/billing", tags=["Billing V3"])
 router.include_router(checkout_router)
 router.include_router(webhook_router)
+router.include_router(upgrade_aria_router)
