@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useMyPlanStatus } from "./useMyPlanStatus";
+import { apiGet } from "@/lib/api-client";
 
 export interface ClientOption {
   id: string;
@@ -16,15 +16,6 @@ interface ClientSingleResponse {
   name: string;
 }
 
-async function authHeaders(): Promise<HeadersInit> {
-  const { data: { session } } = await supabase.auth.getSession();
-  return { Authorization: `Bearer ${session?.access_token ?? ""}` };
-}
-
-function apiBase(): string {
-  return import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1";
-}
-
 export function useMyClients() {
   const { isClient, clientId, loading: planLoading } = useMyPlanStatus();
 
@@ -32,14 +23,10 @@ export function useMyClients() {
     queryKey: ["my_clients", isClient ? `client:${clientId ?? ""}` : "admin"],
     queryFn: async () => {
       if (isClient && clientId) {
-        const res = await fetch(`${apiBase()}/clients/${clientId}`, { headers: await authHeaders() });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = (await res.json()) as ClientSingleResponse;
+        const data = await apiGet<ClientSingleResponse>(`/clients/${clientId}`);
         return [{ id: data.id, name: data.name }];
       }
-      const res = await fetch(`${apiBase()}/clients/`, { headers: await authHeaders() });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = (await res.json()) as ClientApiResponse;
+      const json = await apiGet<ClientApiResponse>(`/clients/`);
       return (json.data ?? []).map((c) => ({ id: c.id, name: c.name }));
     },
     enabled: !planLoading,
