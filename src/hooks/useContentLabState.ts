@@ -4,6 +4,7 @@ import { useMyClients } from "@/hooks/useMyClients";
 import { useGenerateText } from "@/hooks/useGenerateText";
 import { useGenerateImage } from "@/hooks/useGenerateImage";
 import { useVideoJobPolling } from "@/hooks/useVideoJobPolling";
+import { useSaveContent } from "@/hooks/useContentActions";
 import { VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
 import type { ResultV2, BlockState, ModalState } from "@/components/content/ResultCardV2";
 
@@ -25,6 +26,7 @@ export function useContentLabState() {
   const generateText = useGenerateText();
   const generateImage = useGenerateImage();
   const generateVideo = useVideoJobPolling();
+  const saveContent = useSaveContent();
 
   const handleGenerate = async () => {
     const selected = VARIATIONS.filter(v => variations[v]);
@@ -55,7 +57,11 @@ export function useContentLabState() {
   };
 
   const handleAgendar = (r: ResultV2) => { setBlock(prev => ({ ...prev, [slotFor(r.content_type)]: r })); setModalState("open"); setExpandedResult(null); };
-  const handleSave = (id: string) => { setResults(prev => prev.map(r => r.id === id ? { ...r, saved: true } : r)); toast({ title: "Guardado (mock V2)" }); };
+  const handleSave = (id: string) => {
+    saveContent.mutate({ id, is_saved: true }, {
+      onSuccess: () => setResults(prev => prev.map(r => r.id === id ? { ...r, saved: true } : r)),
+    });
+  };
   const handleDownload = (r: ResultV2) => toast({ title: `Descargar mock V2 · tipo: ${r.content_type}` });
   const handleConfirm = () => {
     const ids = [block.caption?.id, block.image?.id, block.hashtags?.id].filter(Boolean) as string[];
