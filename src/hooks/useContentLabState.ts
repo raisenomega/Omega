@@ -6,6 +6,7 @@ import { useGenerateImage } from "@/hooks/useGenerateImage";
 import { useVideoJobPolling } from "@/hooks/useVideoJobPolling";
 import { useSaveContent } from "@/hooks/useContentActions";
 import { downloadResult } from "@/lib/download-result";
+import { useScheduleBlock } from "@/hooks/useScheduleBlock";
 import { VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
 import type { ResultV2, BlockState, ModalState } from "@/components/content/ResultCardV2";
 
@@ -28,6 +29,7 @@ export function useContentLabState() {
   const generateImage = useGenerateImage();
   const generateVideo = useVideoJobPolling();
   const saveContent = useSaveContent();
+  const scheduleBlock = useScheduleBlock();
 
   const handleGenerate = async () => {
     const selected = VARIATIONS.filter(v => variations[v]);
@@ -71,11 +73,17 @@ export function useContentLabState() {
       toast({ title: "Error al descargar", description: e instanceof Error ? e.message : "", variant: "destructive" });
     }
   };
-  const handleConfirm = () => {
-    const ids = [block.caption?.id, block.image?.id, block.hashtags?.id].filter(Boolean) as string[];
-    setResults(prev => prev.filter(r => !ids.includes(r.id)));
-    setBlock(INITIAL_BLOCK); setModalState("closed"); setScheduledAt("");
-    toast({ title: `✅ Bloque programado para ${scheduledAt} (mock V2)` });
+  const handleConfirm = async () => {
+    if (!form.clientId) { toast({ title: "Falta seleccionar cliente", variant: "destructive" }); return; }
+    try {
+      await scheduleBlock.mutateAsync({ block, clientId: form.clientId, platform: form.platform, scheduledAt });
+      const ids = [block.caption?.id, block.image?.id, block.hashtags?.id].filter(Boolean) as string[];
+      setResults(prev => prev.filter(r => !ids.includes(r.id)));
+      setBlock(INITIAL_BLOCK); setModalState("closed"); setScheduledAt("");
+      toast({ title: `✅ Bloque programado para ${scheduledAt}` });
+    } catch (e) {
+      toast({ title: "Error al agendar", description: e instanceof Error ? e.message : "", variant: "destructive" });
+    }
   };
   const handleResearch = () => toast({ title: "Brave Research en futuro Sprint" });
 
