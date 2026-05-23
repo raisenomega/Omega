@@ -50,7 +50,7 @@ export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, 
 
   return (
     <Card onClick={() => onExpand(result)}
-      className="relative h-full border-amber-500/30 cursor-pointer hover:border-amber-500 hover:shadow-md transition group">
+      className="relative h-full overflow-hidden border-amber-500/30 cursor-pointer hover:border-amber-500 hover:shadow-md transition group">
       <button onClick={(e) => { e.stopPropagation(); onRemove(result.id); }}
         className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition z-10"
         aria-label="Eliminar resultado">
@@ -63,8 +63,8 @@ export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, 
             <Badge className={`${labelClass} text-white text-[10px] px-2`}>{result.variation_label}</Badge>
           )}
         </div>
-        {isImage ? <img src={result.generated_text} alt="" className="rounded-md w-full" />
-          : isVideo ? <video src={result.generated_text} controls className="rounded-md w-full" />
+        {isImage ? <img src={result.generated_text} alt="" className="rounded-md w-full max-h-[100px] object-cover" />
+          : isVideo ? <video src={result.generated_text} controls className="rounded-md w-full max-h-[100px] object-cover" />
           : <p className="text-sm line-clamp-3 whitespace-pre-wrap">{result.generated_text}</p>}
         {score > 0 && (
           <div className="flex items-center gap-2">
