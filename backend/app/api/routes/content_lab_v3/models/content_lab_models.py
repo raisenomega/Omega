@@ -18,6 +18,7 @@ class VariationItem(BaseModel):
     generated_text: str
     virality_score: int = 0
     virality_estimated: bool = True
+    brand_dna_score: float = 0.0  # 0.0-1.0 · 0 si corpus vacío (Sprint 1 ④)
 
 
 class GenerateTextResponse(BaseModel):

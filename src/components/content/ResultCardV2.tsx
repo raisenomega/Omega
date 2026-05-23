@@ -11,6 +11,7 @@ export interface ResultV2 {
   variation_label?: string;
   virality_score?: number;
   virality_estimated?: boolean;
+  brand_dna_score?: number;
   saved?: boolean;
   status?: "pending" | "completed" | "failed";
 }
@@ -66,10 +67,15 @@ export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, 
         {isImage ? <img src={result.generated_text} alt="" className="rounded-md w-full max-h-[100px] object-cover" />
           : isVideo ? <video src={result.generated_text} controls className="rounded-md w-full max-h-[100px] object-cover" />
           : <p className="text-sm line-clamp-3 whitespace-pre-wrap">{result.generated_text}</p>}
-        {score > 0 && (
-          <div className="flex items-center gap-2">
-            <Badge className="gap-1 bg-amber-500 text-white text-[10px]">🔥 {score}/100</Badge>
-            {result.virality_estimated && <Badge variant="outline" className="text-[9px]">Estimado</Badge>}
+        {(score > 0 || (result.brand_dna_score ?? 0) > 0) && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {score > 0 && <Badge className="gap-1 bg-amber-500 text-white text-[10px]">🔥 {score}/100</Badge>}
+            {result.virality_estimated && score > 0 && <Badge variant="outline" className="text-[9px]">Estimado</Badge>}
+            {(result.brand_dna_score ?? 0) > 0 && (
+              <Badge variant="outline" className="text-[9px] border-emerald-500/50 text-emerald-700 dark:text-emerald-400">
+                {Math.round((result.brand_dna_score ?? 0) * 100)}% voz de marca
+              </Badge>
+            )}
           </div>
         )}
         <p className="text-[10px] text-amber-600 opacity-0 group-hover:opacity-100 transition">clic para expandir →</p>

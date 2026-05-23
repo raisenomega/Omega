@@ -76,5 +76,5 @@ def _persist_variation(
     return VariationItem(
         id=content_id, label=label, temperature=temp,
         generated_text=clean_text, virality_score=virality["score"],
-        virality_estimated=True,
+        virality_estimated=True, brand_dna_score=dna.score,
     )

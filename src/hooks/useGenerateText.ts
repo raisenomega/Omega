@@ -10,6 +10,7 @@ interface VariationItem {
   generated_text: string;
   virality_score: number;
   virality_estimated: boolean;
+  brand_dna_score: number;
 }
 
 interface GenerateTextResponse {
@@ -51,6 +52,7 @@ export function useGenerateText() {
         variation_label: LABEL_TO_FRONTEND[v.label] ?? selectedLabels[0],
         virality_score: v.virality_score,
         virality_estimated: v.virality_estimated,
+        brand_dna_score: v.brand_dna_score,
       }));
     },
   });
