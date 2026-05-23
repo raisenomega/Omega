@@ -23,11 +23,12 @@ from app.bc_cognition.infrastructure._video_compat import generate_video_compat
 logger = logging.getLogger(__name__)
 
 
-async def create_video_job(client_id: str, prompt: str, ratio: str) -> Optional[str]:
-    """Crea row pending + spawn worker async · retorna job_id inmediato (~50ms)."""
+async def create_video_job(client_id: str, prompt: str, ratio: str) -> str:
+    """Crea row pending + spawn worker async · retorna job_id inmediato (~50ms).
+
+    Raise (no silencia) si insert falla · handler captura y devuelve detail
+    específico al frontend (FIX 4 · observability mejorada)."""
     job_id = repo.insert_pending_job(client_id, prompt, ratio)
-    if not job_id:
-        return None
     from app.main import scheduler  # lazy · evita circular import
     scheduler.add_job(
         _run_video_job, "date", run_date=datetime.now(),

@@ -21,19 +21,15 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def insert_pending_job(client_id: str, prompt: str, ratio: str) -> Optional[str]:
-    """INSERT con status='pending' · retorna job_id (uuid generado por DB)."""
-    try:
-        r = _sb().table("video_generation_jobs").insert({
-            "client_id": client_id, "prompt": prompt, "ratio": ratio,
-            "status": "pending",
-        }).execute()
-        return str(r.data[0]["id"]) if r.data else None
-    except Exception as e:
-        logger.error(
-            f"insert_pending_job failed · client={client_id}: {e}", exc_info=True,
-        )
-        return None
+def insert_pending_job(client_id: str, prompt: str, ratio: str) -> str:
+    """INSERT con status='pending' · raise si falla · handler captura detail."""
+    r = _sb().table("video_generation_jobs").insert({
+        "client_id": client_id, "prompt": prompt, "ratio": ratio,
+        "status": "pending",
+    }).execute()
+    if not r.data:
+        raise RuntimeError("insert returned no data")
+    return str(r.data[0]["id"])
 
 
 def update_job_running(job_id: str) -> None:

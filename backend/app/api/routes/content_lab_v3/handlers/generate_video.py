@@ -6,6 +6,7 @@ GET retorna status actual · frontend debe poll cada 5s hasta completed|failed.
 
 404 si job no existe O no es del cliente actual (no leak existence sobre jobs ajenos).
 """
+import logging
 from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
 
@@ -17,6 +18,7 @@ from app.api.routes.content_lab_v3.models.content_lab_models import (
 from app.bc_cognition.application.use_video_job import create_video_job, get_video_job
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/generate-video", response_model=VideoJobStartResponse)
@@ -29,9 +31,14 @@ async def start_video_generation(
     if not client:
         raise HTTPException(status_code=403, detail="no_client_for_user")
     client_id = str(client["id"])
-    job_id = await create_video_job(client_id, request.prompt, request.ratio)
-    if not job_id:
-        raise HTTPException(status_code=503, detail="job_create_failed")
+    try:
+        job_id = await create_video_job(client_id, request.prompt, request.ratio)
+    except Exception as e:
+        logger.error(f"create_video_job failed · client={client_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=503,
+            detail=f"job_create_failed:{type(e).__name__}:{str(e)[:200]}",
+        )
     return VideoJobStartResponse(job_id=job_id, status="pending")
 
 
