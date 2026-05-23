@@ -79,7 +79,7 @@ async def _download_veo_uri(uri: str) -> bytes:
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         raise httpx.HTTPError("GEMINI_API_KEY no configurada para download")
-    async with httpx.AsyncClient(timeout=_DOWNLOAD_TIMEOUT_S) as client:
+    async with httpx.AsyncClient(timeout=_DOWNLOAD_TIMEOUT_S, follow_redirects=True) as client:
         r = await client.get(uri, headers={"x-goog-api-key": api_key})
         r.raise_for_status()
         return r.content
