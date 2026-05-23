@@ -301,6 +301,71 @@ CATEGORÍAS A INCLUIR:
 Mezclar tamaños: 30% grandes (1M+) · 50% medianos (100K-1M) · 20% pequeños (<100K)
 Ciudad: {region}. Tipo: {property_type}');
 
+-- ═══════════════════════════════════════════════════════════════════
+-- TECHNOLOGY VERTICAL · 6 prompts (caption + script · IG/LinkedIn/FB)
+-- Added 2026-05-23 para desbloquear cobertura technology/SaaS/software.
+-- Comparten estructura HOOK/DESCRIPCIÓN/CTA con los 30 originales.
+-- ═══════════════════════════════════════════════════════════════════
+
+INSERT INTO prompt_vault (category, vertical, platform, agent_code, performance_score, slot_name, prompt_text)
+VALUES
+('caption', 'technology', 'instagram', 'RAFA', 8.9, 'product_launch',
+'Escribe caption para anuncio de lanzamiento de producto/feature SaaS:
+- HOOK: Frase corta sobre el problema concreto que el producto resuelve
+- DESCRIPCIÓN: Qué hace la herramienta + 2-3 beneficios medibles (no features técnicos)
+- SOCIAL PROOF: Resultado de beta/piloto o métrica de early adopters (si aplica)
+- CTA: "Empieza gratis hoy · link en bio" o "Reserva tu demo"
+- HASHTAGS: 5-7 mezclando tech + nicho del cliente
+Sin jerga innecesaria. Cliente: {client_name}. Tono: {tone}. Audiencia: {target_audience}'),
+
+('caption', 'technology', 'instagram', 'RAFA', 8.7, 'feature_announcement',
+'Crea caption para anuncio de nueva feature en producto existente:
+- HOOK VISUAL: "Nuevo en {client_name}: [feature]" con emoji de impacto
+- ANTES/AHORA: Cómo era el workflow antes vs cómo es ahora (2 líneas máx cada uno)
+- CASO DE USO: 1 ejemplo concreto y específico de quién la usa y para qué
+- CTA: "Disponible ya · entra a tu cuenta" o "Prueba la nueva versión"
+- HASHTAGS: 5-6 relevantes al nicho
+Tono: {tone}. Cliente: {client_name}. Audiencia: {target_audience}'),
+
+('caption', 'technology', 'linkedin', 'RAFA', 8.8, 'b2b_case_study',
+'Escribe post LinkedIn estilo case-study B2B (max 280 palabras):
+- HOOK: Cliente + métrica concreta de impacto (ej "Cómo X redujo Y un Z%")
+- CONTEXTO: Industria del cliente + reto que enfrentaba (2-3 líneas)
+- SOLUCIÓN: Qué implementaron con {client_name} (sin overselling, factual)
+- RESULTADO: 2-3 métricas verificables (tiempo, $, % mejora)
+- QUOTE: 1 cita textual del cliente (real, con permiso)
+- CTA: "¿Tu equipo enfrenta algo similar? Hablemos"
+Sin buzzwords vacíos. Cliente: {client_name}. Audiencia: {target_audience}'),
+
+('script', 'technology', 'instagram', 'RAFA', 8.6, 'product_demo_reel',
+'Crea script para Reel de demo de producto SaaS (20-30s):
+- HOOK (0-3s): Pantalla con el problema/dolor del usuario + texto overlay punzante
+- DEMO (4-22s): 3-4 clicks máx mostrando la solución en acción (screen recording)
+- PROOF (23-27s): Métrica/resultado overlay (tiempo ahorrado, etc)
+- CTA (28-30s): Logo {client_name} + "Link en bio · Empieza gratis"
+Velocidad: rápida pero legible · texto siempre en pantalla por sordos/mudo
+Cliente: {client_name}. Tono: {tone}. Audiencia: {target_audience}'),
+
+('caption', 'technology', 'instagram', 'RAFA', 8.4, 'build_in_public',
+'Escribe caption tipo "building in public" para mostrar proceso de desarrollo:
+- HOOK: Algo que aprendiste/decidiste/cambiaste esta semana en el producto
+- CONTEXTO: Qué problema interno motivó esa decisión (sin spoilers competitivos)
+- DECISIÓN: Qué hiciste y por qué (técnico pero accesible)
+- LEARNING: 1 insight aplicable para otros founders/dev teams
+- CTA: "¿Cómo lo resolverías tú? Comentá" o "Seguinos para más"
+Tono honesto, no autopromocional. Cliente: {client_name}. Brand voice: {brand_voice}'),
+
+('caption', 'technology', 'facebook', 'RAFA', 8.5, 'saas_pricing_offer',
+'Crea caption Facebook para oferta/promoción de plan SaaS:
+- HOOK: Valor concreto del plan en una línea (qué resuelve, para quién)
+- DESCRIPCIÓN: 3-4 features clave del plan promocionado (bullets cortos)
+- DIFERENCIADOR: 1 razón por la que este plan vs alternativas
+- URGENCIA: Plazo o cupos reales (sin inventar escasez)
+- CTA: "Activa tu plan · link abajo" con URL clara
+- DISCLAIMER: "Aplican términos · ver detalles en sitio" si corresponde
+Tono: {tone}. Cliente: {client_name}. Audiencia: {target_audience}');
+
 -- Verificación post-INSERT
 SELECT COUNT(*) AS total, array_agg(DISTINCT category) AS categories FROM prompt_vault;
--- Esperado: total=30, categories={ad, caption, email, hashtags, post, script, story}
+-- Esperado: total=36, categories={ad, caption, email, hashtags, post, script, story}
+-- Verticales: construction, health, real_estate, restaurant, technology (6 nuevos)
