@@ -77,7 +77,9 @@ async def poll(
     """Polling de completion. Veo 3.1 toma ~30-90s típicamente."""
     deadline = time.monotonic() + max_wait_s
     while time.monotonic() < deadline:
-        op = await _get_client().aio.operations.get(operation.operation_name)
+        op = await _get_client().aio.operations.get(
+            types.GenerateVideosOperation(name=operation.operation_name)
+        )
         if op.done:
             if op.error:
                 return None, VideoError("api_error", str(op.error))
