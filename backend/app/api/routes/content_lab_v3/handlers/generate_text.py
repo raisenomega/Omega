@@ -9,6 +9,9 @@ from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
 from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.content_lab_v3 import _content_lab_repository as repo
+from app.api.routes.content_lab_v3._prompt_vault_selector import (
+    SafeDict, select_optimal_prompt,
+)
 from app.api.routes.content_lab_v3.handlers._system_builder import build_rafa_system
 from app.api.routes.content_lab_v3.handlers._variations import generate_variations
 from app.api.routes.content_lab_v3.models.content_lab_models import (
@@ -40,8 +43,16 @@ async def generate_text(
     system = build_rafa_system(
         client, ctx, dna, request.platform, request.content_type, request.tone,
     )
+    vertical = (client.get("vertical") or "general").lower()
+    vault_prompt = select_optimal_prompt(vertical, request.platform, request.content_type)
+    user_message = vault_prompt.format_map(SafeDict(
+        client_name=client.get("name", "el cliente"), tone=request.tone,
+        target_audience=ctx.get("target_audience", "audiencia general"),
+        niche=client.get("niche", ""), region=client.get("region", ""),
+        brand_voice=", ".join(dna.tone) if dna.tone else "profesional",
+    )) if vault_prompt else f"Tema: {request.topic}"
     n = 3 if request.variations > 1 else 1
-    variations = await generate_variations(system, request, dna, client_id, n)
+    variations = await generate_variations(system, request, dna, client_id, n, user_message)
     if not variations:
         raise HTTPException(status_code=503, detail="all_variations_failed")
 

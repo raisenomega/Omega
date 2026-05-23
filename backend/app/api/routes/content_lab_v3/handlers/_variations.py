@@ -5,16 +5,13 @@ con 0.7 cuando n=1. Por cada variación exitosa: compute virality + insert draft
 + collect VariationItem. Si todas fallan retorna [] · handler convierte a 503.
 Cache_control ephemeral en system hace cache HIT en calls 2 y 3 → costo ~1.5x.
 
-FIX A (23 may 2026): Claude retorna JSON estructurado per spec del
-content_creator persona ({"draft": "...", "hook": "...", "framework": ...}).
-_extract_draft parsea + extrae solo el campo draft para el frontend ·
-preserva raw_response[:500] en metadata para debug.
+Sprint 1 Subtarea 1.2: user_message viene formateado del handler (vault prompt
+con placeholders resueltos · o 'Tema: ...' fallback si no hay match en vault).
 """
 import asyncio
-import json
-import re
 
 from app.api.routes.content_lab_v3 import _content_lab_repository as repo
+from app.api.routes.content_lab_v3.handlers._json_extract import extract_draft
 from app.api.routes.content_lab_v3.models.content_lab_models import (
     GenerateTextRequest, VariationItem,
 )
@@ -26,32 +23,14 @@ from app.bc_cognition.infrastructure.anthropic_adapter import generate
 _TEMP_TRIPLE = [(0.3, "A"), (0.7, "B"), (1.0, "C")]
 _TEMP_SINGLE = [(0.7, "A")]
 _UI_TO_DB_TYPE = {"caption": "text", "hashtags": "text", "video_script": "video"}
-_JSON_FENCE_RE = re.compile(r"^```(?:json)?\s*|\s*```$", re.MULTILINE)
-
-
-def _extract_draft(raw: str) -> str:
-    """Extrae 'draft' · prueba cleaned + substring entre llaves · fallback raw."""
-    cleaned = _JSON_FENCE_RE.sub("", raw).strip()
-    first, last = cleaned.find("{"), cleaned.rfind("}")
-    candidates = [cleaned]
-    if first >= 0 and last > first:
-        candidates.append(cleaned[first:last + 1])
-    for c in candidates:
-        try:
-            data = json.loads(c)
-            if isinstance(data, dict) and isinstance(data.get("draft"), str):
-                return data["draft"]
-        except (json.JSONDecodeError, TypeError):
-            continue
-    return raw
 
 
 async def generate_variations(
     system: str, request: GenerateTextRequest, dna: BrandDNA,
-    client_id: str, n: int,
+    client_id: str, n: int, user_message: str,
 ) -> list[VariationItem]:
     pairs = _TEMP_TRIPLE if n == 3 else _TEMP_SINGLE
-    messages = [{"role": "user", "content": f"Tema: {request.topic}"}]
+    messages = [{"role": "user", "content": user_message}]
     coros = [
         generate(agent_code="content_creator", system=system, messages=messages,
                  max_tokens=1500, temperature=t)
@@ -73,7 +52,7 @@ def _persist_variation(
     resp: ClaudeResponse, temp: float, label: str,
     request: GenerateTextRequest, dna: BrandDNA, client_id: str,
 ) -> VariationItem | None:
-    clean_text = _extract_draft(resp.text)
+    clean_text = extract_draft(resp.text)
     virality = compute_virality_score(clean_text, dna, request.platform)
     db_type = _UI_TO_DB_TYPE.get(request.content_type, "text")
     content_id = repo.safe_insert(
