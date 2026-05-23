@@ -13,8 +13,8 @@ Limitaciones V1 (DEBT futura · documentar en SOURCE_OF_TRUTH al cierre):
   · Sin cron cleanup de orphans (rows 'running' sin worker activo)
   · Sin rate limit · futuro max 3 pending por cliente
 """
+import asyncio
 import logging
-from datetime import datetime
 from typing import Any, Optional
 
 from app.bc_cognition.infrastructure import video_job_repository as repo
@@ -22,18 +22,21 @@ from app.bc_cognition.infrastructure._video_compat import generate_video_compat
 
 logger = logging.getLogger(__name__)
 
+# Mantener referencia fuerte a tasks activas · evita GC mid-execution
+# (Python docs · asyncio.create_task sin ref puede ser recolectada en cualquier momento)
+_active_tasks: set[asyncio.Task] = set()
+
 
 async def create_video_job(client_id: str, prompt: str, ratio: str) -> str:
-    """Crea row pending + spawn worker async · retorna job_id inmediato (~50ms).
+    """Crea row pending + lanza worker async directo en el event loop.
 
-    Raise (no silencia) si insert falla · handler captura y devuelve detail
-    específico al frontend (FIX 4 · observability mejorada)."""
+    asyncio.create_task corre en mismo worker uvicorn que recibió POST · cero
+    dependencia APScheduler MemoryStore (multi-worker no comparten state).
+    Reemplazó scheduler.add_job (23 may 2026 · diagnóstico job stuck pending)."""
     job_id = repo.insert_pending_job(client_id, prompt, ratio)
-    from app.main import scheduler  # lazy · evita circular import
-    scheduler.add_job(
-        _run_video_job, "date", run_date=datetime.now(),
-        args=[job_id], id=f"vjob_{job_id}",
-    )
+    task = asyncio.create_task(_run_video_job(job_id), name=f"vjob_{job_id}")
+    _active_tasks.add(task)
+    task.add_done_callback(_active_tasks.discard)
     return job_id
 
 
