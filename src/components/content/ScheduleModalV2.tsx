@@ -38,12 +38,12 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
   if (state === "closed") return null;
 
   const filled = SLOTS.filter(s => block[s.key] !== null).length;
-  const ready = filled === 3 && scheduledAt && new Date(scheduledAt) > new Date();
+  const ready = block.caption !== null && scheduledAt && new Date(scheduledAt) > new Date();
 
   if (state === "minimized") {
     return (
       <button onClick={onRestore} className="fixed bottom-4 right-4 z-50 bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-full shadow-lg text-xs flex items-center gap-2">
-        📦 Bloque {filled}/3 <span className="text-base">⤴</span>
+        📦 Bloque ({filled} {filled === 1 ? "pieza" : "piezas"}) <span className="text-base">⤴</span>
       </button>
     );
   }
@@ -53,7 +53,7 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
       <Card className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <div className="p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-sm flex items-center gap-2"><Calendar className="h-4 w-4" />Bloque de publicación · {filled}/3</h3>
+            <h3 className="font-semibold text-sm flex items-center gap-2"><Calendar className="h-4 w-4" />Bloque de publicación · caption {block.caption ? "✓" : "pendiente"}</h3>
             <div className="flex gap-1">
               <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onMinimize}><Minimize2 className="h-3.5 w-3.5" /></Button>
               <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onClose}><X className="h-3.5 w-3.5" /></Button>
@@ -64,9 +64,9 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
           </div>
           <div className="space-y-1 pt-2 border-t">
             <Label className="text-xs">Fecha y hora</Label>
-            <input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} disabled={filled < 3}
+            <input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} disabled={!block.caption}
               className="w-full px-2 py-1.5 text-sm border rounded-md bg-background disabled:opacity-50" />
-            <p className="text-[10px] text-muted-foreground">{filled < 3 ? "Llená los 3 slots para habilitar la programación" : "Listo para agendar"}</p>
+            <p className="text-[10px] text-muted-foreground">{!block.caption ? "Agendá un caption primero · imagen y hashtags son opcionales" : "Listo para agendar"}</p>
           </div>
           <Button onClick={onConfirm} disabled={!ready} className="w-full gap-1 bg-amber-500 hover:bg-amber-600 text-white">
             <Calendar className="h-4 w-4" />Agendar bloque

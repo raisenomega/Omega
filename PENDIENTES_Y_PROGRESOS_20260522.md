@@ -382,4 +382,31 @@ Tras la sesión AM (cierre 02:54 con DEBTs 018/019/020/044 cerradas + DEBT-045 a
 
 ---
 
+## COMPORTAMIENTO ESPERADO · /content muestra todas las variaciones (23 may 2026)
+
+**NO es bug · es spec original del Content Lab.**
+
+Cuando un user genera con N variaciones checkeadas (Conservadora · Balanceada · Atrevida), el backend `_variations.py:_persist_variation` inserta UNA fila en `content_lab_generated` por cada variación · TODAS con `status='draft'` y `is_saved=false`.
+
+Por eso al abrir `/content` (lista de outputs del usuario) aparecen las N variaciones de la sesión · una por temperature (A 0.3 · B 0.7 · C 1.0).
+
+**El user elige cuáles guardar:** click "Guardar" en una card del Content Lab dispara `PATCH /content/{id}/save` con `{is_saved: true}` · marca esa fila específica como guardada (verde · check). Las otras quedan como drafts pendientes en `/content`.
+
+**Flow esperado:**
+1. Generar caption con 3 variaciones → 3 rows draft en DB · 3 cards en Content Lab grid
+2. User evalúa las 3 · elige la mejor → click Guardar (solo en esa)
+3. En `/content`: las 3 siguen visibles · 1 marcada saved · 2 como pending drafts
+4. User puede:
+   - Editar/Guardar las pendientes después
+   - Eliminarlas con DELETE (cleanup manual)
+   - Dejarlas como histórico de iteración (recomendado · alimentan analytics futuras)
+
+**Si el user quiere SOLO el output que aprobó visible en `/content`:**
+- Filtro UI en frontend `/content?status=saved`
+- O backend cron periódico que limpia drafts antiguos no aprobados (DEBT futura)
+
+Esto NO es deuda · es comportamiento intencional del loop P5 (cada output queda registrado · approval marca cuáles alimentan brand_voice_corpus).
+
+---
+
 🐢💎 No velocity. Only precision.
