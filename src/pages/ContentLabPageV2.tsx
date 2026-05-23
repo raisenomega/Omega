@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMyClients } from "@/hooks/useMyClients";
+import { useGenerateText } from "@/hooks/useGenerateText";
 import { Card } from "@/components/ui/card";
 import { ContentLabFormV2, VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
 import { ContentLabFormBar } from "@/components/content/ContentLabFormBar";
@@ -9,12 +10,6 @@ import { ResultCardV2 } from "@/components/content/ResultCardV2";
 import { ResultExpandedModal } from "@/components/content/ResultExpandedModal";
 import { ScheduleModalV2 } from "@/components/content/ScheduleModalV2";
 import type { ResultV2, BlockState, ModalState } from "@/components/content/ResultCardV2";
-
-const MOCK_TEXTS = [
-  "Cada plato es una historia familiar. Nuestro mofongo · tradición de generaciones. Probá lo auténtico hoy. 🍌👨‍🍳 ¿Cuál es tu favorito?",
-  "El sabor de la abuela, en cada bocado. 3 generaciones cocinando con amor. Reservá tu mesa para esta semana. #ComidaCriolla #PR",
-  "🔥 LO QUE NADIE TE DICE del mofongo: el secreto está en el ajo MAJADO a mano. Ven y descubrí la diferencia. Solo este sábado.",
-];
 
 const INITIAL_FORM: FormState = { platform: "instagram", type: "caption", tone: "casual", topic: "", braveQuery: "", clientId: "" };
 const INITIAL_BLOCK: BlockState = { caption: null, image: null, hashtags: null };
@@ -30,18 +25,23 @@ export default function ContentLabPageV2() {
   const [expandedResult, setExpandedResult] = useState<ResultV2 | null>(null);
 
   const { data: clientList } = useMyClients();
+  const generateText = useGenerateText();
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     const selected = VARIATIONS.filter(v => variations[v]);
     if (selected.length === 0) { toast({ title: "Seleccioná al menos una variación", variant: "destructive" }); return; }
     if (!form.topic.trim()) return;
-    const newR: ResultV2[] = selected.map((label, i) => ({
-      id: `mock-${Date.now()}-${i}`, generated_text: MOCK_TEXTS[VARIATIONS.indexOf(label) % 3],
-      content_type: form.type, variation_label: label,
-      virality_score: 70 + Math.floor(Math.random() * 25), virality_estimated: true,
-    }));
-    setResults(prev => [...prev, ...newR]);
-    toast({ title: `${selected.length} resultado(s) agregados al grid` });
+    if (form.type === "image" || form.type === "video") {
+      toast({ title: `Tipo "${form.type}" próximamente · usá Caption/Hashtags por ahora`, variant: "destructive" });
+      return;
+    }
+    try {
+      const newR = await generateText.mutateAsync({ form, selectedLabels: selected });
+      setResults(prev => [...prev, ...newR]);
+      toast({ title: `${newR.length} resultado(s) generado(s) con ARIA` });
+    } catch (e) {
+      toast({ title: "Error generando", description: e instanceof Error ? e.message : "Unknown", variant: "destructive" });
+    }
   };
 
   const slotFor = (t: string): keyof BlockState => t === "image" ? "image" : t === "hashtags" ? "hashtags" : "caption";
