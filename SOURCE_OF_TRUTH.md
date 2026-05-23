@@ -220,6 +220,61 @@ Ver `IDENTIDAD_GIT_CRITICA.md` §1 + `PROTOCOLO_IDENTIDAD_GIT_OMEGA.md`.
 
 ---
 
+## SECCIÓN 9 — SESIÓN 1 CONTENT LAB · 23 may 2026 · CERRADA
+
+### Estado del sistema post-Sesión 1
+
+**Content Lab funcional end-to-end con cliente real en producción.**
+
+**Backend** (`omega-production-3c67.up.railway.app`):
+- `POST /api/v1/content-lab/generate` · Claude 4.x + RAFA persona + Brand DNA + virality score
+- `POST /api/v1/content-lab/generate-image` · Nano Banana → Supabase Storage persistente
+- `POST /api/v1/content-lab/generate-video` + `GET .../{job_id}` · Veo 3.1 con asyncio.create_task
+- `PATCH /api/v1/content/{id}/save` · alimenta brand_voice_corpus
+- `POST /api/v1/calendar/schedule/` · scheduled_posts INSERT
+
+**Frontend** (`omegaraisen.agency`):
+- `/content-lab` UI V2 con 3 generaciones reales · 3 CTAs cableados · block builder dinámico
+- 8 hooks especializados consumiendo `src/lib/api-client.ts` consolidado
+- Modal Agendar libertad total (≥3 piezas combo · sin slots fijos)
+
+**Stack actualizado:**
+```
+google-genai==2.6.0      (Veo 3.1 generate_videos + Nano Banana)
+supabase==2.18.1         (httpx<0.29 compat · realtime 2.7.0)
+httpx==0.28.1            (requerido google-genai 2.x)
+pydantic==2.11.7         (requerido realtime 2.7.0)
+```
+
+### DEBTs nuevas (CL-003 a CL-018)
+
+11 activas · 1 cerrada (CL-014) · 1 verificar (CL-012).
+Cleanup estimado: ~6-8h en próximas sesiones.
+
+**Alta urgencia:**
+- DEBT-CL-016 · `ClientProfile` model desincronizado de DB (plan='adopcion' no en enum · campos required null)
+
+**Media urgencia:**
+- DEBT-CL-005 · backend ignora client_id del frontend (usa user JWT)
+- DEBT-CL-008 · `/generate-image` hardcoded 1024x1024
+- DEBT-CL-011 · Nano Banana ImageConfig (re-activar en 2.6.0)
+- DEBT-CL-013 · useScheduleBlock bypassa backend RBAC
+- DEBT-CL-015 · account_id resolución sin elección del user
+- DEBT-CL-017 · backend ScheduledPostCreate sin video_url field
+
+Detalle completo: `PENDIENTES_Y_PROGRESOS_20260523.md`.
+
+### Próxima Sesión 2
+
+Sprint 1 PLAN_IMPLEMENTACION:
+1. Brand DNA Builder (visual UI)
+2. ARIA memory injection wiring
+3. prompt_vault seed (30 prompts production-tested)
+
+Pre-requisito recomendado: cerrar DEBT-CL-016 (~45 min).
+
+---
+
 > **Regla:** Si está en "lo que existe" pero no puedes mostrar el archivo
 > de código donde vive → se mueve a "no existe". Sin excepciones.
-> **Última actualización:** 17 mayo 2026 · firmado: Claude (auditor) + Ibrain (CEO)
+> **Última actualización:** 23 mayo 2026 · firmado: Claude (cierre Sesión 1 Content Lab) + Ibrain (CEO)
