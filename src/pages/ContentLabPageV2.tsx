@@ -3,6 +3,7 @@ import { Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMyClients } from "@/hooks/useMyClients";
 import { useGenerateText } from "@/hooks/useGenerateText";
+import { useGenerateImage } from "@/hooks/useGenerateImage";
 import { Card } from "@/components/ui/card";
 import { ContentLabFormV2, VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
 import { ContentLabFormBar } from "@/components/content/ContentLabFormBar";
@@ -26,17 +27,19 @@ export default function ContentLabPageV2() {
 
   const { data: clientList } = useMyClients();
   const generateText = useGenerateText();
+  const generateImage = useGenerateImage();
 
   const handleGenerate = async () => {
     const selected = VARIATIONS.filter(v => variations[v]);
     if (selected.length === 0) { toast({ title: "Seleccioná al menos una variación", variant: "destructive" }); return; }
     if (!form.topic.trim()) return;
-    if (form.type === "image" || form.type === "video") {
-      toast({ title: `Tipo "${form.type}" próximamente · usá Caption/Hashtags por ahora`, variant: "destructive" });
+    if (form.type === "video") {
+      toast({ title: "Video próximamente · usá Caption/Hashtags/Image", variant: "destructive" });
       return;
     }
     try {
-      const newR = await generateText.mutateAsync({ form, selectedLabels: selected });
+      const mut = form.type === "image" ? generateImage : generateText;
+      const newR = await mut.mutateAsync({ form, selectedLabels: selected });
       setResults(prev => [...prev, ...newR]);
       toast({ title: `${newR.length} resultado(s) generado(s) con ARIA` });
     } catch (e) {
