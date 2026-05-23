@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMyClients } from "@/hooks/useMyClients";
 import { useGenerateText } from "@/hooks/useGenerateText";
 import { useGenerateImage } from "@/hooks/useGenerateImage";
+import { useVideoJobPolling } from "@/hooks/useVideoJobPolling";
 import { VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
 import type { ResultV2, BlockState, ModalState } from "@/components/content/ResultCardV2";
 
@@ -23,12 +24,26 @@ export function useContentLabState() {
   const { data: clientList } = useMyClients();
   const generateText = useGenerateText();
   const generateImage = useGenerateImage();
+  const generateVideo = useVideoJobPolling();
 
   const handleGenerate = async () => {
     const selected = VARIATIONS.filter(v => variations[v]);
     if (selected.length === 0) { toast({ title: "Seleccioná al menos una variación", variant: "destructive" }); return; }
     if (!form.topic.trim()) return;
-    if (form.type === "video") { toast({ title: "Video próximamente · usá Caption/Hashtags/Image", variant: "destructive" }); return; }
+    if (form.type === "video") {
+      const tempId = `pending-${Date.now()}`;
+      const placeholder: ResultV2 = { id: tempId, generated_text: "", content_type: "video", variation_label: selected[0], status: "pending" };
+      setResults(prev => [...prev, placeholder]);
+      try {
+        const newR = await generateVideo.mutateAsync({ form, selectedLabels: selected });
+        setResults(prev => prev.map(r => r.id === tempId ? newR[0] : r));
+        toast({ title: "Video generado · listo para usar" });
+      } catch (e) {
+        setResults(prev => prev.filter(r => r.id !== tempId));
+        toast({ title: "Error generando video", description: e instanceof Error ? e.message : "Unknown", variant: "destructive" });
+      }
+      return;
+    }
     try {
       const mut = form.type === "image" ? generateImage : generateText;
       const newR = await mut.mutateAsync({ form, selectedLabels: selected });

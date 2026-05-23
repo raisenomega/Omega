@@ -1,4 +1,4 @@
-import { Calendar, Save, Download, Check, X } from "lucide-react";
+import { Calendar, Save, Download, Check, X, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ export interface ResultV2 {
   virality_score?: number;
   virality_estimated?: boolean;
   saved?: boolean;
+  status?: "pending" | "completed" | "failed";
 }
 
 export type ModalState = "closed" | "open" | "minimized";
@@ -31,6 +32,16 @@ const LABEL_COLORS: Record<string, string> = {
 };
 
 export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, onRemove }: Props) {
+  if (result.status === "pending") {
+    return (
+      <Card className="relative h-full border-amber-500/30 flex flex-col items-center justify-center gap-2 p-4">
+        <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
+        <p className="text-xs text-center text-muted-foreground">ARIA está generando tu video...</p>
+        <p className="text-[10px] text-center text-muted-foreground/60">~30-90 segundos</p>
+      </Card>
+    );
+  }
+
   const isImage = result.content_type === "image";
   const isVideo = result.content_type === "video";
   const score = result.virality_score ?? 0;
