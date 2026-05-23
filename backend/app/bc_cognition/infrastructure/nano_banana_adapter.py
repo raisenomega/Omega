@@ -56,9 +56,10 @@ async def generate(
         resp = await _get_client().aio.models.generate_content(
             model=model,
             contents=contents,
+            # google-genai 1.2.0 removió types.ImageConfig · aspect_ratio sin
+            # control programático (DEBT-CL-011) · default model output = 1:1.
             config=types.GenerateContentConfig(
                 response_modalities=["IMAGE"],
-                image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
             ),
         )
     except Exception as e:                                          # noqa: BLE001
