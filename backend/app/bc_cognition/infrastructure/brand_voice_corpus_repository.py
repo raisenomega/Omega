@@ -37,3 +37,39 @@ def fetch_recent_corpus(client_id: str, limit: int = 20) -> list[dict]:
             exc_info=True,
         )
         return []
+
+
+def count_corpus(client_id: str) -> int:
+    """COUNT(*) del corpus del cliente · 0 si vacío o error."""
+    try:
+        r = (
+            _sb().table("brand_voice_corpus")
+            .select("id", count="exact")
+            .eq("client_id", client_id)
+            .limit(1)
+            .execute()
+        )
+        return r.count or 0
+    except Exception as e:
+        logger.error(f"count_corpus failed client_id={client_id}: {e}", exc_info=True)
+        return 0
+
+
+def fetch_tone_tags_only(client_id: str, limit: int = 200) -> list[list[str]]:
+    """SELECT tone_tags · hasta `limit` filas · para agregación top_keywords.
+
+    Devuelve lista de tone_tags arrays (cada row aporta sus tags). El caller
+    (application) hace flatten + Counter para top-N. Pragmatic vs RPC unnest.
+    """
+    try:
+        r = (
+            _sb().table("brand_voice_corpus")
+            .select("tone_tags")
+            .eq("client_id", client_id)
+            .limit(limit)
+            .execute()
+        )
+        return [(row.get("tone_tags") or []) for row in (r.data or [])]
+    except Exception as e:
+        logger.error(f"fetch_tone_tags_only failed client_id={client_id}: {e}", exc_info=True)
+        return []
