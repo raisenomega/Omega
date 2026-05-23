@@ -30,14 +30,19 @@ _JSON_FENCE_RE = re.compile(r"^```(?:json)?\s*|\s*```$", re.MULTILINE)
 
 
 def _extract_draft(raw: str) -> str:
-    """Extrae campo 'draft' del JSON · fallback a texto raw si no parsea."""
+    """Extrae 'draft' · prueba cleaned + substring entre llaves · fallback raw."""
     cleaned = _JSON_FENCE_RE.sub("", raw).strip()
-    try:
-        data = json.loads(cleaned)
-        if isinstance(data, dict) and isinstance(data.get("draft"), str):
-            return data["draft"]
-    except (json.JSONDecodeError, TypeError):
-        pass
+    first, last = cleaned.find("{"), cleaned.rfind("}")
+    candidates = [cleaned]
+    if first >= 0 and last > first:
+        candidates.append(cleaned[first:last + 1])
+    for c in candidates:
+        try:
+            data = json.loads(c)
+            if isinstance(data, dict) and isinstance(data.get("draft"), str):
+                return data["draft"]
+        except (json.JSONDecodeError, TypeError):
+            continue
     return raw
 
 
@@ -49,7 +54,7 @@ async def generate_variations(
     messages = [{"role": "user", "content": f"Tema: {request.topic}"}]
     coros = [
         generate(agent_code="content_creator", system=system, messages=messages,
-                 max_tokens=600, temperature=t)
+                 max_tokens=1500, temperature=t)
         for t, _ in pairs
     ]
     results = await asyncio.gather(*coros)
