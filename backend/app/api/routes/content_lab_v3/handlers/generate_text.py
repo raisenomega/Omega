@@ -23,6 +23,13 @@ router = APIRouter()
 
 _PRO_PLANS = ("pro", "enterprise")
 
+_INDUSTRY_TO_VERTICAL = {
+    "inmobiliaria": "real_estate", "restaurante": "restaurant",
+    "salud": "health", "construccion": "construction",
+    "tecnologia": "technology", "retail": "retail",
+    "educacion": "education", "servicios": "services",
+}
+
 
 @router.post("/generate", response_model=GenerateTextResponse)
 async def generate_text(
@@ -43,7 +50,8 @@ async def generate_text(
     system = build_rafa_system(
         client, ctx, dna, request.platform, request.content_type, request.tone,
     )
-    vertical = (client.get("vertical") or "general").lower()
+    industry = (client.get("industry") or "").lower()
+    vertical = _INDUSTRY_TO_VERTICAL.get(industry, "general")
     vault_prompt = select_optimal_prompt(vertical, request.platform, request.content_type)
     user_message = vault_prompt.format_map(SafeDict(
         client_name=client.get("name", "el cliente"), tone=request.tone,
