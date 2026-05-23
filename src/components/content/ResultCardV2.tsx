@@ -16,7 +16,7 @@ export interface ResultV2 {
 }
 
 export type ModalState = "closed" | "open" | "minimized";
-export interface BlockState { caption: ResultV2 | null; image: ResultV2 | null; hashtags: ResultV2 | null }
+export interface BlockState { items: ResultV2[] }
 
 interface Props {
   result: ResultV2;

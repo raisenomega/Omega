@@ -11,8 +11,7 @@ import { VARIATIONS, type VariationLabel, type FormState } from "@/components/co
 import type { ResultV2, BlockState, ModalState } from "@/components/content/ResultCardV2";
 
 const INITIAL_FORM: FormState = { platform: "instagram", type: "caption", tone: "casual", topic: "", braveQuery: "", clientId: "" };
-const INITIAL_BLOCK: BlockState = { caption: null, image: null, hashtags: null };
-const slotFor = (t: string): keyof BlockState => t === "image" || t === "video" ? "image" : t === "hashtags" ? "hashtags" : "caption";
+const INITIAL_BLOCK: BlockState = { items: [] };
 
 export function useContentLabState() {
   const { toast } = useToast();
@@ -59,25 +58,22 @@ export function useContentLabState() {
     }
   };
 
-  const handleAgendar = (r: ResultV2) => { setBlock(prev => ({ ...prev, [slotFor(r.content_type)]: r })); setModalState("open"); setExpandedResult(null); };
+  const handleAgendar = (r: ResultV2) => { setBlock(prev => ({ items: [...prev.items, r] })); setModalState("open"); setExpandedResult(null); };
+  const handleRemoveItem = (i: number) => setBlock(prev => ({ items: prev.items.filter((_, j) => j !== i) }));
   const handleSave = (id: string) => {
     saveContent.mutate({ id, is_saved: true }, {
       onSuccess: () => setResults(prev => prev.map(r => r.id === id ? { ...r, saved: true } : r)),
     });
   };
   const handleDownload = async (r: ResultV2) => {
-    try {
-      await downloadResult(r);
-      toast({ title: "Descarga iniciada" });
-    } catch (e) {
-      toast({ title: "Error al descargar", description: e instanceof Error ? e.message : "", variant: "destructive" });
-    }
+    try { await downloadResult(r); toast({ title: "Descarga iniciada" }); }
+    catch (e) { toast({ title: "Error al descargar", description: e instanceof Error ? e.message : "", variant: "destructive" }); }
   };
   const handleConfirm = async () => {
     if (!form.clientId) { toast({ title: "Falta seleccionar cliente", variant: "destructive" }); return; }
     try {
       await scheduleBlock.mutateAsync({ block, clientId: form.clientId, platform: form.platform, scheduledAt });
-      const ids = [block.caption?.id, block.image?.id, block.hashtags?.id].filter(Boolean) as string[];
+      const ids = block.items.map(i => i.id);
       setResults(prev => prev.filter(r => !ids.includes(r.id)));
       setBlock(INITIAL_BLOCK); setModalState("closed"); setScheduledAt("");
       toast({ title: `✅ Bloque programado para ${scheduledAt}` });
@@ -91,6 +87,6 @@ export function useContentLabState() {
     form, setForm, variations, setVariations, results, setResults, clientList,
     block, modalState, setModalState, scheduledAt, setScheduledAt,
     expandedResult, setExpandedResult, slots: Math.max(4, results.length),
-    handleGenerate, handleAgendar, handleSave, handleDownload, handleConfirm, handleResearch,
+    handleGenerate, handleAgendar, handleRemoveItem, handleSave, handleDownload, handleConfirm, handleResearch,
   };
 }
