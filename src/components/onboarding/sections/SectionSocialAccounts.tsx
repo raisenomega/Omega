@@ -22,7 +22,10 @@ export function SectionSocialAccounts({ form }: Props) {
   const updateDraft = <K extends keyof Acc>(k: K, x: Acc[K]) => setDraft((d) => ({ ...d, [k]: x }));
 
   const handleSubmit = () => {
-    const next = [...list];
+    let next = [...list];
+    if (draft.is_primary) {
+      next = next.map((a, j) => j === editingIndex ? a : { ...a, is_primary: false });
+    }
     if (editingIndex !== null) next[editingIndex] = draft;
     else next.push(draft);
     form.setValue("social_accounts", next);
