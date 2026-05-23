@@ -1,26 +1,42 @@
 {
-  "$schema": "https://json.schemastore.org/claude-code-settings",
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "_comment": "OmegaRaisen — Claude Code project settings. Hooks enforce DDD_REGLAS_OMEGA.md.",
 
   "hooks": {
     "PreToolUse": [
       {
-        "match": "Edit|Write",
-        "command": "python3 .claude/hooks/protect-guardrails.py",
-        "description": "Bloquea modificación de archivos protegidos (limits_omega.py, hooks, sha1 baseline)"
+        "matcher": "Edit|Write",
+        "_comment": "Bloquea modificación de archivos protegidos (limits_omega.py, hooks, sha1 baseline)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/protect-guardrails.py"
+          }
+        ]
       }
     ],
     "PostToolUse": [
       {
-        "match": "Edit|Write",
-        "command": "python3 .claude/hooks/check-file-length.py",
-        "description": "Warning si archivo modificado >75L, error si >100L"
+        "matcher": "Edit|Write",
+        "_comment": "Warning si archivo modificado >75L, error si >100L",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/check-file-length.py"
+          }
+        ]
       }
     ],
     "Stop": [
       {
-        "command": "bash .claude/hooks/verify-on-stop.sh",
-        "description": "Verifica antes de terminar la sesión: tests, lint, SHA1"
+        "matcher": "",
+        "_comment": "Verifica antes de terminar la sesión: tests, lint, SHA1",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/verify-on-stop.sh"
+          }
+        ]
       }
     ]
   },
