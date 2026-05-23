@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useMyClients } from "@/hooks/useMyClients";
 import { Card } from "@/components/ui/card";
 import { ContentLabFormV2, VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
 import { ContentLabFormBar } from "@/components/content/ContentLabFormBar";
@@ -30,10 +29,7 @@ export default function ContentLabPageV2() {
   const [scheduledAt, setScheduledAt] = useState("");
   const [expandedResult, setExpandedResult] = useState<ResultV2 | null>(null);
 
-  const { data: clientList } = useQuery({
-    queryKey: ["lab_clients_v2"],
-    queryFn: async () => (await supabase.from("clients").select("id, name").order("name").limit(20)).data ?? [],
-  });
+  const { data: clientList } = useMyClients();
 
   const handleGenerate = () => {
     const selected = VARIATIONS.filter(v => variations[v]);
