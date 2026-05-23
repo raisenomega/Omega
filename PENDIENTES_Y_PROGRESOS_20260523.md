@@ -153,4 +153,43 @@ Sesión 1 PLAN_CONTENT_LAB_100 considerada CERRADA con éxito. Sistema en produc
 
 Próxima sesión: cleanup rápido de DEBT-CL-016 (~45 min) + Sprint 1 PLAN_IMPLEMENTACION (~4h).
 
+---
+
+## SPRINT 1 PLAN_IMPLEMENTACION · PROGRESS (mismo día · post-cierre Sesión 1)
+
+### Subtareas
+
+| # | Subtarea | Status | Commit |
+|---|---|---|---|
+| 1.1 | Seed 30 prompts del Vault · migración 00019 | ✅ commit creado · pendiente `supabase db push --linked` |
+| 1.2 | Activar `_prompt_vault_selector` + refactor `_json_extract` | ✅ live post-deploy |
+| 1.3 | Brand DNA Builder V1 · verificación de infraestructura | ✅ confirmado (DEBT-044 ya implementó · cableado en `generate_text.py:38-42`) |
+| 1.4 | Brand DNA Score badge backend + frontend | 🟡 próximo |
+
+### Subtarea 1.3 · Verificación detallada
+
+**Status: YA IMPLEMENTADO** (DEBT-044 cerrada el 22 may 2026 dejó la infra completa). Lo verificado:
+
+- ✅ `use_brand_dna.build_dna_for_client(client_id)` en `generate_text.py:39`
+- ✅ `build_brand_dna(corpus)` en `_brand_dna_builder.py` con keyword extraction + tone counter + top excerpts
+- ✅ `_system_builder.build_rafa_system` inyecta `_brand_dna_block` en system prompt
+- ✅ `_brand_dna_block` handle `corpus_size == 0` con guidance "Sin corpus disponible · Usá defaults profesionales sin forzar imitación"
+- ✅ Read-through cache 24h (`use_brand_dna._is_stale`)
+- ✅ Cron `refresh_all_brand_dna` cada 3am en `main.py:103`
+- ✅ SQL trigger en migración 00017 invalida `last_computed_at` cuando corpus cambia
+
+### DEBT-CL-019 (nueva · NO bloqueante)
+
+**Brand DNA industry benchmarks fallback.** El spec § Sprint 1 ③ menciona "Si el corpus está vacío, usar benchmarks de industria como fallback". Actualmente cuando `corpus_size == 0`, retorna `BrandDNA.empty()` con guidance genérico "profesional sin imitación".
+
+Mejora propuesta (futuro · scope opcional):
+- Crear tabla `industry_benchmarks` con tone + keywords típicos por vertical
+- O hardcodear en `_brand_dna_builder.py`: `RESTAURANT_DEFAULTS = {"tone": ["warm", "auténtico"], "keywords": ["sabor", "casa", "familia"]}`
+- En `build_brand_dna(corpus)` si corpus vacío + vertical conocido → usar defaults
+- Tiempo estimado: ~30 min backend
+
+NO se implementa en Sprint 1 V1 · cero impacto en cliente real (los clientes existentes YA tienen corpus poblado o el guidance default es razonable).
+
+---
+
 🐢💎 No velocity. Only precision.
