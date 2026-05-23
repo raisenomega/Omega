@@ -7,7 +7,7 @@
 # ─── Framework ────────────────────────────────────────────────────
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
-pydantic==2.10.5
+pydantic==2.11.7             # bump 23 may 2026 · requerido por realtime 2.7.0 (sub-dep de supabase 2.18.1)
 pydantic-settings==2.6.1
 
 # ─── Database ─────────────────────────────────────────────────────
