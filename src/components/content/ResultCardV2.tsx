@@ -71,11 +71,7 @@ export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, 
           <div className="flex items-center gap-2 flex-wrap">
             {score > 0 && <Badge className="gap-1 bg-amber-500 text-white text-[10px]">🔥 {score}/100</Badge>}
             {result.virality_estimated && score > 0 && <Badge variant="outline" className="text-[9px]">Estimado</Badge>}
-            {(result.brand_dna_score ?? 0) > 0 && (
-              <Badge variant="outline" className="text-[9px] border-emerald-500/50 text-emerald-700 dark:text-emerald-400">
-                {Math.round((result.brand_dna_score ?? 0) * 100)}% voz de marca
-              </Badge>
-            )}
+            {(result.brand_dna_score ?? 0) > 0 && <Badge variant="outline" className="text-[9px] border-emerald-500/50 text-emerald-700 dark:text-emerald-400">{Math.round((result.brand_dna_score ?? 0) * 100)}% voz de marca</Badge>}
           </div>
         )}
         <p className="text-[10px] text-amber-600 opacity-0 group-hover:opacity-100 transition">clic para expandir →</p>
