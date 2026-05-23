@@ -5,6 +5,7 @@ import { useGenerateText } from "@/hooks/useGenerateText";
 import { useGenerateImage } from "@/hooks/useGenerateImage";
 import { useVideoJobPolling } from "@/hooks/useVideoJobPolling";
 import { useSaveContent } from "@/hooks/useContentActions";
+import { downloadResult } from "@/lib/download-result";
 import { VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
 import type { ResultV2, BlockState, ModalState } from "@/components/content/ResultCardV2";
 
@@ -62,7 +63,14 @@ export function useContentLabState() {
       onSuccess: () => setResults(prev => prev.map(r => r.id === id ? { ...r, saved: true } : r)),
     });
   };
-  const handleDownload = (r: ResultV2) => toast({ title: `Descargar mock V2 · tipo: ${r.content_type}` });
+  const handleDownload = async (r: ResultV2) => {
+    try {
+      await downloadResult(r);
+      toast({ title: "Descarga iniciada" });
+    } catch (e) {
+      toast({ title: "Error al descargar", description: e instanceof Error ? e.message : "", variant: "destructive" });
+    }
+  };
   const handleConfirm = () => {
     const ids = [block.caption?.id, block.image?.id, block.hashtags?.id].filter(Boolean) as string[];
     setResults(prev => prev.filter(r => !ids.includes(r.id)));
