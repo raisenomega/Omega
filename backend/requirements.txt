@@ -13,7 +13,7 @@ pydantic-settings==2.6.1
 # ─── Database ─────────────────────────────────────────────────────
 sqlalchemy==2.0.25
 psycopg2-binary==2.9.10
-supabase==2.7.4
+supabase==2.18.1             # bump 23 may 2026 · acepta httpx<0.29,>=0.26 (compat con google-genai 2.6.0 que requiere httpx>=0.28.1)
 
 # ─── AI providers (SOLO 2 — Anthropic + Google) ───────────────────
 anthropic>=0.34.0,<1.0.0
@@ -29,7 +29,7 @@ PyJWT==2.10.1
 stripe==7.10.0
 
 # ─── HTTP / API consumption ───────────────────────────────────────
-httpx==0.26.0
+httpx==0.28.1                # bump 23 may 2026 · requerido por google-genai 2.6.0 · supabase 2.18.1 lo acepta
 requests==2.31.0
 
 # ─── Form data / files ────────────────────────────────────────────
