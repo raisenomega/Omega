@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMyClients } from "@/hooks/useMyClients";
 import { useGenerateText } from "@/hooks/useGenerateText";
@@ -7,6 +7,7 @@ import { useVideoJobPolling } from "@/hooks/useVideoJobPolling";
 import { useSaveContent } from "@/hooks/useContentActions";
 import { downloadResult } from "@/lib/download-result";
 import { useScheduleBlock } from "@/hooks/useScheduleBlock";
+import { loadPersistedResults, persistResults } from "@/lib/content-lab-persistence";
 import { VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
 import type { ResultV2, BlockState, ModalState } from "@/components/content/ResultCardV2";
 
@@ -17,7 +18,8 @@ export function useContentLabState() {
   const { toast } = useToast();
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [variations, setVariations] = useState<Record<VariationLabel, boolean>>({ Conservadora: false, Balanceada: true, Atrevida: false });
-  const [results, setResults] = useState<ResultV2[]>([]);
+  const [results, setResults] = useState<ResultV2[]>(loadPersistedResults);
+  useEffect(() => { persistResults(results); }, [results]);
   const [block, setBlock] = useState<BlockState>(INITIAL_BLOCK);
   const [modalState, setModalState] = useState<ModalState>("closed");
   const [scheduledAt, setScheduledAt] = useState("");
