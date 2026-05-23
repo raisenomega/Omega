@@ -34,7 +34,7 @@ export function SectionContentHistory({ form }: Props) {
         </div>
       </div>
       <div className="space-y-1"><Label className="text-xs">Temas recurrentes (coma)</Label>
-        <Input className="h-8" value={(v?.content_themes ?? []).join(", ")} onChange={(e) => set("content_themes", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} placeholder="café, comunidad, recetas" />
+        <Input className="h-8" defaultValue={(v?.content_themes ?? []).join(", ")} onBlur={(e) => set("content_themes", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} placeholder="café, comunidad, recetas" key={(v?.content_themes ?? []).join("|")} />
       </div>
     </div>
   );

@@ -30,7 +30,7 @@ export function SectionInstructions({ form }: Props) {
       </label>
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1"><Label className="text-xs">Horas preferidas (0-23, coma)</Label>
-          <Input className="h-8" value={hours.join(", ")} onChange={(e) => set("preferred_publishing_hours", e.target.value.split(",").map((s) => Number(s.trim())).filter((n) => !isNaN(n) && n >= 0 && n <= 23))} placeholder="9, 12, 18" />
+          <Input className="h-8" defaultValue={hours.join(", ")} onBlur={(e) => set("preferred_publishing_hours", e.target.value.split(",").map((s) => Number(s.trim())).filter((n) => !isNaN(n) && n >= 0 && n <= 23))} placeholder="9, 12, 18" key={hours.join("|")} />
         </div>
         <div className="space-y-1"><Label className="text-xs">Zona horaria</Label>
           <Input className="h-8" value={v?.timezone ?? "America/Puerto_Rico"} onChange={(e) => set("timezone", e.target.value)} />

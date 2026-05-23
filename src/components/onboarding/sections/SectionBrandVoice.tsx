@@ -33,8 +33,9 @@ export function SectionBrandVoice({ form }: Props) {
         </div>
       </div>
       <div className="space-y-1"><Label className="text-xs">Keywords (separados por coma)</Label>
-        <Input className="h-8" value={(v?.brand_voice_keywords ?? []).join(", ")}
-          onChange={(e) => form.setValue("brand_voice.brand_voice_keywords", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} />
+        <Input className="h-8" defaultValue={(v?.brand_voice_keywords ?? []).join(", ")}
+          onBlur={(e) => form.setValue("brand_voice.brand_voice_keywords", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
+          key={(v?.brand_voice_keywords ?? []).join("|")} />
       </div>
       <div className="space-y-1"><Label className="text-xs">Temas a evitar</Label>
         <Input className="h-8" placeholder="ej: política, religión, competidores..."
