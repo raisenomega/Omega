@@ -17,7 +17,7 @@ supabase==2.7.4
 
 # ─── AI providers (SOLO 2 — Anthropic + Google) ───────────────────
 anthropic>=0.34.0,<1.0.0
-google-genai>=0.3.0          # Nano Banana (imagen) + Veo 3.1 (video) — ÚNICA excepción I1
+google-genai>=2.0.0          # Nano Banana (imagen) + Veo 3.1 (video) — ÚNICA excepción I1 · 2.x requerido por generate_videos (1.x NO lo tenía · sanity test 23 may 2026 · 2.6.0 verificado compatible)
 
 # ─── Auth ─────────────────────────────────────────────────────────
 python-jose[cryptography]==3.3.0
