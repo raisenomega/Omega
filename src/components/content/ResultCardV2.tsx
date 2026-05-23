@@ -78,10 +78,12 @@ export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, 
             className="bg-amber-500 hover:bg-amber-600 text-white gap-1 flex-1 h-7 text-[11px]">
             <Calendar className="h-3 w-3" />Agendar
           </Button>
-          <Button size="sm" variant="outline" onClick={() => onSave(result.id)}
+          <Button size="sm" variant="outline" onClick={() => isVideo ? null : onSave(result.id)}
+            disabled={isVideo}
+            title={isVideo ? "Video persistido automáticamente en Storage" : undefined}
             className={`gap-1 flex-1 h-7 text-[11px] ${result.saved ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600" : ""}`}>
             {result.saved ? <Check className="h-3 w-3" /> : <Save className="h-3 w-3" />}
-            {result.saved ? "✓" : "Guardar"}
+            {result.saved ? "✓" : isVideo ? "Auto" : "Guardar"}
           </Button>
           <Button size="sm" variant="outline" onClick={() => onDownload(result)} className="gap-1 flex-1 h-7 text-[11px]">
             <Download className="h-3 w-3" />Descargar

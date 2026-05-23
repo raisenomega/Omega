@@ -39,9 +39,12 @@ export function ResultExpandedModal({ result, onClose, onAgendar, onSave, onDown
             className="bg-amber-500 hover:bg-amber-600 text-white gap-1.5 font-semibold">
             <Calendar className="h-4 w-4" /> Agendar
           </Button>
-          <Button variant="outline" onClick={() => onSave(result.id)} className="gap-1.5">
+          <Button variant="outline" onClick={() => isVideo ? null : onSave(result.id)}
+            disabled={isVideo}
+            title={isVideo ? "Video persistido automáticamente en Storage" : undefined}
+            className="gap-1.5">
             {result.saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-            {result.saved ? "Guardado" : "Guardar"}
+            {result.saved ? "Guardado" : isVideo ? "Auto" : "Guardar"}
           </Button>
           <Button variant="outline" onClick={() => onDownload(result)} className="gap-1.5">
             <Download className="h-4 w-4" /> Descargar

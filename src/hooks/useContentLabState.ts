@@ -12,7 +12,7 @@ import type { ResultV2, BlockState, ModalState } from "@/components/content/Resu
 
 const INITIAL_FORM: FormState = { platform: "instagram", type: "caption", tone: "casual", topic: "", braveQuery: "", clientId: "" };
 const INITIAL_BLOCK: BlockState = { caption: null, image: null, hashtags: null };
-const slotFor = (t: string): keyof BlockState => t === "image" ? "image" : t === "hashtags" ? "hashtags" : "caption";
+const slotFor = (t: string): keyof BlockState => t === "image" || t === "video" ? "image" : t === "hashtags" ? "hashtags" : "caption";
 
 export function useContentLabState() {
   const { toast } = useToast();
