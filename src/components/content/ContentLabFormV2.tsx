@@ -14,7 +14,10 @@ const ASPECT_LABELS: Record<Aspect, string> = { "1:1": "Cuadrado", "9:16": "Stor
 export interface FormState {
   platform: string; type: string; tone: string; topic: string; braveQuery: string; clientId: string;
   aspect: Aspect;
+  reference_image_b64?: string;  // UX-6 · imagen de referencia opcional para edición
 }
+
+const MAX_REF_IMAGE_BYTES = 5 * 1024 * 1024;  // 5MB cap base64-encoded
 
 interface Props {
   form: FormState;
@@ -28,6 +31,15 @@ interface Props {
 export function ContentLabFormV2({ form, setForm, variations, setVariations, onGenerate, isPending }: Props) {
   const update = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm(prev => ({ ...prev, [k]: v }));
   const hasVar = Object.values(variations).some(Boolean);
+
+  const handleRefImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_REF_IMAGE_BYTES) { alert("Imagen >5MB · usá una más pequeña"); return; }
+    const reader = new FileReader();
+    reader.onload = () => update("reference_image_b64", (reader.result as string).split(",")[1] ?? "");
+    reader.readAsDataURL(file);
+  };
 
   return (
     <div className="space-y-3 h-full flex flex-col">
@@ -51,6 +63,19 @@ export function ContentLabFormV2({ form, setForm, variations, setVariations, onG
           </select>
         )}
       </div>
+      {/* UPLOAD IMAGEN REFERENCIA · solo type=image (UX-6) */}
+      {form.type === "image" && (
+        <div className="flex items-center gap-2">
+          <label className="flex-1 text-[11px] cursor-pointer text-muted-foreground hover:text-foreground border border-dashed rounded px-2 py-1 text-center">
+            📎 {form.reference_image_b64 ? "Referencia adjunta · click para cambiar" : "Adjuntar imagen referencia (opcional)"}
+            <input type="file" accept="image/*" className="hidden" onChange={handleRefImageChange} />
+          </label>
+          {form.reference_image_b64 && (
+            <button type="button" onClick={() => update("reference_image_b64", undefined)}
+              className="text-xs text-red-500 hover:text-red-700 px-1" aria-label="Quitar referencia">✗</button>
+          )}
+        </div>
+      )}
       {/* BOTÓN GENERAR */}
       <Button onClick={onGenerate} disabled={isPending || !form.topic.trim() || !hasVar}
         className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white h-11">

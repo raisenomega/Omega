@@ -34,6 +34,7 @@ class GenerateImageRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=2000)
     style: str = Field(default="realistic", max_length=32)  # realistic|cartoon|minimal
     aspect_ratio: str = Field(default="1:1", max_length=8)  # 1:1|9:16|16:9 (UX-3)
+    reference_image_b64: Optional[str] = Field(default=None)  # base64 sin prefix data: (UX-6)
 
 
 class GenerateImageResponse(BaseModel):

@@ -21,6 +21,7 @@ export function useGenerateImage() {
         prompt: form.topic,
         style: "realistic",
         aspect_ratio: form.aspect,
+        reference_image_b64: form.reference_image_b64,
       });
       return [{
         id: data.id,

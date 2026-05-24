@@ -48,10 +48,12 @@ async def generate_image(
 
     enhanced = _enhance_prompt(request.prompt, request.style)
     size = _ASPECT_TO_SIZE.get(request.aspect_ratio, "1024x1024")
+    refs = [request.reference_image_b64] if request.reference_image_b64 else None  # UX-6
     try:
         urls = await generate_image_compat(
             prompt=enhanced, n=1, size=size,
             quality="standard", client_id=client_id,
+            reference_images_b64=refs,
         )
     except StorageUploadError as e:
         raise HTTPException(status_code=502, detail=f"storage_upload_error:{e}")
