@@ -11,6 +11,7 @@ from typing import Optional
 from app.bc_cognition.application._brand_dna_scoring import compute_score
 from app.bc_cognition.application._brand_dna_stopwords import STOPWORDS
 from app.bc_cognition.domain.brand_dna import BrandDNA
+from app.bc_cognition.domain.industry_defaults import get_defaults
 
 
 _WORD_RE = re.compile(r"\w+", re.UNICODE)
@@ -20,8 +21,24 @@ _TOP_POSTS = 3
 _POST_EXCERPT_WORDS = 150
 
 
-def build_brand_dna(corpus: list[dict], now: Optional[datetime] = None) -> BrandDNA:
+def build_brand_dna(
+    corpus: list[dict],
+    now: Optional[datetime] = None,
+    vertical: Optional[str] = None,
+) -> BrandDNA:
     if not corpus:
+        # DEBT-CL-019: fallback a industry defaults si vertical conocido.
+        # score=0 + corpus_size=0 signal claro: NO es data real del cliente.
+        defaults = get_defaults(vertical)
+        if defaults:
+            return BrandDNA(
+                tone=list(defaults["tone"]),
+                keywords=[(kw, 0) for kw in defaults["keywords"]],
+                avg_length_words=0,
+                top_post_excerpts=[],
+                corpus_size=0,
+                score=0.0,
+            )
         return BrandDNA.empty()
 
     now = now or datetime.utcnow()

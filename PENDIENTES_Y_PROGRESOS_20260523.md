@@ -190,6 +190,8 @@ Mejora propuesta (futuro · scope opcional):
 
 NO se implementa en Sprint 1 V1 · cero impacto en cliente real (los clientes existentes YA tienen corpus poblado o el guidance default es razonable).
 
+**DEBT-CL-019 ✅ CERRADA Sprint 3 (23 may 2026)**: implementada como hardcoded en `domain/industry_defaults.py` (decisión owner sobre tabla DB · más simple · zero schema · 8 verticales del mapping `_INDUSTRY_TO_VERTICAL`). `_brand_dna_builder.build_brand_dna(corpus, vertical=)` rama defaults cuando corpus vacío + vertical conocido · `score=0` + `corpus_size=0` signal claro al UI que NO es data real. Trigger SQL invalida cache automáticamente cuando corpus real llena.
+
 ---
 
 🐢💎 No velocity. Only precision.

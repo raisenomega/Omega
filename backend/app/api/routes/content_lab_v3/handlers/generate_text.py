@@ -45,12 +45,13 @@ async def generate_text(
         raise HTTPException(status_code=403, detail="variations_require_pro_plan")
 
     ctx = repo.find_client_context(client_id)
-    dna = use_brand_dna.build_dna_for_client(client_id)
+    industry = (client.get("industry") or "").lower()
+    vertical = _INDUSTRY_TO_VERTICAL.get(industry, "general")
+    # DEBT-CL-019: pasar vertical al DNA · si corpus vacío usa industry defaults
+    dna = use_brand_dna.build_dna_for_client(client_id, vertical=vertical)
     system = build_rafa_system(
         client, ctx, dna, request.platform, request.content_type, request.tone,
     )
-    industry = (client.get("industry") or "").lower()
-    vertical = _INDUSTRY_TO_VERTICAL.get(industry, "general")
     vault_prompt = select_optimal_prompt(vertical, request.platform, request.content_type)
     user_message = vault_prompt.format_map(SafeDict(
         client_name=client.get("name", "el cliente"), tone=request.tone,

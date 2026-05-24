@@ -9,6 +9,7 @@ main.py startup (cron brand_dna_refresh 3 AM diario).
 """
 import logging
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 
 from app.bc_cognition.application._brand_dna_builder import build_brand_dna
 from app.bc_cognition.domain.brand_dna import BrandDNA
@@ -24,12 +25,18 @@ logger = logging.getLogger(__name__)
 _STALE_AFTER_HOURS = 24
 
 
-def build_dna_for_client(client_id: str, limit: int = 20) -> BrandDNA:
-    """Read-through cache · tabla primero · recompute si stale o ausente."""
+def build_dna_for_client(
+    client_id: str,
+    limit: int = 20,
+    vertical: Optional[str] = None,
+) -> BrandDNA:
+    """Read-through cache · tabla primero · recompute si stale o ausente.
+    DEBT-CL-019: vertical opcional propaga a builder para fallback defaults
+    cuando corpus vacío."""
     persisted = fetch_persisted_dna(client_id)
     if persisted and not _is_stale(persisted):
         return BrandDNA.from_dict(persisted["dna_jsonb"])
-    return _recompute_and_persist(client_id, limit)
+    return _recompute_and_persist(client_id, limit, vertical)
 
 
 def _is_stale(persisted: dict) -> bool:
@@ -45,9 +52,11 @@ def _is_stale(persisted: dict) -> bool:
     return (datetime.now(timezone.utc) - dt) > timedelta(hours=_STALE_AFTER_HOURS)
 
 
-def _recompute_and_persist(client_id: str, limit: int) -> BrandDNA:
+def _recompute_and_persist(
+    client_id: str, limit: int, vertical: Optional[str] = None,
+) -> BrandDNA:
     corpus = fetch_recent_corpus(client_id, limit=limit)
-    dna = build_brand_dna(corpus)
+    dna = build_brand_dna(corpus, vertical=vertical)
     upsert_persisted_dna(client_id, dna.to_dict(), len(corpus))
     return dna
 
