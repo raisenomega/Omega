@@ -11,8 +11,14 @@ from app.domain.calendar.types import Status
 
 
 class ScheduledPostCreate(BaseModel):
-    """DTO for creating scheduled post"""
-    account_id: str = Field(..., description="Social account UUID")
+    """DTO for creating scheduled post.
+    DEBT-CL-013: aceptar client_id+platform como alternativa a account_id
+    (frontend ya no necesita query Supabase directo para resolver account_id).
+    Backend resuelve internamente + ownership check.
+    """
+    account_id: Optional[str] = Field(None, description="Social account UUID (legacy path)")
+    client_id: Optional[str] = Field(None, description="Client UUID (nuevo path · backend resuelve account)")
+    platform: Optional[str] = Field(None, description="Platform (instagram/facebook/...) requerido con client_id")
     content_lab_id: Optional[str] = Field(None, description="Content Lab reference")
     content_type: str = Field(..., description="Type of content (post, story, email, bio, etc.)")
     text_content: str = Field(..., min_length=1, max_length=5000)
