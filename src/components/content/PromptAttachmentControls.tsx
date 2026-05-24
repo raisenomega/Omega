@@ -1,4 +1,5 @@
 import { Paperclip, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const MAX_REF_IMAGE_BYTES = 5 * 1024 * 1024;  // 5MB cap base64-encoded
 
@@ -8,9 +9,15 @@ interface Props {
 }
 
 export function PromptAttachmentControls({ reference_image_b64, onChange }: Props) {
+  const { toast } = useToast();
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Formatos adicionales próximamente",
+        description: "Por ahora solo imágenes · PDF/doc/md en sprint futuro (DEBT-CL-020)." });
+      return;
+    }
     if (file.size > MAX_REF_IMAGE_BYTES) { alert("Imagen >5MB · usá una más pequeña"); return; }
     const reader = new FileReader();
     reader.onload = () => onChange((reader.result as string).split(",")[1] ?? "");

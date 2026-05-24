@@ -50,10 +50,8 @@ export function ContentLabFormV2({ form, setForm, variations, setVariations, onG
       <div className="bg-background border-2 border-amber-500 rounded-lg p-3 flex-1 flex flex-col relative">
         <Textarea value={form.topic} onChange={(e) => update("topic", e.target.value)}
           className="bg-transparent border-none outline-none resize-none w-full h-full focus:ring-0 focus-visible:ring-0 flex-1 min-h-[120px]" />
-        {form.type === "image" && (
-          <PromptAttachmentControls reference_image_b64={form.reference_image_b64}
-            onChange={(b64) => update("reference_image_b64", b64)} />
-        )}
+        <PromptAttachmentControls reference_image_b64={form.reference_image_b64}
+          onChange={(b64) => update("reference_image_b64", b64)} />
         <Button size="sm" variant="ghost" onClick={handleImprove}
           disabled={!form.topic.trim() || improve.isPending}
           className="absolute bottom-2 right-2 h-7 text-[11px] gap-1 text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-950/30">
