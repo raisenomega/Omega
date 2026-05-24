@@ -27,13 +27,18 @@ class UpdateStatusRequest(BaseModel):
 
 
 class ScheduledPostV3Create(BaseModel):
-    """Schema correcto V3 · DEBT-CL-017 + DEBT-031 partial. Frontend apunta
-    a /api/v1/calendar-v3/schedule/. Cero cols inexistentes (legacy issue)."""
+    """Schema correcto V3 · DEBT-CL-017 + DEBT-018 (bulk).
+
+    content_ids: 1+ items de texto del bloque · cada uno se programa como
+    1 row separada · backend spread automático según LIMITS_OMEGA
+    (MIN_HORAS_ENTRE_POSTS=2 · MAX_POSTS_AUTO_PER_DIA_CLIENTE=3).
+    Atomic insert · todos o ninguno.
+    """
     client_id: str = Field(..., description="Client UUID")
     platform: str = Field(..., max_length=32, description="instagram/facebook/...")
-    content_id: str = Field(..., description="content_lab_generated.id del anchor del bloque")
-    scheduled_for: datetime = Field(..., description="Timestamp UTC ISO combinado date+time")
-    media_url: Optional[str] = Field(default=None, description="URL Storage si el bloque incluye image/video")
+    content_ids: list[str] = Field(..., min_length=1, description="content_lab_generated.id de cada anchor del bloque · 1+")
+    scheduled_for: datetime = Field(..., description="Timestamp UTC del PRIMER post · backend espacia los siguientes")
+    media_url: Optional[str] = Field(default=None, description="URL Storage compartida entre todos los N posts del bloque")
 
 
 class ScheduledPostV3Response(BaseModel):

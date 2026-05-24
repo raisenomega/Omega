@@ -81,7 +81,7 @@
 | DEBT-CL-015 | account_id resolución LIMIT 1 sin elección del user | 🔴 OPEN | Media |
 | DEBT-CL-016 | ClientProfile model desincronizado de DB (plan adopcion · campos null) | ✅ CERRADA Sprint 3 | — |
 | DEBT-CL-017 | Backend ScheduledPostCreate sin video_url field · video viaja como image_url | ✅ CERRADA Sprint 3 (path X · calendar_v3/schedule_post + media_url col 00020) | — |
-| DEBT-CL-018 | Bulk schedule · agendar N posts en una llamada (3 captions → 1 row solo hoy) | 🔴 OPEN | Baja |
+| DEBT-CL-018 | Bulk schedule · agendar N posts en una llamada (3 captions → 1 row solo hoy) | ✅ CERRADA Sprint 3 (content_ids list + spacer + atomic bulk insert) | — |
 
 **Total DEBTs activas: 11 · cerradas: 1 · verificar: 1 · estimación cleanup: ~6-8h**
 

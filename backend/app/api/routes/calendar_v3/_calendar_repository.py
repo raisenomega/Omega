@@ -32,24 +32,18 @@ def insert_behavioral_status_change(user_id: str, client_id: str, post_id: str, 
     }).execute()
 
 
-def insert_scheduled_post(
-    client_id: str,
-    social_account_id: str,
-    content_id: str,
-    scheduled_for_iso: str,
-    media_url: str | None,
-) -> dict:
-    """INSERT scheduled_posts con schema V3 real · DEBT-CL-017 + path X.
-    Status inicial 'pending' (per migración 00001 CHECK constraint).
-    Retorna la row creada."""
-    r = _sb().table("scheduled_posts").insert({
-        "client_id": client_id,
-        "social_account_id": social_account_id,
-        "content_id": content_id,
-        "scheduled_for": scheduled_for_iso,
-        "status": "pending",
-        "media_url": media_url,
-    }).execute()
-    if not r.data:
-        raise RuntimeError("scheduled_posts insert returned no row")
-    return r.data[0]
+def insert_scheduled_posts_bulk(rows: list[dict]) -> list[dict]:
+    """INSERT scheduled_posts batch · atómico (single SQL INSERT batch ·
+    todos o ninguno · Postgres transaction). DEBT-CL-018.
+
+    Each row debe contener: client_id, social_account_id, content_id,
+    scheduled_for (ISO), status='pending', media_url (opcional).
+    """
+    if not rows:
+        return []
+    r = _sb().table("scheduled_posts").insert(rows).execute()
+    if not r.data or len(r.data) != len(rows):
+        raise RuntimeError(
+            f"bulk insert returned {len(r.data or [])} rows · expected {len(rows)}"
+        )
+    return r.data
