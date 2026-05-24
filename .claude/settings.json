@@ -56,6 +56,11 @@
       "model": "haiku",
       "description": "Verifica que SOURCE_OF_TRUTH.md y archivos clave fueron leídos al inicio.",
       "tools": ["Read"]
+    },
+    "guardian": {
+      "model": "opus",
+      "description": "Gate read-only del diff de fase contra DDD_REGLAS_OMEGA + CLAUDE.md. Emite APPROVE | CHANGES_REQUIRED antes de commit.",
+      "tools": ["Read", "Grep", "Glob"]
     }
   },
 
