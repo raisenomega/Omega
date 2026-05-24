@@ -273,17 +273,68 @@ Cleanup estimado: ~6-8h en próximas sesiones.
 
 Detalle completo: `PENDIENTES_Y_PROGRESOS_20260523.md`.
 
-### Próxima Sesión 2
+---
 
-Sprint 1 PLAN_IMPLEMENTACION:
-1. Brand DNA Builder (visual UI)
-2. ARIA memory injection wiring
-3. prompt_vault seed (30 prompts production-tested)
+## SECCIÓN 10 — SPRINT 3 CIERRE · 24 may 2026
 
-Pre-requisito ~~recomendado: cerrar DEBT-CL-016 (~45 min)~~ ✅ **CERRADA 23 may 2026 · Sprint 3**.
+### Resumen Sprint 3 (23-24 may)
+
+**19 DEBTs cerradas · ~40 commits · 0 downtime · pre-push 10/10 verde en cada uno.**
+
+Cerradas todas las DEBT-CL-003..022 vivas + DEBT-VID-001 + DEBT-039 V2 partial.
+Detalle full: `PENDIENTES_Y_PROGRESOS_20260524.md`.
+
+### Features nuevas Sprint 3
+
+1. **Brave Search Content Lab** · `POST /api/v1/content-lab/research` + cards UX en grid (no panel inline)
+2. **Video Packs Add-Ons** · página `/add-ons` + 3 Stripe products test mode + checkout end-to-end (DEBT-VID-001)
+3. **Upload context permanent** · `POST /clients/{id}/upload-context` + inyección al system prompt RAFA en cada generación (DEBT-039 V2)
+4. **Multi-account picker** · dropdown cuando cliente tiene N>1 cuentas/platform (DEBT-CL-015)
+5. **6 UX Content Lab** · loading + Mejorar Prompt + Aspect Ratio + Variations compact + Brave key verified + Upload reference image
+6. **PDF/DOCX attachment per-request** · paperclip dentro textarea · 5MB cap (DEBT-CL-020)
+7. **Bulk schedule N posts** · `POST /calendar-v3/schedule/` con `content_ids: list[str]` + timestamp spacer LIMITS_OMEGA (DEBT-CL-018)
+8. **Calendar auth + RBAC completa** · 4 endpoints legacy cerrados (DEBT-CL-013 opción C)
+9. **Video cancel polling** · DELETE endpoint + useRef + cleanup auto (DEBT-CL-010)
+
+### Stripe Video Pack products en producción test mode
+
+```
+STRIPE_PRICE_VIDEO_PACK_STARTER=price_1TaVSsGv6r9UZ1Dre2mQgz7U  ($39 · 6×8s)
+STRIPE_PRICE_VIDEO_PACK_CREATOR=price_1TaVStGv6r9UZ1DrE3R7u41n  ($95 · 5×30s)
+STRIPE_PRICE_VIDEO_PACK_CINEMATIC_PRO=price_1TaVStGv6r9UZ1Drrz70HoEp  ($125 · 3×60s)
+```
+
+Pegadas en Railway env vars (confirmado owner).
+
+### Migraciones SQL pendientes aplicar (owner manual)
+
+```bash
+supabase db push --linked
+```
+- `00020_scheduled_posts_media_url.sql` (alter table + col media_url text)
+- `00021_client_context_uploaded.sql` (alter table client_context + 4 cols uploaded_*)
+
+Sin esto: 500 en `/calendar-v3/schedule/` y `/clients/{id}/upload-context`.
+
+### Bugs latentes cerrados oportunistas
+
+- `ORDER BY is_primary` calendar/_access (col inexistente schema V3) → fix `created_at` (DEBT-CL-015)
+- `result.ok` upgrade_aria (BillingResult TypedDict no dataclass) → `result.get("success")` (DEBT-VID-001)
+- `handleSubmit` sin onInvalid silenciando zod errors → toast destructive + console.warn (post-cierre)
+- web_search_tool retorna `content` · research esperaba `snippet` → mapping explícito 500→200
+
+### DEBTs pendientes (Sprint 4+)
+
+- DEBT-031 read legacy (refactor calendar listing al schema V3)
+- DEBT-039 V1 auto-populate wizard desde PDF (~12h)
+- DEBT-040 OAuth flows social (~40h · sprint dedicado)
+- DEBT-042 regions display ProfileSection (~3h)
+- DEBT-046 ARIA Premium reseller (~4h)
+- DEBT-047 persistent jobstore Python 3.13 (~4h)
+- DEBT-048 ARIA attention memory + embeddings (~16h)
 
 ---
 
 > **Regla:** Si está en "lo que existe" pero no puedes mostrar el archivo
 > de código donde vive → se mueve a "no existe". Sin excepciones.
-> **Última actualización:** 23 mayo 2026 (Sprint 3 Video Pricing) · firmado: Claude (cierre Sesión 1 Content Lab + Sprint 3 Video) + Ibrain (CEO)
+> **Última actualización:** 24 mayo 2026 (Sprint 3 CIERRE COMPLETO) · firmado: Claude Opus 4.7 (1M context) + Ibrain (CEO)
