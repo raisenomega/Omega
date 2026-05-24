@@ -24,7 +24,8 @@ export default function ContentLabPageV2() {
       <div className="grid grid-cols-[280px_1fr_1fr] grid-rows-[220px_220px] items-stretch gap-3">
         <div className="row-span-full h-full">
           <ContentLabFormV2 form={s.form} setForm={s.setForm}
-            variations={s.variations} setVariations={s.setVariations} onGenerate={s.handleGenerate} />
+            variations={s.variations} setVariations={s.setVariations} onGenerate={s.handleGenerate}
+            isPending={s.isPending} />
         </div>
         {Array.from({ length: s.slots }).map((_, i) => {
           const r = s.results[i];

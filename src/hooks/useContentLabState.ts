@@ -85,10 +85,11 @@ export function useContentLabState() {
   };
   const handleResearch = () => toast({ title: "Brave Research en futuro Sprint" });
 
+  const isPending = generateText.isPending || generateImage.isPending || generateVideo.isPending;
   return {
     form, setForm, variations, setVariations, results, setResults, clientList,
     block, modalState, setModalState, scheduledAt, setScheduledAt,
-    expandedResult, setExpandedResult, slots: Math.max(4, results.length),
+    expandedResult, setExpandedResult, slots: Math.max(4, results.length), isPending,
     handleGenerate, handleAgendar, handleRemoveItem, handleSave, handleDownload, handleConfirm, handleResearch,
   };
 }
