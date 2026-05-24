@@ -20,6 +20,7 @@ import Media from "./pages/Media";
 import Analytics from "./pages/Analytics";
 import BrandVoicePage from "./pages/BrandVoicePage";
 import CrisisPage from "./pages/CrisisPage";
+import AddOnsPage from "./pages/AddOnsPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
@@ -115,6 +116,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <AppLayout><CrisisPage /></AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/add-ons"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout><AddOnsPage /></AppLayout>
                   </ProtectedRoute>
                 }
               />

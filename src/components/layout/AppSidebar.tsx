@@ -9,6 +9,7 @@ import {
   Mic2,
   ShieldAlert,
   Sparkles,
+  Package,
 } from "lucide-react";
 import { RaisenLogo } from "@/components/brand/RaisenLogo";
 import { RaisenCircleLogo } from "@/components/brand/RaisenCircleLogo";
@@ -37,6 +38,7 @@ const mainItems = [
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Brand Voice", url: "/brand-voice", icon: Mic2 },
   { title: "Crisis Room", url: "/crisis", icon: ShieldAlert },
+  { title: "Add-Ons", url: "/add-ons", icon: Package },
 ];
 
 const configItems = [
