@@ -1,8 +1,16 @@
-"""Main router calendar_v3 · GET list + PATCH status bajo /calendar prefix."""
+"""Main router calendar_v3.
+
+Sub-routers con prefix diferenciado:
+- list + status bajo /calendar (back-compat con UI existente)
+- schedule_post bajo /calendar-v3 (DEBT-CL-017 + path X · path distintivo
+  para evitar colisión con /calendar/schedule/ del legacy)
+"""
 from fastapi import APIRouter
 from app.api.routes.calendar_v3.handlers.list_calendar import router as list_router
 from app.api.routes.calendar_v3.handlers.update_status import router as status_router
+from app.api.routes.calendar_v3.handlers.schedule_post import router as schedule_router
 
-router = APIRouter(prefix="/calendar", tags=["Calendar V3"])
-router.include_router(list_router)
-router.include_router(status_router)
+router = APIRouter()
+router.include_router(list_router, prefix="/calendar", tags=["Calendar V3 Read"])
+router.include_router(status_router, prefix="/calendar", tags=["Calendar V3 Status"])
+router.include_router(schedule_router, prefix="/calendar-v3", tags=["Calendar V3 Schedule"])

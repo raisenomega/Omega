@@ -1,5 +1,15 @@
 """Handler: Schedule Post · auth + RBAC obligatorios (G-capas).
 
+DEPRECATED 23 may 2026 (Sprint 3 · DEBT-CL-017 path X):
+  Schema usado aquí (account_id, image_url, text_content, scheduled_date,
+  scheduled_time, hashtags, timezone, is_active, content_type, agent_assigned)
+  NO matchea schema V3 real de scheduled_posts (DEBT-031). Cualquier insert
+  contra DB V3 falla salvo que la DB legacy tenga esas cols paralelas.
+  Frontend useScheduleBlock ahora apunta a /api/v1/calendar-v3/schedule/
+  (handler V3 con schema correcto + media_url unificado).
+  Mantener intacto temporalmente para back-compat con callers externos.
+  Eliminar al cerrar DEBT-031 completa (refactor V3 full).
+
 DEBT-CL-013 cerrada: si request.client_id+platform presente → backend
 resuelve account_id internamente (frontend ya no query Supabase directo).
 account_id legacy path preserved para back-compat.
