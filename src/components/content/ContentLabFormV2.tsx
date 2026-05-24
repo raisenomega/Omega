@@ -31,12 +31,12 @@ export function ContentLabFormV2({ form, setForm, variations, setVariations, onG
         <Textarea value={form.topic} onChange={(e) => update("topic", e.target.value)}
           className="bg-transparent border-none outline-none resize-none w-full h-full focus:ring-0 focus-visible:ring-0 flex-1 min-h-[120px]" />
       </div>
-      {/* CHECKBOXES VARIACIONES · flex-wrap para columna estrecha */}
-      <div className="flex flex-wrap gap-3 items-center justify-center py-1">
+      {/* CHECKBOXES VARIACIONES · 1 línea compacta (UX-4) */}
+      <div className="flex flex-nowrap gap-2 items-center justify-center py-1">
         {VARIATIONS.map(v => (
-          <div key={v} className="flex items-center gap-1.5">
-            <Checkbox id={`var-${v}`} checked={variations[v]} onCheckedChange={(c) => setVariations(prev => ({ ...prev, [v]: !!c }))} />
-            <Label htmlFor={`var-${v}`} className="text-xs cursor-pointer">{v}</Label>
+          <div key={v} className="flex items-center gap-1">
+            <Checkbox id={`var-${v}`} checked={variations[v]} onCheckedChange={(c) => setVariations(prev => ({ ...prev, [v]: !!c }))} className="h-3.5 w-3.5" />
+            <Label htmlFor={`var-${v}`} className="text-[11px] cursor-pointer leading-none">{v}</Label>
           </div>
         ))}
       </div>
