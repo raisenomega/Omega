@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     # Application
     app_name: str = Field(default="OmegaRaisen", env="APP_NAME")
     app_version: str = Field(default="1.0.0", env="APP_VERSION")
-    environment: str = Field(default="development", env="ENVIRONMENT")
-    debug: bool = Field(default=True, env="DEBUG")
+    environment: str = Field(default="production", env="ENVIRONMENT")
+    debug: bool = Field(default=False, env="DEBUG")
     secret_key: str = Field(..., env="SECRET_KEY")
 
     # API
