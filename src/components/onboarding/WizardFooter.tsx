@@ -38,8 +38,8 @@ export function WizardFooter({
       {isLast ? (
         <Button
           onClick={onSubmit}
-          disabled={!canSubmit}
-          title={canSubmit ? "" : "Completa nombre, industria y región"}
+          disabled={isSubmitting}
+          title={!canSubmit ? "Identity incompleto · click igual y revisá el toast destructive" : ""}
         >
           {isSubmitting ? submittingLabel : submitLabel}
         </Button>
