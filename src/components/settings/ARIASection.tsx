@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { apiGet, apiDelete } from "@/lib/api-client";
 import { PillGroup } from "@/components/onboarding/PillGroup";
 
 const LEVEL_INFO: Record<number, { label: string; color: string; desc: string }> = {
@@ -16,20 +16,9 @@ const LEVEL_INFO: Record<number, { label: string; color: string; desc: string }>
   4: { label: "ARIA 4.0 · Pro+addons", color: "bg-amber-500 text-white", desc: "Near-NOVA · contexto extendido + autónomas con guardrails." },
 };
 
-async function callDeleteHistory() {
-  const { data: { session } } = await supabase.auth.getSession();
-  const base = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1";
-  const r = await fetch(`${base}/aria/history`, { method: "DELETE", headers: { Authorization: `Bearer ${session?.access_token ?? ""}` } });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-}
-
-async function fetchAriaLevel() {
-  const { data: { session } } = await supabase.auth.getSession();
-  const base = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1";
-  const r = await fetch(`${base}/clients/profile`, { headers: { Authorization: `Bearer ${session?.access_token ?? ""}` } });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  return r.json();
-}
+// DEBT-CL-021 cerrada: api-client wrappers (fuente única auth + apiBase).
+const callDeleteHistory = () => apiDelete(`/aria/history`);
+const fetchAriaLevel = () => apiGet<{ aria_level: number | null }>(`/clients/profile`);
 
 export function ARIASection() {
   const { toast } = useToast();

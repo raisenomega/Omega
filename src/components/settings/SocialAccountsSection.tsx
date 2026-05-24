@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { apiGet } from "@/lib/api-client";
 import { PLATFORMS, PLATFORM_LABELS, PLATFORM_COLORS, type Platform } from "@/lib/onboarding-constants";
 
 interface Acc {
@@ -22,13 +22,8 @@ const STATUS_BADGE: Record<Status["kind"], { label: string; color: string }> = {
   expired: { label: "Token expirado", color: "bg-rose-500 text-white" },
 };
 
-async function fetchData(clientId: string): Promise<OnboardingResp> {
-  const { data: { session } } = await supabase.auth.getSession();
-  const base = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1";
-  const r = await fetch(`${base}/clients/${clientId}/onboarding-data`, { headers: { Authorization: `Bearer ${session?.access_token ?? ""}` } });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  return r.json();
-}
+// DEBT-CL-021 cerrada: apiGet fuente única auth + apiBase.
+const fetchData = (clientId: string) => apiGet<OnboardingResp>(`/clients/${clientId}/onboarding-data`);
 
 interface SocialAccountsSectionProps { clientId: string | null }
 

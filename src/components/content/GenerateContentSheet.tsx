@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { apiPost } from "@/lib/api-client";
 import { PillGroup } from "@/components/onboarding/PillGroup";
 import { PLATFORMS, PLATFORM_LABELS } from "@/lib/onboarding-constants";
 
@@ -15,20 +15,16 @@ const TYPE_LABELS = { caption: "Caption", hashtags: "Hashtags", video_script: "V
 const TONES = ["profesional", "casual", "inspirador", "educativo", "divertido"] as const;
 const TONE_LABELS = { profesional: "Profesional", casual: "Casual", inspirador: "Inspirador", educativo: "Educativo", divertido: "Divertido" } as const;
 
-async function generateContent(body: { platform: string; content_type: string; topic: string; tone: string }) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const base = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1";
-  const r = await fetch(`${base}/content-lab/generate`, {
-    method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token ?? ""}` },
-    body: JSON.stringify(body),
-  });
-  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(typeof e.detail === "string" ? e.detail : `HTTP ${r.status}`); }
-  return r.json();
-}
+// DEBT-CL-021 cerrada: apiPost fuente única auth + apiBase.
+// DEBT-CL-022 cerrada: payload incluye client_id si el caller lo pasa
+// como prop · evita fallback silencioso find_client_for_user (mismo issue
+// que DEBT-CL-005 cerró para los hooks de content-lab page V2).
+const generateContent = (body: { platform: string; content_type: string; topic: string; tone: string; client_id?: string }) =>
+  apiPost(`/content-lab/generate`, body);
 
-interface GenerateContentSheetProps { open: boolean; onOpenChange: (o: boolean) => void }
+interface GenerateContentSheetProps { open: boolean; onOpenChange: (o: boolean) => void; clientId?: string }
 
-export function GenerateContentSheet({ open, onOpenChange }: GenerateContentSheetProps) {
+export function GenerateContentSheet({ open, onOpenChange, clientId }: GenerateContentSheetProps) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [platform, setPlatform] = useState<string>("instagram");
@@ -37,7 +33,7 @@ export function GenerateContentSheet({ open, onOpenChange }: GenerateContentShee
   const [tone, setTone] = useState<string>("casual");
 
   const m = useMutation({
-    mutationFn: () => generateContent({ platform, content_type: type, topic, tone }),
+    mutationFn: () => generateContent({ platform, content_type: type, topic, tone, client_id: clientId }),
     onSuccess: () => { toast({ title: "Contenido generado", description: "Revísalo en Pendientes" }); qc.invalidateQueries({ queryKey: ["content_list"] }); setTopic(""); onOpenChange(false); },
     onError: (e: Error) => toast({ title: "No se pudo generar", description: e.message, variant: "destructive" }),
   });
