@@ -2,7 +2,7 @@
 # https://nixpacks.com/docs/configuration/file
 
 [phases.setup]
-nixPkgs = ["python311", "gcc", "postgresql"]
+nixPkgs = ["python311", "gcc", "libpq"]
 
 [phases.install]
 cmds = [
