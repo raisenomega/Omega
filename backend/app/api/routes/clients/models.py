@@ -8,7 +8,9 @@ from typing import Optional, List, Literal
 from datetime import datetime
 
 # ── Literal types ──────────────────────────────────────────
-PlanOption = Literal["basic", "pro", "enterprise"]
+# DEBT-CL-016 (23 may 2026): +'adopcion' (Free Trial 7d · activo desde
+# DEBT-032 cierre migración 00006 trigger auto-provision Adopción).
+PlanOption = Literal["adopcion", "basic", "pro", "enterprise"]
 RoleOption = Literal["owner", "reseller", "client"]
 StatusOption = Literal["active", "inactive", "deleted", "suspended"]
 SubscriptionStatusOption = Literal["trial", "active", "past_due", "canceled", "inactive"]
@@ -18,17 +20,19 @@ class ClientProfile(BaseModel):
     """
     Complete client profile from database.
     NO password_hash for security.
+    DEBT-CL-016: 6 fields que pueden ser NULL en DB → Optional null-tolerant
+    (legacy rows pre-onboarding-completo · evitar 500 en GET /clients/{id}).
     """
     id: str
-    email: EmailStr
-    name: str
+    email: Optional[EmailStr] = None
+    name: Optional[str] = None
     phone: Optional[str] = None
     company: Optional[str] = None
-    plan: PlanOption
-    role: RoleOption
-    status: StatusOption
-    subscription_status: SubscriptionStatusOption
-    trial_active: bool
+    plan: Optional[PlanOption] = None
+    role: Optional[RoleOption] = None
+    status: Optional[StatusOption] = None
+    subscription_status: Optional[SubscriptionStatusOption] = None
+    trial_active: Optional[bool] = None
     trial_ends_at: Optional[datetime] = None
     reseller_id: Optional[str] = None
     avatar_url: Optional[str] = None

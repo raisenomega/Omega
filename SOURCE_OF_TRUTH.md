@@ -261,7 +261,7 @@ pydantic==2.11.7         (requerido realtime 2.7.0)
 Cleanup estimado: ~6-8h en próximas sesiones.
 
 **Alta urgencia:**
-- DEBT-CL-016 · `ClientProfile` model desincronizado de DB (plan='adopcion' no en enum · campos required null)
+- ~~DEBT-CL-016 · `ClientProfile` model desincronizado de DB~~ ✅ **CERRADA 23 may 2026** (Sprint 3 · `PlanOption` +'adopcion' · 6 fields → Optional null-tolerant · `useMyClients` restaurado a `apiGet`)
 
 **Media urgencia:**
 - DEBT-CL-005 · backend ignora client_id del frontend (usa user JWT)
@@ -280,7 +280,7 @@ Sprint 1 PLAN_IMPLEMENTACION:
 2. ARIA memory injection wiring
 3. prompt_vault seed (30 prompts production-tested)
 
-Pre-requisito recomendado: cerrar DEBT-CL-016 (~45 min).
+Pre-requisito ~~recomendado: cerrar DEBT-CL-016 (~45 min)~~ ✅ **CERRADA 23 may 2026 · Sprint 3**.
 
 ---
 

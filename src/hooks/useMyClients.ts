@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useMyPlanStatus } from "./useMyPlanStatus";
 import { apiGet } from "@/lib/api-client";
 
@@ -12,6 +11,10 @@ interface ClientApiResponse {
   data?: Array<{ id: string; name: string }>;
 }
 
+interface ClientProfileResponse {
+  data?: { id: string; name?: string | null } | null;
+}
+
 export function useMyClients() {
   const { isClient, clientId, loading: planLoading } = useMyPlanStatus();
 
@@ -19,15 +22,11 @@ export function useMyClients() {
     queryKey: ["my_clients", isClient ? `client:${clientId ?? ""}` : "admin"],
     queryFn: async () => {
       if (isClient && clientId) {
-        // DEBT-CL-016: backend GET /clients/{id} retorna 500 (ClientProfile model
-        // desincronizado de DB · plan 'adopcion' no en enum · campos required null).
-        // Fallback temporal a Supabase directo (RLS filtra por user_id). Restaurar
-        // a apiGet cuando se sanee el model backend.
-        const { data, error } = await supabase
-          .from("clients").select("id, name").eq("id", clientId).maybeSingle();
-        if (error) throw new Error(`client_lookup_failed:${error.message}`);
-        if (!data) throw new Error("client_not_found");
-        return [{ id: data.id, name: data.name }];
+        // DEBT-CL-016 cerrada (23 may 2026): backend ClientProfile saneado
+        // (PlanOption +adopcion · 6 fields → Optional). Restaurado apiGet.
+        const r = await apiGet<ClientProfileResponse>(`/clients/${clientId}`);
+        if (!r.data) throw new Error("client_not_found");
+        return [{ id: r.data.id, name: r.data.name ?? "Sin nombre" }];
       }
       const json = await apiGet<ClientApiResponse>(`/clients/`);
       return (json.data ?? []).map((c) => ({ id: c.id, name: c.name }));
