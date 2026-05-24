@@ -11,7 +11,9 @@ from fastapi import APIRouter, Header, HTTPException
 from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.calendar_v3 import _calendar_repository as repo
 from app.api.routes.calendar_v3._access import (
-    resolve_client_or_403, resolve_account_by_client_platform_or_404,
+    resolve_client_or_403,
+    resolve_account_by_client_platform_or_404,
+    resolve_account_by_id_or_403,
 )
 from app.api.routes.calendar_v3._timestamp_spacer import space_timestamps
 from app.api.routes.calendar_v3.models.calendar_models import (
@@ -30,7 +32,11 @@ async def schedule_post_v3(
     user = await get_current_user(authorization)
     user_id = user["id"]
     resolve_client_or_403(user_id, request.client_id)
-    account = resolve_account_by_client_platform_or_404(request.client_id, request.platform)
+    # DEBT-CL-015: prioridad social_account_id (user eligió en dropdown) → fallback primera activa
+    if request.social_account_id:
+        account = resolve_account_by_id_or_403(request.client_id, request.social_account_id)
+    else:
+        account = resolve_account_by_client_platform_or_404(request.client_id, request.platform)
     n = len(request.content_ids)
 
     timestamps = space_timestamps(request.scheduled_for, n)

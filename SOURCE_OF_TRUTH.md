@@ -268,7 +268,7 @@ Cleanup estimado: ~6-8h en próximas sesiones.
 - DEBT-CL-008 · `/generate-image` hardcoded 1024x1024
 - ~~DEBT-CL-011 · Nano Banana ImageConfig (re-activar en 2.6.0)~~ ✅ **CERRADA 23 may 2026** (Sprint 3 · `types.ImageConfig(aspect_ratio=...)` cableado en GenerateContentConfig · `_VALID_ASPECT_RATIOS` frozenset defensivo · aspect honrado end-to-end UI→SDK)
 - ~~DEBT-CL-013 · useScheduleBlock bypassa backend RBAC~~ ✅ **CERRADA 23 may 2026** (Sprint 3 · opción C · cerrados los 4 endpoints calendar legacy con `get_current_user` + ownership via NEW `calendar/_access.py` · frontend `useScheduleBlock` elimina query Supabase directo · schedule_post acepta `client_id+platform` además de `account_id` legacy)
-- DEBT-CL-015 · account_id resolución sin elección del user
+- ~~DEBT-CL-015 · account_id resolución sin elección del user~~ ✅ **CERRADA 23 may 2026** (Sprint 3 · NEW `GET /api/v1/clients/{id}/social-accounts` + `useMyAccounts` hook · dropdown "— Cuenta —" en form bar cuando N>1 cuentas/platform · backend `social_account_id: Optional` con `resolve_account_by_id_or_403` · **BONUS fix latente**: removido `ORDER BY is_primary` (col inexistente en schema V3) de `calendar/_access.py` + `calendar_v3/_access.py` · ahora filtra `status='active'` + `ORDER BY created_at`)
 - ~~DEBT-CL-017 · backend ScheduledPostCreate sin video_url field~~ ✅ **CERRADA 23 may 2026** (Sprint 3 · path X · NEW `POST /api/v1/calendar-v3/schedule/` con schema V3 real + `media_url` único col nueva migración 00020 · handler legacy `calendar/schedule_post.py` deprecated · frontend `useScheduleBlock` apunta al V3 · DEBT-031 partial close)
 
 Detalle completo: `PENDIENTES_Y_PROGRESOS_20260523.md`.

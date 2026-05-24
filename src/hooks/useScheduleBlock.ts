@@ -12,6 +12,7 @@ export interface ScheduleBlockInput {
   clientId: string;
   platform: string;
   scheduledAt: string;  // formato 'YYYY-MM-DDTHH:MM' del datetime-local input
+  accountId?: string;  // DEBT-CL-015 · vacío = backend resuelve primera activa
 }
 
 const MEDIA_TYPES = ["image", "video"];
@@ -22,7 +23,7 @@ export function useScheduleBlock() {
   // según LIMITS_OMEGA. POST /api/v1/calendar-v3/schedule/ con content_ids
   // list · response es list de N rows · atómico (todos o ninguno).
   return useMutation<SchedulePostResponse[], Error, ScheduleBlockInput>({
-    mutationFn: async ({ block, clientId, platform, scheduledAt }) => {
+    mutationFn: async ({ block, clientId, platform, scheduledAt, accountId }) => {
       if (block.items.length === 0) throw new Error("Bloque vacío");
       const textItems = block.items.filter(i => !TEXT_EXCLUDED.includes(i.content_type));
       const mediaItem = block.items.find(i => MEDIA_TYPES.includes(i.content_type));
@@ -36,6 +37,7 @@ export function useScheduleBlock() {
         content_ids: textItems.map(t => t.id),
         scheduled_for: scheduledForIso,
         media_url: mediaItem?.generated_text ?? null,
+        social_account_id: accountId || undefined,  // DEBT-CL-015
       });
     },
   });

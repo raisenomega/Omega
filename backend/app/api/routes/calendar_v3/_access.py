@@ -27,17 +27,40 @@ def resolve_client_or_403(user_id: str, client_id: str) -> dict[str, Any]:
 
 
 def resolve_account_by_client_platform_or_404(client_id: str, platform: str) -> dict[str, Any]:
-    """Lookup primary social_account por (client_id, platform). Caller debe
-    validar ownership del client_id previamente. Raise 404 si sin cuenta."""
+    """Lookup primera cuenta activa por (client_id, platform). Fallback cuando
+    user no eligió cuenta específica (DEBT-CL-015 · ver resolve_account_by_id_or_403).
+
+    Fix latente DEBT-CL-015 (23 may 2026): ordenaba por 'is_primary' col que
+    NO existe en schema V3 · ahora filtra status='active' + ORDER BY
+    created_at ASC (deterministic · primera creada)."""
     sb = get_supabase_service().client
     r = sb.table("social_accounts").select("id, platform").eq(
         "client_id", client_id,
-    ).eq("platform", platform).order(
-        "is_primary", desc=True,
-    ).limit(1).execute()
+    ).eq("platform", platform).eq(
+        "status", "active",
+    ).order("created_at").limit(1).execute()
     if not r.data:
         raise HTTPException(
             status_code=404,
             detail=f"no_account_for_platform:{platform}",
         )
     return r.data[0]
+
+
+def resolve_account_by_id_or_403(client_id: str, account_id: str) -> dict[str, Any]:
+    """Lookup explícito de cuenta + valida pertenencia al client · status active.
+    DEBT-CL-015: cuando user eligió cuenta específica del dropdown picker.
+    Caller debe haber validado ownership del client_id previamente.
+    Raise 404 si no existe · 403 si no pertenece · 400 si no active."""
+    sb = get_supabase_service().client
+    r = sb.table("social_accounts").select(
+        "id, platform, client_id, status",
+    ).eq("id", account_id).limit(1).execute()
+    if not r.data:
+        raise HTTPException(status_code=404, detail="account_not_found")
+    account = r.data[0]
+    if str(account.get("client_id") or "") != client_id:
+        raise HTTPException(status_code=403, detail="account_access_denied")
+    if account.get("status") != "active":
+        raise HTTPException(status_code=400, detail=f"account_status:{account.get('status')}")
+    return account

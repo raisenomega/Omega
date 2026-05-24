@@ -43,13 +43,17 @@ def resolve_account_or_403(supabase, account_id: str, user_id: str) -> dict[str,
 def resolve_account_by_client_platform_or_404(
     supabase, client_id: str, platform: str
 ) -> dict[str, Any]:
-    """Lookup primary account por (client_id, platform). Caller debe haber
-    validado ownership del client_id previamente. Raise 404 si no hay cuenta."""
+    """Lookup primera cuenta activa por (client_id, platform). Caller debe
+    validar ownership del client_id previamente. Raise 404 si sin cuenta.
+
+    Fix latente DEBT-CL-015 (23 may 2026): ordenaba por 'is_primary' col que
+    NO existe en schema V3 (migración 00001) · ahora filtra status='active'
+    + ORDER BY created_at ASC (deterministic · primera creada)."""
     r = supabase.client.table("social_accounts").select("*").eq(
         "client_id", client_id
-    ).eq("platform", platform).order(
-        "is_primary", desc=True
-    ).limit(1).execute()
+    ).eq("platform", platform).eq(
+        "status", "active",
+    ).order("created_at").limit(1).execute()
     if not r.data:
         raise HTTPException(
             status_code=404,

@@ -11,12 +11,14 @@ import { loadPersistedResults, persistResults } from "@/lib/content-lab-persiste
 import { VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
 import type { ResultV2, BlockState, ModalState } from "@/components/content/ResultCardV2";
 
-const INITIAL_FORM: FormState = { platform: "instagram", type: "caption", tone: "casual", topic: "", braveQuery: "", clientId: "", aspect: "1:1" };
+const INITIAL_FORM: FormState = { platform: "instagram", type: "caption", tone: "casual", topic: "", braveQuery: "", clientId: "", aspect: "1:1", accountId: "" };
 const INITIAL_BLOCK: BlockState = { items: [] };
 
 export function useContentLabState() {
   const { toast } = useToast();
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
+  // DEBT-CL-015: reset accountId cuando cambia clientId o platform (evita huérfanos)
+  useEffect(() => { setForm(prev => ({ ...prev, accountId: "" })); }, [form.clientId, form.platform]);
   const [variations, setVariations] = useState<Record<VariationLabel, boolean>>({ Conservadora: false, Balanceada: true, Atrevida: false });
   const [results, setResults] = useState<ResultV2[]>(loadPersistedResults);
   useEffect(() => { persistResults(results); }, [results]);
@@ -74,7 +76,7 @@ export function useContentLabState() {
   const handleConfirm = async () => {
     if (!form.clientId) { toast({ title: "Falta seleccionar cliente", variant: "destructive" }); return; }
     try {
-      await scheduleBlock.mutateAsync({ block, clientId: form.clientId, platform: form.platform, scheduledAt });
+      await scheduleBlock.mutateAsync({ block, clientId: form.clientId, platform: form.platform, scheduledAt, accountId: form.accountId });
       const ids = block.items.map(i => i.id);
       setResults(prev => prev.filter(r => !ids.includes(r.id)));
       setBlock(INITIAL_BLOCK); setModalState("closed"); setScheduledAt("");

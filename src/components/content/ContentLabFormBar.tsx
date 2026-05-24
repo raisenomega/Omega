@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PLATFORMS, PLATFORM_LABELS } from "@/lib/onboarding-constants";
 import { TYPES, TYPE_LABELS, TONES, TONE_LABELS } from "@/lib/content-lab-constants";
+import { useMyAccounts } from "@/hooks/useMyAccounts";
 import type { FormState } from "./ContentLabFormV2";
 
 interface Props {
@@ -25,6 +26,7 @@ function Sel({ value, onChange, options, labels }: { value: string; onChange: (v
 export function ContentLabFormBar({ clientList, form, setForm, onResearch }: Props) {
   const navigate = useNavigate();
   const update = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm(prev => ({ ...prev, [k]: v }));
+  const { data: accounts = [] } = useMyAccounts(form.clientId, form.platform);
   return (
     <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-2 border-green-500 rounded-lg bg-card/80 backdrop-blur-sm">
       <select value={form.clientId} onChange={(e) => update("clientId", e.target.value)}
@@ -33,6 +35,14 @@ export function ContentLabFormBar({ clientList, form, setForm, onResearch }: Pro
         {clientList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
       </select>
       <Sel value={form.platform} onChange={(v) => update("platform", v)} options={PLATFORMS} labels={PLATFORM_LABELS} />
+      {accounts.length > 1 && (
+        <select value={form.accountId} onChange={(e) => update("accountId", e.target.value)}
+          className="px-2 py-1 text-sm rounded-md border bg-background min-w-0 w-[140px] flex-none"
+          title="Elegir cuenta específica (cliente tiene varias en esta plataforma)">
+          <option value="">— Cuenta —</option>
+          {accounts.map(a => <option key={a.id} value={a.id}>{a.account_name}</option>)}
+        </select>
+      )}
       <Sel value={form.type} onChange={(v) => update("type", v)} options={TYPES} labels={TYPE_LABELS} />
       {form.type === "video" && (
         <Button size="sm" variant="outline" onClick={() => navigate("/add-ons", { state: { scrollTo: "video-packs" } })}

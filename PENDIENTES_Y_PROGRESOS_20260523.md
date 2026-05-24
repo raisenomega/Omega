@@ -78,7 +78,7 @@
 | DEBT-CL-012 | Download imagen/video posible CORS · verificar | 🟡 VERIFICAR | Verificar |
 | DEBT-CL-013 | useScheduleBlock query Supabase directo (bypass backend RBAC) | ✅ CERRADA Sprint 3 (opción C · 4 endpoints calendar legacy con auth+RBAC) | — |
 | DEBT-CL-014 | Modal Agendar 3 slots fijos → relajado libertad total | ✅ CERRADA | — |
-| DEBT-CL-015 | account_id resolución LIMIT 1 sin elección del user | 🔴 OPEN | Media |
+| DEBT-CL-015 | account_id resolución LIMIT 1 sin elección del user | ✅ CERRADA Sprint 3 (dropdown picker + fix latente is_primary) | — |
 | DEBT-CL-016 | ClientProfile model desincronizado de DB (plan adopcion · campos null) | ✅ CERRADA Sprint 3 | — |
 | DEBT-CL-017 | Backend ScheduledPostCreate sin video_url field · video viaja como image_url | ✅ CERRADA Sprint 3 (path X · calendar_v3/schedule_post + media_url col 00020) | — |
 | DEBT-CL-018 | Bulk schedule · agendar N posts en una llamada (3 captions → 1 row solo hoy) | ✅ CERRADA Sprint 3 (content_ids list + spacer + atomic bulk insert) | — |

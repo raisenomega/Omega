@@ -18,6 +18,7 @@ export interface FormState {
   platform: string; type: string; tone: string; topic: string; braveQuery: string; clientId: string;
   aspect: Aspect;
   reference_image_b64?: string;  // UX-6 · imagen de referencia opcional para edición
+  accountId: string;  // DEBT-CL-015 · vacío = backend resuelve primera activa
 }
 
 interface Props {
