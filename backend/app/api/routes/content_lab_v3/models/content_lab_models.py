@@ -10,6 +10,8 @@ class GenerateTextRequest(BaseModel):
     tone: str = Field(..., max_length=32)
     variations: int = Field(default=1, ge=1, le=3)  # PRO/enterprise desbloquea >1
     client_id: Optional[str] = Field(default=None)  # DEBT-CL-005 · si presente, usar este (multi-client reseller)
+    reference_attachment_b64: Optional[str] = Field(default=None)  # DEBT-CL-020 · PDF/docx/md/txt base64
+    reference_mime_type: Optional[str] = Field(default=None)       # MIME del attachment para branch extractor
 
 
 class VariationItem(BaseModel):
@@ -37,6 +39,8 @@ class GenerateImageRequest(BaseModel):
     aspect_ratio: str = Field(default="1:1", max_length=8)  # 1:1|9:16|16:9 (UX-3)
     reference_image_b64: Optional[str] = Field(default=None)  # base64 sin prefix data: (UX-6)
     client_id: Optional[str] = Field(default=None)  # DEBT-CL-005 · si presente, usar este (multi-client reseller)
+    reference_attachment_b64: Optional[str] = Field(default=None)  # DEBT-CL-020 · PDF/docx/md/txt como contexto extra
+    reference_mime_type: Optional[str] = Field(default=None)       # MIME del attachment para branch extractor
 
 
 class GenerateImageResponse(BaseModel):
@@ -50,6 +54,8 @@ class GenerateVideoRequest(BaseModel):
     ratio: str = Field(default="1280:768", max_length=32)  # legacy raw resolution
     aspect_ratio: Optional[str] = Field(default=None, max_length=8)  # 1:1|9:16|16:9 (UX-3)
     client_id: Optional[str] = Field(default=None)  # DEBT-CL-005 · si presente, usar este (multi-client reseller)
+    reference_attachment_b64: Optional[str] = Field(default=None)  # DEBT-CL-020 · PDF/docx/md/txt como contexto extra
+    reference_mime_type: Optional[str] = Field(default=None)       # MIME del attachment para branch extractor
 
 
 class VideoJobStartResponse(BaseModel):

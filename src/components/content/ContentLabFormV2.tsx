@@ -17,7 +17,9 @@ export { ASPECTS, type Aspect } from "./_aspect";  // back-compat re-export
 export interface FormState {
   platform: string; type: string; tone: string; topic: string; braveQuery: string; clientId: string;
   aspect: Aspect;
-  reference_image_b64?: string;  // UX-6 · imagen de referencia opcional para edición
+  reference_image_b64?: string;          // UX-6 · imagen de referencia
+  reference_attachment_b64?: string;     // DEBT-CL-020 · PDF/DOCX/MD/TXT
+  reference_mime_type?: string;          // DEBT-CL-020 · MIME del attachment
   accountId: string;  // DEBT-CL-015 · vacío = backend resuelve primera activa
 }
 
@@ -51,8 +53,12 @@ export function ContentLabFormV2({ form, setForm, variations, setVariations, onG
       <div className="bg-background border-2 border-amber-500 rounded-lg p-3 flex-1 flex flex-col relative">
         <Textarea value={form.topic} onChange={(e) => update("topic", e.target.value)}
           className="bg-transparent border-none outline-none resize-none w-full h-full focus:ring-0 focus-visible:ring-0 flex-1 min-h-[120px]" />
-        <PromptAttachmentControls reference_image_b64={form.reference_image_b64}
-          onChange={(b64) => update("reference_image_b64", b64)} />
+        <PromptAttachmentControls
+          reference_image_b64={form.reference_image_b64}
+          reference_attachment_b64={form.reference_attachment_b64}
+          reference_mime_type={form.reference_mime_type}
+          onImageChange={(b64) => update("reference_image_b64", b64)}
+          onAttachmentChange={(b64, mime) => setForm(prev => ({ ...prev, reference_attachment_b64: b64, reference_mime_type: mime }))} />
         <Button size="sm" variant="ghost" onClick={handleImprove}
           disabled={!form.topic.trim() || improve.isPending}
           className="absolute bottom-2 right-2 h-7 text-[11px] gap-1 text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-950/30">

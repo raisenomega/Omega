@@ -9,6 +9,9 @@ from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
 from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.content_lab_v3 import _content_lab_repository as repo
+from app.api.routes.content_lab_v3._attachment_extractor import (
+    ExtractionError, extract_text,
+)
 from app.api.routes.content_lab_v3._client_resolver import resolve_client_or_403
 from app.api.routes.content_lab_v3._prompt_vault_selector import (
     SafeDict, select_optimal_prompt,
@@ -52,6 +55,14 @@ async def generate_text(
     system = build_rafa_system(
         client, ctx, dna, request.platform, request.content_type, request.tone,
     )
+    # DEBT-CL-020: inyectar texto extraído del attachment al system prompt
+    if request.reference_attachment_b64 and request.reference_mime_type:
+        try:
+            extracted = extract_text(request.reference_attachment_b64, request.reference_mime_type)
+        except ExtractionError as e:
+            raise HTTPException(status_code=400, detail=f"attachment_extract_failed:{e}")
+        if extracted:
+            system = f"{system}\n\nCONTEXTO ADJUNTO DEL CLIENTE:\n{extracted}"
     vault_prompt = select_optimal_prompt(vertical, request.platform, request.content_type)
     user_message = vault_prompt.format_map(SafeDict(
         client_name=client.get("name", "el cliente"), tone=request.tone,

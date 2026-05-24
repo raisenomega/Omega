@@ -31,6 +31,8 @@ export function useVideoJobPolling() {
         ratio: "1280:768",
         aspect_ratio: form.aspect,
         client_id: form.clientId || undefined,
+        reference_attachment_b64: form.reference_attachment_b64,  // DEBT-CL-020
+        reference_mime_type: form.reference_mime_type,
       });
       activeJobIdRef.current = job_id;
 

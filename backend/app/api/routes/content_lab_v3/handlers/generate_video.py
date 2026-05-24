@@ -12,6 +12,9 @@ from fastapi import APIRouter, Header, HTTPException
 
 from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.content_lab_v3 import _content_lab_repository as repo
+from app.api.routes.content_lab_v3._attachment_extractor import (
+    ExtractionError, extract_text,
+)
 from app.api.routes.content_lab_v3._client_resolver import resolve_client_or_403
 from app.api.routes.content_lab_v3.models.content_lab_models import (
     GenerateVideoRequest, VideoJobStartResponse, VideoJobStatusResponse,
@@ -28,6 +31,8 @@ logger = logging.getLogger(__name__)
 # UX-3 · aspect ratio → raw resolution (compat con _RATIO_TO_ASPECT en _video_compat)
 _ASPECT_TO_RATIO = {"1:1": "1024:1024", "9:16": "768:1280", "16:9": "1280:768"}
 
+_VIDEO_PROMPT_MAX = 3500  # truncate attachment context · Veo cap 4000 total · DEBT-CL-020
+
 
 @router.post("/generate-video", response_model=VideoJobStartResponse)
 async def start_video_generation(
@@ -38,8 +43,17 @@ async def start_video_generation(
     client = resolve_client_or_403(user["id"], request.client_id)  # DEBT-CL-005
     client_id = str(client["id"])
     ratio = _ASPECT_TO_RATIO.get(request.aspect_ratio, request.ratio) if request.aspect_ratio else request.ratio
+    # DEBT-CL-020: append attachment text al prompt (truncate · Veo cap 4000)
+    prompt = request.prompt
+    if request.reference_attachment_b64 and request.reference_mime_type:
+        try:
+            extracted = extract_text(request.reference_attachment_b64, request.reference_mime_type)
+        except ExtractionError as e:
+            raise HTTPException(status_code=400, detail=f"attachment_extract_failed:{e}")
+        if extracted:
+            prompt = f"{prompt}\n\nCONTEXT: {extracted[:_VIDEO_PROMPT_MAX]}"
     try:
-        job_id = await create_video_job(client_id, request.prompt, ratio)
+        job_id = await create_video_job(client_id, prompt, ratio)
     except Exception as e:
         logger.error(f"create_video_job failed · client={client_id}: {e}", exc_info=True)
         raise HTTPException(

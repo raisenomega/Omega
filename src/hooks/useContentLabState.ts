@@ -19,6 +19,8 @@ export function useContentLabState() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   // DEBT-CL-015: reset accountId cuando cambia clientId o platform (evita huérfanos)
   useEffect(() => { setForm(prev => ({ ...prev, accountId: "" })); }, [form.clientId, form.platform]);
+  // DEBT-CL-020: reset attachments cuando cambia type (un caption no necesita imagen ref · evita confusión)
+  useEffect(() => { setForm(prev => ({ ...prev, reference_image_b64: undefined, reference_attachment_b64: undefined, reference_mime_type: undefined })); }, [form.type]);
   const [variations, setVariations] = useState<Record<VariationLabel, boolean>>({ Conservadora: false, Balanceada: true, Atrevida: false });
   const [results, setResults] = useState<ResultV2[]>(loadPersistedResults);
   useEffect(() => { persistResults(results); }, [results]);

@@ -9,12 +9,17 @@ from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
 from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.content_lab_v3 import _content_lab_repository as repo
+from app.api.routes.content_lab_v3._attachment_extractor import (
+    ExtractionError, extract_text,
+)
 from app.api.routes.content_lab_v3._client_resolver import resolve_client_or_403
 from app.api.routes.content_lab_v3.models.content_lab_models import (
     GenerateImageRequest, GenerateImageResponse,
 )
 from app.bc_cognition.infrastructure._image_compat import generate_image_compat
 from app.bc_cognition.infrastructure._storage_uploader import StorageUploadError
+
+_IMAGE_PROMPT_MAX = 6000  # truncate attachment context · Nano Banana cap 8000 total
 
 router = APIRouter()
 
@@ -46,6 +51,15 @@ async def generate_image(
     client_id = str(client["id"])
 
     enhanced = _enhance_prompt(request.prompt, request.style)
+    # DEBT-CL-020: si attachment text → append al prompt como contexto adicional
+    if request.reference_attachment_b64 and request.reference_mime_type:
+        try:
+            extracted = extract_text(request.reference_attachment_b64, request.reference_mime_type)
+        except ExtractionError as e:
+            raise HTTPException(status_code=400, detail=f"attachment_extract_failed:{e}")
+        if extracted:
+            truncated = extracted[:_IMAGE_PROMPT_MAX]
+            enhanced = f"{enhanced}\n\nCONTEXT FROM USER ATTACHMENT:\n{truncated}"
     size = _ASPECT_TO_SIZE.get(request.aspect_ratio, "1024x1024")
     refs = [request.reference_image_b64] if request.reference_image_b64 else None  # UX-6
     try:
