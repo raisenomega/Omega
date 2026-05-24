@@ -75,7 +75,7 @@
 | DEBT-CL-009 | /generate-video ratio hardcoded 1280:768 | 🔴 OPEN | Baja |
 | DEBT-CL-010 | Video polling cancelable mid-flight · orphan visual | 🔴 OPEN | Baja |
 | DEBT-CL-011 | Nano Banana ImageConfig removida en 1.2 · existe en 2.6 (re-activar) | ✅ CERRADA Sprint 3 | — |
-| DEBT-CL-012 | Download imagen/video posible CORS · verificar | 🟡 VERIFICAR | Verificar |
+| DEBT-CL-012 | Download imagen/video posible CORS · verificar | ✅ VERIFICADA OK Sprint 3 (bucket public + Supabase CORS auto + persisted URLs · cero bug) | — |
 | DEBT-CL-013 | useScheduleBlock query Supabase directo (bypass backend RBAC) | ✅ CERRADA Sprint 3 (opción C · 4 endpoints calendar legacy con auth+RBAC) | — |
 | DEBT-CL-014 | Modal Agendar 3 slots fijos → relajado libertad total | ✅ CERRADA | — |
 | DEBT-CL-015 | account_id resolución LIMIT 1 sin elección del user | ✅ CERRADA Sprint 3 (dropdown picker + fix latente is_primary) | — |
