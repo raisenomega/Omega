@@ -52,7 +52,7 @@ export function ContentLabFormV2({ form, setForm, variations, setVariations, onG
       {/* CAJÓN AMARILLO · Prompt + 📎 left (type=image) + ✨ Mejorar right */}
       <div className="bg-background border-2 border-amber-500 rounded-lg p-3 flex-1 flex flex-col relative">
         <Textarea value={form.topic} onChange={(e) => update("topic", e.target.value)}
-          className="bg-transparent border-none outline-none resize-none w-full h-full focus:ring-0 focus-visible:ring-0 flex-1 min-h-[120px]" />
+          className="bg-transparent border-none outline-none resize-none w-full h-full focus:ring-0 focus-visible:ring-0 flex-1 min-h-[120px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" />
         <PromptAttachmentControls
           reference_image_b64={form.reference_image_b64}
           reference_attachment_b64={form.reference_attachment_b64}
