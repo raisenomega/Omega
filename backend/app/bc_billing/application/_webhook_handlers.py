@@ -2,7 +2,9 @@
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-from app.bc_billing.application._addon_handlers import handle_addon_activation, handle_addon_deactivation
+from app.bc_billing.application._addon_handlers import (
+    handle_addon_activation, handle_addon_deactivation, handle_video_pack_activation,
+)
 from app.bc_billing.infrastructure.stripe_adapter import get_stripe_adapter
 from app.infrastructure.supabase_service import SupabaseService
 
@@ -17,11 +19,18 @@ async def on_checkout_completed(event: dict, supabase: SupabaseService) -> None:
     sub_id = session.get("subscription")
     customer_id = session.get("customer")
     addon_code = metadata.get("addon_code")
+    video_pack_code = metadata.get("video_pack_code")
     if addon_code:
         if not all([client_id, sub_id, addon_code]):
             logger.warning(f"addon checkout.completed con data faltante: {session.get('id')}")
             return
         await handle_addon_activation(client_id, addon_code, sub_id, supabase)
+        return
+    if video_pack_code:
+        if not all([client_id, sub_id, video_pack_code]):
+            logger.warning(f"video_pack checkout.completed con data faltante: {session.get('id')}")
+            return
+        await handle_video_pack_activation(client_id, video_pack_code, sub_id, supabase)
         return
     target_plan = metadata.get("target_plan")
     if not all([client_id, target_plan, sub_id, customer_id]):

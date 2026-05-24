@@ -8,9 +8,10 @@ interface VideoPackCardProps {
   bullets: string[];
   idealFor: string;
   onActivate: () => void;
+  isPending?: boolean;
 }
 
-export function VideoPackCard({ name, price, bullets, idealFor, onActivate }: VideoPackCardProps) {
+export function VideoPackCard({ name, price, bullets, idealFor, onActivate, isPending }: VideoPackCardProps) {
   return (
     <Card className="flex flex-col h-full">
       <CardContent className="flex flex-col gap-3 p-4 flex-1">
@@ -31,9 +32,10 @@ export function VideoPackCard({ name, price, bullets, idealFor, onActivate }: Vi
         </p>
         <Button
           onClick={onActivate}
+          disabled={isPending}
           className="w-full bg-amber-500 hover:bg-amber-600 text-white"
         >
-          Activar Pack
+          {isPending ? "Redirigiendo a Stripe…" : "Activar Pack"}
         </Button>
       </CardContent>
     </Card>

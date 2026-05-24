@@ -74,6 +74,10 @@ class Settings(BaseSettings):
     # ARIA Premium addon prices · DEBT-037 V1 (client) + DEBT-046 (reseller futuro)
     stripe_price_aria_premium_client: str = Field(default="", env="STRIPE_PRICE_ARIA_PREMIUM_CLIENT")
     stripe_price_aria_premium_reseller: str = Field(default="", env="STRIPE_PRICE_ARIA_PREMIUM_RESELLER")
+    # Video Pack addon prices · DEBT-VID-001 (basic/pro only · spec §4.4)
+    stripe_price_video_pack_starter: str = Field(default="", env="STRIPE_PRICE_VIDEO_PACK_STARTER")
+    stripe_price_video_pack_creator: str = Field(default="", env="STRIPE_PRICE_VIDEO_PACK_CREATOR")
+    stripe_price_video_pack_cinematic_pro: str = Field(default="", env="STRIPE_PRICE_VIDEO_PACK_CINEMATIC_PRO")
 
     # Qdrant Vector Store
     QDRANT_HOST: str = Field(default="localhost", env="QDRANT_HOST")

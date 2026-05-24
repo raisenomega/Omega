@@ -1,18 +1,18 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { Package, Video } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { VideoPackCard } from "@/components/addons/VideoPackCard";
 import { VIDEO_PACKS } from "@/components/addons/_video_packs_data";
+import { useVideoPackCheckout } from "@/hooks/useVideoPackCheckout";
 
 interface NavState {
   scrollTo?: string;
 }
 
 export default function AddOnsPage() {
-  const { toast } = useToast();
   const location = useLocation();
   const videoRef = useRef<HTMLElement>(null);
+  const checkout = useVideoPackCheckout();  // DEBT-VID-001
 
   useEffect(() => {
     const state = location.state as NavState | null;
@@ -20,13 +20,6 @@ export default function AddOnsPage() {
       videoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [location.state]);
-
-  const handleActivate = (packName: string) => {
-    toast({
-      title: "Próximamente",
-      description: `${packName} estará disponible vía Stripe pronto. Contáctanos para acceso anticipado.`,
-    });
-  };
 
   return (
     <div className="space-y-8">
@@ -47,12 +40,13 @@ export default function AddOnsPage() {
         <div className="grid gap-4 md:grid-cols-3">
           {VIDEO_PACKS.map((p) => (
             <VideoPackCard
-              key={p.name}
+              key={p.code}
               name={p.name}
               price={p.price}
               bullets={p.bullets}
               idealFor={p.idealFor}
-              onActivate={() => handleActivate(p.name)}
+              onActivate={() => checkout.mutate({ video_pack_code: p.code })}
+              isPending={checkout.isPending}
             />
           ))}
         </div>

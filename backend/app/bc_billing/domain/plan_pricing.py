@@ -17,8 +17,10 @@ from app.config import settings
 
 PlanCode = Literal["adopcion", "basic", "pro", "enterprise"]
 AddonCode = Literal["aria_premium_client", "aria_premium_reseller"]
+VideoPackCode = Literal["starter", "creator", "cinematic_pro"]
 
 ADDON_CODES: FrozenSet[str] = frozenset({"aria_premium_client", "aria_premium_reseller"})
+VIDEO_PACK_CODES: FrozenSet[str] = frozenset({"starter", "creator", "cinematic_pro"})
 
 # Caminos válidos de upgrade per spec §2 camino natural del cliente:
 # Adopción → Básico → Pro. Downgrades (pro→basic) bloqueados desde UI.
@@ -61,5 +63,18 @@ def get_price_id_for_addon(addon_code: str) -> Optional[str]:
         "aria_premium_reseller": settings.stripe_price_aria_premium_reseller,
     }
     raw = price_map.get(addon_code, "") or ""
+    cleaned = raw.strip()
+    return cleaned or None
+
+
+def get_price_id_for_video_pack(video_pack_code: str) -> Optional[str]:
+    """Resuelve Stripe Price ID para video pack. DEBT-VID-001.
+    Returns None si Price ID vacío/whitespace (TODO Stripe Dashboard)."""
+    price_map = {
+        "starter": settings.stripe_price_video_pack_starter,
+        "creator": settings.stripe_price_video_pack_creator,
+        "cinematic_pro": settings.stripe_price_video_pack_cinematic_pro,
+    }
+    raw = price_map.get(video_pack_code, "") or ""
     cleaned = raw.strip()
     return cleaned or None

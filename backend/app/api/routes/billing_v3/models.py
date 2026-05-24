@@ -22,3 +22,18 @@ class CreateCheckoutResponse(BaseModel):
     session_id: Optional[str] = None
     error: Optional[str] = None
     error_code: Optional[str] = None
+
+
+# DEBT-VID-001 · 3 video packs spec §4.4
+VideoPackCodeStr = Literal["starter", "creator", "cinematic_pro"]
+
+
+class VideoPackCheckoutRequest(BaseModel):
+    """DEBT-VID-001 · payload POST /billing/checkout-video-pack."""
+    video_pack_code: VideoPackCodeStr = Field(..., description="starter | creator | cinematic_pro")
+
+
+class VideoPackCheckoutResponse(BaseModel):
+    """Respuesta POST /billing/checkout-video-pack."""
+    checkout_url: str
+    session_id: str

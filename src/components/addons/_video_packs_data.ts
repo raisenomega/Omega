@@ -1,9 +1,11 @@
-// Data shape para VideoAddonModal · espejo de MODELO_NEGOCIO §4.4 y
-// backend/app/bc_billing/domain/video_entitlements.py
-// Mantener bullets espejo del doc para que el cliente vea exactamente lo
-// que se aprobó en pricing.
+// Data shape para VideoAddonModal + AddOnsPage · espejo de MODELO_NEGOCIO §4.4
+// y backend/app/bc_billing/domain/plan_pricing.py VIDEO_PACK_CODES.
+// Mantener bullets espejo del doc + code sincronizado con backend frozen set.
+
+export type VideoPackCode = "starter" | "creator" | "cinematic_pro";
 
 export interface VideoPack {
+  code: VideoPackCode;
   name: string;
   price: string;
   bullets: string[];
@@ -12,6 +14,7 @@ export interface VideoPack {
 
 export const VIDEO_PACKS: readonly VideoPack[] = [
   {
+    code: "starter",
     name: "Pack Starter",
     price: "$39/mes",
     bullets: [
@@ -23,6 +26,7 @@ export const VIDEO_PACKS: readonly VideoPack[] = [
     idealFor: "presencia constante en redes",
   },
   {
+    code: "creator",
     name: "Pack Creator",
     price: "$95/mes",
     bullets: [
@@ -35,6 +39,7 @@ export const VIDEO_PACKS: readonly VideoPack[] = [
     idealFor: "campañas y contenido de valor",
   },
   {
+    code: "cinematic_pro",
     name: "Pack Cinematic Pro",
     price: "$125/mes",
     bullets: [

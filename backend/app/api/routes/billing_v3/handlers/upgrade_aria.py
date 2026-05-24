@@ -37,15 +37,18 @@ async def upgrade_aria(
         success_url=settings.stripe_success_url,
         cancel_url=settings.stripe_cancel_url,
     )
-    if not result.ok:
-        code = result.error_code or "unknown"
+    # BONUS DEBT-VID-001 commit · fix bug latente: BillingResult es TypedDict
+    # NO dataclass · acceso por keys (.get) en lugar de atributos (.ok/.error_code/.data)
+    if not result.get("success"):
+        code = result.get("error_code") or "unknown"
         status = (
             409 if code == "already_active"
             else 503 if code == "price_not_configured"
             else 400
         )
         raise HTTPException(status_code=status, detail=code)
+    data = result.get("data") or {}
     return UpgradeAriaResponse(
-        checkout_url=result.data["checkout_url"],
-        session_id=result.data["session_id"],
+        checkout_url=data["checkout_url"],
+        session_id=data["session_id"],
     )

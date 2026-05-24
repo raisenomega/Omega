@@ -41,10 +41,29 @@ async def handle_addon_activation(
     logger.info(f"ARIA Premium activated · client={client_id} · aria_level {current}→{new_level}")
 
 
+async def handle_video_pack_activation(
+    client_id: str, video_pack_code: str, subscription_id: str,
+    supabase: SupabaseService,
+) -> None:
+    """DEBT-VID-001 · push entry video_pack a client_plans.addons jsonb.
+    NO bumpea aria_level (video pack es cuota de generación · no inteligencia)."""
+    plan_row = supabase.client.table("client_plans").select("addons").eq("client_id", client_id).execute()
+    addons = (plan_row.data[0].get("addons") if plan_row.data else None) or []
+    addons.append({
+        "addon_code": f"video_pack_{video_pack_code}",
+        "stripe_subscription_id": subscription_id,
+        "activated_at": _now_iso(), "deactivated_at": None,
+    })
+    supabase.client.table("client_plans").update({"addons": addons}).eq("client_id", client_id).execute()
+    logger.info(f"Video Pack activated · client={client_id} · pack={video_pack_code}")
+
+
 async def handle_addon_deactivation(
     subscription_id: str, supabase: SupabaseService,
 ) -> Optional[str]:
-    """Match addon por subscription_id · marca deactivated_at · reset aria_level a base. Retorna client_id si match."""
+    """Match addon por subscription_id · marca deactivated_at. Reset aria_level
+    SOLO si el addon era aria_premium* (video_pack no afecta aria_level · DEBT-VID-001).
+    Retorna client_id si match."""
     rows = supabase.client.table("client_plans").select("client_id, plan, addons").execute()
     for r in (rows.data or []):
         for a in (r.get("addons") or []):
@@ -53,10 +72,14 @@ async def handle_addon_deactivation(
                 supabase.client.table("client_plans").update(
                     {"addons": r["addons"]}
                 ).eq("client_id", r["client_id"]).execute()
-                base = _BASE_LEVEL.get(r.get("plan") or "adopcion", 1)
-                supabase.client.table("clients").update(
-                    {"aria_level": base}
-                ).eq("id", r["client_id"]).execute()
-                logger.info(f"ARIA Premium deactivated · client={r['client_id']} · aria_level reset to {base}")
+                addon_code = a.get("addon_code", "")
+                if addon_code.startswith("aria_premium"):
+                    base = _BASE_LEVEL.get(r.get("plan") or "adopcion", 1)
+                    supabase.client.table("clients").update(
+                        {"aria_level": base}
+                    ).eq("id", r["client_id"]).execute()
+                    logger.info(f"ARIA Premium deactivated · client={r['client_id']} · aria_level reset to {base}")
+                else:
+                    logger.info(f"Addon {addon_code} deactivated · client={r['client_id']} · aria_level intacto")
                 return r["client_id"]
     return None
