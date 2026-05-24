@@ -7,6 +7,7 @@ import { useVideoJobPolling } from "@/hooks/useVideoJobPolling";
 import { useSaveContent } from "@/hooks/useContentActions";
 import { downloadResult } from "@/lib/download-result";
 import { useScheduleBlock } from "@/hooks/useScheduleBlock";
+import { useResearch, type ResearchResult } from "@/hooks/useResearch";
 import { loadPersistedResults, persistResults } from "@/lib/content-lab-persistence";
 import { VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
 import type { ResultV2, BlockState, ModalState } from "@/components/content/ResultCardV2";
@@ -90,7 +91,23 @@ export function useContentLabState() {
       toast({ title: "Error al agendar", description: e instanceof Error ? e.message : "", variant: "destructive" });
     }
   };
-  const handleResearch = () => toast({ title: "Brave Research en futuro Sprint" });
+  // Brave Search · cablea botón Research al backend · panel inline muestra results
+  const research = useResearch();
+  const [researchResults, setResearchResults] = useState<ResearchResult[]>([]);
+  const [researchMeta, setResearchMeta] = useState<{ query?: string; durationMs?: number }>({});
+  const handleResearch = () => {
+    const q = form.braveQuery.trim();
+    if (q.length < 3) { toast({ title: "Query muy corta", description: "Mínimo 3 caracteres", variant: "destructive" }); return; }
+    setResearchMeta({ query: q });
+    research.mutate({ query: q, max_results: 5 }, {
+      onSuccess: (r) => { setResearchResults(r.results); setResearchMeta({ query: r.query, durationMs: r.duration_ms }); },
+      onError: (e) => toast({ title: "Brave Search falló", description: e.message, variant: "destructive" }),
+    });
+  };
+  const dismissResearch = () => { setResearchResults([]); setResearchMeta({}); };
+  const appendSnippetToTopic = (snippet: string) => {
+    setForm(prev => ({ ...prev, topic: prev.topic ? `${prev.topic}\n\nContexto web: ${snippet}` : `Contexto web: ${snippet}` }));
+  };
   // DEBT-CL-010: user clica X en placeholder pending video · cancel + clean
   const handleCancelVideo = (tempId: string) => {
     generateVideo.cancel();
@@ -104,5 +121,6 @@ export function useContentLabState() {
     block, modalState, setModalState, scheduledAt, setScheduledAt,
     expandedResult, setExpandedResult, slots: Math.max(4, results.length), isPending,
     handleGenerate, handleAgendar, handleRemoveItem, handleSave, handleDownload, handleConfirm, handleResearch, handleCancelVideo,
+    researchResults, researchMeta, isResearching: research.isPending, dismissResearch, appendSnippetToTopic,
   };
 }

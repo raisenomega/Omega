@@ -79,3 +79,23 @@ class ImprovePromptRequest(BaseModel):
 
 class ImprovePromptResponse(BaseModel):
     improved_prompt: str
+
+
+class ResearchRequest(BaseModel):
+    """POST /content-lab/research · Brave Search wrapper · Sprint 3."""
+    query: str = Field(..., min_length=3, max_length=300)
+    max_results: int = Field(default=5, ge=1, le=5)  # Brave tool clamp 1-5
+
+
+class ResearchResult(BaseModel):
+    title: str
+    url: str
+    snippet: str  # cap 1000 chars desde web_search_tool
+
+
+class ResearchResponse(BaseModel):
+    query: str
+    results: list[ResearchResult]
+    answer: Optional[str] = None        # Brave "altered query" si reescribió
+    count: int
+    duration_ms: int
