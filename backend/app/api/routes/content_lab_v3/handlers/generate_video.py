@@ -12,9 +12,13 @@ from fastapi import APIRouter, Header, HTTPException
 
 from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.content_lab_v3 import _content_lab_repository as repo
+from app.api.routes.content_lab_v3._client_resolver import resolve_client_or_403
 from app.api.routes.content_lab_v3.models.content_lab_models import (
     GenerateVideoRequest, VideoJobStartResponse, VideoJobStatusResponse,
 )
+# cross-BC helper · candidato a app.shared.access_control (DEBT-CL-005)
+from app.api.routes.clients_v3 import _clients_reader as clients_reader
+from app.api.routes.clients_v3._access_control import user_owns_client
 from app.bc_cognition.application.use_video_job import create_video_job, get_video_job
 
 router = APIRouter()
@@ -30,9 +34,7 @@ async def start_video_generation(
     authorization: Optional[str] = Header(None),
 ) -> VideoJobStartResponse:
     user = await get_current_user(authorization)
-    client = repo.find_client_for_user(user["id"])
-    if not client:
-        raise HTTPException(status_code=403, detail="no_client_for_user")
+    client = resolve_client_or_403(user["id"], request.client_id)  # DEBT-CL-005
     client_id = str(client["id"])
     ratio = _ASPECT_TO_RATIO.get(request.aspect_ratio, request.ratio) if request.aspect_ratio else request.ratio
     try:
@@ -52,11 +54,13 @@ async def get_video_job_status(
     authorization: Optional[str] = Header(None),
 ) -> VideoJobStatusResponse:
     user = await get_current_user(authorization)
-    client = repo.find_client_for_user(user["id"])
-    if not client:
-        raise HTTPException(status_code=403, detail="no_client_for_user")
     job = get_video_job(job_id)
-    if not job or str(job.get("client_id")) != str(client["id"]):
+    if not job:
+        raise HTTPException(status_code=404, detail="job_not_found")
+    # DEBT-CL-005 variant · ownership via job.client_id (no via find_client_for_user
+    # que ignoraba reseller multi-client). 404 sin leak existence si no owner.
+    job_client = clients_reader.get_client(str(job.get("client_id") or ""))
+    if not job_client or not user_owns_client(user["id"], job_client):
         raise HTTPException(status_code=404, detail="job_not_found")
     return VideoJobStatusResponse(
         job_id=job_id, status=job["status"],

@@ -9,6 +9,7 @@ from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
 from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.content_lab_v3 import _content_lab_repository as repo
+from app.api.routes.content_lab_v3._client_resolver import resolve_client_or_403
 from app.api.routes.content_lab_v3._prompt_vault_selector import (
     SafeDict, select_optimal_prompt,
 )
@@ -37,9 +38,7 @@ async def generate_text(
     authorization: Optional[str] = Header(None),
 ) -> GenerateTextResponse:
     user = await get_current_user(authorization)
-    client = repo.find_client_for_user(user["id"])
-    if not client:
-        raise HTTPException(status_code=403, detail="no_client_for_user")
+    client = resolve_client_or_403(user["id"], request.client_id)  # DEBT-CL-005
     client_id = str(client["id"])
 
     if request.variations > 1 and repo.find_client_plan(client_id) not in _PRO_PLANS:

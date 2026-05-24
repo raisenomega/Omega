@@ -9,6 +9,7 @@ from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
 from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.content_lab_v3 import _content_lab_repository as repo
+from app.api.routes.content_lab_v3._client_resolver import resolve_client_or_403
 from app.api.routes.content_lab_v3.models.content_lab_models import (
     GenerateImageRequest, GenerateImageResponse,
 )
@@ -41,9 +42,7 @@ async def generate_image(
     authorization: Optional[str] = Header(None),
 ) -> GenerateImageResponse:
     user = await get_current_user(authorization)
-    client = repo.find_client_for_user(user["id"])
-    if not client:
-        raise HTTPException(status_code=403, detail="no_client_for_user")
+    client = resolve_client_or_403(user["id"], request.client_id)  # DEBT-CL-005
     client_id = str(client["id"])
 
     enhanced = _enhance_prompt(request.prompt, request.style)

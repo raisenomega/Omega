@@ -9,6 +9,7 @@ class GenerateTextRequest(BaseModel):
     topic: str = Field(..., min_length=1, max_length=2000)
     tone: str = Field(..., max_length=32)
     variations: int = Field(default=1, ge=1, le=3)  # PRO/enterprise desbloquea >1
+    client_id: Optional[str] = Field(default=None)  # DEBT-CL-005 · si presente, usar este (multi-client reseller)
 
 
 class VariationItem(BaseModel):
@@ -35,6 +36,7 @@ class GenerateImageRequest(BaseModel):
     style: str = Field(default="realistic", max_length=32)  # realistic|cartoon|minimal
     aspect_ratio: str = Field(default="1:1", max_length=8)  # 1:1|9:16|16:9 (UX-3)
     reference_image_b64: Optional[str] = Field(default=None)  # base64 sin prefix data: (UX-6)
+    client_id: Optional[str] = Field(default=None)  # DEBT-CL-005 · si presente, usar este (multi-client reseller)
 
 
 class GenerateImageResponse(BaseModel):
@@ -47,6 +49,7 @@ class GenerateVideoRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=2000)
     ratio: str = Field(default="1280:768", max_length=32)  # legacy raw resolution
     aspect_ratio: Optional[str] = Field(default=None, max_length=8)  # 1:1|9:16|16:9 (UX-3)
+    client_id: Optional[str] = Field(default=None)  # DEBT-CL-005 · si presente, usar este (multi-client reseller)
 
 
 class VideoJobStartResponse(BaseModel):

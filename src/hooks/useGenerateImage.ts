@@ -22,6 +22,7 @@ export function useGenerateImage() {
         style: "realistic",
         aspect_ratio: form.aspect,
         reference_image_b64: form.reference_image_b64,
+        client_id: form.clientId || undefined,  // DEBT-CL-005 · multi-client reseller
       });
       return [{
         id: data.id,

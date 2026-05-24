@@ -41,6 +41,7 @@ export function useGenerateText() {
         topic: form.topic,
         tone: form.tone,
         variations: variationsCount,
+        client_id: form.clientId || undefined,  // DEBT-CL-005 · multi-client reseller
       });
       const items = variationsCount === 3
         ? data.variations.filter(v => selectedLabels.includes(LABEL_TO_FRONTEND[v.label]))

@@ -22,6 +22,7 @@ export function useVideoJobPolling() {
         prompt: form.topic,
         ratio: "1280:768",
         aspect_ratio: form.aspect,
+        client_id: form.clientId || undefined,  // DEBT-CL-005 · multi-client reseller
       });
 
       for (let i = 0; i < MAX_ATTEMPTS; i++) {
