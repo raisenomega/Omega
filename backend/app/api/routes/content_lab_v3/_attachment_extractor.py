@@ -1,18 +1,9 @@
-"""Attachment text extractor · DEBT-CL-020.
+"""Attachment text extractor · DEBT-CL-020 + sanitización (SPRINT 4A-3 #1).
 
-Capa puente entre handler y libs externas (pypdf · python-docx). Función
-pública pura desde la perspectiva del handler: input (b64, mime) → output
-texto extraído o None (caso imagen · caller usa b64 como referencia visual).
-
-Branches por MIME:
-- image/*                                          → None (no text extract)
-- application/pdf                                  → pypdf · cap 50K chars
-- application/vnd.openxmlformats-...wordprocessingml.document → python-docx · cap 50K
-- text/* (markdown, plain, csv, etc.)              → decode utf-8 · cap 50K
-- otros                                            → ExtractionError
-
-Cap 5MB raw (frontend ya valida · defense in depth server-side).
-Cap 50K chars output (~12K tokens · cabe en contexto Claude).
+input (b64, mime) → texto extraído y SANITIZADO (input_sanitizer · contexto
+UPLOADED_DOCUMENT, T2) o None (imágenes · caller usa b64 como referencia visual).
+Branches MIME: image/* → None · pdf → pypdf · docx → python-docx · text/* → utf-8.
+Cap raw 5MB. Doc no confiable (BLOCK/HOLD/fail-closed del sanitizer) → ExtractionError.
 """
 from __future__ import annotations
 
@@ -21,19 +12,22 @@ import io
 import logging
 from typing import Optional
 
+from app.bc_cognition.application.input_sanitizer import sanitize_input
+from app.bc_cognition.domain.input_threats import InputContext, SanitizerAction
+
 logger = logging.getLogger(__name__)
 
 MAX_RAW_BYTES = 5 * 1024 * 1024  # 5MB
-MAX_OUTPUT_CHARS = 50_000
+MAX_OUTPUT_CHARS = 50_000  # bound pre-sanitize · el cap final (20K) lo aplica input_sanitizer
 _DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
 
 class ExtractionError(Exception):
-    """Falla de extracción · handler la mapea a HTTPException 400/422."""
+    """Falla de extracción o de seguridad · handler la mapea a HTTPException 400/422."""
 
 
 def extract_text(b64: str, mime_type: str) -> Optional[str]:
-    """Decode base64 + extract text según mime. Retorna None para imágenes."""
+    """Decode base64 + extract + sanitiza (T2). Retorna None para imágenes."""
     if not b64 or not mime_type:
         return None
     if mime_type.startswith("image/"):
@@ -46,12 +40,24 @@ def extract_text(b64: str, mime_type: str) -> Optional[str]:
         raise ExtractionError(f"attachment_too_large:{len(raw)}>5MB")
 
     if mime_type == "application/pdf":
-        return _extract_pdf(raw)
-    if mime_type == _DOCX_MIME or mime_type.endswith("wordprocessingml.document"):
-        return _extract_docx(raw)
-    if mime_type.startswith("text/"):
-        return _extract_plain(raw)
-    raise ExtractionError(f"unsupported_mime:{mime_type}")
+        text = _extract_pdf(raw)
+    elif mime_type == _DOCX_MIME or mime_type.endswith("wordprocessingml.document"):
+        text = _extract_docx(raw)
+    elif mime_type.startswith("text/"):
+        text = _extract_plain(raw)
+    else:
+        raise ExtractionError(f"unsupported_mime:{mime_type}")
+    return _sanitize(text)
+
+
+def _sanitize(text: str) -> str:
+    """Sanitiza doc no confiable (T2). BLOCK/HOLD/fail-closed → ExtractionError."""
+    out, err = sanitize_input(text, InputContext.UPLOADED_DOCUMENT)
+    if err is not None:
+        raise ExtractionError(f"sanitizer_failure:{err.code}")
+    if out.action in (SanitizerAction.BLOCK, SanitizerAction.HOLD_FOR_HUMAN_REVIEW):
+        raise ExtractionError(f"unsafe_attachment:{out.action.value}")
+    return out.clean_text
 
 
 def _extract_pdf(raw: bytes) -> str:

@@ -32,7 +32,7 @@ class ThreatFlag(Enum):
 
 MAX_CHARS: Final[MappingProxyType] = MappingProxyType({
     InputContext.ARIA_CHAT: 2000, InputContext.CONTENT_PROMPT: 1000,
-    InputContext.UPLOADED_DOCUMENT: 10000, InputContext.RESEARCH_SNIPPET: 500,
+    InputContext.UPLOADED_DOCUMENT: 20000, InputContext.RESEARCH_SNIPPET: 500,
     InputContext.BRAND_CORPUS: 3000,
 })
 
