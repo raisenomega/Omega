@@ -36,7 +36,7 @@ export function ContentLabFormBar({ clientList, form, setForm, onResearch }: Pro
       <Sel value={form.type} onChange={(v) => update("type", v)} options={TYPES} labels={TYPE_LABELS} />
       {form.type === "video" && (
         <Button size="sm" variant="outline" onClick={() => navigate("/add-ons", { state: { scrollTo: "video-packs" } })}
-          className="gap-1 h-8 text-xs">
+          className="gap-1 h-8 text-xs animate-pulse border-amber-500 text-amber-600 hover:bg-amber-50 hover:text-amber-700">
           <Video className="h-3.5 w-3.5" />
           Video Packs
         </Button>
