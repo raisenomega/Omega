@@ -1,3 +1,10 @@
+/**
+ * @deprecated 23 may 2026 — Video Packs migrados a página dedicada /add-ons.
+ * El sidebar entry "Add-Ons" + ContentLabFormBar botón "Video Packs" (cuando
+ * type === 'video') ahora navegan a /add-ons en vez de abrir este modal.
+ * Mantener temporalmente por si se quiere revivir como modal contextual.
+ * Eliminar en Sprint 4 si no encuentra uso.
+ */
 import { useState } from "react";
 import { Video } from "lucide-react";
 import { Button } from "@/components/ui/button";

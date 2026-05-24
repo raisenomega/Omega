@@ -1,9 +1,9 @@
-import { Search } from "lucide-react";
+import { Search, Video } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PLATFORMS, PLATFORM_LABELS } from "@/lib/onboarding-constants";
 import { TYPES, TYPE_LABELS, TONES, TONE_LABELS } from "@/lib/content-lab-constants";
-import { VideoAddonModal } from "@/components/addons/VideoAddonModal";
 import type { FormState } from "./ContentLabFormV2";
 
 interface Props {
@@ -23,6 +23,7 @@ function Sel({ value, onChange, options, labels }: { value: string; onChange: (v
 }
 
 export function ContentLabFormBar({ clientList, form, setForm, onResearch }: Props) {
+  const navigate = useNavigate();
   const update = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm(prev => ({ ...prev, [k]: v }));
   return (
     <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-2 border-green-500 rounded-lg bg-card/80 backdrop-blur-sm">
@@ -33,7 +34,13 @@ export function ContentLabFormBar({ clientList, form, setForm, onResearch }: Pro
       </select>
       <Sel value={form.platform} onChange={(v) => update("platform", v)} options={PLATFORMS} labels={PLATFORM_LABELS} />
       <Sel value={form.type} onChange={(v) => update("type", v)} options={TYPES} labels={TYPE_LABELS} />
-      {form.type === "video" && <VideoAddonModal />}
+      {form.type === "video" && (
+        <Button size="sm" variant="outline" onClick={() => navigate("/add-ons", { state: { scrollTo: "video-packs" } })}
+          className="gap-1 h-8 text-xs">
+          <Video className="h-3.5 w-3.5" />
+          Video Packs
+        </Button>
+      )}
       <Sel value={form.tone} onChange={(v) => update("tone", v)} options={TONES} labels={TONE_LABELS} />
       <div className="h-6 w-px bg-border/60 hidden sm:block" aria-hidden />
       <Input value={form.braveQuery} onChange={(e) => update("braveQuery", e.target.value)}
