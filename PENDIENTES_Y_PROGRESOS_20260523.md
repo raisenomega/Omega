@@ -70,7 +70,7 @@
 | ID | Descripción | Status | Urgencia |
 |---|---|---|---|
 | DEBT-CL-003 | Auth helpers ARIAChat + UpgradePlan sin consolidar (cluster Content Lab YA) | 🟡 PARCIAL | Baja |
-| DEBT-CL-005 | Backend ignora client_id en /content-lab/generate | 🔴 OPEN | Media |
+| DEBT-CL-005 | Backend ignora client_id en /content-lab/generate | ✅ CERRADA Sprint 3 | — |
 | DEBT-CL-008 | /generate-image hardcoded 1024x1024 (no aspect_ratio param) | 🔴 OPEN | Media |
 | DEBT-CL-009 | /generate-video ratio hardcoded 1280:768 | 🔴 OPEN | Baja |
 | DEBT-CL-010 | Video polling cancelable mid-flight · orphan visual | 🔴 OPEN | Baja |

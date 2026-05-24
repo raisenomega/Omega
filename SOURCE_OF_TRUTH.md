@@ -264,7 +264,7 @@ Cleanup estimado: ~6-8h en próximas sesiones.
 - ~~DEBT-CL-016 · `ClientProfile` model desincronizado de DB~~ ✅ **CERRADA 23 may 2026** (Sprint 3 · `PlanOption` +'adopcion' · 6 fields → Optional null-tolerant · `useMyClients` restaurado a `apiGet`)
 
 **Media urgencia:**
-- DEBT-CL-005 · backend ignora client_id del frontend (usa user JWT)
+- ~~DEBT-CL-005 · backend ignora client_id del frontend (usa user JWT)~~ ✅ **CERRADA 23 may 2026** (Sprint 3 · NEW `_client_resolver.resolve_client_or_403` · 3 handlers POST + GET status video usan resolver/ownership · frontend manda `client_id` en payload de los 3 hooks)
 - DEBT-CL-008 · `/generate-image` hardcoded 1024x1024
 - ~~DEBT-CL-011 · Nano Banana ImageConfig (re-activar en 2.6.0)~~ ✅ **CERRADA 23 may 2026** (Sprint 3 · `types.ImageConfig(aspect_ratio=...)` cableado en GenerateContentConfig · `_VALID_ASPECT_RATIOS` frozenset defensivo · aspect honrado end-to-end UI→SDK)
 - DEBT-CL-013 · useScheduleBlock bypassa backend RBAC
