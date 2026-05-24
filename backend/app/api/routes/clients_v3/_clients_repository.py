@@ -1,4 +1,5 @@
 """Repository clients_v3 · única capa de WRITES Supabase (DDD A1/A9)."""
+# force Railway redeploy · Nixpacks · 24 may 2026
 import logging
 from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import get_supabase_service
