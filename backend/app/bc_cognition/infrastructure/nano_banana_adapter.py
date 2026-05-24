@@ -20,6 +20,11 @@ from app.bc_cognition.infrastructure._nano_banana_types import (
     ImageRoute, MODEL_BY_ROUTE, ImageResponse, ImageError,
 )
 
+# google-genai 2.6 ImageConfig.aspect_ratio · supported values (DEBT-CL-011)
+_VALID_ASPECT_RATIOS: frozenset[str] = frozenset({
+    "1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "21:9",
+})
+
 _client: genai.Client | None = None
 
 
@@ -42,6 +47,8 @@ async def generate(
     """Genera imagen vía Nano Banana. aspect_ratio: 1:1|16:9|9:16|4:3|21:9."""
     if not prompt or len(prompt) > 8000:
         return None, ImageError("invalid_input", "prompt vacío o >8000 chars")
+    if aspect_ratio not in _VALID_ASPECT_RATIOS:
+        return None, ImageError("invalid_input", f"aspect_ratio '{aspect_ratio}' no soportado")
 
     model = MODEL_BY_ROUTE[route]
     contents: list = [prompt]
@@ -56,10 +63,11 @@ async def generate(
         resp = await _get_client().aio.models.generate_content(
             model=model,
             contents=contents,
-            # google-genai 1.2.0 removió types.ImageConfig · aspect_ratio sin
-            # control programático (DEBT-CL-011) · default model output = 1:1.
+            # DEBT-CL-011 cerrada (23 may 2026 · Sprint 3): google-genai 2.6
+            # trajo types.ImageConfig de vuelta · aspect_ratio honrado por SDK.
             config=types.GenerateContentConfig(
                 response_modalities=["IMAGE"],
+                image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
             ),
         )
     except Exception as e:                                          # noqa: BLE001

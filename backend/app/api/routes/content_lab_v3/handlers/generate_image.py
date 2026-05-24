@@ -23,9 +23,9 @@ _STYLE_SUFFIXES = {
     "minimal": ", minimalist design, clean lines, simple composition",
 }
 
-# UX-3 · aspect ratio → resolution (compat con _SIZE_TO_ASPECT en _image_compat)
-# OJO DEBT-CL-011: nano_banana_adapter recibe aspect pero NO lo pasa al SDK
-# todavía (ImageConfig pendiente en google-genai 2.6 · verificación SDK aparte).
+# UX-3 · aspect ratio → resolution (compat con _SIZE_TO_ASPECT en _image_compat).
+# DEBT-CL-011 cerrada Sprint 3: nano_banana_adapter ya pasa aspect_ratio al SDK
+# vía ImageConfig (google-genai 2.6) · aspect respetado end-to-end.
 _ASPECT_TO_SIZE = {"1:1": "1024x1024", "9:16": "1024x1792", "16:9": "1792x1024"}
 
 

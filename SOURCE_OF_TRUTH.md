@@ -266,7 +266,7 @@ Cleanup estimado: ~6-8h en próximas sesiones.
 **Media urgencia:**
 - DEBT-CL-005 · backend ignora client_id del frontend (usa user JWT)
 - DEBT-CL-008 · `/generate-image` hardcoded 1024x1024
-- DEBT-CL-011 · Nano Banana ImageConfig (re-activar en 2.6.0)
+- ~~DEBT-CL-011 · Nano Banana ImageConfig (re-activar en 2.6.0)~~ ✅ **CERRADA 23 may 2026** (Sprint 3 · `types.ImageConfig(aspect_ratio=...)` cableado en GenerateContentConfig · `_VALID_ASPECT_RATIOS` frozenset defensivo · aspect honrado end-to-end UI→SDK)
 - DEBT-CL-013 · useScheduleBlock bypassa backend RBAC
 - DEBT-CL-015 · account_id resolución sin elección del user
 - DEBT-CL-017 · backend ScheduledPostCreate sin video_url field

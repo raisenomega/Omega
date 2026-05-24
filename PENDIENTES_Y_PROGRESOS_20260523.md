@@ -74,7 +74,7 @@
 | DEBT-CL-008 | /generate-image hardcoded 1024x1024 (no aspect_ratio param) | 🔴 OPEN | Media |
 | DEBT-CL-009 | /generate-video ratio hardcoded 1280:768 | 🔴 OPEN | Baja |
 | DEBT-CL-010 | Video polling cancelable mid-flight · orphan visual | 🔴 OPEN | Baja |
-| DEBT-CL-011 | Nano Banana ImageConfig removida en 1.2 · existe en 2.6 (re-activar) | 🔴 OPEN | Media |
+| DEBT-CL-011 | Nano Banana ImageConfig removida en 1.2 · existe en 2.6 (re-activar) | ✅ CERRADA Sprint 3 | — |
 | DEBT-CL-012 | Download imagen/video posible CORS · verificar | 🟡 VERIFICAR | Verificar |
 | DEBT-CL-013 | useScheduleBlock query Supabase directo (bypass backend RBAC) | 🔴 OPEN | Media |
 | DEBT-CL-014 | Modal Agendar 3 slots fijos → relajado libertad total | ✅ CERRADA | — |
