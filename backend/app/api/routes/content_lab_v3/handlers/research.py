@@ -43,9 +43,20 @@ async def research(
         if "Brave HTTP" in err:
             raise HTTPException(503, detail=f"brave_unavailable:{err}")
         raise HTTPException(500, detail=f"research_failed:{err[:200]}")
+    # BUG fix: web_search_tool.py:97 retorna 'content' · ResearchResult
+    # espera 'snippet' · ResearchResult(**r) hace Pydantic ValidationError
+    # → FastAPI 500 (causa del bug reportado por owner). Mapeo explícito
+    # robusto · tolera ambos shapes (legacy content + future snippet).
     return ResearchResponse(
         query=str(result.get("query") or request.query),
-        results=[ResearchResult(**r) for r in (result.get("results") or [])],
+        results=[
+            ResearchResult(
+                title=str(r.get("title", "")),
+                url=str(r.get("url", "")),
+                snippet=str(r.get("content") or r.get("snippet") or ""),
+            )
+            for r in (result.get("results") or [])
+        ],
         answer=result.get("answer") or None,
         count=int(result.get("count") or 0),
         duration_ms=int(result.get("duration_ms") or 0),
