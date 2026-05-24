@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useMyPlanStatus } from "@/hooks/useMyPlanStatus";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
@@ -23,7 +24,11 @@ const TABS: { id: TabId; label: string }[] = [
 
 export default function SettingsPage() {
   const my = useMyPlanStatus();
-  const [active, setActive] = useState<TabId>("perfil");
+  const [params] = useSearchParams();
+  const tab = params.get("tab");
+  const [active, setActive] = useState<TabId>(
+    TABS.some((t) => t.id === tab) ? (tab as TabId) : "perfil",
+  );
   useTrackOnMount("feature_open", { feature: "settings" });
 
   return (

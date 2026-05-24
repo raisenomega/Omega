@@ -126,7 +126,7 @@ SENTINEL global score ≥ 95/100 sostenido 7 días
 | ID | Item | Por qué existe | Tiempo | Impacto |
 |----|------|----------------|--------|---------|
 | DEBT-001 | `scheduled_post_repository.py` = 265L | Crecimiento orgánico | 2h | Bajo |
-| DEBT-002 | Math.random() en analytics frontend | Datos sintéticos pre-integración | 4h | Alto (P1) |
+| DEBT-002 | **CERRADA (24 may 2026 · Sprint 4A-4)**: cero `Math.random()` / datos sintéticos en analytics. Verificado: `useAnalyticsData.ts` devuelve `[]`+`null` (de-mock previo · comentario "P1 strict: cero datos sintéticos"); los 3 charts (`GrowthChart`/`EngagementChart`/`BestTimesHeatmap`) + `AnalyticsKPIs` ya renderizan empty states honestos; dashboard (`useDashboardData`+`PlatformCharts`) usa queries Supabase reales + filtro `followers>0`. Único `Math.random()` restante = `src/components/ui/sidebar.tsx:536` (skeleton shadcn · exento · no es dato de cliente). Este commit completó la honestidad UX en `Analytics.tsx`: banner "Datos de ejemplo" (mentiroso · ya no había datos) → placeholder honesto gated `!hasAnyData` + CTA "Conectar cuentas →" deep-link a `/settings?tab=cuentas` (`SettingsPage` lee `?tab` vía useSearchParams). **Nota**: Meta OAuth real sigue pendiente (DEBT-040) · el CTA lleva a gestión manual de cuentas. **Original (histórico)**: Math.random() en analytics frontend · datos sintéticos pre-integración | — | 0h (cerrada) | — |
 | DEBT-003 | Instagram/TikTok/Facebook APIs sin keys | Falta Meta Developer App | 40h | Bloquea publicación |
 | DEBT-004 | 202 archivos backend >75L (cifra estimada pre-lift&shift) | Falta enforcement | — | subsumido por DEBT-017 (post-lift&shift cifra real) |
 | DEBT-005 | 5 proveedores IA cuando solo Anthropic permitido | Histórico | 40h | Crítico (DDD I1) |

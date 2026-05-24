@@ -7,6 +7,8 @@ import { AnalyticsKPIs } from "@/components/analytics/AnalyticsKPIs";
 import { GrowthChart } from "@/components/analytics/GrowthChart";
 import { EngagementChart } from "@/components/analytics/EngagementChart";
 import { BestTimesHeatmap } from "@/components/analytics/BestTimesHeatmap";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 type Period = "7d" | "30d" | "90d";
 
@@ -27,6 +29,7 @@ export default function Analytics() {
 
   const hasEngagement = engagementData.length > 0;
   const postsCount = hasEngagement ? engagementData.reduce((s, e) => s + e.likes + e.comments + e.shares, 0) : null;
+  const hasAnyData = growthData.length > 0 || hasEngagement || heatmapData.length > 0 || totalFollowers !== null || avgEngagement !== null;
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-6 space-y-4">
@@ -51,10 +54,15 @@ export default function Analytics() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 bg-muted/40 rounded px-3 py-2 text-xs text-muted-foreground">
-        <Info className="h-3.5 w-3.5 shrink-0" />
-        <span>Datos de ejemplo · Conecta tus cuentas para ver métricas reales (DEBT-034)</span>
-      </div>
+      {!hasAnyData && (
+        <div className="flex items-center gap-2 bg-muted/40 rounded px-3 py-2 text-xs text-muted-foreground">
+          <Info className="h-3.5 w-3.5 shrink-0" />
+          <span className="flex-1">Aún no hay métricas reales · las analíticas se activan al conectar tus cuentas y publicar contenido</span>
+          <Button asChild size="sm" variant="outline" className="h-7 text-xs shrink-0">
+            <Link to="/settings?tab=cuentas">Conectar cuentas →</Link>
+          </Button>
+        </div>
+      )}
 
       <AnalyticsKPIs followers={totalFollowers} engagement={avgEngagement} bestHour={heatmapData.length > 0 ? "19:00 – 21:00" : null} posts={postsCount} />
 
