@@ -27,6 +27,11 @@ def get_brand_assets(client_id: str) -> dict[str, Any]:
     return r.data[0] if r.data else {}
 
 
+def get_brand_voice_samples_manual(client_id: str) -> list[str]:
+    r = _sb().table("brand_voice_corpus").select("text").eq("client_id", client_id).eq("source", "manual_upload").order("created_at", desc=False).execute()
+    return [x["text"] for x in (r.data or []) if x.get("text")]
+
+
 def get_user_reseller_ids(user_id: str) -> list[str]:
     r = _sb().table("resellers").select("id").eq("owner_user_id", user_id).execute()
     return [str(x["id"]) for x in (r.data or [])]

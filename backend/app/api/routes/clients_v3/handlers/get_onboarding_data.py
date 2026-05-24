@@ -26,4 +26,5 @@ async def get_onboarding_data(
     context = reader.get_client_context(client_id)
     accounts = reader.get_social_accounts(client_id)
     assets = reader.get_brand_assets(client_id)
-    return to_onboarding_payload(client, context, accounts, assets)
+    samples = reader.get_brand_voice_samples_manual(client_id)
+    return to_onboarding_payload(client, context, accounts, assets, samples)

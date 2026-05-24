@@ -50,6 +50,10 @@ async def update_onboarding_data(
         repo.required_insert("update_context", repo.upsert_client_context, client_id, _build_context(payload, completion))
         repo.required_insert("delete_accounts", repo.delete_social_accounts, client_id)
         repo.required_insert("insert_accounts", repo.bulk_insert_social_accounts, client_id, [a.model_dump() for a in payload.social_accounts])
+        # Replace strategy samples manual · preserva approved_draft (Bug 2.B+2.C 24 may)
+        repo.required_insert("delete_samples", repo.delete_brand_voice_samples_manual, client_id)
+        if payload.brand_voice_samples:
+            repo.required_insert("insert_samples", repo.insert_brand_voice_samples, client_id, payload.brand_voice_samples)
         if payload.brand_assets is not None:
             repo.required_insert("brand_assets", repo.upsert_brand_assets, client_id, payload.brand_assets.model_dump())
     except Exception as e:

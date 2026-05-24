@@ -65,6 +65,12 @@ def insert_brand_voice_samples(client_id: str, samples: list[str]) -> None:
         _sb().table("brand_voice_corpus").insert(rows).execute()
 
 
+def delete_brand_voice_samples_manual(client_id: str) -> None:
+    # Replace strategy (igual que social_accounts en update_onboarding_data).
+    # Solo borra source='manual_upload' · preserva 'approved_draft' (auto-learn Content Lab).
+    _sb().table("brand_voice_corpus").delete().eq("client_id", client_id).eq("source", "manual_upload").execute()
+
+
 def insert_behavioral_event(user_id: str, client_id: str, event_type: str, event_data: dict) -> None:
     _sb().table("behavioral_events").insert({
         "user_id": user_id, "client_id": client_id, "event_type": event_type, "event_data": event_data,
