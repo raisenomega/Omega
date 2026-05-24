@@ -11,7 +11,7 @@ import { loadPersistedResults, persistResults } from "@/lib/content-lab-persiste
 import { VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
 import type { ResultV2, BlockState, ModalState } from "@/components/content/ResultCardV2";
 
-const INITIAL_FORM: FormState = { platform: "instagram", type: "caption", tone: "casual", topic: "", braveQuery: "", clientId: "" };
+const INITIAL_FORM: FormState = { platform: "instagram", type: "caption", tone: "casual", topic: "", braveQuery: "", clientId: "", aspect: "1:1" };
 const INITIAL_BLOCK: BlockState = { items: [] };
 
 export function useContentLabState() {

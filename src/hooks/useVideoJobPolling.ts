@@ -21,6 +21,7 @@ export function useVideoJobPolling() {
       const { job_id } = await apiPost<JobStartResponse>(`/content-lab/generate-video`, {
         prompt: form.topic,
         ratio: "1280:768",
+        aspect_ratio: form.aspect,
       });
 
       for (let i = 0; i < MAX_ATTEMPTS; i++) {

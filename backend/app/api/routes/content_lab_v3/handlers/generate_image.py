@@ -23,6 +23,11 @@ _STYLE_SUFFIXES = {
     "minimal": ", minimalist design, clean lines, simple composition",
 }
 
+# UX-3 · aspect ratio → resolution (compat con _SIZE_TO_ASPECT en _image_compat)
+# OJO DEBT-CL-011: nano_banana_adapter recibe aspect pero NO lo pasa al SDK
+# todavía (ImageConfig pendiente en google-genai 2.6 · verificación SDK aparte).
+_ASPECT_TO_SIZE = {"1:1": "1024x1024", "9:16": "1024x1792", "16:9": "1792x1024"}
+
 
 def _enhance_prompt(prompt: str, style: str) -> str:
     suffix = _STYLE_SUFFIXES.get(style, _STYLE_SUFFIXES["realistic"])
@@ -42,9 +47,10 @@ async def generate_image(
     client_id = str(client["id"])
 
     enhanced = _enhance_prompt(request.prompt, request.style)
+    size = _ASPECT_TO_SIZE.get(request.aspect_ratio, "1024x1024")
     try:
         urls = await generate_image_compat(
-            prompt=enhanced, n=1, size="1024x1024",
+            prompt=enhanced, n=1, size=size,
             quality="standard", client_id=client_id,
         )
     except StorageUploadError as e:

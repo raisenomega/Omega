@@ -20,6 +20,9 @@ from app.bc_cognition.application.use_video_job import create_video_job, get_vid
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+# UX-3 · aspect ratio → raw resolution (compat con _RATIO_TO_ASPECT en _video_compat)
+_ASPECT_TO_RATIO = {"1:1": "1024:1024", "9:16": "768:1280", "16:9": "1280:768"}
+
 
 @router.post("/generate-video", response_model=VideoJobStartResponse)
 async def start_video_generation(
@@ -31,8 +34,9 @@ async def start_video_generation(
     if not client:
         raise HTTPException(status_code=403, detail="no_client_for_user")
     client_id = str(client["id"])
+    ratio = _ASPECT_TO_RATIO.get(request.aspect_ratio, request.ratio) if request.aspect_ratio else request.ratio
     try:
-        job_id = await create_video_job(client_id, request.prompt, request.ratio)
+        job_id = await create_video_job(client_id, request.prompt, ratio)
     except Exception as e:
         logger.error(f"create_video_job failed · client={client_id}: {e}", exc_info=True)
         raise HTTPException(

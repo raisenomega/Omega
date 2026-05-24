@@ -20,6 +20,7 @@ export function useGenerateImage() {
       const data = await apiPost<GenerateImageResponse>(`/content-lab/generate-image`, {
         prompt: form.topic,
         style: "realistic",
+        aspect_ratio: form.aspect,
       });
       return [{
         id: data.id,

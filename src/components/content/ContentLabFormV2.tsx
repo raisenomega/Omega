@@ -7,8 +7,13 @@ import { Label } from "@/components/ui/label";
 export const VARIATIONS = ["Conservadora", "Balanceada", "Atrevida"] as const;
 export type VariationLabel = typeof VARIATIONS[number];
 
+export const ASPECTS = ["1:1", "9:16", "16:9"] as const;
+export type Aspect = typeof ASPECTS[number];
+const ASPECT_LABELS: Record<Aspect, string> = { "1:1": "Cuadrado", "9:16": "Story", "16:9": "Landscape" };
+
 export interface FormState {
   platform: string; type: string; tone: string; topic: string; braveQuery: string; clientId: string;
+  aspect: Aspect;
 }
 
 interface Props {
@@ -31,7 +36,7 @@ export function ContentLabFormV2({ form, setForm, variations, setVariations, onG
         <Textarea value={form.topic} onChange={(e) => update("topic", e.target.value)}
           className="bg-transparent border-none outline-none resize-none w-full h-full focus:ring-0 focus-visible:ring-0 flex-1 min-h-[120px]" />
       </div>
-      {/* CHECKBOXES VARIACIONES · 1 línea compacta (UX-4) */}
+      {/* CHECKBOXES VARIACIONES + ASPECT (UX-4 + UX-3) · 1 línea compacta */}
       <div className="flex flex-nowrap gap-2 items-center justify-center py-1">
         {VARIATIONS.map(v => (
           <div key={v} className="flex items-center gap-1">
@@ -39,6 +44,12 @@ export function ContentLabFormV2({ form, setForm, variations, setVariations, onG
             <Label htmlFor={`var-${v}`} className="text-[11px] cursor-pointer leading-none">{v}</Label>
           </div>
         ))}
+        {(form.type === "image" || form.type === "video") && (
+          <select value={form.aspect} onChange={(e) => update("aspect", e.target.value as Aspect)}
+            className="ml-1 px-1.5 py-0.5 text-[11px] rounded border bg-background h-6">
+            {ASPECTS.map(a => <option key={a} value={a}>{ASPECT_LABELS[a]} {a}</option>)}
+          </select>
+        )}
       </div>
       {/* BOTÓN GENERAR */}
       <Button onClick={onGenerate} disabled={isPending || !form.topic.trim() || !hasVar}

@@ -33,6 +33,7 @@ class GenerateTextResponse(BaseModel):
 class GenerateImageRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=2000)
     style: str = Field(default="realistic", max_length=32)  # realistic|cartoon|minimal
+    aspect_ratio: str = Field(default="1:1", max_length=8)  # 1:1|9:16|16:9 (UX-3)
 
 
 class GenerateImageResponse(BaseModel):
@@ -43,7 +44,8 @@ class GenerateImageResponse(BaseModel):
 
 class GenerateVideoRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=2000)
-    ratio: str = Field(default="1280:768", max_length=32)  # 1280:768|768:1280
+    ratio: str = Field(default="1280:768", max_length=32)  # legacy raw resolution
+    aspect_ratio: Optional[str] = Field(default=None, max_length=8)  # 1:1|9:16|16:9 (UX-3)
 
 
 class VideoJobStartResponse(BaseModel):
