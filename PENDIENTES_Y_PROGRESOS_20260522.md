@@ -1,7 +1,7 @@
 # OMEGA · PENDIENTES Y PROGRESOS · SESIÓN 22 MAY 2026
 
-> **DOCUMENTO LOCAL · NUNCA SE COMMITEA · NUNCA SE PUSHEA**
-> Protegido por `.gitignore` patrón `PENDIENTES_*.md`. Confirmar con `git status` antes de cualquier operación destructiva en working tree.
+> **Handoff operacional · versionado en el repo** (sin secretos · safe to commit).
+> `.gitignore` permite `PENDIENTES_Y_PROGRESOS_*` vía la negación de línea 133.
 >
 > Generado al cierre 22 may 2026 · madrugada. Próxima sesión: arrancar con DEBT-045 (persistent jobstore + orphan cleanup).
 
