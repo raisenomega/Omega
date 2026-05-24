@@ -60,3 +60,13 @@ class VideoJobStatusResponse(BaseModel):
     video_url: Optional[str] = None
     error: Optional[str] = None
     metadata: dict = {}
+
+
+class ImprovePromptRequest(BaseModel):
+    original_prompt: str = Field(..., min_length=1, max_length=2000)
+    platform: Optional[str] = Field(default=None, max_length=32)
+    content_type: Optional[str] = Field(default=None, max_length=32)
+
+
+class ImprovePromptResponse(BaseModel):
+    improved_prompt: str

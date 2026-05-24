@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { useImprovePrompt } from "@/hooks/useImprovePrompt";
+import { ImprovePromptPanel } from "./ImprovePromptPanel";
 
 export const VARIATIONS = ["Conservadora", "Balanceada", "Atrevida"] as const;
 export type VariationLabel = typeof VARIATIONS[number];
@@ -31,6 +34,12 @@ interface Props {
 export function ContentLabFormV2({ form, setForm, variations, setVariations, onGenerate, isPending }: Props) {
   const update = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm(prev => ({ ...prev, [k]: v }));
   const hasVar = Object.values(variations).some(Boolean);
+  const [improvedText, setImprovedText] = useState<string | null>(null);
+  const improve = useImprovePrompt();
+  const handleImprove = () => improve.mutate(
+    { original_prompt: form.topic, platform: form.platform, content_type: form.type },
+    { onSuccess: (d) => setImprovedText(d.improved_prompt) }
+  );
 
   const handleRefImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -43,10 +52,21 @@ export function ContentLabFormV2({ form, setForm, variations, setVariations, onG
 
   return (
     <div className="space-y-3 h-full flex flex-col">
+      {improvedText && (
+        <ImprovePromptPanel improvedText={improvedText}
+          onAccept={() => { update("topic", improvedText); setImprovedText(null); }}
+          onReject={() => setImprovedText(null)} />
+      )}
       {/* CAJÓN AMARILLO · Prompt principal (flex-1 ocupa altura disponible) */}
-      <div className="bg-background border-2 border-amber-500 rounded-lg p-3 flex-1 flex flex-col">
+      <div className="bg-background border-2 border-amber-500 rounded-lg p-3 flex-1 flex flex-col relative">
         <Textarea value={form.topic} onChange={(e) => update("topic", e.target.value)}
           className="bg-transparent border-none outline-none resize-none w-full h-full focus:ring-0 focus-visible:ring-0 flex-1 min-h-[120px]" />
+        <Button size="sm" variant="ghost" onClick={handleImprove}
+          disabled={!form.topic.trim() || improve.isPending}
+          className="absolute bottom-2 right-2 h-7 text-[11px] gap-1 text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-950/30">
+          {improve.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+          Mejorar
+        </Button>
       </div>
       {/* CHECKBOXES VARIACIONES + ASPECT (UX-4 + UX-3) · 1 línea compacta */}
       <div className="flex flex-nowrap gap-2 items-center justify-center py-1">
