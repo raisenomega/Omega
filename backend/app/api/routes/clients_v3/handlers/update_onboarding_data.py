@@ -35,14 +35,27 @@ async def update_onboarding_data(
     identity_dict = payload.identity.model_dump()
     regions = identity_dict.pop("regions")
     identity_dict["region"] = ",".join(regions)
-    repo.safe_insert("update_client", repo.update_client_by_id, client_id, identity_dict)
+
+    # CRÍTICO: identidad del cliente · si falla, el wizard NO guardó (P1/R5)
+    try:
+        rows = repo.required_insert("update_client", repo.update_client_by_id, client_id, identity_dict)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"update_client_failed:{type(e).__name__}:{str(e)[:200]}")
+    if rows == 0:
+        raise HTTPException(status_code=404, detail="client_update_no_rows")
 
     completion = calc_completion_percent(payload)
-    repo.safe_insert("update_context", repo.upsert_client_context, client_id, _build_context(payload, completion))
-    repo.safe_insert("delete_accounts", repo.delete_social_accounts, client_id)
-    repo.safe_insert("insert_accounts", repo.bulk_insert_social_accounts, client_id, [a.model_dump() for a in payload.social_accounts])
-    if payload.brand_assets is not None:
-        repo.safe_insert("brand_assets", repo.upsert_brand_assets, client_id, payload.brand_assets.model_dump())
+    # CRÍTICOS: context + social_accounts (replace pattern · DEBT-040) + brand_assets
+    try:
+        repo.required_insert("update_context", repo.upsert_client_context, client_id, _build_context(payload, completion))
+        repo.required_insert("delete_accounts", repo.delete_social_accounts, client_id)
+        repo.required_insert("insert_accounts", repo.bulk_insert_social_accounts, client_id, [a.model_dump() for a in payload.social_accounts])
+        if payload.brand_assets is not None:
+            repo.required_insert("brand_assets", repo.upsert_brand_assets, client_id, payload.brand_assets.model_dump())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"persist_partial_failed:{type(e).__name__}:{str(e)[:200]}")
+
+    # BEST-EFFORT: telemetría · no rompe la operación si falla
     repo.safe_insert("memory", repo.insert_agent_memory, user["id"], client_id,
                      f"Cliente {client.get('name')} actualizó su perfil",
                      "Datos del cliente actualizados · context disponible para todos los agentes", 10)

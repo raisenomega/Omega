@@ -54,13 +54,25 @@ async def create_client_onboarding(
     identity_dict = payload.identity.model_dump()
     regions = identity_dict.pop("regions")
     identity_dict["region"] = ",".join(regions)
-    client_id = repo.upsert_client(user_id, reseller_id, identity_dict)
+
+    # CRÍTICO: upsert_client genera el ID · si falla el onboarding entero falla
+    try:
+        client_id = repo.required_insert("upsert_client", repo.upsert_client, user_id, reseller_id, identity_dict)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"upsert_client_failed:{type(e).__name__}:{str(e)[:200]}")
+
     completion = calc_completion_percent(payload)
-    repo.safe_insert("upsert_client_context", repo.upsert_client_context, client_id, _build_context(payload, completion))
-    repo.safe_insert("bulk_social", repo.bulk_insert_social_accounts, client_id, [a.model_dump() for a in payload.social_accounts])
-    if payload.brand_assets is not None:
-        repo.safe_insert("brand_assets", repo.upsert_brand_assets, client_id, payload.brand_assets.model_dump())
-    repo.safe_insert("voice_samples", repo.insert_brand_voice_samples, client_id, payload.brand_voice_samples)
+    # CRÍTICOS: context + social_accounts + brand_assets + voice_samples
+    try:
+        repo.required_insert("upsert_client_context", repo.upsert_client_context, client_id, _build_context(payload, completion))
+        repo.required_insert("bulk_social", repo.bulk_insert_social_accounts, client_id, [a.model_dump() for a in payload.social_accounts])
+        if payload.brand_assets is not None:
+            repo.required_insert("brand_assets", repo.upsert_brand_assets, client_id, payload.brand_assets.model_dump())
+        repo.required_insert("voice_samples", repo.insert_brand_voice_samples, client_id, payload.brand_voice_samples)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"persist_partial_failed:{type(e).__name__}:{str(e)[:200]}")
+
+    # BEST-EFFORT: telemetría
     repo.safe_insert("behavioral", repo.insert_behavioral_event, user_id, client_id, "client_onboarded",
                      {"completion_percent": completion, "social_accounts": len(payload.social_accounts)})
     repo.safe_insert("memory", repo.insert_agent_memory, user_id, client_id,

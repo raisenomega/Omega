@@ -8,12 +8,29 @@ P = ParamSpec("P"); T = TypeVar("T")
 
 
 def safe_insert(label: str, fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> Optional[T]:
-    """Best-effort wrapper (audit FIX 4 pattern) · errores loguean stack y NO propagan."""
+    """Best-effort wrapper (audit FIX 4 pattern) · errores loguean stack y NO propagan.
+    Usar SOLO para writes de telemetría/log (behavioral_events, agent_memory) donde
+    el fallo no debe romper la operación principal. Para writes críticos (identidad
+    del cliente, context, social_accounts, brand_assets) usar required_insert."""
     try:
         return fn(*args, **kwargs)
     except Exception as e:
         logger.error(f"clients_repository.{label} failed: {e}", exc_info=True)
         return None
+
+
+def required_insert(label: str, fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
+    """Critical wrapper · errores loguean stack Y PROPAGAN (caller decide HTTP).
+    Usar para writes que el frontend debe saber si fallaron (P1/R5 honestidad).
+    Patrón usage en handler:
+        try: rows = repo.required_insert('label', repo.fn, *args)
+        except Exception as e: raise HTTPException(500, detail=f'op:{type(e).__name__}')
+    """
+    try:
+        return fn(*args, **kwargs)
+    except Exception as e:
+        logger.error(f"clients_repository.{label} failed: {e}", exc_info=True)
+        raise
 
 
 def _sb():
@@ -66,8 +83,10 @@ def resolve_reseller_for_user(user_id: str) -> Optional[str]:
     return str(r.data[0]["reseller_id"]) if r.data else None
 
 
-def update_client_by_id(client_id: str, fields: dict[str, Any]) -> None:
-    _sb().table("clients").update(fields).eq("id", client_id).execute()
+def update_client_by_id(client_id: str, fields: dict[str, Any]) -> int:
+    """Retorna número de rows actualizadas · 0 si client_id no existe."""
+    result = _sb().table("clients").update(fields).eq("id", client_id).execute()
+    return len(result.data or [])
 
 
 def delete_social_accounts(client_id: str) -> None:
