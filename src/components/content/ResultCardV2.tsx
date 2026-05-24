@@ -5,25 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { TYPE_LABELS } from "@/lib/content-lab-constants";
 import { PendingVideoCard } from "./PendingVideoCard";
 import { ResearchResultCard } from "./ResearchResultCard";
+import type { ResultV2, ModalState, BlockState } from "./result-types";
 
-export interface ResultV2 {
-  id: string;
-  generated_text: string;
-  content_type: string;
-  variation_label?: string;
-  virality_score?: number;
-  virality_estimated?: boolean;
-  brand_dna_score?: number;
-  saved?: boolean;
-  status?: "pending" | "completed" | "failed";
-  // Brave Search · content_type='research' usa estos campos en lugar de generated_text
-  url?: string;
-  snippet?: string;
-  title?: string;
-}
-
-export type ModalState = "closed" | "open" | "minimized";
-export interface BlockState { items: ResultV2[] }
+export type { ResultV2, ModalState, BlockState };
 
 interface Props {
   result: ResultV2;

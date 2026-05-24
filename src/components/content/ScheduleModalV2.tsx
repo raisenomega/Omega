@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import type { ModalState, BlockState } from "@/components/content/ResultCardV2";
+import { computeSpread, SPREAD_HOURS, SPREAD_MAX_DAY } from "@/lib/schedule-spread";
 
 interface Props {
   state: ModalState;
@@ -24,21 +25,6 @@ const ICON_BY_TYPE: Record<string, string> = {
 
 const MIN_PIECES = 3;
 const NON_TEXT = ["image", "video", "hashtags"];
-const SPREAD_HOURS = 2;   // LIMITS_OMEGA MIN_HORAS_ENTRE_POSTS
-const SPREAD_MAX_DAY = 3; // LIMITS_OMEGA MAX_POSTS_AUTO_PER_DIA_CLIENTE
-
-function computeSpread(base: string, n: number): string[] {
-  if (n < 1 || !base) return [];
-  const baseDate = new Date(base);
-  return Array.from({ length: n }, (_, i) => {
-    const day = Math.floor(i / SPREAD_MAX_DAY);
-    const inDay = i % SPREAD_MAX_DAY;
-    const ts = new Date(baseDate);
-    ts.setDate(ts.getDate() + day);
-    ts.setHours(ts.getHours() + inDay * SPREAD_HOURS);
-    return ts.toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
-  });
-}
 
 export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onMinimize, onRestore, onClose, onConfirm, onRemoveItem }: Props) {
   if (state === "closed") return null;

@@ -75,8 +75,6 @@ assert get_pack("starter")["price_usd"] == 39
 assert get_pack("creator")["seconds_per_video"] == 30
 assert get_pack("cinematic_pro")["includes_dedicated_agent"] is True
 assert not is_pack_available_for_plan("adopcion"), "Packs NO en Adopción"
-try:
-    VIDEO_PACK_ENTITLEMENTS["starter"] = None  # type: ignore[index]
-    raise AssertionError("VIDEO_PACK_ENTITLEMENTS mutable — frozen broken")
-except TypeError:
-    pass
+# Frozen: MappingProxyType es read-only por definición (outer + inner)
+assert isinstance(VIDEO_PACK_ENTITLEMENTS, MappingProxyType)
+assert isinstance(VIDEO_PACK_ENTITLEMENTS["starter"], MappingProxyType)

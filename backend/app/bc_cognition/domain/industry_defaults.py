@@ -53,8 +53,6 @@ assert get_defaults("unknown") is None
 assert get_defaults(None) is None
 assert get_defaults("") is None
 assert get_defaults("restaurant")["tone"][0] == "warm"
-try:
-    INDUSTRY_DEFAULTS["test"] = None  # type: ignore[index]
-    raise AssertionError("INDUSTRY_DEFAULTS mutable")
-except TypeError:
-    pass
+# Frozen: MappingProxyType read-only (outer + inner)
+assert isinstance(INDUSTRY_DEFAULTS, MappingProxyType)
+assert isinstance(INDUSTRY_DEFAULTS["restaurant"], MappingProxyType)

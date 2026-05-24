@@ -45,18 +45,12 @@ class Settings(BaseSettings):
 
     # Anthropic Claude
     anthropic_api_key: str = Field(..., env="ANTHROPIC_API_KEY")
-    anthropic_model: str = Field(
-        default="claude-sonnet-4-20250514",
-        env="ANTHROPIC_MODEL"
-    )
+    anthropic_model: str = Field(default="claude-sonnet-4-20250514", env="ANTHROPIC_MODEL")
 
     # JWT
     jwt_secret_key: str = Field(..., env="JWT_SECRET_KEY")
     jwt_algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
-    access_token_expire_minutes: int = Field(
-        default=30,
-        env="ACCESS_TOKEN_EXPIRE_MINUTES"
-    )
+    access_token_expire_minutes: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
     refresh_token_expire_days: int = Field(
         default=7,
         env="REFRESH_TOKEN_EXPIRE_DAYS"

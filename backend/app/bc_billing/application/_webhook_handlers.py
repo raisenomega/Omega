@@ -1,9 +1,11 @@
 """Handlers internos del webhook dispatcher. Privado · usado solo por process_webhook."""
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 from app.bc_billing.application._addon_handlers import (
     handle_addon_activation, handle_addon_deactivation, handle_video_pack_activation,
+)
+from app.bc_billing.application._webhook_helpers import (
+    _lookup_client_by_customer, _iso_from_ts, _now_iso,
 )
 from app.bc_billing.infrastructure.stripe_adapter import get_stripe_adapter
 from app.infrastructure.supabase_service import SupabaseService
@@ -83,21 +85,6 @@ async def on_subscription_deleted(event: dict, supabase: SupabaseService) -> Non
         "stripe_subscription_id": None,
     }).eq("client_id", client["id"]).execute()
     logger.info(f"Cliente {client['id']} downgraded → Adopción 7d (subscription canceled)")
-
-
-def _lookup_client_by_customer(supabase: SupabaseService, customer_id: Optional[str]) -> Optional[dict]:
-    if not customer_id:
-        return None
-    r = supabase.client.table("clients").select("id").eq("stripe_customer_id", customer_id).execute()
-    return r.data[0] if r.data else None
-
-
-def _iso_from_ts(ts: int) -> str:
-    return datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
-
-
-def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 EVENT_HANDLERS = {
