@@ -52,6 +52,12 @@ async def _run_video_job(job_id: str) -> None:
             prompt=job["prompt"], ratio=job["ratio"],
             client_id=str(job["client_id"]),
         )
+        # DEBT-CL-010: re-check status antes de update final · si user canceló
+        # mid-flight, NO sobreescribir 'cancelled' con completed/failed
+        current = repo.fetch_job(job_id)
+        if current and current.get("status") == "cancelled":
+            logger.info(f"job {job_id} cancelled mid-flight · skipping persist")
+            return
         if result.get("status") == "completed":
             repo.update_job_completed(
                 job_id, str(result["video_url"]),

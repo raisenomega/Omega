@@ -31,7 +31,8 @@ export default function ContentLabPageV2() {
           const r = s.results[i];
           return r ? (
             <ResultCardV2 key={r.id} result={r} onExpand={s.setExpandedResult} onAgendar={s.handleAgendar}
-              onSave={s.handleSave} onDownload={s.handleDownload} onRemove={(id) => s.setResults(p => p.filter(x => x.id !== id))} />
+              onSave={s.handleSave} onDownload={s.handleDownload} onRemove={(id) => s.setResults(p => p.filter(x => x.id !== id))}
+              onCancel={s.handleCancelVideo} />
           ) : (
             <Card key={`empty-${i}`} className="h-full min-h-full border border-dashed border-muted-foreground/30 flex items-center justify-center bg-card/40">
               <p className="text-xs text-muted-foreground">próximo resultado</p>

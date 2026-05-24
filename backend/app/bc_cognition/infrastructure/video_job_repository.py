@@ -54,6 +54,14 @@ def update_job_failed(job_id: str, error: str) -> None:
     }).eq("id", job_id).execute()
 
 
+def update_job_cancelled(job_id: str) -> None:
+    """DEBT-CL-010: Status → cancelled · completed_at. Idempotente vía
+    handler (chequea estado antes de llamar)."""
+    _sb().table("video_generation_jobs").update({
+        "status": "cancelled", "completed_at": _now_iso(),
+    }).eq("id", job_id).execute()
+
+
 def fetch_job(job_id: str) -> Optional[dict[str, Any]]:
     """Lee fila completa · handler hace ownership check (no leak existence)."""
     try:

@@ -34,6 +34,9 @@ export function useContentLabState() {
   const saveContent = useSaveContent();
   const scheduleBlock = useScheduleBlock();
 
+  // DEBT-CL-010: cleanup auto-cancela video pending al unmount (zombie polling fix)
+  useEffect(() => () => { generateVideo.cancel(); }, [generateVideo]);
+
   const handleGenerate = async () => {
     const selected = VARIATIONS.filter(v => variations[v]);
     if (selected.length === 0) { toast({ title: "Seleccioná al menos una variación", variant: "destructive" }); return; }
@@ -86,12 +89,18 @@ export function useContentLabState() {
     }
   };
   const handleResearch = () => toast({ title: "Brave Research en futuro Sprint" });
+  // DEBT-CL-010: user clica X en placeholder pending video · cancel + clean
+  const handleCancelVideo = (tempId: string) => {
+    generateVideo.cancel();
+    setResults(prev => prev.filter(r => r.id !== tempId));
+    toast({ title: "Video cancelado" });
+  };
 
   const isPending = generateText.isPending || generateImage.isPending || generateVideo.isPending;
   return {
     form, setForm, variations, setVariations, results, setResults, clientList,
     block, modalState, setModalState, scheduledAt, setScheduledAt,
     expandedResult, setExpandedResult, slots: Math.max(4, results.length), isPending,
-    handleGenerate, handleAgendar, handleRemoveItem, handleSave, handleDownload, handleConfirm, handleResearch,
+    handleGenerate, handleAgendar, handleRemoveItem, handleSave, handleDownload, handleConfirm, handleResearch, handleCancelVideo,
   };
 }

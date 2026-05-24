@@ -38,3 +38,11 @@ export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
   });
   return handleResponse<T>(res);
 }
+
+export async function apiDelete(path: string): Promise<void> {
+  const res = await fetch(`${apiBase()}${path}`, { method: "DELETE", headers: await authHeaders() });
+  if (!res.ok && res.status !== 204) {
+    const e = (await res.json().catch(() => ({}))) as { detail?: string };
+    throw new Error(typeof e.detail === "string" ? e.detail : `HTTP ${res.status}`);
+  }
+}

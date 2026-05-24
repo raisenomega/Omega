@@ -20,6 +20,7 @@ from app.api.routes.content_lab_v3.models.content_lab_models import (
 from app.api.routes.clients_v3 import _clients_reader as clients_reader
 from app.api.routes.clients_v3._access_control import user_owns_client
 from app.bc_cognition.application.use_video_job import create_video_job, get_video_job
+from app.bc_cognition.infrastructure import video_job_repository as job_repo
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -67,3 +68,23 @@ async def get_video_job_status(
         video_url=job.get("video_url"), error=job.get("error"),
         metadata=job.get("metadata") or {},
     )
+
+
+@router.delete("/generate-video/{job_id}", status_code=204)
+async def cancel_video_job(
+    job_id: str,
+    authorization: Optional[str] = Header(None),
+) -> None:
+    """DEBT-CL-010: user-initiated cancel · ahorra costo Veo si job sigue
+    running. Idempotente (completed/failed/cancelled → 204 sin tocar)."""
+    user = await get_current_user(authorization)
+    job = get_video_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="job_not_found")
+    job_client = clients_reader.get_client(str(job.get("client_id") or ""))
+    if not job_client or not user_owns_client(user["id"], job_client):
+        raise HTTPException(status_code=404, detail="job_not_found")  # no leak
+    if job["status"] in ("completed", "failed", "cancelled"):
+        return  # idempotent
+    job_repo.update_job_cancelled(job_id)
+    logger.info(f"job {job_id} cancelled · user={user['id']}")
