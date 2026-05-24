@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PLATFORMS, PLATFORM_LABELS } from "@/lib/onboarding-constants";
 import { TYPES, TYPE_LABELS, TONES, TONE_LABELS } from "@/lib/content-lab-constants";
+import { VideoAddonModal } from "@/components/addons/VideoAddonModal";
 import type { FormState } from "./ContentLabFormV2";
 
 interface Props {
@@ -32,6 +33,7 @@ export function ContentLabFormBar({ clientList, form, setForm, onResearch }: Pro
       </select>
       <Sel value={form.platform} onChange={(v) => update("platform", v)} options={PLATFORMS} labels={PLATFORM_LABELS} />
       <Sel value={form.type} onChange={(v) => update("type", v)} options={TYPES} labels={TYPE_LABELS} />
+      {form.type === "video" && <VideoAddonModal />}
       <Sel value={form.tone} onChange={(v) => update("tone", v)} options={TONES} labels={TONE_LABELS} />
       <div className="h-6 w-px bg-border/60 hidden sm:block" aria-hidden />
       <Input value={form.braveQuery} onChange={(e) => update("braveQuery", e.target.value)}
