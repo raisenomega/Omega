@@ -2,28 +2,18 @@ import { ArrowUpRight, Loader2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { apiPost } from "@/lib/api-client";
 
 // Banner upgrade ARIA Premium · DEBT-037 V1 cerrada (cliente · $12/mes)
 // Reseller variant pending DEBT-046.
+// DEBT-CL-003 cerrada: usa apiPost en vez de fetch raw + supabase.auth directo.
 
 interface ARIAUpgradeBannerProps {
   currentLevel: number;
 }
 
-async function startAriaUpgrade(): Promise<{ checkout_url: string; session_id: string }> {
-  const { data: { session } } = await supabase.auth.getSession();
-  const base = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1";
-  const r = await fetch(`${base}/billing/upgrade-aria`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${session?.access_token ?? ""}` },
-  });
-  if (!r.ok) {
-    const e = await r.json().catch(() => ({}));
-    throw new Error(typeof e.detail === "string" ? e.detail : `HTTP ${r.status}`);
-  }
-  return r.json();
-}
+const startAriaUpgrade = (): Promise<{ checkout_url: string; session_id: string }> =>
+  apiPost<{ checkout_url: string; session_id: string }>(`/billing/upgrade-aria`, {});
 
 export function ARIAUpgradeBanner({ currentLevel }: ARIAUpgradeBannerProps) {
   const { toast } = useToast();

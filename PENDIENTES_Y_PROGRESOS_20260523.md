@@ -69,7 +69,8 @@
 
 | ID | Descripción | Status | Urgencia |
 |---|---|---|---|
-| DEBT-CL-003 | Auth helpers ARIAChat + UpgradePlan sin consolidar (cluster Content Lab YA) | 🟡 PARCIAL | Baja |
+| DEBT-CL-003 | Auth helpers ARIAChat + UpgradePlan sin consolidar (cluster Content Lab YA) | ✅ CERRADA Sprint 3 (3 archivos cluster ARIA refactor a apiGet/apiPost · -59L netos · cierra bug latente useUpgradePlan sin Authorization) | — |
+| DEBT-CL-021 | 5 archivos fuera de cluster ARIA con `supabase.auth.getSession` directo: useBehavioralTracking.ts · useAuth.tsx (puede ser legítimo · es el hook de auth) · SocialAccountsSection.tsx · ARIASection.tsx · GenerateContentSheet.tsx. Verificar caso por caso: `useAuth` SÍ debe usar supabase auth directo · los otros 4 deberían migrar a api-client.ts. Estimado: 1-2h (consolidación 4 archivos · cero schema · cero break) | 🔴 OPEN | Baja |
 | DEBT-CL-005 | Backend ignora client_id en /content-lab/generate | ✅ CERRADA Sprint 3 | — |
 | DEBT-CL-008 | /generate-image hardcoded 1024x1024 (no aspect_ratio param) | 🔴 OPEN | Media |
 | DEBT-CL-009 | /generate-video ratio hardcoded 1280:768 | 🔴 OPEN | Baja |
