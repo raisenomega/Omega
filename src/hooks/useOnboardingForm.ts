@@ -60,9 +60,38 @@ export function useOnboardingForm(opts: UseOnboardingFormOptions = {}): UseOnboa
     onError: (e: Error) => toast({ title: isEditing ? "No se pudo actualizar" : "No se pudo crear", description: e.message, variant: "destructive" }),
   });
 
+  // BUGFIX 24 may 2026: handleSubmit sin onInvalid callback silenciaba zod
+  // validation errors · botón Guardar Cambios click "no hacía nada" sin toast
+  // ni request en network. Ahora onInvalid muestra detail al user para
+  // diagnóstico inmediato (ej: identity.regions vacío post-load por DEBT-042
+  // o instructions.preferred_publishing_hours formato raro post-load DEBT-031).
+  const handleSubmit = form.handleSubmit(
+    (d) => mutation.mutate(d),
+    (errors) => {
+      console.warn("[onboarding] zod validation failed:", errors);
+      const msgs: string[] = [];
+      const walk = (obj: unknown, path = ""): void => {
+        if (!obj || typeof obj !== "object") return;
+        for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+          if (v && typeof v === "object" && "message" in (v as object)) {
+            msgs.push(`${path}${k}: ${(v as { message: string }).message}`);
+          } else if (v && typeof v === "object") {
+            walk(v, `${path}${k}.`);
+          }
+        }
+      };
+      walk(errors);
+      toast({
+        title: isEditing ? "No se pudo guardar · campos inválidos" : "No se pudo crear · campos inválidos",
+        description: msgs.slice(0, 5).join(" · ") || "Form inválido · revisá campos required",
+        variant: "destructive",
+      });
+    },
+  );
+
   return {
     form,
-    submit: form.handleSubmit((d) => mutation.mutate(d)),
+    submit: handleSubmit,
     isSubmitting: mutation.isPending,
     isLoading: isEditing && dataQuery.isLoading,
     isEditing,
