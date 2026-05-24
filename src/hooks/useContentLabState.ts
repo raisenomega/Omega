@@ -7,7 +7,7 @@ import { useVideoJobPolling } from "@/hooks/useVideoJobPolling";
 import { useSaveContent } from "@/hooks/useContentActions";
 import { downloadResult } from "@/lib/download-result";
 import { useScheduleBlock } from "@/hooks/useScheduleBlock";
-import { useResearch, type ResearchResult } from "@/hooks/useResearch";
+import { useResearch } from "@/hooks/useResearch";
 import { loadPersistedResults, persistResults } from "@/lib/content-lab-persistence";
 import { VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
 import type { ResultV2, BlockState, ModalState } from "@/components/content/ResultCardV2";
@@ -91,20 +91,28 @@ export function useContentLabState() {
       toast({ title: "Error al agendar", description: e instanceof Error ? e.message : "", variant: "destructive" });
     }
   };
-  // Brave Search · cablea botón Research al backend · panel inline muestra results
+  // Brave Search · resultados aparecen como cards en el grid (mismo UX que outputs generados)
+  // Spec owner: "resultado pop-up como resultado de generar cualquier type de orquestador"
   const research = useResearch();
-  const [researchResults, setResearchResults] = useState<ResearchResult[]>([]);
-  const [researchMeta, setResearchMeta] = useState<{ query?: string; durationMs?: number }>({});
   const handleResearch = () => {
     const q = form.braveQuery.trim();
     if (q.length < 3) { toast({ title: "Query muy corta", description: "Mínimo 3 caracteres", variant: "destructive" }); return; }
-    setResearchMeta({ query: q });
     research.mutate({ query: q, max_results: 5 }, {
-      onSuccess: (r) => { setResearchResults(r.results); setResearchMeta({ query: r.query, durationMs: r.duration_ms }); },
+      onSuccess: (r) => {
+        const mapped: ResultV2[] = r.results.map((res, i) => ({
+          id: `research-${Date.now()}-${i}`,
+          generated_text: res.snippet,
+          content_type: "research",
+          title: res.title,
+          url: res.url,
+          snippet: res.snippet,
+        }));
+        setResults(prev => [...prev, ...mapped]);
+        toast({ title: `${r.results.length} resultado(s) web · ${r.duration_ms}ms` });
+      },
       onError: (e) => toast({ title: "Brave Search falló", description: e.message, variant: "destructive" }),
     });
   };
-  const dismissResearch = () => { setResearchResults([]); setResearchMeta({}); };
   const appendSnippetToTopic = (snippet: string) => {
     setForm(prev => ({ ...prev, topic: prev.topic ? `${prev.topic}\n\nContexto web: ${snippet}` : `Contexto web: ${snippet}` }));
   };
@@ -121,6 +129,6 @@ export function useContentLabState() {
     block, modalState, setModalState, scheduledAt, setScheduledAt,
     expandedResult, setExpandedResult, slots: Math.max(4, results.length), isPending,
     handleGenerate, handleAgendar, handleRemoveItem, handleSave, handleDownload, handleConfirm, handleResearch, handleCancelVideo,
-    researchResults, researchMeta, isResearching: research.isPending, dismissResearch, appendSnippetToTopic,
+    isResearching: research.isPending, appendSnippetToTopic,
   };
 }

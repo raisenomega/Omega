@@ -4,7 +4,6 @@ import { ContentLabFormV2 } from "@/components/content/ContentLabFormV2";
 import { ContentLabFormBar } from "@/components/content/ContentLabFormBar";
 import { ResultCardV2 } from "@/components/content/ResultCardV2";
 import { ResultExpandedModal } from "@/components/content/ResultExpandedModal";
-import { ResearchPanel } from "@/components/content/ResearchPanel";
 import { ScheduleModalV2 } from "@/components/content/ScheduleModalV2";
 import { useContentLabState } from "@/hooks/useContentLabState";
 
@@ -22,13 +21,6 @@ export default function ContentLabPageV2() {
             onResearch={s.handleResearch} />
         </div>
       </div>
-      <ResearchPanel
-        query={s.researchMeta.query}
-        results={s.researchResults}
-        isLoading={s.isResearching}
-        durationMs={s.researchMeta.durationMs}
-        onDismiss={s.dismissResearch}
-        onUseSnippet={s.appendSnippetToTopic} />
       <div className="grid grid-cols-[280px_1fr_1fr] grid-rows-[220px_220px] items-stretch gap-3">
         <div className="row-span-full h-full">
           <ContentLabFormV2 form={s.form} setForm={s.setForm}
@@ -40,7 +32,7 @@ export default function ContentLabPageV2() {
           return r ? (
             <ResultCardV2 key={r.id} result={r} onExpand={s.setExpandedResult} onAgendar={s.handleAgendar}
               onSave={s.handleSave} onDownload={s.handleDownload} onRemove={(id) => s.setResults(p => p.filter(x => x.id !== id))}
-              onCancel={s.handleCancelVideo} />
+              onCancel={s.handleCancelVideo} onUseSnippet={s.appendSnippetToTopic} />
           ) : (
             <Card key={`empty-${i}`} className="h-full min-h-full border border-dashed border-muted-foreground/30 flex items-center justify-center bg-card/40">
               <p className="text-xs text-muted-foreground">próximo resultado</p>

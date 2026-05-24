@@ -1,8 +1,10 @@
-import { Calendar, Save, Download, Check, X, Loader2 } from "lucide-react";
+import { Calendar, Save, Download, Check, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TYPE_LABELS } from "@/lib/content-lab-constants";
+import { PendingVideoCard } from "./PendingVideoCard";
+import { ResearchResultCard } from "./ResearchResultCard";
 
 export interface ResultV2 {
   id: string;
@@ -14,6 +16,10 @@ export interface ResultV2 {
   brand_dna_score?: number;
   saved?: boolean;
   status?: "pending" | "completed" | "failed";
+  // Brave Search · content_type='research' usa estos campos en lugar de generated_text
+  url?: string;
+  snippet?: string;
+  title?: string;
 }
 
 export type ModalState = "closed" | "open" | "minimized";
@@ -26,29 +32,22 @@ interface Props {
   onSave: (id: string) => void;
   onDownload: (r: ResultV2) => void;
   onRemove: (id: string) => void;
-  onCancel?: (id: string) => void;  // DEBT-CL-010 · pending video
+  onCancel?: (id: string) => void;             // DEBT-CL-010 · pending video
+  onUseSnippet?: (snippet: string) => void;    // Brave research · appendea al topic
 }
 
 const LABEL_COLORS: Record<string, string> = {
   Conservadora: "bg-slate-500", Balanceada: "bg-blue-500", Atrevida: "bg-rose-500",
 };
 
-export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, onRemove, onCancel }: Props) {
+export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, onRemove, onCancel, onUseSnippet }: Props) {
+  // Brave Search · render simplificado en sub-componente
+  if (result.content_type === "research") {
+    return <ResearchResultCard result={result} onRemove={onRemove} onUseSnippet={onUseSnippet} />;
+  }
+  // Video pending · placeholder durante generación Veo
   if (result.status === "pending") {
-    return (
-      <Card className="relative h-full border-amber-500/30 flex flex-col items-center justify-center gap-2 p-4">
-        {onCancel && (
-          <button onClick={() => onCancel(result.id)}
-            className="absolute top-1.5 right-1.5 h-6 px-2 rounded-md flex items-center gap-1 text-[10px] text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
-            aria-label="Cancelar video">
-            <X className="h-3 w-3" /> Cancelar
-          </button>
-        )}
-        <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
-        <p className="text-xs text-center text-muted-foreground">ARIA está generando tu video...</p>
-        <p className="text-[10px] text-center text-muted-foreground/60">~30-90 segundos</p>
-      </Card>
-    );
+    return <PendingVideoCard resultId={result.id} onCancel={onCancel} />;
   }
 
   const isImage = result.content_type === "image";
