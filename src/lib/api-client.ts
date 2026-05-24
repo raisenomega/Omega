@@ -46,3 +46,15 @@ export async function apiDelete(path: string): Promise<void> {
     throw new Error(typeof e.detail === "string" ? e.detail : `HTTP ${res.status}`);
   }
 }
+
+// Multipart variant · NO setea Content-Type (browser lo hace con boundary
+// correcto). Auth header preservado · usado por upload endpoints.
+export async function apiPostFormData<T>(path: string, formData: FormData): Promise<T> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const res = await fetch(`${apiBase()}${path}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${session?.access_token ?? ""}` },
+    body: formData,
+  });
+  return handleResponse<T>(res);
+}

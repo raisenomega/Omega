@@ -5,11 +5,12 @@ import { SECTIONS } from "./sections/registry";
 interface OnboardingLayoutProps {
   form: UseFormReturn<OnboardingForm>;
   activeIndex: number;
+  clientId?: string | null;  // DEBT-039 V2 · pasado a Component (SectionSamples lo usa)
 }
 
 // Renderiza Section[activeIndex] · banner opcional inline al lado del título
 // (definido en registry · ver SectionDef.banner).
-export function OnboardingLayout({ form, activeIndex }: OnboardingLayoutProps) {
+export function OnboardingLayout({ form, activeIndex, clientId }: OnboardingLayoutProps) {
   const section = SECTIONS[activeIndex];
   const Comp = section.Component;
   return (
@@ -24,7 +25,7 @@ export function OnboardingLayout({ form, activeIndex }: OnboardingLayoutProps) {
             <span className="text-[10px] text-muted-foreground">{section.banner}</span>
           )}
         </div>
-        <Comp form={form} />
+        <Comp form={form} clientId={clientId} />
       </div>
     </div>
   );

@@ -56,7 +56,7 @@ export function OnboardingWizard({ wizard, onClose }: OnboardingWizardProps) {
     <div className="flex h-full flex-col">
       <WizardHeader completionPercent={wizard.completionPercent} isEditing={wizard.isEditing} onClose={onClose} />
       <HorizontalStepper activeIndex={activeIndex} completedIndices={completedIndices} onJump={setActiveIndex} />
-      <OnboardingLayout form={wizard.form} activeIndex={activeIndex} />
+      <OnboardingLayout form={wizard.form} activeIndex={activeIndex} clientId={wizard.clientId} />
       <WizardFooter
         activeIndex={activeIndex}
         totalSections={SECTIONS.length}

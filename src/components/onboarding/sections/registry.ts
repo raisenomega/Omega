@@ -17,7 +17,9 @@ export interface SectionDef {
   title: string;
   required?: boolean;
   banner?: string;
-  Component: ComponentType<{ form: UseFormReturn<OnboardingForm> }>;
+  // clientId opcional · solo SectionSamples lo usa (DEBT-039 V2 upload context).
+  // Otras secciones ignoran la prop · TS lo permite porque es opcional.
+  Component: ComponentType<{ form: UseFormReturn<OnboardingForm>; clientId?: string | null }>;
 }
 
 export const SECTIONS: readonly SectionDef[] = [

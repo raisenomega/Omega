@@ -1,44 +1,63 @@
+import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
+import { Loader2, FileText, CheckCircle2, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useUploadClientContext } from "@/hooks/useUploadClientContext";
 import type { OnboardingForm } from "@/lib/onboarding-schema";
 
-interface Props { form: UseFormReturn<OnboardingForm> }
+const MAX_BYTES = 5 * 1024 * 1024;
+const ACCEPT = ".pdf,.docx,.md,.txt";
 
-export function SectionSamples({ form }: Props) {
+interface Props {
+  form: UseFormReturn<OnboardingForm>;
+  clientId?: string | null;  // null durante creación · presente al editar
+}
+
+export function SectionSamples({ form, clientId }: Props) {
   const { toast } = useToast();
   const samples = form.watch("brand_voice_samples") ?? [];
   const text = samples.join("\n\n");
+  const upload = useUploadClientContext();
+  const [uploaded, setUploaded] = useState<{ filename: string; chars: number } | null>(null);
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_BYTES) { toast({ title: "Archivo >5MB", variant: "destructive" }); return; }
+    if (!clientId) { toast({ title: "Guardá primero el cliente", description: "El upload requiere cliente creado · cerrá el wizard y editá después." }); return; }
+    upload.mutate({ clientId, file }, {
+      onSuccess: (d) => { setUploaded({ filename: d.filename, chars: d.char_count }); toast({ title: "Contexto subido", description: `${d.char_count} chars extraídos · ARIA lo usará en cada generación.` }); },
+      onError: (err) => toast({ title: "Upload falló", description: err.message, variant: "destructive" }),
+    });
+  };
 
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground bg-muted/40 px-3 py-2 rounded">
-        Pega 3-5 ejemplos · o sube PDF · ARIA también aprenderá de tus aprobaciones.
+        Pega 3-5 ejemplos · o sube documento contexto · ARIA también aprenderá de tus aprobaciones.
       </p>
       <div className="space-y-1">
         <Label className="text-xs">Ejemplos (línea en blanco separa)</Label>
-        <Textarea
-          rows={3}
-          value={text}
-          onChange={(e) => form.setValue(
-            "brand_voice_samples",
-            e.target.value.split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean),
-          )}
-          placeholder="Pega aquí tus mejores posts, uno por párrafo..."
-          className="resize-none"
-        />
+        <Textarea rows={3} value={text}
+          onChange={(e) => form.setValue("brand_voice_samples", e.target.value.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean))}
+          placeholder="Pega aquí tus mejores posts, uno por párrafo..." className="resize-none" />
         <p className="text-xs text-muted-foreground">{samples.length} muestra(s) detectada(s)</p>
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">PDF info del negocio (opcional)</Label>
-        <Input
-          type="file"
-          accept="application/pdf"
-          className="h-8"
-          onChange={() => toast({ title: "PDF parsing próximamente", description: "DEBT-039 · Fase 3 · pypdf + Claude Haiku" })}
-        />
+        <Label className="text-xs">Documento contexto del cliente (PDF · DOCX · MD · TXT · max 5MB)</Label>
+        <Input type="file" accept={ACCEPT} className="h-8" onChange={handleUpload} disabled={upload.isPending || !clientId} />
+        {!clientId && <p className="text-[10px] text-amber-600">Disponible al editar cliente (guardá primero)</p>}
+        {upload.isPending && <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Extrayendo texto...</p>}
+        {uploaded && (
+          <p className="text-[10px] text-emerald-600 flex items-center gap-1">
+            <CheckCircle2 className="h-3 w-3" /> <FileText className="h-3 w-3" />
+            {uploaded.filename} · {uploaded.chars.toLocaleString()} chars · ARIA lo usará permanentemente
+            <button type="button" onClick={() => setUploaded(null)} aria-label="Limpiar visual" className="ml-1"><X className="h-3 w-3" /></button>
+          </p>
+        )}
       </div>
     </div>
   );

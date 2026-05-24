@@ -24,6 +24,7 @@ export interface UseOnboardingFormResult {
   form: UseFormReturn<OnboardingForm>; submit: () => void;
   isSubmitting: boolean; isLoading: boolean; isEditing: boolean; completionPercent: number;
   isError: boolean; errorMessage: string | null; retry: () => void;
+  clientId?: string | null;  // DEBT-039 V2 · SectionSamples needs it for upload
 }
 
 export function useOnboardingForm(opts: UseOnboardingFormOptions = {}): UseOnboardingFormResult {
@@ -69,5 +70,6 @@ export function useOnboardingForm(opts: UseOnboardingFormOptions = {}): UseOnboa
     isError: isEditing && dataQuery.isError,
     errorMessage: dataQuery.error instanceof Error ? dataQuery.error.message : null,
     retry: () => dataQuery.refetch(),
+    clientId,
   };
 }

@@ -16,10 +16,25 @@ def build_rafa_system(
     name = client.get("name") or "este cliente"
     industry = client.get("industry") or "su industria"
     audience = ctx.get("target_audience") or client.get("target_audience") or "su audiencia"
+    parts = [
+        CONTENT_CREATOR_SYSTEM_PROMPT,
+        _client_context_block(name, industry, audience, platform, content_type, tone),
+        _brand_dna_block(dna),
+    ]
+    # Documento permanente del cliente (DEBT-039 V2 · /clients/{id}/upload-context).
+    # Inyectado SIEMPRE al system · diferente de DEBT-CL-020 que era per-request.
+    uploaded = ctx.get("uploaded_context_text")
+    if uploaded:
+        parts.append(_uploaded_context_block(str(uploaded)))
+    return "\n\n".join(parts)
+
+
+def _uploaded_context_block(text: str) -> str:
     return (
-        f"{CONTENT_CREATOR_SYSTEM_PROMPT}\n\n"
-        f"{_client_context_block(name, industry, audience, platform, content_type, tone)}\n\n"
-        f"{_brand_dna_block(dna)}"
+        "# CONTEXTO PERMANENTE DEL CLIENTE (documento adjunto)\n"
+        "El cliente subió este documento como referencia de identidad/voz/contexto. "
+        "Tomalo como verdad operativa permanente.\n\n"
+        f"{text}"
     )
 
 
