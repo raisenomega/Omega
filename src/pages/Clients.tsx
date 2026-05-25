@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -19,7 +19,7 @@ import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts"
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 export default function Clients() {
   const navigate = useNavigate();
@@ -243,13 +243,15 @@ export default function Clients() {
 
       {isDesktop ? (
         <Dialog open={wizardOpen} onOpenChange={(o) => { if (!o) handleClose(); }}>
-          <DialogContent className="max-w-4xl w-full h-[85vh] p-0 gap-0 border-2 border-warning">
+          <DialogContent aria-describedby={undefined} className="max-w-4xl w-full h-[85vh] p-0 gap-0 border-2 border-warning">
+            <DialogTitle className="sr-only">{wizard.isEditing ? "Editar cliente" : "Nuevo cliente"}</DialogTitle>
             <OnboardingWizard wizard={wizard} onClose={handleClose} />
           </DialogContent>
         </Dialog>
       ) : (
         <Sheet open={wizardOpen} onOpenChange={(o) => { if (!o) handleClose(); }}>
-          <SheetContent side="bottom" className="h-[90vh] p-0">
+          <SheetContent aria-describedby={undefined} side="bottom" className="h-[90vh] p-0">
+            <SheetTitle className="sr-only">{wizard.isEditing ? "Editar cliente" : "Nuevo cliente"}</SheetTitle>
             <OnboardingWizard wizard={wizard} onClose={handleClose} />
           </SheetContent>
         </Sheet>
