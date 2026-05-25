@@ -97,6 +97,19 @@ def resolve_reseller_for_user(user_id: str) -> Optional[str]:
     return str(r.data[0]["reseller_id"]) if r.data else None
 
 
+def resolve_owned_reseller_id(user_id: str) -> Optional[str]:
+    """Reseller que el user POSEE (owner_user_id) · para que un reseller cree sus clientes."""
+    r = _sb().table("resellers").select("id").eq("owner_user_id", user_id).limit(1).execute()
+    return str(r.data[0]["id"]) if r.data else None
+
+
+def get_default_reseller_id() -> Optional[str]:
+    """Reseller default 'OMEGA Direct' (slug omega-direct · migración 00006) · clientes directos.
+    clients.reseller_id es NOT NULL → un cliente directo se asigna a este reseller plataforma."""
+    r = _sb().table("resellers").select("id").eq("slug", "omega-direct").limit(1).execute()
+    return str(r.data[0]["id"]) if r.data else None
+
+
 def update_client_by_id(client_id: str, fields: dict[str, Any]) -> int:
     """Retorna número de rows actualizadas · 0 si client_id no existe."""
     result = _sb().table("clients").update(fields).eq("id", client_id).execute()

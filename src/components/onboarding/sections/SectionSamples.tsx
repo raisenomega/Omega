@@ -14,9 +14,10 @@ const ACCEPT = ".pdf,.docx,.md,.txt";
 interface Props {
   form: UseFormReturn<OnboardingForm>;
   clientId?: string | null;  // null durante creación · presente al editar
+  onPendingFile?: (f: File | null) => void;  // FIX · retiene doc para subir al crear
 }
 
-export function SectionSamples({ form, clientId }: Props) {
+export function SectionSamples({ form, clientId, onPendingFile }: Props) {
   const { toast } = useToast();
   const samples = form.watch("brand_voice_samples") ?? [];
   const text = samples.join("\n\n");
@@ -27,7 +28,13 @@ export function SectionSamples({ form, clientId }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > MAX_BYTES) { toast({ title: "Archivo >5MB", variant: "destructive" }); return; }
-    if (!clientId) { toast({ title: "Guardá primero el cliente", description: "El upload requiere cliente creado · cerrá el wizard y editá después." }); return; }
+    if (!clientId) {
+      // Nuevo Cliente (sin clientId) → retener · se sube automáticamente al crear.
+      onPendingFile?.(file);
+      setUploaded({ filename: file.name, chars: 0 });
+      toast({ title: "Documento listo", description: "Se subirá automáticamente al crear el cliente." });
+      return;
+    }
     upload.mutate({ clientId, file }, {
       onSuccess: (d) => { setUploaded({ filename: d.filename, chars: d.char_count }); toast({ title: "Contexto subido", description: `${d.char_count} chars extraídos · ARIA lo usará en cada generación.` }); },
       onError: (err) => toast({ title: "Upload falló", description: err.message, variant: "destructive" }),
@@ -48,14 +55,13 @@ export function SectionSamples({ form, clientId }: Props) {
       </div>
       <div className="space-y-1">
         <Label className="text-xs">Documento contexto del cliente (PDF · DOCX · MD · TXT · max 5MB)</Label>
-        <Input type="file" accept={ACCEPT} className="h-8" onChange={handleUpload} disabled={upload.isPending || !clientId} />
-        {!clientId && <p className="text-[10px] text-amber-600">Disponible al editar cliente (guardá primero)</p>}
+        <Input type="file" accept={ACCEPT} className="h-8" onChange={handleUpload} disabled={upload.isPending} />
         {upload.isPending && <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Extrayendo texto...</p>}
         {uploaded && (
           <p className="text-[10px] text-emerald-600 flex items-center gap-1">
             <CheckCircle2 className="h-3 w-3" /> <FileText className="h-3 w-3" />
-            {uploaded.filename} · {uploaded.chars.toLocaleString()} chars · ARIA lo usará permanentemente
-            <button type="button" onClick={() => setUploaded(null)} aria-label="Limpiar visual" className="ml-1"><X className="h-3 w-3" /></button>
+            {uploaded.filename} · {uploaded.chars > 0 ? `${uploaded.chars.toLocaleString()} chars · ARIA lo usará permanentemente` : "se subirá al crear el cliente"}
+            <button type="button" onClick={() => { setUploaded(null); onPendingFile?.(null); }} aria-label="Limpiar visual" className="ml-1"><X className="h-3 w-3" /></button>
           </p>
         )}
       </div>

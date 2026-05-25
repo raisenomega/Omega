@@ -47,9 +47,16 @@ async def create_client_onboarding(
     if not ok:
         raise HTTPException(status_code=422, detail=err)
 
-    reseller_id = repo.resolve_reseller_for_user(user_id)
+    # REGRESIÓN FIX: clients.reseller_id es NOT NULL → no puede ser null. Resolución por
+    # prioridad: reseller propio (si el user es reseller) → reseller de su client existente →
+    # reseller default "OMEGA Direct" (cliente directo nuevo, o cuyo client fue borrado · hard-delete).
+    reseller_id = (
+        repo.resolve_owned_reseller_id(user_id)
+        or repo.resolve_reseller_for_user(user_id)
+        or repo.get_default_reseller_id()
+    )
     if not reseller_id:
-        raise HTTPException(status_code=403, detail="user_has_no_reseller")
+        raise HTTPException(status_code=500, detail="default_reseller_missing")
 
     identity_dict = payload.identity.model_dump()
     regions = identity_dict.pop("regions")
