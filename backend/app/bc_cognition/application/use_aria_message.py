@@ -64,9 +64,7 @@ async def use_aria_message(
 
     # Call Claude · system = persona + contexto cliente (BUG 2) + web actual (auto-search) + memoria (P5)
     base = build_system_prompt(level, role)
-    ctx = repo.fetch_client_context(supabase, client_id) if client_id else None
-    if ctx is not None and client_id:  # TAREA C: cuentas conectadas → ARIA sabe si tiene o no
-        ctx["social_accounts"] = repo.fetch_social_accounts(supabase, client_id)
+    ctx = repo.fetch_aria_context(supabase, client_id) if client_id else None  # context+social+perfil
     ctx_block = build_client_context_block(ctx) if ctx else ""
     vertical = (ctx.get("vertical") or ctx.get("niche") or "") if ctx else ""
     web_block = await fetch_web_context(user_message, vertical, "aria", client_id)

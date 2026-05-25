@@ -33,6 +33,32 @@ def test_boundary_caps():
 
 
 def test_error_empty_ctx_still_has_accounts_line():
-    """ctx vacío → bloque mínimo con header + línea de cuentas (nunca crashea)."""
+    """ctx vacío → bloque mínimo con header + perfil 0/10 (nunca crashea)."""
     out = build_client_context_block({})
     assert "CONTEXTO DEL CLIENTE" in out and "ninguna aún" in out
+    assert "Perfil completado: 0/10 secciones." in out
+
+
+def test_profile_completion_counts_and_lists():
+    """X/10 correcto + ✅ con detalle / ❌ sin datos por sección (ARIA guía qué falta)."""
+    ctx = {
+        "_client": {"name": "La Milagrosa", "industry": "inmobiliaria", "region": "PR"},
+        "niche": "bienes raíces",
+        "social_accounts": [{"platform": "instagram", "account_name": "milcasa"}],
+        "_brand_assets": {}, "_samples_count": 0,
+    }
+    out = build_client_context_block(ctx)
+    assert "Perfil completado: 3/10 secciones." in out
+    assert "✅ Identidad: La Milagrosa" in out
+    assert "✅ Negocio: bienes raíces" in out
+    assert "✅ Cuentas sociales: instagram" in out
+    assert "❌ Audiencia: sin datos" in out
+    assert "❌ Ejemplos de contenido: sin datos" in out
+
+
+def test_profile_mirror_frontend_edge_cases():
+    """Espejo estricto del wizard (guardian): identidad sin región = ❌ · audiencia solo edad = ❌."""
+    no_region = build_client_context_block({"_client": {"name": "X", "industry": "i"}})
+    assert "❌ Identidad: sin datos" in no_region
+    age_only = build_client_context_block({"audience_age_range": "18-30"})
+    assert "❌ Audiencia: sin datos" in age_only

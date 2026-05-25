@@ -1,7 +1,7 @@
-"""Bloque de contexto del cliente para ARIA (TAREA C · dominio puro · A2).
+"""Bloque de contexto del cliente para ARIA (dominio puro · A2).
 
-Inyectado en cada mensaje: negocio, audiencia, objetivos, voz de marca, cuentas
-conectadas y documento subido. Cap total 2000 (I6) · uploaded cede espacio primero.
+Incluye: perfil completado (X/10 + ✅/❌ por sección · ARIA guía qué falta) +
+contexto real (negocio, audiencia, objetivos, voz, cuentas, doc). Cap total 2000 (I6).
 """
 from typing import Any
 
@@ -21,9 +21,40 @@ def _accounts_line(accounts: list[dict[str, Any]]) -> str:
     return f"Cuentas conectadas: {shown}" if shown else "Cuentas conectadas: ninguna aún."
 
 
+def _sections(ctx: dict[str, Any]) -> list[tuple[bool, str, str]]:
+    """(lleno, etiqueta, detalle) por las 10 secciones del wizard · espejo de sectionsFilled."""
+    cl = ctx.get("_client") or {}
+    ba = ctx.get("_brand_assets") or {}
+    bv = ctx.get("brand_voice") or {}
+    acc = ctx.get("social_accounts") or []
+    return [
+        (bool(cl.get("name") and cl.get("industry") and cl.get("region")), "Identidad", str(cl.get("name") or "")),
+        (any(ctx.get(k) for k in ("niche", "vertical", "business_what", "business_diff")), "Negocio", str(ctx.get("niche") or ctx.get("vertical") or "")),
+        (bool(ctx.get("target_audience")) or bool(ctx.get("competitors")), "Audiencia", str(ctx.get("target_audience") or "")),
+        (bool(ctx.get("tone")) or bool(bv.get("keywords")), "Voz de marca", str(ctx.get("tone") or "")),
+        (any(ctx.get(k) for k in ("primary_goal", "goal_this_month", "goal_this_quarter", "success_metric")), "Objetivos", str(ctx.get("primary_goal") or ctx.get("goal_this_month") or "")),
+        (any(ctx.get(k) for k in ("has_existing_content", "best_post_url", "what_worked")), "Historial de contenido", ""),
+        (len(acc) > 0, "Cuentas sociales", ", ".join(str(a.get("platform")) for a in acc if a.get("platform"))),
+        (bool(ctx.get("custom_instructions")) or bool(ctx.get("emergency_contact_name")), "Instrucciones especiales", ""),
+        (bool(ba.get("primary_color")) or bool(ba.get("logo_file_id")), "Identidad visual", ""),
+        (int(ctx.get("_samples_count") or 0) > 0, "Ejemplos de contenido", ""),
+    ]
+
+
+def _completion_lines(ctx: dict[str, Any]) -> list[str]:
+    s = _sections(ctx)
+    out = [f"Perfil completado: {sum(1 for f, _, _ in s if f)}/10 secciones."]
+    for filled, label, detail in s:
+        if filled:
+            out.append(f"✅ {label}: {detail[:50]}" if detail else f"✅ {label}")
+        else:
+            out.append(f"❌ {label}: sin datos")
+    return out
+
+
 def build_client_context_block(ctx: dict[str, Any]) -> str:
-    """Bloque real del cliente para ARIA · total ≤2000 chars (uploaded capado)."""
-    lines: list[str] = []
+    """Perfil (X/10 + qué falta) + contexto real · total ≤2000 chars (uploaded capado)."""
+    lines = _completion_lines(ctx)
     niche = ctx.get("niche") or ctx.get("vertical")
     if niche:
         lines.append(f"Negocio: {niche}")
