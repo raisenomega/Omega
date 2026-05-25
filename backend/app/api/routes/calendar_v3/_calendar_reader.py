@@ -63,3 +63,12 @@ def list_scheduled_posts(client_ids: list[str], month: Optional[str], status: Op
 def get_scheduled_post(post_id: str) -> Optional[dict[str, Any]]:
     r = _sb().table("scheduled_posts").select("*").eq("id", post_id).limit(1).execute()
     return r.data[0] if r.data else None
+
+
+def fetch_existing_content_ids(client_id: str, content_ids: list[str]) -> set[str]:
+    """Ids de content_lab_generated que existen Y pertenecen al client · valida pre-schedule
+    (evita FK 500 con ids stale del localStorage del frontend · cierra ownership a la vez)."""
+    if not content_ids:
+        return set()
+    r = _sb().table("content_lab_generated").select("id").eq("client_id", client_id).in_("id", content_ids).execute()
+    return {str(row["id"]) for row in (r.data or [])}

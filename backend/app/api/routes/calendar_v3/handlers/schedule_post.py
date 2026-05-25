@@ -9,7 +9,7 @@ from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
 
 from app.api.routes.auth.auth_utils import get_current_user
-from app.api.routes.calendar_v3 import _calendar_repository as repo
+from app.api.routes.calendar_v3 import _calendar_repository as repo, _calendar_reader as reader
 from app.api.routes.calendar_v3._access import (
     resolve_client_or_403,
     resolve_account_by_client_platform_or_404,
@@ -38,6 +38,13 @@ async def schedule_post_v3(
     else:
         account = resolve_account_by_client_platform_or_404(request.client_id, request.platform)
     n = len(request.content_ids)
+
+    # Valida que los content_ids existan Y sean del client ANTES del insert · evita FK 500
+    # opaco con ids stale del localStorage del frontend (P1: error honesto y accionable).
+    existing = reader.fetch_existing_content_ids(request.client_id, request.content_ids)
+    missing = [cid for cid in request.content_ids if cid not in existing]
+    if missing:
+        raise HTTPException(409, f"content_not_found:{','.join(missing)}")
 
     timestamps = space_timestamps(request.scheduled_for, n)
     rows_to_insert = [
