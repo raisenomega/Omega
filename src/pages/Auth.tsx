@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { apiPost } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +43,8 @@ export default function Auth() {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      // GUARDIAN 4B-4 · reportar login exitoso (fire-and-forget · fail-open · no bloquea navegación)
+      apiPost("/guardian/login-event", { success: true }).catch(() => {});
       navigate("/dashboard");
     }
   };

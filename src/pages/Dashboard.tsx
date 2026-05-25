@@ -6,6 +6,7 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { AccountDistributionChart } from "@/components/dashboard/PlatformCharts";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { PlatformStatus } from "@/components/dashboard/PlatformStatus";
+import { SecurityKPICard } from "@/components/dashboard/SecurityKPICard";
 import { PlanStatusBar } from "@/components/clients/PlanStatusBar";
 
 export default function Dashboard() {
@@ -78,6 +79,9 @@ export default function Dashboard() {
           subtitle={`${totalAccounts} registradas`}
         />
       </div>
+
+      {/* GUARDIAN 4B-4 · seguridad de la cuenta (solo cliente · superadmin ve SentinelDashboardCard) */}
+      {!myPlan.isOwner && <SecurityKPICard />}
 
       {/* Distribución de cuentas (única chart con data real) */}
       <AccountDistributionChart data={platformCounts} />
