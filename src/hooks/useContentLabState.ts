@@ -88,7 +88,15 @@ export function useContentLabState() {
       setBlock(INITIAL_BLOCK); setModalState("closed"); setScheduledAt("");
       toast({ title: `✅ Bloque programado para ${scheduledAt}` });
     } catch (e) {
-      toast({ title: "Error al agendar", description: e instanceof Error ? e.message : "", variant: "destructive" });
+      const msg = e instanceof Error ? e.message : "";
+      if (msg.startsWith("content_not_found:")) {  // backend 409 · ids stale del localStorage
+        const stale = new Set(msg.slice("content_not_found:".length).split(",").filter(Boolean));
+        setBlock(prev => ({ items: prev.items.filter(i => !stale.has(i.id)) }));
+        setResults(prev => prev.filter(r => !stale.has(r.id)));  // persistResults() limpia localStorage
+        toast({ title: "Estos contenidos ya no existen, regeneralos", variant: "destructive" });
+        return;
+      }
+      toast({ title: "Error al agendar", description: msg, variant: "destructive" });
     }
   };
   // Brave Search · resultados aparecen como cards en el grid (mismo UX que outputs generados)
