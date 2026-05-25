@@ -1,6 +1,7 @@
 """PATCH /api/v1/calendar/{post_id}/status · transiciones user-iniciadas.
 
-Permitidas: pending<->cancelled (cancelar/reactivar).
+Permitidas: pending<->cancelled (cancelar/reactivar) · pending->published_manual
+(el operador marca el post como publicado a mano · feature popup calendario).
 Bloqueadas: cualquier otra (publishing/published/failed son sistema · DEBT futura).
 INSERT behavioral_events('post_status_changed') best-effort.
 """
@@ -12,7 +13,10 @@ from app.api.routes.calendar_v3.models.calendar_models import UpdateStatusReques
 
 router = APIRouter()
 
-ALLOWED_TRANSITIONS = {("pending", "cancelled"), ("cancelled", "pending")}
+ALLOWED_TRANSITIONS = {
+    ("pending", "cancelled"), ("cancelled", "pending"),
+    ("pending", "published_manual"),
+}
 
 
 @router.patch("/{post_id}/status")
