@@ -24,7 +24,7 @@ async def handle_get_dashboard(
         date_range: Time range (7d, 30d, 90d)
 
     Returns:
-        Dict with content_generated, scheduled_posts, agent_executions, client_context stats
+        Dict with content_generated, scheduled_posts, client_context stats
 
     Raises:
         HTTPException 500: Database error
@@ -88,10 +88,9 @@ async def handle_get_dashboard(
             "trend": trend
         }
 
-        # 2. Scheduled Posts Stats
+        # 2. Scheduled Posts Stats (schema V3 · scheduled_for/status · DEBT-031)
         posts_query = supabase.client.table("scheduled_posts")\
-            .select("id, status, scheduled_date")\
-            .eq("is_active", True)
+            .select("id, status, scheduled_for")
 
         if client_id:
             posts_query = posts_query.eq("client_id", client_id)
@@ -104,12 +103,12 @@ async def handle_get_dashboard(
             status = post.get("status", "unknown")
             by_status[status] = by_status.get(status, 0) + 1
 
-        # Upcoming posts
+        # Upcoming posts (scheduled_for >= hoy · ISO timestamptz lexicográfico válido)
         upcoming = [
-            {"id": p["id"], "scheduled_date": p.get("scheduled_date")}
-            for p in sorted(posts_data, key=lambda x: x.get("scheduled_date", ""))[:5]
-            if p.get("scheduled_date", "") >= today
-        ]
+            {"id": p["id"], "scheduled_for": p.get("scheduled_for")}
+            for p in sorted(posts_data, key=lambda x: x.get("scheduled_for", ""))
+            if (p.get("scheduled_for", "") or "") >= today
+        ][:5]
 
         scheduled_stats = {
             "total": len(posts_data),
@@ -117,43 +116,8 @@ async def handle_get_dashboard(
             "upcoming": upcoming
         }
 
-        # 3. Agent Executions Stats
-        exec_query = supabase.client.table("agent_executions")\
-            .select("id, agent_id, status, execution_time_ms, started_at")\
-            .gte("started_at", f"{start_date}T00:00:00")\
-            .lte("started_at", f"{today}T23:59:59")
-
-        if client_id:
-            exec_query = exec_query.eq("client_id", client_id)
-
-        exec_resp = exec_query.execute()
-        exec_data = exec_resp.data or []
-
-        successful = sum(1 for e in exec_data if e.get("status") == "completed")
-        total_execs = len(exec_data)
-        success_rate = round((successful / total_execs) * 100, 1) if total_execs > 0 else 0
-
-        by_agent = {}
-        total_time = 0
-        for ex in exec_data:
-            agent = ex.get("agent_id", "unknown")
-            by_agent[agent] = by_agent.get(agent, 0) + 1
-            if ex.get("execution_time_ms"):
-                total_time += ex.get("execution_time_ms", 0)
-
-        avg_time = round(total_time / total_execs, 2) if total_execs > 0 else 0
-
-        # Top 10 agents
-        top_agents = dict(sorted(by_agent.items(), key=lambda x: x[1], reverse=True)[:10])
-
-        agent_stats = {
-            "total": total_execs,
-            "success_rate": success_rate,
-            "by_agent": top_agents,
-            "avg_execution_time_ms": avg_time
-        }
-
-        # 4. Client Context (if client_id provided)
+        # 3. Client Context (if client_id provided)
+        # NOTA DEBT-031: bloque agent_executions eliminado · tabla inexistente en schema V3.
         context_stats = {}
         if client_id:
             context_resp = supabase.client.table("client_context")\
@@ -173,12 +137,11 @@ async def handle_get_dashboard(
             else:
                 context_stats = {"has_context": False}
 
-        logger.info(f"Dashboard stats: {current_count} content, {total_execs} executions")
+        logger.info(f"Dashboard stats: {current_count} content, {len(posts_data)} scheduled posts")
 
         return {
             "content_generated": content_stats,
             "scheduled_posts": scheduled_stats,
-            "agent_executions": agent_stats,
             "client_context": context_stats,
             "date_range": date_range,
             "client_id": client_id

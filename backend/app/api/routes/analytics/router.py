@@ -185,7 +185,7 @@ async def get_dashboard(
     - **client_id**: Optional client UUID (if None, aggregate all clients)
     - **date_range**: Time range (7d, 30d, 90d)
 
-    Returns content_generated, scheduled_posts, agent_executions, client_context stats
+    Returns content_generated, scheduled_posts, client_context stats
     """
     result = await handle_get_dashboard(client_id, date_range)
     return AnalyticsResponse(

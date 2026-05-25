@@ -34,7 +34,7 @@ except ImportError:
 from app.api.routes import (
     content, strategy, analytics, engagement, monitor, brand_voice, competitive, trends, crisis,
     reports, growth, video_production, scheduling, ab_testing, orchestrator, resellers, auth,
-    context, clients, social_accounts, brand_files, content_lab, calendar, agents,
+    context, clients, social_accounts, brand_files, content_lab, agents,
     system, omega, nova, sentinel, oracle, prompt_vault, handoff, reseller, upsell, admin, sub_brands
 )
 # DEBT-036: legacy Lovable billing module desregistrado · reemplazado por billing_v3 bc_billing
@@ -153,7 +153,7 @@ app.include_router(clients.router, prefix=settings.api_v1_prefix, tags=["Clients
 app.include_router(social_accounts.router, prefix=settings.api_v1_prefix, tags=["Social Accounts 📱"])
 app.include_router(brand_files.router, prefix=settings.api_v1_prefix, tags=["Brand Files 📎"])
 app.include_router(content_lab.router, prefix=settings.api_v1_prefix, tags=["Content Lab 🎨"])
-app.include_router(calendar.router, prefix=settings.api_v1_prefix, tags=["Calendar 📅"])
+# DEBT-031: legacy calendar.router eliminado · 100% superseded por calendar_v3 (schema V3 real)
 app.include_router(agents.router, prefix=settings.api_v1_prefix, tags=["Agents 🤖"])
 app.include_router(system.router, prefix=settings.api_v1_prefix, tags=["System 🔧"])
 app.include_router(omega.router, prefix=settings.api_v1_prefix, tags=["OMEGA Company 👑"])
