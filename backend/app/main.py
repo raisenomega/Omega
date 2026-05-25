@@ -20,6 +20,7 @@ from app.workers.news_monitor_worker import NewsMonitorWorker
 from app.workers.competitor_tracker_worker import CompetitorTrackerWorker
 from app.workers.trend_spotter_worker import TrendSpotterWorker
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -196,7 +197,7 @@ async def health_check() -> dict[str, str]:
         total_agents = agents_resp.count if agents_resp.count else 37
     except:
         total_agents = 37
-    return {"status": "healthy", "version": "2.0.0", "agents": f"{total_agents}/{total_agents}", "environment": settings.environment}
+    return {"status": "healthy", "version": "2.0.0", "agents": f"{total_agents}/{total_agents}", "environment": settings.environment, "git_sha": os.getenv("RAILWAY_GIT_COMMIT_SHA", "unknown")[:7]}
 
 @app.get(f"{settings.api_v1_prefix}/status")
 async def api_status() -> dict[str, str | bool]:
