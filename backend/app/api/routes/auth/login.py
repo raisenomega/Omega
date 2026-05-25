@@ -89,7 +89,10 @@ async def login(request: LoginRequest, http_request: Request) -> APIResponse:
                 detail="Account is inactive. Contact support."
             )
 
-        # Generate JWT tokens with full client data
+        # Generate JWT tokens with full client data.
+        # NOTA: role/reseller_id van en el token y la respuesta SOLO para redirect/UX.
+        # La AUTORIZACIÓN se deriva server-side en get_current_user (no se confía en el
+        # claim · forgery-proof · commit 33166e4). No reintroducir confianza en estos campos.
         access_token = create_access_token({
             "id": client["id"],
             "email": client["email"],
@@ -101,7 +104,8 @@ async def login(request: LoginRequest, http_request: Request) -> APIResponse:
         # Remove password_hash from response
         client.pop("password_hash", None)
 
-        # For resellers: lookup reseller_id from resellers table
+        # For resellers: lookup reseller_id from resellers table (solo para la respuesta/
+        # redirect · NO autoriza · get_current_user re-deriva role/reseller_id de la DB).
         if client.get("role") == "reseller":
             reseller_response = await asyncio.to_thread(
                 lambda: service.client.table("resellers")
