@@ -17,17 +17,19 @@ _WINDOW_HOURS = 72
 _BATCH = 200
 
 
-async def run_outcome_evaluation() -> dict[str, int]:
-    """Drafts >72h sin guardar → was_correct=False en agent_memory. Best-effort por fila."""
+async def run_outcome_evaluation() -> dict[str, object]:
+    """Drafts >72h sin guardar → was_correct=False en agent_memory. Best-effort por fila.
+    Retorna {evaluated, failed, errors} · errors capado a 25 (diagnóstico endpoint + log)."""
     sb = get_supabase_service().client
     cutoff = (datetime.now(timezone.utc) - timedelta(hours=_WINDOW_HOURS)).isoformat()
+    errors: list[str] = []
     try:
         r = sb.table("content_lab_generated").select("id, client_id, agent_code, prompt") \
             .eq("status", "draft").is_("outcome_evaluated_at", "null") \
             .lte("created_at", cutoff).limit(_BATCH).execute()
     except Exception as e:
         logger.error(f"outcome_evaluator · fetch drafts failed: {e}", exc_info=True)
-        return {"evaluated": 0, "failed": 0}
+        return {"evaluated": 0, "failed": 0, "errors": [f"fetch: {e}"]}
 
     now = datetime.now(timezone.utc).isoformat()
     evaluated = 0
@@ -38,9 +40,11 @@ async def run_outcome_evaluation() -> dict[str, int]:
             evaluated += 1
         except Exception as e:  # una fila rota no detiene el batch
             failed += 1
+            if len(errors) < 25:
+                errors.append(f"row {row.get('id')}: {e}")
             logger.error(f"outcome_evaluator · row {row.get('id')} failed: {e}", exc_info=True)
     logger.info(f"outcome_evaluator · evaluated={evaluated} failed={failed} (drafts abandonados 72h)")
-    return {"evaluated": evaluated, "failed": failed}
+    return {"evaluated": evaluated, "failed": failed, "errors": errors}
 
 
 def _record_negative(sb, row: dict, now: str) -> None:
