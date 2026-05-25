@@ -75,7 +75,7 @@ class SentinelService:
                 "auto_fixes_applied": 0,
                 "calculated_at": datetime.now(timezone.utc).isoformat(),
             }).execute()
-            return {
+            result = {
                 "security_score": global_score,
                 "status": status,
                 "deploy_decision": "BLOCK" if global_score < 70 else "APPROVE",
@@ -84,6 +84,13 @@ class SentinelService:
                 "agents_scanned": len(results),
                 "issues": all_issues,
             }
+            if global_score < 80:  # alerta best-effort (Email Resend + Telegram opcional) · no rompe el scan
+                from app.bc_cognition.application.alert_dispatcher import dispatch_sentinel_alert
+                try:
+                    await dispatch_sentinel_alert(global_score, all_issues, datetime.now(timezone.utc).isoformat())
+                except Exception as e:
+                    logger.error(f"sentinel alert dispatch failed: {e}")
+            return result
         except Exception as e:
             logger.error(f"Full scan error: {e}")
             return {"security_score": 0, "status": "critical", "deploy_decision": "BLOCK", "error": str(e)}

@@ -2,7 +2,7 @@
 Application Configuration
 Manages all environment variables and settings
 """
-from typing import List
+from typing import List, Optional
 from pydantic_settings import BaseSettings
 from pydantic import Field
 
@@ -51,10 +51,7 @@ class Settings(BaseSettings):
     jwt_secret_key: str = Field(..., env="JWT_SECRET_KEY")
     jwt_algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
     access_token_expire_minutes: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
-    refresh_token_expire_days: int = Field(
-        default=7,
-        env="REFRESH_TOKEN_EXPIRE_DAYS"
-    )
+    refresh_token_expire_days: int = Field(default=7, env="REFRESH_TOKEN_EXPIRE_DAYS")
 
     # Stripe Payment
     stripe_secret_key: str = Field(default="", env="STRIPE_SECRET_KEY")
@@ -84,6 +81,13 @@ class Settings(BaseSettings):
     # Rate Limiting
     rate_limit_per_minute: int = Field(default=60, env="RATE_LIMIT_PER_MINUTE")
     rate_limit_per_hour: int = Field(default=1000, env="RATE_LIMIT_PER_HOUR")
+
+    # Alertas SENTINEL (dispatcher · score<80) · Optional → faltan = skip best-effort · Email si RESEND_API_KEY · Telegram si BOT_TOKEN+CHAT_ID
+    resend_api_key: Optional[str] = Field(default=None, env="RESEND_API_KEY")
+    alert_email_to: str = Field(default="raisenagencypr@gmail.com", env="ALERT_EMAIL_TO")
+    alert_email_from: str = Field(default="OMEGA SENTINEL <onboarding@resend.dev>", env="ALERT_EMAIL_FROM")
+    telegram_bot_token: Optional[str] = Field(default=None, env="TELEGRAM_BOT_TOKEN")
+    telegram_chat_id: Optional[str] = Field(default=None, env="TELEGRAM_CHAT_ID")
 
     class Config:
         env_file = ".env"
