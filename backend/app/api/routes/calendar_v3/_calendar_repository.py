@@ -20,8 +20,13 @@ def _sb():
     return get_supabase_service().client
 
 
-def update_status(post_id: str, value: str) -> None:
-    _sb().table("scheduled_posts").update({"status": value}).eq("id", post_id).execute()
+def update_status(post_id: str, value: str) -> dict:
+    """UPDATE status · retorna la fila persistida · raise si 0 filas (post inexistente
+    o CHECK violado) para que el handler NO mienta 200 sin persistir (P1)."""
+    r = _sb().table("scheduled_posts").update({"status": value}).eq("id", post_id).execute()
+    if not r.data:
+        raise RuntimeError(f"update_status affected 0 rows · post_id={post_id} · value={value}")
+    return r.data[0]
 
 
 def insert_behavioral_status_change(user_id: str, client_id: str, post_id: str, from_status: str, to_status: str) -> None:
