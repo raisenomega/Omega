@@ -23,7 +23,7 @@ GOALS_K = ("goal_this_month", "goal_this_quarter", "goal_priority_now", "success
 HISTORY_K = ("has_existing_content", "existing_followers", "best_post_url", "what_worked", "what_failed", "content_themes")
 INSTR_K = ("custom_instructions", "emergency_contact_name", "emergency_contact_phone", "requires_publish_approval", "preferred_publishing_hours", "timezone")
 ASSETS_K = ("primary_color", "secondary_color", "accent_color", "font_primary", "font_secondary", "logo_file_id", "brand_guide_file_id")
-SOCIAL_K = ("platform", "username", "profile_url", "is_primary", "auto_publish_allowed", "approx_followers", "publishing_frequency", "is_business_account")
+SOCIAL_K = ("platform", "is_primary", "auto_publish_allowed", "approx_followers", "publishing_frequency", "is_business_account")
 
 
 def to_onboarding_payload(
@@ -46,7 +46,8 @@ def to_onboarding_payload(
         "brand_voice": {"tone": _csv_split(context.get("tone")), "brand_voice_keywords": bv_keywords, **_pick(context, BRAND_VOICE_K)},
         "goals": {"primary_goal": _csv_split(context.get("primary_goal")), **_pick(context, GOALS_K)},
         "content_history": _pick(context, HISTORY_K),
-        "social_accounts": [{k: a.get(k) for k in SOCIAL_K} for a in accounts],
+        # account_name (col real) → username para el wizard · profile_url no existe en schema
+        "social_accounts": [{**_pick(a, SOCIAL_K), "username": a.get("account_name") or "", "profile_url": None} for a in accounts],
         "instructions": _pick(context, INSTR_K),
         "brand_assets": _pick(assets, ASSETS_K) if assets else None,
         "brand_voice_samples": samples or [],

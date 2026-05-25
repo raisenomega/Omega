@@ -57,7 +57,7 @@ export const contentHistorySchema = z.object({
 });
 
 export const socialAccountSchema = z.object({
-  platform: z.enum(PLATFORMS), username: z.string().min(1).max(64),
+  platform: z.enum(PLATFORMS), username: z.string().min(1).max(500).catch(""),
   profile_url: opt(z.string()), is_primary: z.boolean().default(false),
   auto_publish_allowed: z.boolean().default(false), approx_followers: opt(intMin0),
   publishing_frequency: opt(z.enum(PUBLISHING_FREQUENCIES)).catch(null),

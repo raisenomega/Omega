@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class SocialAccountInput(BaseModel):
     platform: str
-    username: str = Field(..., min_length=1, max_length=64)
+    username: str = Field(..., min_length=1, max_length=500)  # tolera URLs largas · se mapea a account_name
     profile_url: Optional[str] = None
     is_primary: bool = False
     auto_publish_allowed: bool = False

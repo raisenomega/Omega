@@ -53,7 +53,14 @@ def upsert_client_context(client_id: str, context: dict[str, Any]) -> None:
 
 def bulk_insert_social_accounts(client_id: str, accounts: list[dict[str, Any]]) -> None:
     if not accounts: return
-    _sb().table("social_accounts").insert([{**a, "client_id": client_id} for a in accounts]).execute()
+    # La columna real del handle es account_name (NO username) · profile_url no existe en
+    # el schema → se descartan para no romper el insert (resto de la app ya usa account_name).
+    rows = [
+        {**{k: v for k, v in a.items() if k not in ("username", "profile_url")},
+         "client_id": client_id, "account_name": a.get("username") or ""}
+        for a in accounts
+    ]
+    _sb().table("social_accounts").insert(rows).execute()
 
 
 def upsert_brand_assets(client_id: str, assets: dict[str, Any]) -> None:
