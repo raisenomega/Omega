@@ -59,6 +59,31 @@ Owner: Ibrain Raisen (CEO) · Cliente piloto: Jorge / La Milagrosa Software.
 
 ---
 
+## 4 · Continuación post-cierre (25 may · ARIA + Calendario + System)
+
+Bloque de fixes tras §1-3. Todos en origin/main · gate 10/10 c/u · guardian APPROVE. **HEAD: `f807f2c`**.
+
+| Área | Commits | Resumen |
+|------|---------|---------|
+| **ARIA · deadlock input** | `cece228` | input quedaba mudo: `apiPost`/`apiGet` sin timeout → fetch colgado nunca settla → `isPending` trabado → `disabled` permanente. Wrapper aislado `aria-fetch`: AbortController 35s que cubre fetch **+ body** (`res.json`) → body colgado tras 200 también rechaza. + `onError` toast. (api-client global intacto → Content Lab no afectado) |
+| **ARIA · history invertido** | `3a85fe1` | `/aria/history` traía los 50 MÁS VIEJOS (`desc=False`) → mensajes nuevos caían fuera de la ventana al superar 50 → no renderizaban. Fix: `desc=True` + `reversed()` (últimos 50 cronológicos) |
+| **ARIA · limit single source** | `493fff7` | `limit=50` duplicado en 3 lugares → ahora solo en el repository (`history.py` y `use_aria_history` forwardean) |
+| **Deuda registrada** | `09a77b8` `493fff7` | **DEBT-050** capa multi-agente stubeada (monitor/orchestrator/execute fabrican éxito · P1 cuando dispara · 16h) · **DEBT-051** `aria_repository.py` 99/100L (extraer `fetch_aria_context` · 2h) |
+| **Brave timeout** | `ab0a7a4` | 20s→8s · si tarda más, ARIA responde sin contexto web |
+| **KPI Posts Programados** | `44ca9d5` | marcaba 0: `.gte(scheduled_for, ahora)` excluía posts cuya hora ya pasó hoy. Fix: ventana desde **inicio del día** + `status IN [pending, scheduled]` |
+| **TAREA 2 · 3 botones popup** | `9bd30d7` `0f1bd75` `3b6b1fb` | migración **00025** (`published_manual` en CHECK · DO block) + transición `pending→published_manual` + popup: **Publicar Manual** (→ published_manual) / **Publicar Auto** (disabled · tooltip "requiere cuenta social · MCP") / **Cancelar** |
+| **FIX 1 · P1 update_status** | `84a05fe` | devolvía 200 desde el input aunque el UPDATE fallara (safe_insert tragaba) → ahora 500 honesto + respuesta desde la fila persistida |
+| **FIX 2 · P5 conteos** | `b2ab2fe` | dashboard/scheduling sumaban solo `published` → ahora `IN [published, published_manual]` (distingue origen, suma en reportes) |
+| **FIX 3 + ISSUE 2 · get_stats** | `01ef77c` `aa0c5f8` | `scheduled_posts.is_active` (inexistente → `status='pending'`) + `agents.status` (inexistente → removido) |
+| **ISSUE 1 · FK al agendar bloque** | `59d182a` `c9bfdb0` | el localStorage del Content Lab arrastraba content_ids de filas borradas (p.ej. hard-delete cascada) → FK 500. Backend valida existencia+ownership → **409 honesto**; frontend limpia items stale + toast "regeneralos" |
+| **get_stats verde** | `f807f2c` | eliminada query `agent_executions` (inexistente · DEBT-049) + `_safe_count` por query (degradación parcial · no try monolítico) + docstrings sincronizados + filtro muerto `clients.neq(deleted)` removido |
+
+**Migración 00025 aplicada** por el owner (`db push`) → `published_manual` habilitado en el CHECK de `scheduled_posts.status`. Backend → Railway · Frontend → Vercel.
+
+**`/system/stats`**: cerrados 2 de 3 dominós (is_active, agents.status) + eliminada query agent_executions → **verde**. DEBT-049 sigue abierta (tabla `agent_executions` real cuando haya telemetría de agentes).
+
+---
+
 ```
 PENDIENTES_Y_PROGRESOS_20260525.md · sesión 25 may · ~22 commits · gate 10/10 · guardian APPROVE
 Firmado: Claude Opus 4.7 (1M context) + Ibrain Raisen (CEO)
