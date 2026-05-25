@@ -7,12 +7,14 @@ Bilingüe ES/EN. Cero imports externos.
 """
 from typing import Final, List
 
+# Umbral subido (25 may): quitados over-triggers por substring/comunes de chat —
+# "news" (matcheaba "newsletter"), "esta semana"/"this week" (comunísimos en calendario),
+# "trend" (substring). Quedan los inequívocos. Evita disparar Brave (+20s) en chat normal.
 _STRONG: Final = (
     "trending", "qué está pasando", "que esta pasando", "última hora", "ultima hora",
-    "ahora mismo", "esta semana", "noticias", "competencia", "competidor", "tendencia",
-    "novedades",
-    "what's happening", "whats happening", "breaking news", "right now", "this week",
-    "news", "competitor", "trend", "latest news",
+    "ahora mismo", "noticias", "competencia", "competidor", "tendencia", "novedades",
+    "what's happening", "whats happening", "breaking news", "right now", "latest news",
+    "competitor",
 )
 _BROAD: Final = (
     "hoy", "today", "reciente", "recientemente", "recent", "recently",

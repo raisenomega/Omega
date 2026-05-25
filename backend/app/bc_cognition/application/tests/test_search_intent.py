@@ -6,6 +6,9 @@ def test_happy_no_trigger_no_search():
     """Mensaje normal → no busca. 'hoy' amplio sin cue NO dispara (FP-guard)."""
     assert needs_web_search("¿qué publico hoy en Instagram?") is False
     assert needs_web_search("dame ideas de contenido para mi cafetería") is False
+    # umbral subido 25 may: ya NO disparan en chat normal (evita +20s de Brave)
+    assert needs_web_search("escribe el newsletter de esta semana") is False  # antes: "news"+"esta semana"
+    assert needs_web_search("¿qué publico esta semana?") is False              # antes: "esta semana"
 
 
 def test_edge_strong_trigger_fires_alone():
