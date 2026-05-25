@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { apiDelete } from "@/lib/api-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,22 +53,22 @@ export default function Clients() {
       const { data, error } = await supabase
         .from("clients")
         .select("*")
+        .neq("status", "deleted")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
 
+  // DELETE vía backend (service_role bypasea RLS · check de propiedad real): el
+  // Supabase directo era bloqueado por RLS y devolvía 0 filas SIN error → toast falso.
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("clients").delete().eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => apiDelete(`/clients/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       toast({ title: "Cliente eliminado" });
     },
-    onError: (e) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "No se pudo eliminar", description: e.message, variant: "destructive" }),
   });
 
   const handleEdit = (clientId: string) => {

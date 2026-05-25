@@ -177,6 +177,26 @@ class ClientRepository:
             logger.error(f"Error soft deleting client: {e}")
             raise
 
+    async def get_owned_reseller_ids(self, user_id: str) -> List[str]:
+        """Reseller ids que el user posee (owner_user_id) · para checks de propiedad."""
+        try:
+            r = self.service.client.table("resellers").select("id").eq("owner_user_id", user_id).execute()
+            return [str(x["id"]) for x in (r.data or [])]
+        except Exception as e:
+            logger.error(f"Error fetching owned resellers: {e}")
+            return []
+
+    async def is_platform_superadmin(self, user_id: str) -> bool:
+        """Superadmin REAL = dueño de un reseller con is_owner=true (00022) · server-side.
+        No se usa el claim role (user_metadata es editable por el user → escalada)."""
+        try:
+            r = self.service.client.table("resellers").select("id")\
+                .eq("owner_user_id", user_id).eq("is_owner", True).limit(1).execute()
+            return bool(r.data)
+        except Exception as e:
+            logger.error(f"Error checking superadmin: {e}")
+            return False
+
 
 # Global instance
 client_repository = ClientRepository()

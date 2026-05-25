@@ -26,21 +26,27 @@ async def delete_client(
         # 1. Get authenticated user
         user = await get_current_user(authorization)
         user_id = user["id"]
-        role = user["role"]
 
-        # 2. Only owner, super_admin, or admin can delete clients
-        if role not in ("owner", "super_admin", "admin"):
-            raise HTTPException(
-                status_code=403,
-                detail="Only platform owners can delete clients"
-            )
-
-        # 3. Verify client exists
+        # 2. Verify client exists
         client = await client_repository.get_client(client_id)
         if not client:
             raise HTTPException(
                 status_code=404,
                 detail="Client not found"
+            )
+
+        # 3. Propiedad por DATOS server-side. NO se usa el claim `role` (sale de
+        #    user_metadata, editable por el user → escalada de privilegios · guardian).
+        #    Permite: dueño de la fila (user_id) O reseller que la gestiona O superadmin real.
+        rid = client.get("reseller_id")
+        owned_resellers = await client_repository.get_owned_reseller_ids(user_id)
+        is_row_owner = str(client.get("user_id")) == str(user_id)
+        is_managing_reseller = bool(rid) and str(rid) in owned_resellers
+        is_superadmin = await client_repository.is_platform_superadmin(user_id)
+        if not (is_row_owner or is_managing_reseller or is_superadmin):
+            raise HTTPException(
+                status_code=403,
+                detail="No autorizado para eliminar este cliente"
             )
 
         # 4. Soft delete
