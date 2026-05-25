@@ -33,6 +33,17 @@ def find_client_context(client_id: str) -> dict[str, Any]:
     return r.data[0] if r.data else {}
 
 
+def find_client_logo_url(client_id: str) -> Optional[str]:
+    """URL del logo del cliente · client_brand_assets.logo_file_id → brand_files.storage_url.
+    None si no tiene logo (la imagen sale sin marca)."""
+    a = _sb().table("client_brand_assets").select("logo_file_id").eq("client_id", client_id).limit(1).execute()
+    logo_id = a.data[0]["logo_file_id"] if a.data else None
+    if not logo_id:
+        return None
+    f = _sb().table("brand_files").select("storage_url").eq("id", logo_id).limit(1).execute()
+    return f.data[0].get("storage_url") if f.data else None
+
+
 def insert_generated_content(client_id: str, payload: dict[str, Any]) -> Optional[str]:
     """INSERT content_lab_generated · retorna id del nuevo draft."""
     r = _sb().table("content_lab_generated").insert({**payload, "client_id": client_id}).execute()

@@ -21,6 +21,7 @@ export interface FormState {
   reference_attachment_b64?: string;     // DEBT-CL-020 · PDF/DOCX/MD/TXT
   reference_mime_type?: string;          // DEBT-CL-020 · MIME del attachment
   accountId: string;  // DEBT-CL-015 · vacío = backend resuelve primera activa
+  applyLogo?: boolean;  // Fase 1 · opt-in · overlay del logo del cliente en la imagen
 }
 
 interface Props {
@@ -78,6 +79,13 @@ export function ContentLabFormV2({ form, setForm, variations, setVariations, onG
       {/* LÍNEA 2 · ASPECT toggle buttons (solo image/video · UX-3) */}
       {(form.type === "image" || form.type === "video") && (
         <AspectRow aspect={form.aspect} onChange={(a) => update("aspect", a)} />
+      )}
+      {/* Fase 1 · logo opt-in (solo imagen · default sin logo) */}
+      {form.type === "image" && (
+        <div className="flex items-center gap-2 justify-center py-0.5">
+          <Checkbox id="apply-logo" checked={!!form.applyLogo} onCheckedChange={(c) => update("applyLogo", !!c)} className="h-3.5 w-3.5" />
+          <Label htmlFor="apply-logo" className="text-[11px] cursor-pointer leading-none">Usar mi logo</Label>
+        </div>
       )}
       {/* BOTÓN GENERAR */}
       <Button onClick={onGenerate} disabled={isPending || !form.topic.trim() || !hasVar}

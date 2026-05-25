@@ -31,6 +31,7 @@ stripe==7.10.0
 # ─── HTTP / API consumption ───────────────────────────────────────
 httpx==0.28.1                # bump 23 may 2026 · requerido por google-genai 2.6.0 · supabase 2.18.1 lo acepta
 requests==2.31.0
+Pillow==10.4.0               # overlay de logo en imágenes generadas (content_lab · Fase 1)
 
 # ─── Form data / files ────────────────────────────────────────────
 python-multipart==0.0.6

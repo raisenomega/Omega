@@ -5,6 +5,7 @@ Sin Brand DNA en esta versión · scope quirúrgico Paso 4 (puede agregarse en
 futuro augmentando el prompt con visual_style del DNA).
 Error semantics: 502 si falla upload a Storage · 503 si falla Nano Banana.
 """
+import logging
 from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
 from app.api.routes.auth.auth_utils import get_current_user
@@ -17,11 +18,13 @@ from app.api.routes.content_lab_v3.models.content_lab_models import (
     GenerateImageRequest, GenerateImageResponse,
 )
 from app.bc_cognition.infrastructure._image_compat import generate_image_compat
-from app.bc_cognition.infrastructure._storage_uploader import StorageUploadError
+from app.bc_cognition.infrastructure._storage_uploader import StorageUploadError, upload_image_bytes
+from app.bc_cognition.infrastructure._logo_overlay import overlay_logo
 
 _IMAGE_PROMPT_MAX = 6000  # truncate attachment context · Nano Banana cap 8000 total
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 _STYLE_SUFFIXES = {
     "realistic": ", photorealistic, high quality, professional photography",
@@ -75,6 +78,14 @@ async def generate_image(
     if not urls:
         raise HTTPException(status_code=503, detail="image_gen_empty")
     image_url = urls[0]
+    # Fase 1: overlay opt-in del logo del cliente · best-effort (nunca rompe la generación).
+    if request.apply_logo:
+        logo_url = repo.find_client_logo_url(client_id)
+        if logo_url:
+            try:
+                image_url = upload_image_bytes(overlay_logo(image_url, logo_url), "image/png", client_id)
+            except Exception as e:
+                logger.warning(f"logo overlay falló · imagen sin marca · client={client_id}: {e}")
 
     content_id = repo.safe_insert(
         "insert_image", repo.insert_generated_content, client_id, {

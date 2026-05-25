@@ -41,6 +41,7 @@ class GenerateImageRequest(BaseModel):
     client_id: Optional[str] = Field(default=None)  # DEBT-CL-005 · si presente, usar este (multi-client reseller)
     reference_attachment_b64: Optional[str] = Field(default=None)  # DEBT-CL-020 · PDF/docx/md/txt como contexto extra
     reference_mime_type: Optional[str] = Field(default=None)       # MIME del attachment para branch extractor
+    apply_logo: bool = Field(default=False)  # Fase 1 · opt-in · overlay del logo del cliente (default: sin logo)
 
 
 class GenerateImageResponse(BaseModel):

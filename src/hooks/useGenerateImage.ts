@@ -25,6 +25,7 @@ export function useGenerateImage() {
         client_id: form.clientId || undefined,  // DEBT-CL-005 · multi-client reseller
         reference_attachment_b64: form.reference_attachment_b64,  // DEBT-CL-020
         reference_mime_type: form.reference_mime_type,
+        apply_logo: form.applyLogo,  // Fase 1 · opt-in logo overlay
       });
       return [{
         id: data.id,
