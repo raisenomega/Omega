@@ -67,7 +67,7 @@ async def web_search(
     max_results = min(max(1, max_results), 5)  # clamp 1-5
 
     try:
-        async with httpx.AsyncClient(timeout=20.0) as client:
+        async with httpx.AsyncClient(timeout=8.0) as client:  # 8s · si Brave tarda más → [] · ARIA no se bloquea
             response = await client.get(
                 BRAVE_URL,
                 params={
@@ -129,7 +129,7 @@ async def web_search(
         await _log_tool_call(agent_code, client_id, query[:100], False, duration_ms)
         return {
             "success": False,
-            "error": "Timeout — Brave no respondió en 20s",
+            "error": "Timeout — Brave no respondió en 8s",
             "results": []
         }
 
