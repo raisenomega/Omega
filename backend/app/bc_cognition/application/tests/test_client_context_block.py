@@ -56,9 +56,13 @@ def test_profile_completion_counts_and_lists():
     assert "❌ Ejemplos de contenido: sin datos" in out
 
 
-def test_profile_mirror_frontend_edge_cases():
-    """Espejo estricto del wizard (guardian): identidad sin región = ❌ · audiencia solo edad = ❌."""
+def test_profile_mirror_backend_frontend():
+    """Convergencia de los 3 calculadores (wizard=backend=ARIA): identidad sin región = ❌;
+    audiencia solo edad = ✅; voz solo preferred_formats = ✅ (espejo de c12ef86)."""
     no_region = build_client_context_block({"_client": {"name": "X", "industry": "i"}})
     assert "❌ Identidad: sin datos" in no_region
-    age_only = build_client_context_block({"audience_age_range": "18-30"})
-    assert "❌ Audiencia: sin datos" in age_only
+    assert "✅ Audiencia" in build_client_context_block({"audience_age_range": "18-30"})
+    assert "✅ Voz de marca" in build_client_context_block({"preferred_formats": ["reel"]})
+    # business_to_whom cuenta (espejo backend) · vertical NO cuenta como negocio
+    assert "✅ Negocio" in build_client_context_block({"business_to_whom": "pymes"})
+    assert "❌ Negocio: sin datos" in build_client_context_block({"vertical": "x"})

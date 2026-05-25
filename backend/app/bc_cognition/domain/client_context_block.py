@@ -22,20 +22,21 @@ def _accounts_line(accounts: list[dict[str, Any]]) -> str:
 
 
 def _sections(ctx: dict[str, Any]) -> list[tuple[bool, str, str]]:
-    """(lleno, etiqueta, detalle) por las 10 secciones del wizard · espejo de sectionsFilled."""
+    """(lleno, etiqueta, detalle) por las 10 secciones · espejo EXACTO de sectionsFilled
+    (frontend) y calc_completion_percent (backend) · los 3 calculadores convergen."""
     cl = ctx.get("_client") or {}
     ba = ctx.get("_brand_assets") or {}
     bv = ctx.get("brand_voice") or {}
     acc = ctx.get("social_accounts") or []
     return [
         (bool(cl.get("name") and cl.get("industry") and cl.get("region")), "Identidad", str(cl.get("name") or "")),
-        (any(ctx.get(k) for k in ("niche", "vertical", "business_what", "business_diff")), "Negocio", str(ctx.get("niche") or ctx.get("vertical") or "")),
-        (bool(ctx.get("target_audience")) or bool(ctx.get("competitors")), "Audiencia", str(ctx.get("target_audience") or "")),
-        (bool(ctx.get("tone")) or bool(bv.get("keywords")), "Voz de marca", str(ctx.get("tone") or "")),
-        (any(ctx.get(k) for k in ("primary_goal", "goal_this_month", "goal_this_quarter", "success_metric")), "Objetivos", str(ctx.get("primary_goal") or ctx.get("goal_this_month") or "")),
+        (any(ctx.get(k) for k in ("niche", "business_what", "business_to_whom", "business_diff")), "Negocio", str(ctx.get("niche") or ctx.get("vertical") or "")),
+        (any(ctx.get(k) for k in ("target_audience", "audience_age_range", "competitors")), "Audiencia", str(ctx.get("target_audience") or "")),
+        (bool(ctx.get("tone")) or bool(bv.get("keywords")) or bool(ctx.get("preferred_formats")), "Voz de marca", str(ctx.get("tone") or "")),
+        (any(ctx.get(k) for k in ("primary_goal", "goal_this_month", "success_metric")), "Objetivos", str(ctx.get("primary_goal") or ctx.get("goal_this_month") or "")),
         (any(ctx.get(k) for k in ("has_existing_content", "best_post_url", "what_worked")), "Historial de contenido", ""),
         (len(acc) > 0, "Cuentas sociales", ", ".join(str(a.get("platform")) for a in acc if a.get("platform"))),
-        (bool(ctx.get("custom_instructions")) or bool(ctx.get("emergency_contact_name")), "Instrucciones especiales", ""),
+        (any(ctx.get(k) for k in ("custom_instructions", "emergency_contact_name", "preferred_publishing_hours")), "Instrucciones especiales", ""),
         (bool(ba.get("primary_color")) or bool(ba.get("logo_file_id")), "Identidad visual", ""),
         (int(ctx.get("_samples_count") or 0) > 0, "Ejemplos de contenido", ""),
     ]
