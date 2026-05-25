@@ -22,6 +22,8 @@ from app.api.routes.content_lab_v3.models.content_lab_models import (
     GenerateTextRequest, GenerateTextResponse,
 )
 from app.bc_cognition.application import use_brand_dna
+from app.bc_cognition.application.input_sanitizer import sanitize_input
+from app.bc_cognition.domain.input_threats import InputContext, SanitizerAction
 
 router = APIRouter()
 
@@ -43,6 +45,12 @@ async def generate_text(
     user = await get_current_user(authorization)
     client = resolve_client_or_403(user["id"], request.client_id)  # DEBT-CL-005
     client_id = str(client["id"])
+
+    # SPRINT 4A-3 #3: sanear topic del usuario (T1/T3 · CONTENT_PROMPT) antes del prompt
+    st, serr = sanitize_input(request.topic, InputContext.CONTENT_PROMPT)
+    if serr is not None or st is None or st.action in (SanitizerAction.BLOCK, SanitizerAction.HOLD_FOR_HUMAN_REVIEW):
+        raise HTTPException(status_code=400, detail="unsafe_input:topic")
+    request.topic = st.clean_text
 
     if request.variations > 1 and repo.find_client_plan(client_id) not in _PRO_PLANS:
         raise HTTPException(status_code=403, detail="variations_require_pro_plan")
