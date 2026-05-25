@@ -86,10 +86,11 @@ def insert_behavioral_event(
 
 
 def load_recent_history(supabase: SupabaseService, user_id: str, window: int) -> list[dict[str, str]]:
-    # window*2 filas → clean_history asegura historial válido para Anthropic (fix ARIA silenciosa).
-    r = supabase.client.table("aria_conversations").select("role, content, created_at").eq("user_id", user_id).order("created_at", desc=True).limit(window * 2).execute()
-    rows = [{"role": x["role"], "content": x["content"]} for x in reversed(r.data or [])]
-    return clean_history(rows, window)
+    try:  # fallo de DB → [] · ARIA nunca cae por el historial (window*2 → clean_history)
+        r = supabase.client.table("aria_conversations").select("role, content, created_at").eq("user_id", user_id).order("created_at", desc=True).limit(window * 2).execute()
+        return clean_history([{"role": x["role"], "content": x["content"]} for x in reversed(r.data or [])], window)
+    except Exception as e:
+        logger.error(f"load_recent_history failed: {e}", exc_info=True); return []
 
 
 def load_history_for_endpoint(supabase: SupabaseService, user_id: str, limit: int = 50) -> list[dict[str, Any]]:
