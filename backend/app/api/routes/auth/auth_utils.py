@@ -4,11 +4,19 @@ from fastapi import HTTPException
 import jwt
 from jwt import PyJWKClient
 import logging
+import time
+import threading
 
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 JWT_LOCAL_ALG = "HS256"
+
+# Caché TTL-corto del rol derivado (per-process · no compartido entre workers) · evita 1 query/request.
+# TRADE-OFF: un upgrade O una revocación de rol tarda hasta _ROLE_CACHE_TTL en reflejarse.
+_ROLE_CACHE_TTL = 60.0  # segundos
+_role_cache: Dict[str, tuple[float, str, Optional[str]]] = {}  # user_id → (expires_at, role, reseller_id)
+_role_cache_lock = threading.Lock()
 
 # JWKS client cached at module level · PyJWKClient cachea las signing keys
 # internamente (cache_keys=True default, lifespan 300s).
@@ -49,17 +57,29 @@ def _resolve_role_and_reseller(user_id: Optional[str]) -> tuple[str, Optional[st
     reseller · client = default seguro. Fail-closed a 'client' ante error de DB."""
     if not user_id:
         return ("client", None)
+    now = time.monotonic()
+    with _role_cache_lock:  # hit de caché (lock breve · sin I/O adentro)
+        hit = _role_cache.get(user_id)
+        if hit and hit[0] > now:
+            return (hit[1], hit[2])
     try:
         from app.infrastructure.supabase_service import get_supabase_service
         sb = get_supabase_service().client
         r = sb.table("resellers").select("id, is_owner").eq("owner_user_id", user_id).limit(1).execute()
         if r.data:
             row = r.data[0]
-            return ("owner" if row.get("is_owner") else "reseller", str(row["id"]))
-        return ("client", None)  # cliente o sin fila → 'client' (1 sola query)
+            result = ("owner" if row.get("is_owner") else "reseller", str(row["id"]))
+        else:
+            result = ("client", None)  # cliente o sin fila → 'client'
     except Exception as e:
         logger.error(f"_resolve_role_and_reseller failed ({user_id}): {e}")
-        return ("client", None)  # fail-closed: menor privilegio ante fallo
+        return ("client", None)  # fail-closed · NO se cachea el error (reintenta al próximo request)
+    with _role_cache_lock:
+        if len(_role_cache) > 5000:  # guard de memoria · purga expirados
+            for k in [k for k, v in _role_cache.items() if v[0] <= now]:
+                _role_cache.pop(k, None)
+        _role_cache[user_id] = (now + _ROLE_CACHE_TTL, result[0], result[1])
+    return result
 
 
 async def get_current_user(authorization: Optional[str]) -> Dict[str, Any]:
