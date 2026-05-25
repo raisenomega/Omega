@@ -8,9 +8,8 @@ repo.safe_insert · errores logueados pero NUNCA propagan al cliente.
 from typing import Optional, Tuple
 from app.bc_cognition.application._aria_memory_context import load_and_format_memory
 from app.bc_cognition.application.web_context import fetch_web_context
-from app.bc_cognition.domain.persona_aria import (
-    build_client_context_block, build_system_prompt, get_agent_code_for_level, get_history_window,
-)
+from app.bc_cognition.domain.persona_aria import build_system_prompt, get_agent_code_for_level, get_history_window
+from app.bc_cognition.domain.client_context_block import build_client_context_block
 from app.bc_cognition.infrastructure.anthropic_adapter import generate
 from app.bc_cognition.infrastructure import aria_repository as repo, aria_memory_repository as mem
 from app.bc_cognition.infrastructure._anthropic_types import ClaudeError
@@ -66,6 +65,8 @@ async def use_aria_message(
     # Call Claude · system = persona + contexto cliente (BUG 2) + web actual (auto-search) + memoria (P5)
     base = build_system_prompt(level, role)
     ctx = repo.fetch_client_context(supabase, client_id) if client_id else None
+    if ctx is not None and client_id:  # TAREA C: cuentas conectadas → ARIA sabe si tiene o no
+        ctx["social_accounts"] = repo.fetch_social_accounts(supabase, client_id)
     ctx_block = build_client_context_block(ctx) if ctx else ""
     vertical = (ctx.get("vertical") or ctx.get("niche") or "") if ctx else ""
     web_block = await fetch_web_context(user_message, vertical, "aria", client_id)

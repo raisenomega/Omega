@@ -30,15 +30,29 @@ def find_reseller_by_owner(supabase: SupabaseService, user_id: str) -> Optional[
 
 
 def fetch_client_context(supabase: SupabaseService, client_id: str) -> Optional[dict[str, Any]]:
-    """Lee client_context para inyectar a ARIA (BUG 2). Best-effort: None si falla/vacío."""
+    """Lee client_context completo para inyectar a ARIA (TAREA C). Best-effort: None si falla/vacío."""
     try:
         r = supabase.client.table("client_context").select(
-            "niche, vertical, business_what, target_audience, uploaded_context_text"
+            "niche, vertical, business_what, business_diff, target_audience, "
+            "audience_age_range, audience_gender, primary_goal, goal_this_month, "
+            "tone, emoji_usage, hashtag_strategy, uploaded_context_text"
         ).eq("client_id", client_id).limit(1).execute()
         return r.data[0] if r.data else None
     except Exception as e:
         logger.error(f"aria_repository.fetch_client_context failed: {e}", exc_info=True)
         return None
+
+
+def fetch_social_accounts(supabase: SupabaseService, client_id: str) -> list[dict[str, Any]]:
+    """Cuentas conectadas (plataforma + account_name) · ARIA sabe si tiene cuentas (TAREA C)."""
+    try:
+        r = supabase.client.table("social_accounts").select(
+            "platform, account_name"
+        ).eq("client_id", client_id).execute()
+        return r.data or []
+    except Exception as e:
+        logger.error(f"aria_repository.fetch_social_accounts failed: {e}", exc_info=True)
+        return []
 
 
 def insert_user_message(supabase: SupabaseService, user_id: str, client_id: Optional[str], content: str, level: int) -> None:
