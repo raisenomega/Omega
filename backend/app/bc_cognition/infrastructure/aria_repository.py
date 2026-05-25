@@ -6,6 +6,7 @@ Memory + delete history: ver aria_memory_repository (C4 split).
 import logging
 from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import SupabaseService
+from app.bc_cognition.domain.aria_history import clean_history
 
 logger = logging.getLogger(__name__)
 P = ParamSpec("P"); T = TypeVar("T")
@@ -85,10 +86,10 @@ def insert_behavioral_event(
 
 
 def load_recent_history(supabase: SupabaseService, user_id: str, window: int) -> list[dict[str, str]]:
-    r = supabase.client.table("aria_conversations").select(
-        "role, content, created_at"
-    ).eq("user_id", user_id).order("created_at", desc=True).limit(window).execute()
-    return [{"role": x["role"], "content": x["content"]} for x in reversed(r.data or [])]
+    # window*2 filas → clean_history asegura historial válido para Anthropic (fix ARIA silenciosa).
+    r = supabase.client.table("aria_conversations").select("role, content, created_at").eq("user_id", user_id).order("created_at", desc=True).limit(window * 2).execute()
+    rows = [{"role": x["role"], "content": x["content"]} for x in reversed(r.data or [])]
+    return clean_history(rows, window)
 
 
 def load_history_for_endpoint(supabase: SupabaseService, user_id: str, limit: int = 50) -> list[dict[str, Any]]:
