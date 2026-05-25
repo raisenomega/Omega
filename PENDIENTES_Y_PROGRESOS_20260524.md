@@ -389,25 +389,60 @@ Mientras tanto: **Brave + Video Packs + Upload Context** son flow productivo end
 
 ---
 
-## 10 · SPRINT 4A — ESTADO (24 may 2026)
+## 10 · SESIÓN 24 MAY · CIERRE COMPLETO (4A + 4B + BUGs + auto-search)
 
+### Estado por bloque
 ```
-4A-1 ✅  subagente guardian (gate read-only) + 4 builders dev-tooling
-4A-2 ⏸   outcome_evaluator — PAUSADO (no existe señal de outcome real aún)
-4A-3 ✅  input_sanitizer + 5 consumidores (extractor · research · generate_text · ARIA · agent_memory)
-4A-4 ✅  DEBT-002 analytics sin datos sintéticos (banner honesto + CTA conectar cuentas)
-4A-5 ✅  config fail-secure (environment=production · debug=False)
+SPRINT 4A
+  4A-1 ✅  subagente guardian (gate) + 4 builders dev-tooling
+  4A-2 ⏸   outcome_evaluator — PAUSADO (no hay señal de outcome real aún)
+  4A-3 ✅  input_sanitizer + 5 consumidores cableados
+  4A-4 ✅  DEBT-002 analytics sin datos sintéticos (banner honesto + CTA)
+  4A-5 ✅  config fail-secure (environment=production · debug=False)
+SPRINT 4B — GUARDIAN (seguridad usuario/sesión)
+  4B-1 ✅  migración 00022 (3 tablas + RLS + is_owner)
+  4B-2 ✅  analyzer heurístico + repo + tests
+  4B-3 ✅  trigger login + /guardian/login-event + /guardian/session-report
+  4B-4 ✅  SecurityKPICard (cliente)
+  4B-5 ✅  SentinelDashboardCard (superadmin) + /sentinel/status asegurado
+BUGS ARIA
+  BUG 1 ✅  contexto subido reaparece al reabrir wizard
+  BUG 2 ✅  ARIA lee el contexto real del cliente (cap 1500)
+FEATURE
+  Auto-Brave-Search ✅  ARIA + Content Lab (buscan info actual · snippets saneados T2)
 ```
+Detalle + hashes: `SOURCE_OF_TRUTH.md` §11/§12/§13. Specs gitignored: `PROTOCOLO_SEGURIDAD_INPUT_OMEGA.md`, `GUARDIAN_SECURITY_AGENT.md`.
 
-**Próximo: SPRINT 4B-1 — GUARDIAN `SecurityKPICard`** (frontend · card de KPIs de seguridad).
+### 🔴 ACCIÓN MANUAL CRÍTICA DEL OWNER (bloquea features en prod)
+```bash
+cd "D:/Omega Master redes"
+supabase db push --linked
+```
+Aplica migraciones **00020 · 00021 · 00022** (aún sin correr contra el Supabase real).
+**Sin esto, en producción:**
+- `/clients/{id}/upload-context` → 500 (col `uploaded_context_text` no existe) → BUG 1/2 y ARIA-contexto NO funcionan.
+- `/guardian/*` y `SecurityKPICard`/`SentinelDashboardCard` → 500/empty (tablas 00022 no existen).
+- `/calendar-v3/schedule/` media_url → 500 (00020).
+El código + tests están verdes; **solo falta el deploy de migración.** Verificar luego que las tablas tengan RLS=true.
 
-Detalle 4A-3 en `SOURCE_OF_TRUTH.md` §11 · spec en `PROTOCOLO_SEGURIDAD_INPUT_OMEGA.md` (gitignored).
+### Pendientes técnicos (Sprint 5+)
+- **4A-2 outcome_evaluator** — esperando una señal de outcome real (sin ella, evaluaría a ciegas · viola P1).
+- **Capa 2 Haiku** del input_sanitizer + del GUARDIAN analyzer (anti-falsos-positivos · con volumen real).
+- **DEBT abiertas previas:** 040 (OAuth social), 046 (ARIA Premium reseller), 047 (jobstore Py3.13), 048 (ARIA attention memory · embeddings), 031 (calendar read legacy), 042 (regions display), 039 V1 (auto-populate wizard desde PDF).
+- **/sentinel/* restantes** (scan/history/deploy-check) siguen SIN auth — hallazgo pre-existente (solo /status asegurado en 4B-5).
+- **`/guardian/login-event`** es señal complementaria (un cliente autenticado podría reportar success arbitrario) · la fuente de verdad server-side es `auth/login.py`.
+- **brute_force path Supabase**: fallos client-side no llegan al backend (sin JWT) · legacy cubre server-side.
+- **`scripts/create_stripe_video_packs.py`**: fixes locales sin commitear (decisión owner pendiente · §6.1).
+
+### Próxima sesión — recomendación
+1. Correr `supabase db push --linked` + smoke de GUARDIAN/ARIA-contexto/auto-search contra DB real.
+2. Decidir Sprint 5 scope (Capa 2 Haiku · 4A-2 si hay señal · DEBTs 040/046).
 
 ---
 
 ```
 PENDIENTES_Y_PROGRESOS_20260524.md
-Sprint 3 cierre · 19 DEBTs · ~40 commits · 0 downtime
+Sesión 24 may · 4A (5) + 4B (5) + BUG 1/2 + auto-Brave-Search · ~30 commits · gate 10/10 c/u · 0 downtime
 Firmado: Claude Opus 4.7 (1M context) + Ibrain Raisen (CEO)
 🐢💎 No velocity. Only precision.
 ```

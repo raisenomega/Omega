@@ -350,8 +350,30 @@ Sin esto: 500 en `/calendar-v3/schedule/` y `/clients/{id}/upload-context`.
 
 **Otros cierres 4A:** `.gitignore` protege 5 docs estratégicos untracked (`a813477`); boilerplate "NUNCA SE COMMITEA" corregido en PENDIENTES (`33f5a21`); `MODELO_NEGOCIO_OMEGA_CLIENTE.md` confirmado committable (Opción A · sin secretos).
 
+## SECCIÓN 12 — SPRINT 4B · GUARDIAN (seguridad usuario/sesión) · CIERRE (24 may 2026)
+
+GUARDIAN = seguridad de **usuario/sesión** (≠ SENTINEL infra). Spec firmada `GUARDIAN_SECURITY_AGENT.md` (gitignored). 5 fases · cada una guardian APPROVE + gate 10/10.
+
+| Fase | Commit | Entrega |
+|------|--------|---------|
+| 4B-1 | `a2b21bc` | Migración **00022** · 3 tablas (`user_security_log`, `ip_watchlist`, `security_incidents`) + RLS + `resellers.is_owner` |
+| 4B-2 | `c39b3e3` | `domain/guardian_threats` (brute_force ≥5/15min · impossible_travel proxy · new_device · watchlist) + `application/guardian_session_analyzer` (A5 · fail-open) + repo + tests |
+| 4B-3 | `c02e6ce` | `POST /guardian/login-event` + `GET /guardian/session-report` + hook legacy `auth/login.py` |
+| 4B-4 | `15f0de8` | `SecurityKPICard` (cliente `!isOwner`) + wiring login-event en Auth.tsx (success-only · fallo no tiene JWT) |
+| 4B-5 | `40fe83d` | `SentinelDashboardCard` (superadmin `isSuperadmin`=is_owner) swap de PlatformStatus + `/sentinel/status/` asegurado (auth + is_owner) |
+
+Decisiones firmadas §7: risk 0-100 · heurística-only v1 (Haiku→Sprint 5) · auto-BLOCK solo brute_force determinístico · fail-open · superadmin = `is_owner=true`.
+
+## SECCIÓN 13 — BUGS ARIA + AUTO-BRAVE-SEARCH (24 may 2026)
+
+**BUG 1** (`84aa820`) · doc de contexto reaparece al reabrir el wizard. Causa raíz: el write persistía pero `to_onboarding_payload` no devolvía el campo + `SectionBusiness` no hidrataba (gap de lectura). Fix: payload +metadata `uploaded_context` · zod +campo · hidratación desde el form. Save seguro (Pydantic ignora extras · upsert parcial no borra el doc).
+
+**BUG 2** (`663bf75`) · ARIA no leía el contexto del cliente. Causa: `use_aria_message` armaba el system solo con `level+role`. Fix: `persona_aria.build_client_context_block` + `aria_repository.fetch_client_context` → ARIA inyecta negocio/audiencia + `uploaded_context_text` capado a **1500** (I6).
+
+**Auto-Brave-Search** (`523a0de` ARIA · `e1abee5` Content Lab) · si el mensaje/topic pide info actual → `web_search` → snippets **saneados (T2 · RESEARCH_SNIPPET)** → al system. Módulo compartido `bc_cognition/{domain/search_intent, application/web_context}.py` · trigger ES+EN · umbral subido (amplios solo con cue) · best-effort · cap 3×500.
+
 ---
 
 > **Regla:** Si está en "lo que existe" pero no puedes mostrar el archivo
 > de código donde vive → se mueve a "no existe". Sin excepciones.
-> **Última actualización:** 24 mayo 2026 (SPRINT 4A CIERRE · input sanitization live) · firmado: Claude Opus 4.7 (1M context) + Ibrain (CEO)
+> **Última actualización:** 24 mayo 2026 (SPRINT 4A+4B + BUGs ARIA + auto-Brave-Search) · firmado: Claude Opus 4.7 (1M context) + Ibrain (CEO)
