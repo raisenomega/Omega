@@ -376,6 +376,39 @@ Decisiones firmadas §7: risk 0-100 · heurística-only v1 (Haiku→Sprint 5) ·
 
 ---
 
+## SECCIÓN 14 — SESIÓN 25 MAY 2026 (prod fixes + seguridad + features) · ~22 commits
+
+Continuación del 24 may (§10-13). Cliente piloto: Jorge / La Milagrosa Software. Detalle completo + handoff: `PENDIENTES_Y_PROGRESOS_20260525.md`.
+
+**DEBT-031 CERRADA** (`f9fa866`): módulo legacy `api/routes/calendar` + repo + `domain/calendar` eliminados (schema fantasma · 100% superseded por calendar_v3); `analytics/get_dashboard.py` reescrito a schema V3. **DEBT-049 NUEVA** (`fc512b9`): schema fantasma residual — NOVA `infrastructure/calendar` (cols viejas) + tabla `agent_executions` inexistente en system/omega. Latente, ~6h.
+
+**Wizard % (AUDIT 1)** (`c12ef86`): `sectionsFilled` (frontend) tenía falsos positivos por truthiness de arrays vacíos JS (`tone:[]`, `goals.primary_goal:[]`) → form en blanco marcaba 20% → mostraba 40% vs backend 20%. Reescrito como espejo EXACTO de `calc_completion_percent`. Los **3 calculadores convergen** (wizard=backend=ARIA · `b312676`).
+
+**Content Lab picker (AUDIT 2 / BUG B)** (`c52a1be` backend + `c12ef86` frontend): el trigger 00006 auto-crea client row a todo user → reseller owner tenía `isClient=true` → `useMyClients` caía en rama single-client y nunca pedía `/clients/`. Fix: prioriza `isOwner`. Backend `list_clients` resuelve resellers desde tabla (no claim JWT).
+
+**Wizard persistencia (BUG A)** (`7db0fb7` + `ec221ed`): (1) zod resiliente en load (enum/hex/uuid inválidos → null · `.catch()` · competitors legacy → {name,url}); (2) `username` `.max(64)`→`.max(500)` + mapeo `username`→`account_name` (columna real · `username`/`profile_url` no existen en social_accounts).
+
+**Wizard 3 fixes Nuevo Cliente** (`546cabd` + `98aa557`): (1) deferred upload del doc de contexto (retiene File → sube al crear); (2) campos numéricos `type=number`→`type=text`+`parseLooseNumber` (acepta "10,000"→10000); (3) reset blindado (`!isDirty` → refetch no borra ediciones). + extraído `onboarding-error-toast.ts`.
+
+**Regresión create directo** (`f8df3e8`): el hard-delete dejó al cliente sin fila → `create_client_onboarding` daba 403 (resolvía reseller solo de fila existente · `clients.reseller_id` es NOT NULL). Fix: resolución por prioridad — reseller propio → reseller del client → **OMEGA Direct** default (slug omega-direct, del trigger 00006). + SectionSamples deferred-upload.
+
+**🔒 Seguridad auth_utils — role server-side** (`33166e4`): `get_current_user` leía `role`/`reseller_id` de `user_metadata` (editable por el user → **escalada de privilegios**: `updateUser({data:{role:"owner"}})`). Ahora **derivado de la DB** (`_resolve_role_and_reseller`: resellers.is_owner=true→owner · reseller→reseller · resto→client · fail-closed). Forge cerrada en TODOS los endpoints. + fix de checks de propiedad en `clients/read.py`+`update.py` (comparaban espacios de ID distintos). + índice `resellers.owner_user_id` (migración 00023 · **aplicada**) (`4c2fb10`) + caché TTL-60s del rol (`015c6a5`) + cleanup docs login.py. (Deuda transversal: otros endpoints aún usan `user["role"]` del claim — blast radius reportado.)
+
+**Hard delete cliente** (`4033cd6` + `5ff0d27`): DELETE real permanente (cascada FK · todas son CASCADE/SET NULL · cero migración). Frontend ruta a `apiDelete('/clients/{id}')` (antes Supabase directo · RLS bloqueaba silenciosamente → toast falso). Autorización server-side: dueño de fila / reseller dueño / superadmin (is_owner).
+
+**Logo overlay opt-in en imágenes (Fase 1)** (`5358f7f`): toggle "Usar mi logo" → `apply_logo` (default sin logo). `_logo_overlay.py` (Pillow): descarga imagen+logo → overlay esquina inf-derecha (10%·padding 20·opac 80%) → re-upload. Best-effort. Video fuera de scope (ffmpeg). **Fase 2 pendiente** (persistir logo subido en Content Lab → brand_files/client_brand_assets).
+
+**ARIA contexto ampliado** (`d115222` + `c8973af` + `331b989`): build_client_context_block ahora incluye negocio/audiencia/objetivos/voz/cuentas conectadas + **regiones** (`clients.region`) + **"Perfil completado X/10"** con ✅/❌ por sección. `fetch_aria_context` unifica context+social+identidad+assets+samples. Cap total 2000.
+
+**a11y consola** (`68e14b5`): `DialogTitle`/`SheetTitle` sr-only en overlays sin título (Clients wizard + sidebar móvil) → limpia warnings Radix. **`git_sha` en `/health`** (`d04f05a`) para verificar deploy de Railway.
+
+### 🔴 Acciones del owner / estado de deploy
+- **Migraciones: TODAS aplicadas** (hasta 00023 · `db push` corrido esta sesión). **NO hay migración pendiente.**
+- **Railway debe REBUILDEAR** por la dependencia nueva **Pillow** (es build de nixpacks, NO un `db push`). Verificar `/health` `git_sha` ≥ `5358f7f` post-rebuild. Vigilar el build (nixpacks tuvo fricciones antes).
+- **Vercel** debe deployar el frontend (AUDIT 1/2, wizard 3 fixes, toggle logo, a11y) + hard-refresh.
+
+---
+
 > **Regla:** Si está en "lo que existe" pero no puedes mostrar el archivo
 > de código donde vive → se mueve a "no existe". Sin excepciones.
-> **Última actualización:** 24 mayo 2026 (SPRINT 4A+4B + BUGs ARIA + auto-Brave-Search) · firmado: Claude Opus 4.7 (1M context) + Ibrain (CEO)
+> **Última actualización:** 25 mayo 2026 (sesión prod fixes + seguridad role server-side + logo overlay) · firmado: Claude Opus 4.7 (1M context) + Ibrain (CEO)

@@ -440,6 +440,10 @@ El código + tests están verdes; **solo falta el deploy de migración.** Verifi
 
 ---
 
+> **→ Sesión siguiente (25 may):** AUDIT 1/2 wizard% + picker · BUG A persistencia · seguridad
+> role server-side · hard delete · wizard 3 fixes · logo overlay · ARIA regiones + X/10 · DEBT-049.
+> Detalle: **`PENDIENTES_Y_PROGRESOS_20260525.md`** + **`SOURCE_OF_TRUTH.md` §14**.
+
 ```
 PENDIENTES_Y_PROGRESOS_20260524.md
 Sesión 24 may · 4A (5) + 4B (5) + BUG 1/2 + auto-Brave-Search · ~30 commits · gate 10/10 c/u · 0 downtime
