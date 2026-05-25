@@ -7,6 +7,12 @@ function isoDaysFromNow(days: number): string {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 }
 
+function startOfTodayIso(): string {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);  // medianoche local · un post pending de las 05:45 de hoy aún cuenta
+  return d.toISOString();
+}
+
 export function useDashboardData() {
   const clientsQuery = useQuery({
     queryKey: ["clients"],
@@ -38,8 +44,8 @@ export function useDashboardData() {
       const { count, error } = await supabase
         .from("scheduled_posts")
         .select("*", { count: "exact", head: true })
-        .eq("status", "pending")
-        .gte("scheduled_for", new Date().toISOString())
+        .in("status", ["pending", "scheduled"])  // 'scheduled' es etiqueta UI · 'pending' es DB canónico
+        .gte("scheduled_for", startOfTodayIso())  // desde 00:00 de hoy · no excluye posts cuya hora ya pasó hoy
         .lte("scheduled_for", isoDaysFromNow(7));
       if (error) throw error;
       return count ?? 0;
