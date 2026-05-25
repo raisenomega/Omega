@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -6,6 +6,7 @@ import { useToast } from "./use-toast";
 import { onboardingSchema, type OnboardingForm } from "@/lib/onboarding-schema";
 import { sectionsFilled, completionPercent } from "@/lib/onboarding-completion";
 import { fetchOnboardingData, postOnboarding, patchOnboarding } from "@/lib/onboarding-api";
+import { useUploadClientContext } from "./useUploadClientContext";
 
 const DEFAULTS: Partial<OnboardingForm> = {
   business: {} as OnboardingForm["business"],
@@ -25,12 +26,15 @@ export interface UseOnboardingFormResult {
   isSubmitting: boolean; isLoading: boolean; isEditing: boolean; completionPercent: number;
   isError: boolean; errorMessage: string | null; retry: () => void;
   clientId?: string | null;  // DEBT-039 V2 · SectionSamples needs it for upload
+  setPendingFile: (f: File | null) => void;  // FIX 1 · doc de contexto pendiente (deferred upload al crear)
 }
 
 export function useOnboardingForm(opts: UseOnboardingFormOptions = {}): UseOnboardingFormResult {
   const { toast } = useToast();
   const { clientId, onSuccess } = opts;
   const isEditing = !!clientId;
+  const upload = useUploadClientContext();
+  const [pendingFile, setPendingFile] = useState<File | null>(null);  // FIX 1
 
   const form = useForm<OnboardingForm>({
     resolver: zodResolver(onboardingSchema),
@@ -46,7 +50,8 @@ export function useOnboardingForm(opts: UseOnboardingFormOptions = {}): UseOnboa
   });
 
   useEffect(() => {
-    if (dataQuery.data) form.reset(dataQuery.data);
+    // FIX 3: no resetear si el usuario ya editó (refetch en window-focus borraría sus cambios)
+    if (dataQuery.data && !form.formState.isDirty) form.reset(dataQuery.data);
   }, [dataQuery.data, form]);
 
   const pct = completionPercent(sectionsFilled(form.watch()));
@@ -54,6 +59,11 @@ export function useOnboardingForm(opts: UseOnboardingFormOptions = {}): UseOnboa
   const mutation = useMutation({
     mutationFn: (data: OnboardingForm) => (clientId ? patchOnboarding(clientId, data) : postOnboarding(data)),
     onSuccess: (r) => {
+      // FIX 1: en creación ya existe clientId → subir el doc de contexto retenido (best-effort).
+      if (!isEditing && pendingFile) {
+        upload.mutate({ clientId: r.client_id, file: pendingFile });
+        setPendingFile(null);
+      }
       toast({ title: isEditing ? "Cliente actualizado" : "Cliente creado", description: `${r.completion_percent}% · ${r.onboarding_complete ? "completo" : "parcial"}` });
       onSuccess?.(r.client_id);
     },
@@ -100,5 +110,6 @@ export function useOnboardingForm(opts: UseOnboardingFormOptions = {}): UseOnboa
     errorMessage: dataQuery.error instanceof Error ? dataQuery.error.message : null,
     retry: () => dataQuery.refetch(),
     clientId,
+    setPendingFile,
   };
 }

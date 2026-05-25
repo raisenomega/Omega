@@ -6,11 +6,12 @@ interface OnboardingLayoutProps {
   form: UseFormReturn<OnboardingForm>;
   activeIndex: number;
   clientId?: string | null;  // DEBT-039 V2 · pasado a Component (SectionSamples lo usa)
+  onPendingFile?: (f: File | null) => void;  // FIX 1 · SectionBusiness retiene doc para subir al crear
 }
 
 // Renderiza Section[activeIndex] · banner opcional inline al lado del título
 // (definido en registry · ver SectionDef.banner).
-export function OnboardingLayout({ form, activeIndex, clientId }: OnboardingLayoutProps) {
+export function OnboardingLayout({ form, activeIndex, clientId, onPendingFile }: OnboardingLayoutProps) {
   const section = SECTIONS[activeIndex];
   const Comp = section.Component;
   return (
@@ -25,7 +26,7 @@ export function OnboardingLayout({ form, activeIndex, clientId }: OnboardingLayo
             <span className="text-[10px] text-muted-foreground">{section.banner}</span>
           )}
         </div>
-        <Comp form={form} clientId={clientId} />
+        <Comp form={form} clientId={clientId} onPendingFile={onPendingFile} />
       </div>
     </div>
   );

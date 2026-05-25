@@ -19,7 +19,8 @@ export interface SectionDef {
   banner?: string;
   // clientId opcional · solo SectionSamples lo usa (DEBT-039 V2 upload context).
   // Otras secciones ignoran la prop · TS lo permite porque es opcional.
-  Component: ComponentType<{ form: UseFormReturn<OnboardingForm>; clientId?: string | null }>;
+  // onPendingFile · solo SectionBusiness lo usa (FIX 1 deferred upload en Nuevo Cliente).
+  Component: ComponentType<{ form: UseFormReturn<OnboardingForm>; clientId?: string | null; onPendingFile?: (f: File | null) => void }>;
 }
 
 export const SECTIONS: readonly SectionDef[] = [

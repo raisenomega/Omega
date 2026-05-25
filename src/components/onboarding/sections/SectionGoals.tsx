@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PRIMARY_GOALS } from "@/lib/onboarding-constants";
 import type { OnboardingForm } from "@/lib/onboarding-schema";
+import { parseLooseNumber } from "@/lib/parse-number";
 import { PillGroup } from "../PillGroup";
 
 interface Props { form: UseFormReturn<OnboardingForm> }
@@ -46,7 +47,7 @@ export function SectionGoals({ form }: Props) {
         </div>
       </div>
       <div className="space-y-1"><Label className="text-xs">Target revenue mensual (USD)</Label>
-        <Input className="h-8" type="number" min={0} step="0.01" value={v?.monthly_revenue_target ?? ""} onChange={(e) => set("monthly_revenue_target", e.target.value ? Number(e.target.value) : null)} />
+        <Input className="h-8" type="text" inputMode="numeric" placeholder="ej: 5,000" value={v?.monthly_revenue_target ?? ""} onChange={(e) => set("monthly_revenue_target", parseLooseNumber(e.target.value))} />
       </div>
     </div>
   );

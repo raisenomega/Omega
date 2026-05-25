@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PLATFORMS, PLATFORM_LABELS, PUBLISHING_FREQUENCIES } from "@/lib/onboarding-constants";
 import type { OnboardingForm } from "@/lib/onboarding-schema";
+import { parseLooseNumber } from "@/lib/parse-number";
 import { PillGroup } from "../PillGroup";
 
 type Acc = OnboardingForm["social_accounts"][number];
@@ -35,7 +36,7 @@ export function SocialAccountForm({ value, onChange, onSubmit, isEditing }: Soci
           <Input className="h-8" placeholder="@usuario" value={value.username} onChange={(e) => onChange("username", e.target.value)} />
         </div>
         <div className="space-y-1"><Label className="text-xs">Seguidores aprox.</Label>
-          <Input className="h-8" type="number" min={0} value={value.approx_followers ?? ""} onChange={(e) => onChange("approx_followers", e.target.value ? Number(e.target.value) : null)} />
+          <Input className="h-8" type="text" inputMode="numeric" placeholder="ej: 10,000" value={value.approx_followers ?? ""} onChange={(e) => onChange("approx_followers", parseLooseNumber(e.target.value))} />
         </div>
       </div>
       <div className="space-y-1"><Label className="text-xs">Frecuencia</Label>

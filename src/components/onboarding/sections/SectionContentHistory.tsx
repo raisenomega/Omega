@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { OnboardingForm } from "@/lib/onboarding-schema";
+import { parseLooseNumber } from "@/lib/parse-number";
 
 interface Props { form: UseFormReturn<OnboardingForm> }
 
@@ -17,7 +18,7 @@ export function SectionContentHistory({ form }: Props) {
           Ya tengo contenido publicado
         </label>
         <div className="space-y-1"><Label className="text-xs">Seguidores aprox.</Label>
-          <Input className="h-8" type="number" min={0} value={v?.existing_followers ?? ""} onChange={(e) => set("existing_followers", e.target.value ? Number(e.target.value) : null)} />
+          <Input className="h-8" type="text" inputMode="numeric" placeholder="ej: 10,000" value={v?.existing_followers ?? ""} onChange={(e) => set("existing_followers", parseLooseNumber(e.target.value))} />
         </div>
       </div>
       <div className="space-y-1"><Label className="text-xs">URL mejor post</Label>
