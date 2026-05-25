@@ -50,4 +50,11 @@ def to_onboarding_payload(
         "instructions": _pick(context, INSTR_K),
         "brand_assets": _pick(assets, ASSETS_K) if assets else None,
         "brand_voice_samples": samples or [],
+        # BUG 1 fix · metadata del doc subido (no el texto · solo para mostrar en el wizard)
+        "uploaded_context": (
+            {"filename": context.get("uploaded_context_filename"),
+             "char_count": len(str(context.get("uploaded_context_text") or "")),
+             "at": context.get("uploaded_context_at")}
+            if context.get("uploaded_context_text") else None
+        ),
     }

@@ -27,6 +27,9 @@ export function SectionBusiness({ form, clientId }: Props) {
   const upload = useUploadClientContext();
   const [uploaded, setUploaded] = useState<{ filename: string; chars: number } | null>(null);
   const v = form.watch("business");
+  // BUG 1 fix · doc guardado (del GET /onboarding-data) o recién subido (estado local)
+  const savedCtx = form.watch("uploaded_context");
+  const shown = uploaded ?? (savedCtx ? { filename: savedCtx.filename ?? "documento", chars: savedCtx.char_count } : null);
   const set = <K extends keyof OnboardingForm["business"]>(k: K, x: OnboardingForm["business"][K]) => form.setValue(`business.${k}`, x);
 
   const handleFile = (f: File | undefined) => {
@@ -51,11 +54,11 @@ export function SectionBusiness({ form, clientId }: Props) {
         <input ref={fileRef} type="file" accept={ACCEPT} className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
       </div>
       {!clientId && <p className="text-[10px] text-amber-600">Disponible al editar cliente (guardá primero)</p>}
-      {uploaded && (
+      {shown && (
         <p className="text-[10px] text-emerald-600 flex items-center gap-1">
           <CheckCircle2 className="h-3 w-3" /> <FileText className="h-3 w-3" />
-          {uploaded.filename} · {uploaded.chars.toLocaleString()} chars · ARIA lo usará permanentemente
-          <button type="button" onClick={() => setUploaded(null)} aria-label="Limpiar visual" className="ml-1"><X className="h-3 w-3" /></button>
+          {shown.filename} · {shown.chars.toLocaleString()} chars · ARIA lo usará permanentemente
+          {uploaded && <button type="button" onClick={() => setUploaded(null)} aria-label="Limpiar visual" className="ml-1"><X className="h-3 w-3" /></button>}
         </p>
       )}
       <div className="grid grid-cols-2 gap-2">

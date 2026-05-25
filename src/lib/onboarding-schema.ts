@@ -25,6 +25,12 @@ export const onboardingSchema = z.object({
   }),
   brand_assets: brandAssetsSchema.optional().nullable(),
   brand_voice_samples: z.array(z.string()).default([]),
+  // BUG 1 fix · metadata read-only del doc subido (GET lo carga · backend ignora en save)
+  uploaded_context: z.object({
+    filename: z.string().nullable(),
+    char_count: z.number(),
+    at: z.string().nullable(),
+  }).nullable().optional(),
 });
 
 export type OnboardingForm = z.infer<typeof onboardingSchema>;
