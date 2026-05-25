@@ -3,28 +3,31 @@ Handler: Get Sentinel Status
 Retorna último scan de cada agente
 Filosofía: No velocity, only precision 🐢💎
 """
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from fastapi import HTTPException
 import logging
 
 from app.infrastructure.supabase_service import get_supabase_service
+from app.api.routes.auth.auth_utils import get_current_user
 
 logger = logging.getLogger(__name__)
 
 
-async def handle_get_status() -> Dict[str, Any]:
+async def handle_get_status(authorization: Optional[str]) -> Dict[str, Any]:
     """
-    Get current security status from latest scans
-
-    Returns:
-        Dict with security score, status, and agent details
+    Get current security status from latest scans · solo owner/superadmin (4B-5).
 
     Raises:
-        HTTPException 500: Database error
+        HTTPException 401: sin auth · 403: no superadmin (isOwner) · 500: DB error
     """
+    user = await get_current_user(authorization)
+    supabase = get_supabase_service()
+    # 4B-5: SENTINEL es del sistema → solo superadmin (dueño de reseller · isOwner)
+    owns = supabase.client.table("resellers").select("id").eq(
+        "owner_user_id", user["id"]).eq("is_owner", True).limit(1).execute()
+    if not owns.data:
+        raise HTTPException(status_code=403, detail="superadmin_only")
     try:
-        supabase = get_supabase_service()
-
         # Get latest scan for each agent (DISTINCT ON emulation)
         scans_resp = supabase.client.table("sentinel_scans")\
             .select("*")\

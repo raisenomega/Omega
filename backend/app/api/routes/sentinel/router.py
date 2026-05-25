@@ -2,7 +2,7 @@
 Sentinel Router - Security & Monitoring
 Filosofía: No velocity, only precision 🐢💎
 """
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Header
 from typing import Optional
 
 from .handlers import (
@@ -17,9 +17,9 @@ router = APIRouter(prefix="/sentinel", tags=["SENTINEL 🛡️"])
 
 
 @router.get("/status/")
-async def get_status():
-    """Get current security status from latest scans"""
-    return await handle_get_status()
+async def get_status(authorization: Optional[str] = Header(None)):
+    """Get current security status · solo owner/superadmin (4B-5)."""
+    return await handle_get_status(authorization)
 
 
 @router.post("/scan/")

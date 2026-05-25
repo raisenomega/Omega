@@ -7,6 +7,7 @@ import { AccountDistributionChart } from "@/components/dashboard/PlatformCharts"
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { PlatformStatus } from "@/components/dashboard/PlatformStatus";
 import { SecurityKPICard } from "@/components/dashboard/SecurityKPICard";
+import { SentinelDashboardCard } from "@/components/dashboard/SentinelDashboardCard";
 import { PlanStatusBar } from "@/components/clients/PlanStatusBar";
 
 export default function Dashboard() {
@@ -89,7 +90,8 @@ export default function Dashboard() {
       {/* Activity + Platform Status */}
       <div className="grid gap-4 lg:grid-cols-2">
         <ActivityFeed recentClients={recentClients} recentAccounts={recentAccounts} />
-        <PlatformStatus data={platformCounts} />
+        {/* SENTINEL 4B-5 · solo superadmin real (is_owner=true) ve salud del sistema · resto ve estado por plataforma */}
+        {myPlan.isSuperadmin ? <SentinelDashboardCard /> : <PlatformStatus data={platformCounts} />}
       </div>
     </div>
   );

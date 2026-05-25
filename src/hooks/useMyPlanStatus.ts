@@ -5,7 +5,8 @@ import { useAuth } from "./useAuth";
 export interface MyPlanStatus {
   loading: boolean;
   isClient: boolean;
-  isOwner: boolean;
+  isOwner: boolean;       // dueño de cualquier reseller
+  isSuperadmin: boolean;  // is_owner=true · superadmin de plataforma (00022 · §7.5)
   clientId: string | null;
 }
 
@@ -32,12 +33,13 @@ export function useMyPlanStatus(): MyPlanStatus {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("resellers")
-        .select("id")
+        .select("*")
         .eq("owner_user_id", user!.id)
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      // is_owner (migración 00022 · superadmin) aún no en types generados → cast acotado
+      return data as unknown as { id: string; is_owner: boolean } | null;
     },
     enabled: !!user,
   });
@@ -46,6 +48,7 @@ export function useMyPlanStatus(): MyPlanStatus {
     loading: !user || clientQuery.isLoading || resellerQuery.isLoading,
     isClient: !!clientQuery.data,
     isOwner: !!resellerQuery.data,
+    isSuperadmin: !!resellerQuery.data?.is_owner,
     clientId: clientQuery.data?.id ?? null,
   };
 }
