@@ -45,12 +45,15 @@ async def update_client_profile(
                 detail="Client not found"
             )
 
-        # 4. Reseller can only update their clients
-        if role == "reseller" and client.get("reseller_id") != user_id:
-            raise HTTPException(
-                status_code=403,
-                detail="Cannot update client from another reseller"
-            )
+        # 4. Reseller solo actualiza SUS clientes · por datos (antes: reseller_id != user_id,
+        #    espacios de ID distintos → siempre 403). owner/superadmin sin restricción.
+        if role == "reseller":
+            owned = await client_repository.get_owned_reseller_ids(user_id)
+            if str(client.get("reseller_id")) not in owned:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Cannot update client from another reseller"
+                )
 
         # 5. Extract only provided fields
         update_data = request.model_dump(exclude_unset=True)

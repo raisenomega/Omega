@@ -37,14 +37,16 @@ async def get_client_profile(
                 detail="Client not found"
             )
 
-        # 3. Access control based on role
-        if role == "reseller" and client.get("reseller_id") != user_id:
-            raise HTTPException(
-                status_code=403,
-                detail="Cannot access client from another reseller"
-            )
-
-        if role == "client" and client_id != user_id:
+        # 3. Access control por DATOS (antes mezclaba espacios: reseller_id/client_id vs
+        #    user_id auth → siempre 403). owner/superadmin sin restricción.
+        if role == "reseller":
+            owned = await client_repository.get_owned_reseller_ids(user_id)
+            if str(client.get("reseller_id")) not in owned:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Cannot access client from another reseller"
+                )
+        elif role == "client" and str(client.get("user_id")) != str(user_id):
             raise HTTPException(
                 status_code=403,
                 detail="Cannot access another client's profile"
