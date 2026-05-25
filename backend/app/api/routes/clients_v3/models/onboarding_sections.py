@@ -7,6 +7,8 @@ class IdentitySection(BaseModel):
     name: str = Field(..., min_length=1, max_length=120)
     industry: str = Field(..., max_length=64)
     regions: list[str] = Field(..., min_length=1)
+    website: Optional[str] = None         # sec 1 · opcional (migración 00024)
+    business_email: Optional[str] = None  # sec 1 · opcional (migración 00024)
 
 
 class BusinessSection(BaseModel):

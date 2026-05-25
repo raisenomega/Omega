@@ -40,6 +40,8 @@ def to_onboarding_payload(
             "name": client.get("name") or "",
             "industry": client.get("industry") or "",
             "regions": _csv_split(client.get("region")),
+            "website": client.get("website"),
+            "business_email": client.get("business_email"),
         },
         "business": _pick(context, BUSINESS_K),
         "audience": {**_pick(context, AUDIENCE_K), "competitors": context.get("competitors") or []},

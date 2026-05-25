@@ -57,18 +57,26 @@ def test_profile_completion_counts_and_lists():
     assert "❌ Ejemplos de contenido: sin datos" in out
 
 
-def test_competitors_logo_colors():
-    """P1 competidores + P2 logo (existe+URL / no cargado) + colores de marca."""
+def test_rich_context_fields():
+    """Campos del bloque: competidores · logo (URL/no cargado) · colores · avoided/custom/
+    what_* (TASK 1) · website/email (TASK 2) · vacíos NO aparecen (P1 · sin placeholders)."""
     ctx = {
-        "competitors": [{"name": "Comp A", "url": "x"}, {"name": "Comp B"}],
+        "competitors": [{"name": "Comp A"}, {"name": "Comp B"}],
         "_logo_url": "https://cdn/logo.png",
         "_brand_assets": {"primary_color": "#FF0000", "secondary_color": "#00FF00"},
+        "avoided_topics": "política", "avoided_words": ["barato", "gratis"],
+        "custom_instructions": "siempre en tú", "what_worked": "reels", "what_failed": "posts largos",
+        "_client": {"name": "X", "industry": "i", "website": "milagrosa.online", "business_email": "hola@m.online"},
     }
     out = build_client_context_block(ctx)
-    assert "Competidores: Comp A, Comp B" in out
-    assert "Logo: disponible (URL: https://cdn/logo.png)" in out
-    assert "Colores de marca: #FF0000, #00FF00" in out
-    assert "Logo: no cargado" in build_client_context_block({})  # sin logo
+    for exp in ("Competidores: Comp A, Comp B", "Logo: disponible (URL: https://cdn/logo.png)",
+                "Colores de marca: #FF0000, #00FF00", "Evitar (temas): política",
+                "Evitar (palabras): barato, gratis", "Instrucciones del cliente: siempre en tú",
+                "Qué funcionó: reels", "Qué falló: posts largos", "Sitio web: milagrosa.online",
+                "Email de contacto: hola@m.online"):
+        assert exp in out, exp
+    empty = build_client_context_block({})
+    assert "Logo: no cargado" in empty and "Evitar" not in empty and "Sitio web" not in empty  # P1
 
 
 def test_profile_mirror_backend_frontend():

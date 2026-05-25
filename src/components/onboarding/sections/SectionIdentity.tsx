@@ -42,6 +42,17 @@ export function SectionIdentity({ form }: Props) {
           cols={4}
         />
       </div>
+      {/* Campos opcionales · sin placeholder (P1: cero texto sugerido) */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <Label className="text-xs">Sitio web del negocio</Label>
+          <Input className="h-8" value={v?.website ?? ""} onChange={(e) => form.setValue("identity.website", e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Email de contacto</Label>
+          <Input className="h-8" value={v?.business_email ?? ""} onChange={(e) => form.setValue("identity.business_email", e.target.value)} />
+        </div>
+      </div>
     </div>
   );
 }

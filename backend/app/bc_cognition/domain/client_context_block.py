@@ -54,38 +54,38 @@ def _completion_lines(ctx: dict[str, Any]) -> list[str]:
 
 
 def build_client_context_block(ctx: dict[str, Any]) -> str:
-    """Perfil (X/10 + qué falta) + contexto real · total ≤2000 chars (uploaded capado)."""
+    """Perfil (X/10 + qué falta) + contexto real · total ≤2000 chars (uploaded capado).
+    Campos vacíos NO se muestran (P1 · sin placeholders/datos sugeridos)."""
+    cl = ctx.get("_client") or {}
+    ba = ctx.get("_brand_assets") or {}
     lines = _completion_lines(ctx)
-    niche = ctx.get("niche") or ctx.get("vertical")
-    if niche:
-        lines.append(f"Negocio: {niche}")
-    region = (ctx.get("_client") or {}).get("region")
-    if region:
-        lines.append(f"Regiones: {str(region).replace(',', ', ')}")
-    if ctx.get("business_what"):
-        lines.append(f"Qué hace: {str(ctx['business_what'])[:300]}")
-    if ctx.get("business_diff"):
-        lines.append(f"Diferenciador: {str(ctx['business_diff'])[:200]}")
-    aud = _joined(ctx, ("target_audience", "audience_age_range", "audience_gender"))
-    if aud:
-        lines.append(f"Audiencia: {aud}")
+
+    def add(val: object, label: str, cap: int = 0) -> None:
+        if val:
+            lines.append(f"{label}: {str(val)[:cap] if cap else val}")
+
+    def joined(vals: object) -> str:
+        return ", ".join(str(v) for v in vals if v) if isinstance(vals, list) else ""
+
+    add(ctx.get("niche") or ctx.get("vertical"), "Negocio")
+    add(str(cl["region"]).replace(",", ", ") if cl.get("region") else "", "Regiones")
+    add(cl.get("website"), "Sitio web")                     # TASK 2
+    add(cl.get("business_email"), "Email de contacto")      # TASK 2
+    add(ctx.get("business_what"), "Qué hace", 300)
+    add(ctx.get("business_diff"), "Diferenciador", 200)
+    add(_joined(ctx, ("target_audience", "audience_age_range", "audience_gender")), "Audiencia")
     comps = [str(c.get("name") if isinstance(c, dict) else c) for c in (ctx.get("competitors") or [])]
-    comps = [c for c in comps if c and c != "None"]
-    if comps:
-        lines.append(f"Competidores: {', '.join(comps[:8])}")
-    goals = _joined(ctx, ("primary_goal", "goal_this_month"))
-    if goals:
-        lines.append(f"Objetivos: {goals}")
-    voice = _joined(ctx, ("tone", "emoji_usage", "hashtag_strategy"))
-    if voice:
-        lines.append(f"Voz de marca: {voice}")
-    # Identidad visual · ARIA no VE la imagen pero sabe que existe + su URL (P2)
+    add(", ".join(c for c in comps if c and c != "None"), "Competidores", 300)
+    add(_joined(ctx, ("primary_goal", "goal_this_month")), "Objetivos")
+    add(_joined(ctx, ("tone", "emoji_usage", "hashtag_strategy")), "Voz de marca")
+    add(ctx.get("avoided_topics"), "Evitar (temas)", 200)            # TASK 1
+    add(joined(ctx.get("avoided_words")), "Evitar (palabras)")       # TASK 1
+    add(ctx.get("custom_instructions"), "Instrucciones del cliente", 400)  # TASK 1
+    add(ctx.get("what_worked"), "Qué funcionó", 200)                 # TASK 1
+    add(ctx.get("what_failed"), "Qué falló", 200)                    # TASK 1
     logo_url = ctx.get("_logo_url")
     lines.append(f"Logo: disponible (URL: {logo_url})" if logo_url else "Logo: no cargado")
-    ba = ctx.get("_brand_assets") or {}
-    brand_colors = [c for c in (ba.get("primary_color"), ba.get("secondary_color")) if c]
-    if brand_colors:
-        lines.append(f"Colores de marca: {', '.join(brand_colors)}")
+    add(joined([ba.get("primary_color"), ba.get("secondary_color")]), "Colores de marca")
     lines.append(_accounts_line(ctx.get("social_accounts") or []))
     if ctx.get("uploaded_context_text"):
         lines.append("Documento de referencia del cliente:\n" + str(ctx["uploaded_context_text"])[:_UPLOADED_CAP])

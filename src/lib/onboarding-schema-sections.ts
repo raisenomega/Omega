@@ -17,6 +17,8 @@ export const identitySchema = z.object({
   name: z.string().min(1, "Requerido").max(120),
   industry: z.enum(INDUSTRIES),
   regions: z.array(z.enum(REGIONS)).min(1, "Selecciona al menos una"),
+  website: opt(z.string()),         // sec 1 · opcional (migración 00024)
+  business_email: opt(z.string()),  // sec 1 · opcional (migración 00024)
 });
 
 export const businessSchema = z.object({

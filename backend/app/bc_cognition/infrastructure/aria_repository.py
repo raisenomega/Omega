@@ -39,7 +39,7 @@ def fetch_aria_context(supabase: SupabaseService, client_id: str) -> Optional[di
         ctx: dict[str, Any] = r.data[0]
         sa = supabase.client.table("social_accounts").select("platform, account_name").eq("client_id", client_id).execute()
         ctx["social_accounts"] = sa.data or []
-        cl = supabase.client.table("clients").select("name, industry, region").eq("id", client_id).limit(1).execute()
+        cl = supabase.client.table("clients").select("name, industry, region, website, business_email").eq("id", client_id).limit(1).execute()
         ctx["_client"] = cl.data[0] if cl.data else {}
         ba = supabase.client.table("client_brand_assets").select("primary_color, secondary_color, logo_file_id").eq("client_id", client_id).limit(1).execute()
         ctx["_brand_assets"] = ba.data[0] if ba.data else {}
