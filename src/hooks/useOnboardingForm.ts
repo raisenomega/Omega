@@ -7,6 +7,7 @@ import { onboardingSchema, type OnboardingForm } from "@/lib/onboarding-schema";
 import { sectionsFilled, completionPercent } from "@/lib/onboarding-completion";
 import { fetchOnboardingData, postOnboarding, patchOnboarding } from "@/lib/onboarding-api";
 import { useUploadClientContext } from "./useUploadClientContext";
+import { onboardingErrorToast } from "@/lib/onboarding-error-toast";
 
 const DEFAULTS: Partial<OnboardingForm> = {
   business: {} as OnboardingForm["business"],
@@ -70,33 +71,11 @@ export function useOnboardingForm(opts: UseOnboardingFormOptions = {}): UseOnboa
     onError: (e: Error) => toast({ title: isEditing ? "No se pudo actualizar" : "No se pudo crear", description: e.message, variant: "destructive" }),
   });
 
-  // BUGFIX 24 may 2026: handleSubmit sin onInvalid callback silenciaba zod
-  // validation errors · botón Guardar Cambios click "no hacía nada" sin toast
-  // ni request en network. Ahora onInvalid muestra detail al user para
-  // diagnóstico inmediato (ej: identity.regions vacío post-load por DEBT-042
-  // o instructions.preferred_publishing_hours formato raro post-load DEBT-031).
+  // BUGFIX 24 may: onInvalid muestra los errores zod al user (antes el click "no hacía nada").
+  // El armado del mensaje se extrajo a onboarding-error-toast.ts (cosmético · <100L).
   const handleSubmit = form.handleSubmit(
     (d) => mutation.mutate(d),
-    (errors) => {
-      console.warn("[onboarding] zod validation failed:", errors);
-      const msgs: string[] = [];
-      const walk = (obj: unknown, path = ""): void => {
-        if (!obj || typeof obj !== "object") return;
-        for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
-          if (v && typeof v === "object" && "message" in (v as object)) {
-            msgs.push(`${path}${k}: ${(v as { message: string }).message}`);
-          } else if (v && typeof v === "object") {
-            walk(v, `${path}${k}.`);
-          }
-        }
-      };
-      walk(errors);
-      toast({
-        title: isEditing ? "No se pudo guardar · campos inválidos" : "No se pudo crear · campos inválidos",
-        description: msgs.slice(0, 5).join(" · ") || "Form inválido · revisá campos required",
-        variant: "destructive",
-      });
-    },
+    (errors) => { console.warn("[onboarding] zod validation failed:", errors); toast(onboardingErrorToast(errors, isEditing)); },
   );
 
   return {
