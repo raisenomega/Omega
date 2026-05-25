@@ -6,6 +6,7 @@ T4 Sprint 1: fetch_recent_for_owner agregado para inyectar memoria al system.
 import logging
 from typing import Optional
 from app.infrastructure.supabase_service import SupabaseService
+from app.bc_cognition.domain.input_threats import redact_pii
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ def insert_agent_memory(
     supabase.client.table("agent_memory").insert({
         "user_id": user_id, "client_id": client_id, "reseller_id": reseller_id,
         "agent_code": "aria", "memory_type": "episodic",
-        "context": user_message, "decision": assistant_response, "confidence": 7,
+        "context": redact_pii(user_message)[0], "decision": redact_pii(assistant_response)[0], "confidence": 7,
         "was_correct": was_correct, "source_event_id": source_event_id,
         "metadata": {"aria_level": level},
     }).execute()

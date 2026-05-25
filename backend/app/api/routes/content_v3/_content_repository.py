@@ -2,6 +2,7 @@
 import logging
 from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import get_supabase_service
+from app.bc_cognition.domain.input_threats import redact_pii
 
 logger = logging.getLogger(__name__)
 P = ParamSpec("P"); T = TypeVar("T")
@@ -37,6 +38,6 @@ def insert_brand_voice_corpus_approved(client_id: str, text: str, platform: Opti
 def insert_agent_memory_approved(user_id: str, client_id: str, content_text: str) -> None:
     _sb().table("agent_memory").insert({
         "user_id": user_id, "client_id": client_id, "agent_code": "brand_voice",
-        "memory_type": "semantic", "context": content_text[:500],
+        "memory_type": "semantic", "context": redact_pii(content_text)[0][:500],
         "decision": "approved_by_client", "confidence": 10, "was_correct": True,
     }).execute()

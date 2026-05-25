@@ -1,8 +1,8 @@
 """Repository clients_v3 · única capa de WRITES Supabase (DDD A1/A9)."""
-# force Railway redeploy · Nixpacks · 24 may 2026
 import logging
 from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import get_supabase_service
+from app.bc_cognition.domain.input_threats import redact_pii
 
 logger = logging.getLogger(__name__)
 P = ParamSpec("P"); T = TypeVar("T")
@@ -81,7 +81,7 @@ def insert_behavioral_event(user_id: str, client_id: str, event_type: str, event
 def insert_agent_memory(user_id: str, client_id: str, context: str, decision: str, confidence: int) -> None:
     _sb().table("agent_memory").insert({
         "user_id": user_id, "client_id": client_id, "agent_code": "nova", "memory_type": "semantic",
-        "context": context, "decision": decision, "confidence": confidence, "was_correct": True,
+        "context": redact_pii(context)[0], "decision": redact_pii(decision)[0], "confidence": confidence, "was_correct": True,
     }).execute()
 
 
