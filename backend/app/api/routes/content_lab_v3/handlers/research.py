@@ -18,8 +18,28 @@ from app.api.routes.content_lab_v3.models.content_lab_models import (
     ResearchRequest, ResearchResponse, ResearchResult,
 )
 from app.infrastructure.tools.web_search_tool import web_search
+from app.bc_cognition.application.input_sanitizer import sanitize_input
+from app.bc_cognition.domain.input_threats import InputContext, SanitizerAction
 
 router = APIRouter()
+
+_UNSAFE = (SanitizerAction.BLOCK, SanitizerAction.HOLD_FOR_HUMAN_REVIEW)
+
+
+def _safe_result(r: dict) -> Optional[ResearchResult]:
+    """Sanitiza snippet externo (T2 · RESEARCH_SNIPPET). Inseguro → None (descartar)."""
+    out, err = sanitize_input(str(r.get("content") or r.get("snippet") or ""), InputContext.RESEARCH_SNIPPET)
+    if err is not None or out is None or out.action in _UNSAFE:
+        return None
+    return ResearchResult(title=str(r.get("title", "")), url=str(r.get("url", "")), snippet=out.clean_text)
+
+
+def _safe_answer(answer: object) -> Optional[str]:
+    """Sanitiza el answer externo de Brave (T2). Inseguro/vacío → None."""
+    if not answer:
+        return None
+    out, err = sanitize_input(str(answer), InputContext.RESEARCH_SNIPPET)
+    return None if (err is not None or out is None or out.action in _UNSAFE) else out.clean_text
 
 
 @router.post("/research", response_model=ResearchResponse)
@@ -47,17 +67,11 @@ async def research(
     # espera 'snippet' · ResearchResult(**r) hace Pydantic ValidationError
     # → FastAPI 500 (causa del bug reportado por owner). Mapeo explícito
     # robusto · tolera ambos shapes (legacy content + future snippet).
+    safe = [x for x in (_safe_result(r) for r in (result.get("results") or [])) if x is not None]
     return ResearchResponse(
         query=str(result.get("query") or request.query),
-        results=[
-            ResearchResult(
-                title=str(r.get("title", "")),
-                url=str(r.get("url", "")),
-                snippet=str(r.get("content") or r.get("snippet") or ""),
-            )
-            for r in (result.get("results") or [])
-        ],
-        answer=result.get("answer") or None,
-        count=int(result.get("count") or 0),
+        results=safe,
+        answer=_safe_answer(result.get("answer")),
+        count=len(safe),
         duration_ms=int(result.get("duration_ms") or 0),
     )
