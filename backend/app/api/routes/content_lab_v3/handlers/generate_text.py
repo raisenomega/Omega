@@ -22,6 +22,7 @@ from app.api.routes.content_lab_v3.models.content_lab_models import (
     GenerateTextRequest, GenerateTextResponse,
 )
 from app.bc_cognition.application import use_brand_dna
+from app.bc_cognition.application.web_context import fetch_web_context
 from app.bc_cognition.application.input_sanitizer import sanitize_input
 from app.bc_cognition.domain.input_threats import InputContext, SanitizerAction
 
@@ -71,6 +72,10 @@ async def generate_text(
             raise HTTPException(status_code=400, detail=f"attachment_extract_failed:{e}")
         if extracted:
             system = f"{system}\n\nCONTEXTO ADJUNTO DEL CLIENTE:\n{extracted}"
+    # COMMIT 2: auto-Brave-Search · si el topic pide info actual → snippets web saneados (T2)
+    web_block = await fetch_web_context(request.topic, vertical, "content_creator", client_id)
+    if web_block:
+        system = f"{system}\n\n{web_block}"
     vault_prompt = select_optimal_prompt(vertical, request.platform, request.content_type)
     user_message = vault_prompt.format_map(SafeDict(
         client_name=client.get("name", "el cliente"), tone=request.tone,
