@@ -2,7 +2,7 @@
 Auth Login Routes
 Endpoint for client login with JWT token generation
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from app.models.shared_models import APIResponse
 from app.api.routes.auth.models import LoginRequest
 from app.api.routes.auth.jwt_utils import (
@@ -12,6 +12,7 @@ from app.api.routes.auth.jwt_utils import (
     get_redirect_by_role,
 )
 from app.infrastructure.supabase_service import get_supabase_service
+from app.bc_cognition.application.guardian_session_analyzer import analyze_login
 import asyncio
 import logging
 
@@ -19,8 +20,13 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
+def _guardian_ip(req: Request) -> str:
+    fwd = req.headers.get("x-forwarded-for", "")
+    return fwd.split(",")[0].strip() if fwd else (req.client.host if req.client else "")
+
+
 @router.post("/login", response_model=APIResponse)
-async def login(request: LoginRequest) -> APIResponse:
+async def login(request: LoginRequest, http_request: Request) -> APIResponse:
     """
     Login with email and password
 
@@ -69,6 +75,8 @@ async def login(request: LoginRequest) -> APIResponse:
 
         # Verify password using bcrypt
         if not verify_password(request.password, client["password_hash"]):
+            await asyncio.to_thread(analyze_login, client["id"], _guardian_ip(http_request),
+                                    http_request.headers.get("user-agent", ""), False)  # GUARDIAN 4B-3
             raise HTTPException(
                 status_code=401,
                 detail="Invalid email or password"
@@ -108,6 +116,8 @@ async def login(request: LoginRequest) -> APIResponse:
         redirect_to = get_redirect_by_role(client.get("role", "client"))
 
         logger.info(f"Client logged in successfully: {client['email']}")
+        await asyncio.to_thread(analyze_login, client["id"], _guardian_ip(http_request),
+                                http_request.headers.get("user-agent", ""), True)  # GUARDIAN 4B-3
 
         return APIResponse(
             success=True,

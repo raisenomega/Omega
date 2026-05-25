@@ -45,6 +45,7 @@ from app.api.routes import content_v3
 from app.api.routes import calendar_v3
 from app.api.routes import content_lab_v3
 from app.api.routes import brand_voice_v2
+from app.api.routes import guardian
 from app.sentinel.persistence_router import router as sentinel_persistence_router
 from app.api.routes.clients.feature_usage_router import router as feature_usage_router
 
@@ -159,6 +160,7 @@ app.include_router(omega.router, prefix=settings.api_v1_prefix, tags=["OMEGA Com
 app.include_router(nova.router, prefix=settings.api_v1_prefix, tags=["NOVA 👑"])
 app.include_router(sentinel.router, prefix=settings.api_v1_prefix, tags=["SENTINEL 🛡️"])
 app.include_router(sentinel_persistence_router)
+app.include_router(guardian.router, prefix=settings.api_v1_prefix, tags=["GUARDIAN 🛡️"])
 app.include_router(oracle.router, prefix=settings.api_v1_prefix + "/oracle", tags=["ORACLE 🔮"])
 app.include_router(prompt_vault.router, prefix=settings.api_v1_prefix, tags=["Prompt Vault 📚"])
 app.include_router(handoff.router, prefix=settings.api_v1_prefix, tags=["Handoff Protocol 🤝"])
