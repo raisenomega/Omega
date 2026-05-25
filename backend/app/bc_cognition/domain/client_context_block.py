@@ -59,6 +59,9 @@ def build_client_context_block(ctx: dict[str, Any]) -> str:
     niche = ctx.get("niche") or ctx.get("vertical")
     if niche:
         lines.append(f"Negocio: {niche}")
+    region = (ctx.get("_client") or {}).get("region")
+    if region:
+        lines.append(f"Regiones: {str(region).replace(',', ', ')}")
     if ctx.get("business_what"):
         lines.append(f"Qué hace: {str(ctx['business_what'])[:300]}")
     if ctx.get("business_diff"):

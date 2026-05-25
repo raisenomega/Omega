@@ -51,6 +51,7 @@ def test_profile_completion_counts_and_lists():
     assert "Perfil completado: 3/10 secciones." in out
     assert "✅ Identidad: La Milagrosa" in out
     assert "✅ Negocio: bienes raíces" in out
+    assert "Regiones: PR" in out
     assert "✅ Cuentas sociales: instagram" in out
     assert "❌ Audiencia: sin datos" in out
     assert "❌ Ejemplos de contenido: sin datos" in out
