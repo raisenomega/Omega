@@ -12,7 +12,7 @@ export async function authHeaders(): Promise<HeadersInit> {
   };
 }
 
-async function handleResponse<T>(res: Response): Promise<T> {
+export async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const e = (await res.json().catch(() => ({}))) as { detail?: string };
     throw new Error(typeof e.detail === "string" ? e.detail : `HTTP ${res.status}`);

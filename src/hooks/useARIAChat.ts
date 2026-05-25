@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMyPlanStatus } from "./useMyPlanStatus";
 import { useClientPlanStatus } from "./useClientPlanStatus";
-import { apiGet, apiPost } from "@/lib/api-client";
+import { useToast } from "@/hooks/use-toast";
+import { ariaGet, ariaPost } from "@/lib/aria-fetch";
 import type { PlanCode } from "@/lib/plan-limits";
 
 // Mapping plan → ARIA level (Q2=A · spec §6 ARIA_NOVA_INTELLIGENCE)
@@ -23,6 +24,7 @@ interface HistoryResponse { messages: ARIAMessage[] }
 // como fuente única de truth para fetch wrappers + auth headers.
 export function useARIAChat() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const myPlan = useMyPlanStatus();
   const planStatus = useClientPlanStatus(myPlan.clientId ?? "");
   const ariaLevel = PLAN_TO_LEVEL[planStatus.planCode] ?? 1;
@@ -30,7 +32,7 @@ export function useARIAChat() {
   const historyQuery = useQuery({
     queryKey: ["aria_history"],
     queryFn: async (): Promise<ARIAMessage[]> => {
-      const data = await apiGet<HistoryResponse>(`/aria/history`);
+      const data = await ariaGet<HistoryResponse>(`/aria/history`);
       return data.messages ?? [];
     },
     enabled: !myPlan.loading,
@@ -38,9 +40,16 @@ export function useARIAChat() {
 
   const sendMutation = useMutation({
     mutationFn: (content: string): Promise<ARIAMessage> =>
-      apiPost<ARIAMessage>(`/aria/message`, { content }),
+      ariaPost<ARIAMessage>(`/aria/message`, { content }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["aria_history"] });
+    },
+    onError: (e: unknown) => {  // fallo/abort visible → input no queda mudo (fix deadlock)
+      toast({
+        variant: "destructive",
+        title: "ARIA no pudo responder",
+        description: e instanceof Error ? e.message : "Error desconocido. Reintentá.",
+      });
     },
   });
 
