@@ -335,6 +335,23 @@ Sin esto: 500 en `/calendar-v3/schedule/` y `/clients/{id}/upload-context`.
 
 ---
 
+## SECCIÓN 11 — SPRINT 4A · CIERRE (24 may 2026)
+
+**Estado:** 4A-1 ✅ · 4A-2 ⏸ (pausado · sin señal de outcome real) · 4A-3 ✅ · 4A-4 ✅ · 4A-5 ✅
+
+| Fase | Commit(s) | Entrega |
+|------|-----------|---------|
+| 4A-1 | `c6fd158` cleanup + `8356a73` + `4915ad9` | Subagente `guardian` (gate read-only) + 4 builders dev-tooling registrados |
+| 4A-4 | `884e5af` | DEBT-002 CERRADA · analytics sin datos sintéticos · banner honesto + CTA + deep-link `/settings?tab=cuentas` |
+| 4A-5 | `a5e32d6` | config fail-secure (`environment=production`, `debug=False`) · cierra fuga de errores en prod |
+| 4A-3 | `20f46ae`·`f8d924b`·`cd3f26c`·`0d04cfa`·`983a6f0`·`313df10` | **Input sanitization layer** (heurística Capa 1) |
+
+**4A-3 · cobertura lograda:** todo input no confiable que alimenta un prompt de Claude o `agent_memory` pasa por `input_sanitizer`. Módulo `bc_cognition/{domain/input_threats,application/input_sanitizer}.py` (9 tests) + 5 consumidores: (#1) `_attachment_extractor` docs subidos · (#2) research/Brave snippets · (#3) generate_text topic · (#4) ARIA chat (refusal conversacional) · (#5) writes a `agent_memory` PII-redacted en 3 choke points. Cada commit: guardian APPROVE + gate 10/10. Spec firmada `PROTOCOLO_SEGURIDAD_INPUT_OMEGA.md` (gitignored · cap UPLOADED 20K). Capa 2 (Haiku · anti-FP) → Sprint 5 (DEBT-INPUT-FP nueva si aplica).
+
+**Otros cierres 4A:** `.gitignore` protege 5 docs estratégicos untracked (`a813477`); boilerplate "NUNCA SE COMMITEA" corregido en PENDIENTES (`33f5a21`); `MODELO_NEGOCIO_OMEGA_CLIENTE.md` confirmado committable (Opción A · sin secretos).
+
+---
+
 > **Regla:** Si está en "lo que existe" pero no puedes mostrar el archivo
 > de código donde vive → se mueve a "no existe". Sin excepciones.
-> **Última actualización:** 24 mayo 2026 (Sprint 3 CIERRE COMPLETO) · firmado: Claude Opus 4.7 (1M context) + Ibrain (CEO)
+> **Última actualización:** 24 mayo 2026 (SPRINT 4A CIERRE · input sanitization live) · firmado: Claude Opus 4.7 (1M context) + Ibrain (CEO)

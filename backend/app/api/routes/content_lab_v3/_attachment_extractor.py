@@ -53,8 +53,8 @@ def extract_text(b64: str, mime_type: str) -> Optional[str]:
 def _sanitize(text: str) -> str:
     """Sanitiza doc no confiable (T2). BLOCK/HOLD/fail-closed → ExtractionError."""
     out, err = sanitize_input(text, InputContext.UPLOADED_DOCUMENT)
-    if err is not None:
-        raise ExtractionError(f"sanitizer_failure:{err.code}")
+    if err is not None or out is None:
+        raise ExtractionError(f"sanitizer_failure:{err.code if err else 'none'}")
     if out.action in (SanitizerAction.BLOCK, SanitizerAction.HOLD_FOR_HUMAN_REVIEW):
         raise ExtractionError(f"unsafe_attachment:{out.action.value}")
     return out.clean_text

@@ -389,6 +389,22 @@ Mientras tanto: **Brave + Video Packs + Upload Context** son flow productivo end
 
 ---
 
+## 10 · SPRINT 4A — ESTADO (24 may 2026)
+
+```
+4A-1 ✅  subagente guardian (gate read-only) + 4 builders dev-tooling
+4A-2 ⏸   outcome_evaluator — PAUSADO (no existe señal de outcome real aún)
+4A-3 ✅  input_sanitizer + 5 consumidores (extractor · research · generate_text · ARIA · agent_memory)
+4A-4 ✅  DEBT-002 analytics sin datos sintéticos (banner honesto + CTA conectar cuentas)
+4A-5 ✅  config fail-secure (environment=production · debug=False)
+```
+
+**Próximo: SPRINT 4B-1 — GUARDIAN `SecurityKPICard`** (frontend · card de KPIs de seguridad).
+
+Detalle 4A-3 en `SOURCE_OF_TRUTH.md` §11 · spec en `PROTOCOLO_SEGURIDAD_INPUT_OMEGA.md` (gitignored).
+
+---
+
 ```
 PENDIENTES_Y_PROGRESOS_20260524.md
 Sprint 3 cierre · 19 DEBTs · ~40 commits · 0 downtime
