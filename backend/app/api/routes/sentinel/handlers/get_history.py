@@ -8,24 +8,19 @@ from fastapi import HTTPException
 import logging
 
 from app.infrastructure.supabase_service import get_supabase_service
+from app.api.routes.auth.auth_utils import require_superadmin
 
 logger = logging.getLogger(__name__)
 
 
-async def handle_get_history(limit: int = 30, agent_code: Optional[str] = None) -> Dict[str, Any]:
+async def handle_get_history(authorization: Optional[str], limit: int = 30, agent_code: Optional[str] = None) -> Dict[str, Any]:
     """
-    Get scan history with pagination
-
-    Args:
-        limit: Number of records to return
-        agent_code: Optional filter by agent
-
-    Returns:
-        Dict with scan history
+    Get scan history with pagination · solo owner/superadmin (4B-5 · SENTINEL es del sistema).
 
     Raises:
-        HTTPException 500: Database error
+        HTTPException 401/403: sin auth / no superadmin · 500: Database error
     """
+    await require_superadmin(authorization)
     try:
         supabase = get_supabase_service()
 

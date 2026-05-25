@@ -5,11 +5,12 @@ SENTINEL Persistence Endpoints
 Agregar al router existente de SENTINEL o importar en main.py.
 MAX 200L — DDD compliant
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
 from app.infrastructure.supabase_service import get_supabase_service
+from app.api.routes.auth.auth_utils import require_superadmin
 from app.sentinel.persistence_service import (
     PersistenceService,
     ErrorFix,
@@ -56,7 +57,7 @@ class RiskScoreRequest(BaseModel):
 # ── ENDPOINTS ────────────────────────────────────────────────
 
 @router.post("/register-fix")
-def register_fix(req: RegisterFixRequest):
+async def register_fix(req: RegisterFixRequest, authorization: Optional[str] = Header(None)):
     """
     Registra un bug resuelto como regla permanente.
     Llamar después de cada fix + commit.
@@ -75,6 +76,7 @@ def register_fix(req: RegisterFixRequest):
       "commit_hash": "abc123f"
     }
     """
+    await require_superadmin(authorization)  # SENTINEL del sistema → solo superadmin (4B-5)
     try:
         valid_types = {
             "BUILD","RUNTIME","LOGIC","DB",
@@ -108,7 +110,7 @@ def register_fix(req: RegisterFixRequest):
 
 
 @router.post("/resolve-debt/{debt_id}")
-def resolve_debt(debt_id: str, req: ResolveDebtRequest):
+async def resolve_debt(debt_id: str, req: ResolveDebtRequest, authorization: Optional[str] = Header(None)):
     """
     Marca una deuda técnica como resuelta.
 
@@ -116,6 +118,7 @@ def resolve_debt(debt_id: str, req: ResolveDebtRequest):
     POST /api/v1/sentinel/resolve-debt/DEBT-001
     { "resolution": "Dividido en reader.py + writer.py, ambos <200L" }
     """
+    await require_superadmin(authorization)  # SENTINEL del sistema → solo superadmin (4B-5)
     db = get_supabase_service()
     service = PersistenceService(db)
     result = service.resolve_debt(debt_id, req.resolution)
@@ -127,7 +130,7 @@ def resolve_debt(debt_id: str, req: ResolveDebtRequest):
 
 
 @router.post("/risk-score")
-def save_risk_score(req: RiskScoreRequest):
+async def save_risk_score(req: RiskScoreRequest, authorization: Optional[str] = Header(None)):
     """
     Guarda el Risk Score calculado por SENT_BRAIN.
     Se llama automáticamente desde el cron de las 7 AM.
@@ -138,6 +141,7 @@ def save_risk_score(req: RiskScoreRequest):
       60-74  → DEPLOY_WITH_CAUTION
       0-59   → DO_NOT_DEPLOY
     """
+    await require_superadmin(authorization)  # SENTINEL del sistema → solo superadmin (4B-5)
     if not 0 <= req.score <= 100:
         raise HTTPException(
             status_code=422,
@@ -164,7 +168,7 @@ def save_risk_score(req: RiskScoreRequest):
 
 
 @router.get("/persistence-summary")
-def get_persistence_summary():
+async def get_persistence_summary(authorization: Optional[str] = Header(None)):
     """
     Resumen del sistema de aprendizaje.
     NOVA lo usa para el briefing diario.
@@ -174,6 +178,7 @@ def get_persistence_summary():
     - Deudas técnicas activas
     - Último Risk Score
     """
+    await require_superadmin(authorization)  # SENTINEL del sistema → solo superadmin (4B-5)
     db = get_supabase_service()
     service = PersistenceService(db)
     return service.get_summary()

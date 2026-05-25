@@ -101,3 +101,12 @@ async def get_current_user(authorization: Optional[str]) -> Dict[str, Any]:
     uid = payload.get("sub") or payload.get("id")
     role, reseller_id = _resolve_role_and_reseller(uid)
     return {"id": uid, "email": payload.get("email"), "role": role, "reseller_id": reseller_id}
+
+
+async def require_superadmin(authorization: Optional[str]) -> Dict[str, Any]:
+    """Gate superadmin reusable · 401 si sin auth · 403 si no es owner. 'owner' = is_owner=true
+    en resellers (4B-5) · derivado server-side por get_current_user (no del claim · forgery-proof)."""
+    user = await get_current_user(authorization)
+    if user.get("role") != "owner":
+        raise HTTPException(status_code=403, detail="superadmin_only")
+    return user

@@ -3,12 +3,13 @@ Handler: Run Security Scan
 Ejecuta scans de seguridad y guarda resultados
 Filosofía: No velocity, only precision 🐢💎
 """
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from fastapi import HTTPException
 from pydantic import BaseModel
 import logging
 
 from app.services.sentinel_service import SentinelService
+from app.api.routes.auth.auth_utils import require_superadmin
 
 logger = logging.getLogger(__name__)
 
@@ -17,20 +18,15 @@ class ScanRequest(BaseModel):
     scan_type: str  # "vault" | "pulse" | "db" | "full"
 
 
-async def handle_run_scan(request: ScanRequest) -> Dict[str, Any]:
+async def handle_run_scan(request: ScanRequest, authorization: Optional[str]) -> Dict[str, Any]:
     """
-    Execute security scan
-
-    Args:
-        request: ScanRequest with scan_type
-
-    Returns:
-        Dict with scan results
+    Execute security scan · solo owner/superadmin (4B-5 · SENTINEL es del sistema).
 
     Raises:
-        HTTPException 400: Invalid scan type
-        HTTPException 500: Scan execution error
+        HTTPException 401/403: sin auth / no superadmin
+        HTTPException 400: Invalid scan type · 500: Scan execution error
     """
+    await require_superadmin(authorization)
     try:
         sentinel = SentinelService()
 

@@ -8,7 +8,7 @@ from fastapi import HTTPException
 import logging
 
 from app.infrastructure.supabase_service import get_supabase_service
-from app.api.routes.auth.auth_utils import get_current_user
+from app.api.routes.auth.auth_utils import require_superadmin
 
 logger = logging.getLogger(__name__)
 
@@ -20,13 +20,8 @@ async def handle_get_status(authorization: Optional[str]) -> Dict[str, Any]:
     Raises:
         HTTPException 401: sin auth · 403: no superadmin (isOwner) · 500: DB error
     """
-    user = await get_current_user(authorization)
+    await require_superadmin(authorization)  # 4B-5: SENTINEL del sistema → solo owner/superadmin
     supabase = get_supabase_service()
-    # 4B-5: SENTINEL es del sistema → solo superadmin (dueño de reseller · isOwner)
-    owns = supabase.client.table("resellers").select("id").eq(
-        "owner_user_id", user["id"]).eq("is_owner", True).limit(1).execute()
-    if not owns.data:
-        raise HTTPException(status_code=403, detail="superadmin_only")
     try:
         # Get latest scan for each agent (DISTINCT ON emulation)
         scans_resp = supabase.client.table("sentinel_scans")\

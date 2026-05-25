@@ -3,26 +3,25 @@ Handler: Deploy Check
 Verifica si es seguro deployar ahora
 Filosofía: No velocity, only precision 🐢💎
 """
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 import logging
 
 from app.infrastructure.supabase_service import get_supabase_service
+from app.api.routes.auth.auth_utils import require_superadmin
 
 logger = logging.getLogger(__name__)
 
 
-async def handle_deploy_check() -> Dict[str, Any]:
+async def handle_deploy_check(authorization: Optional[str]) -> Dict[str, Any]:
     """
-    Check if it's safe to deploy now
-
-    Returns:
-        Dict with deploy decision and reasoning
+    Check if it's safe to deploy now · solo owner/superadmin (4B-5 · SENTINEL es del sistema).
 
     Raises:
-        HTTPException 500: Database error
+        HTTPException 401/403: sin auth / no superadmin · 500: Database error
     """
+    await require_superadmin(authorization)
     try:
         supabase = get_supabase_service()
 
