@@ -1,7 +1,8 @@
-import { X } from "lucide-react";
+import { X, Check, Zap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PLATFORM_COLORS, PLATFORM_LABELS, type Platform } from "@/lib/onboarding-constants";
 import type { CalendarPost, DbStatus } from "@/hooks/useCalendarData";
 import { useUpdatePostStatus } from "@/hooks/useCalendarData";
@@ -12,10 +13,12 @@ interface PostsListProps {
 }
 
 const STATUS_LABELS: Record<DbStatus, string> = {
-  pending: "Programado", publishing: "Publicando", published: "Publicado", failed: "Falló", cancelled: "Cancelado",
+  pending: "Programado", publishing: "Publicando", published: "Publicado",
+  published_manual: "Publicado (manual)", failed: "Falló", cancelled: "Cancelado",
 };
 const STATUS_VARIANT: Record<DbStatus, "default" | "secondary" | "destructive" | "outline"> = {
-  pending: "secondary", publishing: "default", published: "default", failed: "destructive", cancelled: "outline",
+  pending: "secondary", publishing: "default", published: "default",
+  published_manual: "default", failed: "destructive", cancelled: "outline",
 };
 
 function formatTime(iso: string): string {
@@ -48,10 +51,26 @@ export function PostsList({ day, posts }: PostsListProps) {
               </div>
               <p className="text-xs text-muted-foreground line-clamp-2">{p.content_preview || "(sin contenido)"}</p>
               {p.status === "pending" && (
-                <Button size="sm" variant="ghost" className="h-7 gap-1 w-full" disabled={update.isPending}
-                  onClick={() => update.mutate({ id: p.id, status: "cancelled" })}>
-                  <X className="h-3.5 w-3.5" />Cancelar
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button size="sm" variant="default" className="h-7 flex-1 gap-1 text-[11px]" disabled={update.isPending}
+                    onClick={() => update.mutate({ id: p.id, status: "published_manual" })}>
+                    <Check className="h-3.5 w-3.5" />Publicar Manual
+                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span tabIndex={0} className="flex-1">
+                        <Button size="sm" variant="secondary" className="h-7 w-full gap-1 text-[11px]" disabled>
+                          <Zap className="h-3.5 w-3.5" />Publicar Auto
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Requiere cuenta social conectada · disponible con MCP</TooltipContent>
+                  </Tooltip>
+                  <Button size="sm" variant="ghost" className="h-7 gap-1" disabled={update.isPending}
+                    onClick={() => update.mutate({ id: p.id, status: "cancelled" })} aria-label="Cancelar">
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>

@@ -13,6 +13,7 @@ const STATUS_COLOR: Record<DbStatus, string> = {
   pending: "bg-blue-500",
   publishing: "bg-amber-500",
   published: "bg-emerald-500",
+  published_manual: "bg-teal-500",
   failed: "bg-rose-500",
   cancelled: "bg-muted-foreground/40",
 };

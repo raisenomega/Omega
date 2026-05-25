@@ -3,7 +3,7 @@ import { useToast } from "./use-toast";
 import { apiGet, apiPatch } from "@/lib/api-client";
 
 export type CalendarStatus = "all" | "scheduled" | "published" | "failed" | "cancelled";
-export type DbStatus = "pending" | "publishing" | "published" | "failed" | "cancelled";
+export type DbStatus = "pending" | "publishing" | "published" | "failed" | "cancelled" | "published_manual";
 
 export interface CalendarPost {
   id: string;
@@ -35,7 +35,11 @@ export function useUpdatePostStatus() {
       apiPatch(`/calendar/${id}/status`, { status }),
     onSuccess: (_r, vars) => {
       qc.invalidateQueries({ queryKey: ["calendar_list"] });
-      toast({ title: vars.status === "cancelled" ? "Cancelado" : "Reactivado" });
+      const titles: Partial<Record<DbStatus, string>> = {
+        cancelled: "Cancelado",
+        published_manual: "Marcado como publicado",
+      };
+      toast({ title: titles[vars.status] ?? "Reactivado" });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
