@@ -1,4 +1,7 @@
 // Zod sub-schemas · 9 secciones · alineado 1:1 con backend Pydantic.
+// BUG A (defensivo): data cargada/legacy inválida NUNCA bloquea el save (onInvalid).
+// enum desconocido → null · array de enums inválida → [] · hex/uuid inválido → null ·
+// competitors legacy string[] → {name,url}[]. Lo válido se conserva; el save procede.
 import { z } from "zod";
 import { INDUSTRIES, REGIONS } from "./client-constants";
 import {
@@ -19,26 +22,29 @@ export const identitySchema = z.object({
 export const businessSchema = z.object({
   niche: opt(z.string()), vertical: opt(z.string()),
   business_what: opt(z.string()), business_to_whom: opt(z.string()), business_diff: opt(z.string()),
-  business_size: opt(z.enum(BUSINESS_SIZES)), years_operating: opt(intMin0),
+  business_size: opt(z.enum(BUSINESS_SIZES)).catch(null), years_operating: opt(intMin0).catch(null),
 });
 
 export const audienceSchema = z.object({
   target_audience: opt(z.string()),
   audience_age_range: opt(z.string()),
-  audience_gender: opt(z.enum(GENDERS)),
-  competitors: z.array(z.object({ name: z.string(), url: opt(z.string()) })).default([]),
+  audience_gender: opt(z.enum(GENDERS)).catch(null),
+  competitors: z.preprocess(
+    (val) => (Array.isArray(val) ? val.map((c) => (typeof c === "string" ? { name: c, url: null } : c)) : val),
+    z.array(z.object({ name: z.string(), url: opt(z.string()) })),
+  ).default([]).catch([]),
 });
 
 export const brandVoiceSchema = z.object({
-  tone: z.array(z.enum(TONES)).default([]),
+  tone: z.array(z.enum(TONES)).default([]).catch([]),
   brand_voice_keywords: z.array(z.string()).default([]),
   avoided_topics: opt(z.string()), avoided_words: z.array(z.string()).default([]),
-  preferred_formats: z.array(z.enum(CONTENT_FORMATS)).default([]),
-  emoji_usage: opt(z.enum(EMOJI_USAGE)), hashtag_strategy: opt(z.enum(HASHTAG_STRATEGY)),
+  preferred_formats: z.array(z.enum(CONTENT_FORMATS)).default([]).catch([]),
+  emoji_usage: opt(z.enum(EMOJI_USAGE)).catch(null), hashtag_strategy: opt(z.enum(HASHTAG_STRATEGY)).catch(null),
 });
 
 export const goalsSchema = z.object({
-  primary_goal: z.array(z.enum(PRIMARY_GOALS)).max(3).default([]),
+  primary_goal: z.array(z.enum(PRIMARY_GOALS)).max(3).default([]).catch([]),
   goal_this_month: opt(z.string()), goal_this_quarter: opt(z.string()),
   goal_priority_now: opt(z.string()), success_metric: opt(z.string()),
   monthly_revenue_target: opt(z.coerce.number().min(0)),
@@ -54,7 +60,7 @@ export const socialAccountSchema = z.object({
   platform: z.enum(PLATFORMS), username: z.string().min(1).max(64),
   profile_url: opt(z.string()), is_primary: z.boolean().default(false),
   auto_publish_allowed: z.boolean().default(false), approx_followers: opt(intMin0),
-  publishing_frequency: opt(z.enum(PUBLISHING_FREQUENCIES)),
+  publishing_frequency: opt(z.enum(PUBLISHING_FREQUENCIES)).catch(null),
   is_business_account: z.boolean().default(false),
   is_paused: z.boolean().default(false),
 });
@@ -68,8 +74,8 @@ export const instructionsSchema = z.object({
 });
 
 export const brandAssetsSchema = z.object({
-  primary_color: opt(hex), secondary_color: opt(hex), accent_color: opt(hex),
+  primary_color: opt(hex).catch(null), secondary_color: opt(hex).catch(null), accent_color: opt(hex).catch(null),
   font_primary: opt(z.string()), font_secondary: opt(z.string()),
-  logo_file_id: opt(z.string().uuid()), brand_guide_file_id: opt(z.string().uuid()),
+  logo_file_id: opt(z.string().uuid()).catch(null), brand_guide_file_id: opt(z.string().uuid()).catch(null),
   logo_files: z.array(z.instanceof(File)).max(3).optional(),
 });
