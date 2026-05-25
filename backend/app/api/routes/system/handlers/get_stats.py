@@ -49,11 +49,10 @@ async def handle_get_stats(app: FastAPI) -> Dict[str, Any]:
             .execute()
         total_agents = agents_resp.count if agents_resp.count else 0
 
-        # 3. Count active agents (status='active')
+        # 3. Count active agents · is_active=True (agents NO tiene columna 'status' en V3)
         active_agents_resp = supabase.client.table("agents")\
             .select("id", count="exact")\
             .eq("is_active", True)\
-            .eq("status", "active")\
             .execute()
         active_agents = active_agents_resp.count if active_agents_resp.count else 0
 
