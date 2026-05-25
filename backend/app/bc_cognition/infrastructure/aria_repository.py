@@ -94,7 +94,6 @@ def load_recent_history(supabase: SupabaseService, user_id: str, window: int) ->
 
 
 def load_history_for_endpoint(supabase: SupabaseService, user_id: str, limit: int = 50) -> list[dict[str, Any]]:
-    r = supabase.client.table("aria_conversations").select(
-        "role, content, aria_level, created_at"
-    ).eq("user_id", user_id).order("created_at", desc=False).limit(limit).execute()
-    return r.data or []
+    # DESC+limit = últimos N · reversed = ASC. Bug previo: desc=False traía los 50 más VIEJOS → nuevos fuera de la ventana.
+    r = supabase.client.table("aria_conversations").select("role, content, aria_level, created_at").eq("user_id", user_id).order("created_at", desc=True).limit(limit).execute()
+    return list(reversed(r.data or []))
