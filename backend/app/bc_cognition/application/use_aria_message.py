@@ -13,7 +13,12 @@ from app.bc_cognition.domain.persona_aria import (
 from app.bc_cognition.infrastructure.anthropic_adapter import generate
 from app.bc_cognition.infrastructure import aria_repository as repo, aria_memory_repository as mem
 from app.bc_cognition.infrastructure._anthropic_types import ClaudeError
+from app.bc_cognition.application.input_sanitizer import sanitize_input
+from app.bc_cognition.domain.input_threats import InputContext, SanitizerAction
 from app.infrastructure.supabase_service import get_supabase_service
+
+_UNSAFE = (SanitizerAction.BLOCK, SanitizerAction.HOLD_FOR_HUMAN_REVIEW)
+_SAFE_REFUSAL = "No puedo procesar ese mensaje por seguridad. ¿En qué más puedo ayudarte con tu contenido o estrategia?"
 
 
 class ARIAResult:
@@ -40,6 +45,16 @@ async def use_aria_message(
     role, client_id, reseller_id, level = _resolve_role(supabase, user_id)
     if not role:
         return None, ClaudeError("forbidden", "User no es cliente ni reseller")
+
+    # SPRINT 4A-3 #4: sanear input del cliente (T1/T3/T4 · ARIA_CHAT) antes de store/Claude
+    sanitized, serr = sanitize_input(user_message, InputContext.ARIA_CHAT)
+    if serr is not None or sanitized is None or sanitized.action in _UNSAFE:
+        flags = "" if sanitized is None else ",".join(f.value for f in sanitized.flags)
+        repo.safe_insert("aria_blocked", repo.insert_behavioral_event,
+                         supabase, user_id, client_id, reseller_id,
+                         "aria_message_blocked", {"flags": flags})
+        return ARIAResult(content=_SAFE_REFUSAL, aria_level=level), None
+    user_message = sanitized.clean_text  # clean_text en TODOS los stores (decisión A · cero PII cruda)
 
     # Pre-Claude · user message + behavioral signal (safe · log si falla)
     repo.safe_insert("user_message", repo.insert_user_message,
