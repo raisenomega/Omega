@@ -7,6 +7,7 @@ repo.safe_insert · errores logueados pero NUNCA propagan al cliente.
 """
 from typing import Optional, Tuple
 from app.bc_cognition.application._aria_memory_context import load_and_format_memory
+from app.bc_cognition.application.web_context import fetch_web_context
 from app.bc_cognition.domain.persona_aria import (
     build_client_context_block, build_system_prompt, get_agent_code_for_level, get_history_window,
 )
@@ -62,12 +63,14 @@ async def use_aria_message(
     event_id = repo.safe_insert("behavioral_sent", repo.insert_behavioral_event,
                                  supabase, user_id, client_id, reseller_id, "aria_message_sent")
 
-    # Call Claude · system = persona + contexto del cliente (BUG 2) + memoria reciente (P5)
+    # Call Claude · system = persona + contexto cliente (BUG 2) + web actual (auto-search) + memoria (P5)
     base = build_system_prompt(level, role)
     ctx = repo.fetch_client_context(supabase, client_id) if client_id else None
     ctx_block = build_client_context_block(ctx) if ctx else ""
+    vertical = (ctx.get("vertical") or ctx.get("niche") or "") if ctx else ""
+    web_block = await fetch_web_context(user_message, vertical, "aria", client_id)
     memory_block = load_and_format_memory(supabase, client_id, reseller_id)
-    system = "\n\n".join(p for p in (base, ctx_block, memory_block) if p)
+    system = "\n\n".join(p for p in (base, ctx_block, web_block, memory_block) if p)
     history = repo.load_recent_history(supabase, user_id, get_history_window(level))
     response, err = await generate(
         agent_code=get_agent_code_for_level(level), system=system,
