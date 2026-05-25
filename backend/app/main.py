@@ -107,8 +107,11 @@ async def startup_event():
     # VIDEO ORPHAN cleanup (DEBT-045 Sprint 3 · 10mo cron job)
     from app.bc_cognition.application.cleanup_orphan_video_jobs import cleanup_orphan_video_jobs
     scheduler.add_job(cleanup_orphan_video_jobs, 'interval', hours=1, id='video_jobs_orphan_cleanup', max_instances=1)
+    # OUTCOME EVALUATOR (4A-2 · PASO 3 ciclo auto-aprendizaje · 11vo cron job)
+    from app.bc_cognition.application.outcome_evaluator import run_outcome_evaluation
+    scheduler.add_job(run_outcome_evaluation, 'cron', hour=4, minute=0, id='outcome_evaluator')
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP workers activos — 10 jobs registrados")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL workers activos — 11 jobs registrados")
 
 @app.on_event("shutdown")
 async def shutdown_event():
