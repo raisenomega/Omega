@@ -64,10 +64,10 @@ async def handle_get_stats(app: FastAPI) -> Dict[str, Any]:
             .execute()
         total_clients = clients_resp.count if clients_resp.count else 0
 
-        # 5. Count scheduled posts (is_active=true)
+        # 5. Count scheduled posts activos · status='pending' (is_active NO existe en scheduled_posts V3)
         posts_resp = supabase.client.table("scheduled_posts")\
             .select("id", count="exact")\
-            .eq("is_active", True)\
+            .eq("status", "pending")\
             .execute()
         total_scheduled_posts = posts_resp.count if posts_resp.count else 0
 
