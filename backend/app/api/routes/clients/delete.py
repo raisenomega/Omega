@@ -19,8 +19,8 @@ async def delete_client(
     authorization: Optional[str] = Header(None)
 ) -> Response:
     """
-    Soft delete client (status = 'deleted').
-    Only owner can delete.
+    Hard delete REAL y permanente (cascada FK borra todos los datos del cliente).
+    Autorizado: dueño de la fila (user_id), reseller que la gestiona, o superadmin real.
     """
     try:
         # 1. Get authenticated user
@@ -49,15 +49,16 @@ async def delete_client(
                 detail="No autorizado para eliminar este cliente"
             )
 
-        # 4. Soft delete
-        success = await client_repository.soft_delete_client(client_id)
+        # 4. Hard delete REAL y permanente · service_role bypasea RLS · cascada FK
+        #    borra todos los hijos (CASCADE) u orfana los SET NULL. Irreversible.
+        success = await client_repository.hard_delete_client(client_id)
         if not success:
             raise HTTPException(
                 status_code=500,
                 detail="Failed to delete client"
             )
 
-        logger.info(f"Client {client_id} deleted by owner {user_id}")
+        logger.info(f"Client {client_id} HARD deleted by {user_id}")
 
         return Response(status_code=204)
 

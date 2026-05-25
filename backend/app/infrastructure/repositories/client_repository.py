@@ -177,6 +177,25 @@ class ClientRepository:
             logger.error(f"Error soft deleting client: {e}")
             raise
 
+    async def hard_delete_client(self, client_id: str) -> bool:
+        """Hard delete REAL y permanente · service_role · la cascada FK borra los hijos
+        (ON DELETE CASCADE) u orfana los SET NULL. Irreversible."""
+        try:
+            response = self.service.client.table("clients")\
+                .delete()\
+                .eq("id", client_id)\
+                .execute()
+
+            if not response.data or len(response.data) == 0:
+                return False
+
+            logger.info(f"Client HARD deleted (permanent): {client_id}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error hard deleting client: {e}")
+            raise
+
     async def get_owned_reseller_ids(self, user_id: str) -> List[str]:
         """Reseller ids que el user posee (owner_user_id) · para checks de propiedad."""
         try:
