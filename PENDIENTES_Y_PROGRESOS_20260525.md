@@ -84,6 +84,24 @@ Bloque de fixes tras §1-3. Todos en origin/main · gate 10/10 c/u · guardian A
 
 ---
 
+## 5 · Sesión noche (25 may · learning + seguridad SENTINEL) · HEAD `062353b`
+
+Todos en origin/main · gate 10/10 c/u · guardian APPROVE.
+
+| Área | Commits | Resumen |
+|------|---------|---------|
+| **outcome_evaluator (4A-2 · P5)** | `5a834ed` `3490ce0` `8016531` | **Cierra el ciclo de auto-aprendizaje**: drafts abandonados >72h (`status='draft'`) → `agent_memory.was_correct=False` (proxy is_saved=status · sin Meta API). Positivo ya lo cubría `insert_agent_memory_approved`. Migración **00026** (`outcome_evaluated_at` · idempotencia) + cron 4 AM + **X3 10→11** (DDD_REGLAS · autorizado CEO). `agent_executions` NO bloqueante (era hipótesis). |
+| **Endpoint diagnóstico run-now** | `9da5f74` | `GET /api/v1/system/outcome-evaluator/run-now` (superadmin) · triggea el cron manual + retorna `{evaluated, failed, errors}` · **DEBT-055** (remover tras validar) |
+| **🔒 SENTINEL 100% cerrado** | `14b5d37` | Los **8 endpoints** `/api/v1/sentinel/*` (scan/history/deploy-check + persistence: register-fix/resolve-debt/risk-score/persistence-summary) ahora **superadmin-only** vía helper DRY `require_superadmin` (auth_utils · role=='owner' forgery-proof). get_status refactorizado. Cron 7 AM intacto (escribe risk_score directo a DB). **DEBT-056** (sentinel_check.sh URL stale + Bearer · nota X1) |
+| **Alert dispatcher SENTINEL** | `062353b` | Score < 80 → **Email Resend** (`raisenagencypr@gmail.com` · activa al pegar `RESEND_API_KEY`) + **Telegram preparado** (activa al pegar `TELEGRAM_BOT_TOKEN`+`CHAT_ID` · sin code deploy). `alert_dispatcher.py` (62L · httpx · best-effort triple red). Wired en `sentinel_brief`. |
+
+### Acciones owner (Railway env vars)
+- **`RESEND_API_KEY`** → activa el email de alertas (sin ella: skip + log).
+- `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` → activa Telegram (cuando tengas el bot).
+- **Migraciones 00025 + 00026 aplicadas** (`db push` · owner). Sin pendientes.
+
+---
+
 ```
 PENDIENTES_Y_PROGRESOS_20260525.md · sesión 25 may · ~22 commits · gate 10/10 · guardian APPROVE
 Firmado: Claude Opus 4.7 (1M context) + Ibrain Raisen (CEO)

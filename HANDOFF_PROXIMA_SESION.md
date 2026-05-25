@@ -1,38 +1,43 @@
 # HANDOFF · Próxima sesión OmegaRaisen
 
-Cierre: **25 may 2026** · Owner: Ibrain Raisen (CEO) · Cliente piloto: Jorge / La Milagrosa Software.
-Detalle de lo trabajado: `PENDIENTES_Y_PROGRESOS_20260525.md` (§1-3 pre-cierre · §4 post-cierre).
+Cierre: **25 may 2026 (noche)** · Owner: Ibrain Raisen (CEO) · Cliente piloto: Jorge / La Milagrosa Software.
+Detalle de lo trabajado: `PENDIENTES_Y_PROGRESOS_20260525.md` (§1-3 pre-cierre · §4 post-cierre · §5 sesión noche).
 
 ---
 
 ## ESTADO
-- **Frontend** → Vercel (deploy auto en push a `main` · hard-refresh tras deploy)
+- **Frontend** → Vercel (deploy auto en push a `main`)
 - **Backend** → Railway · `https://omega-production-3c67.up.railway.app`
-- **DB** → Supabase (PostgreSQL + RLS · migraciones **hasta 00025 aplicadas** · sin pendientes)
-- **HEAD git**: `f807f2c` — refactor get_stats verde (elimina agent_executions + try por query)
+- **DB** → Supabase (migraciones hasta **00026** aplicadas · sin pendientes)
+- **HEAD git**: `062353b` — alert dispatcher SENTINEL (Email Resend activo + Telegram preparado)
+
+### 🔴 Acción owner pendiente (Railway env var)
+- **Pegar `RESEND_API_KEY`** en Railway → activa el email de alertas SENTINEL (score<80 → `raisenagencypr@gmail.com`). Sin ella: skip + log (no rompe nada).
 
 ---
 
-## 🎯 PRIORIDAD 1 al despertar
-**`outcome_evaluator.py`** — 4A-2 · **único carry-over de Sprint 4A**.
-- Spec: `OMEGA_AGENT_SYSTEM.md` → sección **"EL CICLO COMPLETO DE AUTO-APRENDIZAJE"** (PASO 3 · `outcome_evaluator` actualiza `was_correct`) · `DDD_REGLAS_OMEGA.md P5` (aprendizaje honesto · el sistema aprende de resultados reales).
+## 🎯 PRIORIDADES próxima sesión
+1. **DEBT-046** — ARIA Premium reseller variant (~4h)
+2. **DEBT-054** — Info Tab: conectar a `client_context` (datos del wizard · hoy vacío) (~3h)
+3. **Logo Fase 2** — persistir logo subido en Content Lab → `brand_files` (categoría 'logo') + `client_brand_assets.logo_file_id` (~3h)
 
 ---
 
-## PENDIENTES carry-over
-- **DEBT-046** — ARIA Premium reseller variant (~4h)
+## Carry-over
 - **DEBT-047** — APScheduler persistent jobstore · Python 3.13 + SQLAlchemy 2.0.25 incompat (~4h)
-- **DEBT-048** — ARIA attention-based memory · stack embeddings + nueva excepción I1 (~16h)
+- **DEBT-048** — ARIA attention-based memory · embeddings + nueva excepción I1 (~16h)
 - **DEBT-049** — `agent_executions` inexistente + NOVA `infrastructure/calendar` schema fantasma (~6h)
-- **DEBT-050** — capa multi-agente stubeada · monitor/orchestrator/execute fabrican éxito · **P1 cuando dispara** (~16h)
-- **DEBT-051** — `aria_repository.py` 99/100L · extraer `fetch_aria_context` a módulo de lectura antes de que C4 bloquee (~2h)
-- **`/sentinel/{scan,history,deploy-check}`** sin auth
-- **Logo Fase 2** — persistir logo subido en Content Lab → `brand_files` (categoría 'logo') + `client_brand_assets.logo_file_id`
+- **DEBT-051** — `aria_repository.py` 99/100L · extraer `fetch_aria_context` a módulo de lectura (~2h)
+- **DEBT-055** — remover endpoint diagnóstico `run-now` tras validar el cron outcome_evaluator en prod (~0.5h)
+- **DEBT-056** — `sentinel_check.sh` URL stale + Bearer · X1 script `GET`→`POST`+auth (~0.5h)
 - **"Nueva conversación" ARIA** — botón para archivar el historial y empezar fresh (hoy es continuo)
+- **Telegram alertas** — pegar `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` en Railway cuando tengas el bot (se activa solo · sin code deploy)
+
+> Registro completo de deuda (DEBT-052/053 AI/Posts Tab Sprint 5, etc.): `SOURCE_OF_TRUTH.md` §6 · total ~697h.
 
 ---
 
-## PROTOCOLO INICIO (verificación bloqueante · antes de tocar nada)
+## PROTOCOLO INICIO (verificación bloqueante)
 ```bash
 git config --get user.email   # → raisenagencypr@gmail.com  (si no coincide: DETENER)
 git log --oneline -5

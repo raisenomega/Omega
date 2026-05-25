@@ -414,8 +414,14 @@ Continuación del 24 may (§10-13). Cliente piloto: Jorge / La Milagrosa Softwar
 - **Calendario**: KPI Posts Programados contaba desde "ahora" → desde inicio del día + `status IN [pending,scheduled]` (`44ca9d5`). **3 botones en popup** (Publicar Manual/Auto/Cancelar) + migración **00025** `published_manual` + transición backend (`9bd30d7`+`0f1bd75`+`3b6b1fb`). **ISSUE 1 FK al agendar**: localStorage stale → validación **409 honesto** + limpieza de items stale (`59d182a`+`c9bfdb0`).
 - **Reportes/sistema**: P1 `update_status` 200-honesto-desde-fila-persistida (`84a05fe`) · P5 conteos `published`+`published_manual` (`b2ab2fe`) · `get_stats` columnas/tablas inexistentes (`is_active`, `agents.status`, `agent_executions`) → `_safe_count` por query → **`/system/stats` verde** (`01ef77c`+`aa0c5f8`+`f807f2c`). DEBT-049 sigue abierta (tabla `agent_executions` real para telemetría futura).
 
+**Sesión noche (HEAD `062353b`)** — detalle en `PENDIENTES_Y_PROGRESOS_20260525.md` §5:
+- **outcome_evaluator (4A-2 · P5)** — cierra el ciclo de auto-aprendizaje: drafts abandonados >72h → `agent_memory.was_correct=False` (proxy is_saved=status). Migración **00026** (`outcome_evaluated_at`) + cron 4 AM + **X3 10→11** (`5a834ed`+`3490ce0`+`8016531`). Endpoint diagnóstico `run-now` superadmin (`9da5f74` · DEBT-055). `agent_executions` NO era bloqueante.
+- **🔒 SENTINEL 100% cerrado** (`14b5d37`): los 8 endpoints `/api/v1/sentinel/*` → superadmin-only vía helper DRY `require_superadmin` (auth_utils · role=='owner'). DEBT-056 (sentinel_check.sh stale + X1).
+- **Alert dispatcher** (`062353b`): score<80 → Email Resend (activa con `RESEND_API_KEY`) + Telegram preparado (activa con `TELEGRAM_BOT_TOKEN`+`CHAT_ID`). `alert_dispatcher.py` best-effort.
+
 ### 🔴 Acciones del owner / estado de deploy
-- **Migraciones: TODAS aplicadas** (hasta `00025` · incluye 00024 `clients_website_email` + 00025 `published_manual` · `db push` por el owner). **NO hay migración pendiente.**
+- **Migraciones: TODAS aplicadas** (hasta `00026` · 00024 `clients_website_email` + 00025 `published_manual` + 00026 `outcome_evaluated_at` · `db push` por el owner). **NO hay migración pendiente.**
+- **Railway env vars (alertas SENTINEL)**: pegar `RESEND_API_KEY` (activa el email) · `TELEGRAM_BOT_TOKEN`+`TELEGRAM_CHAT_ID` (activa Telegram · opcional).
 - **Railway debe REBUILDEAR** por la dependencia nueva **Pillow** (es build de nixpacks, NO un `db push`). Verificar `/health` `git_sha` ≥ `5358f7f` post-rebuild. Vigilar el build (nixpacks tuvo fricciones antes).
 - **Vercel** debe deployar el frontend (AUDIT 1/2, wizard 3 fixes, toggle logo, a11y) + hard-refresh.
 
