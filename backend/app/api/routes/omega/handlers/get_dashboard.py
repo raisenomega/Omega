@@ -99,7 +99,7 @@ async def handle_get_omega_dashboard() -> Dict[str, Any]:
             platform = acc.get("platform", "unknown")
             by_platform[platform] = by_platform.get(platform, 0) + 1
         scheduled = [p for p in posts_data if p.get("status") == "scheduled"]
-        published_month = [p for p in posts_data if p.get("status") == "published" and p.get("scheduled_date", "")[:10] >= first_of_month]
+        published_month = [p for p in posts_data if p.get("status") in ("published", "published_manual") and p.get("scheduled_date", "")[:10] >= first_of_month]
         next_7days = (today + timedelta(days=7)).isoformat()
         upcoming = [p for p in scheduled if today.isoformat() <= p.get("scheduled_date", "")[:10] <= next_7days]
         by_department = {}

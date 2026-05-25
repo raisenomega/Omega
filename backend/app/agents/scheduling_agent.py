@@ -170,7 +170,7 @@ class SchedulingAgent(BaseAgent):
         scheduled_count = len([p for p in all_posts if p.status in ["approved", "scheduled"]])
         published_today = len([
             p for p in all_posts
-            if p.status == "published" and p.scheduled_time.startswith(datetime.now().date().isoformat())
+            if p.status in ("published", "published_manual") and p.scheduled_time.startswith(datetime.now().date().isoformat())
         ])
 
         # Get next publication
