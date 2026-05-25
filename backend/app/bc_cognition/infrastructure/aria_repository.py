@@ -29,6 +29,18 @@ def find_reseller_by_owner(supabase: SupabaseService, user_id: str) -> Optional[
     return r.data[0] if r.data else None
 
 
+def fetch_client_context(supabase: SupabaseService, client_id: str) -> Optional[dict[str, Any]]:
+    """Lee client_context para inyectar a ARIA (BUG 2). Best-effort: None si falla/vacío."""
+    try:
+        r = supabase.client.table("client_context").select(
+            "niche, vertical, business_what, target_audience, uploaded_context_text"
+        ).eq("client_id", client_id).limit(1).execute()
+        return r.data[0] if r.data else None
+    except Exception as e:
+        logger.error(f"aria_repository.fetch_client_context failed: {e}", exc_info=True)
+        return None
+
+
 def insert_user_message(supabase: SupabaseService, user_id: str, client_id: Optional[str], content: str, level: int) -> None:
     supabase.client.table("aria_conversations").insert({
         "user_id": user_id, "client_id": client_id, "role": "user",

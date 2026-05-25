@@ -59,6 +59,26 @@ def build_system_prompt(level: int, role: str) -> str:
     )
 
 
+_UPLOADED_CAP = 1500  # I6 · ARIA inyecta en cada mensaje → capá costo/contexto (BUG 2 · §A budget)
+
+
+def build_client_context_block(ctx: dict) -> str:
+    """Bloque de contexto real del cliente para ARIA (BUG 2). uploaded_context_text capado."""
+    lines = []
+    niche = ctx.get("niche") or ctx.get("vertical")
+    if niche:
+        lines.append(f"Negocio: {niche}")
+    if ctx.get("business_what"):
+        lines.append(f"Qué hace: {str(ctx['business_what'])[:400]}")
+    if ctx.get("target_audience"):
+        lines.append(f"Audiencia: {ctx['target_audience']}")
+    if ctx.get("uploaded_context_text"):
+        lines.append("Documento de referencia del cliente:\n" + str(ctx["uploaded_context_text"])[:_UPLOADED_CAP])
+    if not lines:
+        return ""
+    return "# CONTEXTO DEL CLIENTE (usalo · nunca inventes datos)\n" + "\n".join(lines)
+
+
 def get_agent_code_for_level(level: int) -> str:
     """Mapea nivel ARIA a agent_code registrado en routing_table.
 
