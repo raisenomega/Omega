@@ -8,7 +8,9 @@ from app.bc_cognition.infrastructure import aria_repository as repo
 from app.infrastructure.supabase_service import get_supabase_service
 
 
-async def use_aria_history(user_id: str, limit: int = 50) -> list[dict[str, Any]]:
-    """Retorna últimos N mensajes ASC del usuario para el endpoint GET /history."""
+async def use_aria_history(user_id: str, limit: int | None = None) -> list[dict[str, Any]]:
+    """Retorna los últimos N mensajes ASC del usuario. limit=None → default del repository (single source)."""
     supabase = get_supabase_service()
+    if limit is None:
+        return repo.load_history_for_endpoint(supabase, user_id)
     return repo.load_history_for_endpoint(supabase, user_id, limit)

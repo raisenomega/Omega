@@ -16,7 +16,7 @@ async def aria_history(
     authorization: Optional[str] = Header(None),
 ) -> ARIAHistoryResponse:
     user = await get_current_user(authorization)
-    rows = await use_aria_history(user_id=user["id"], limit=50)
+    rows = await use_aria_history(user_id=user["id"])  # limit vive en el repository (single source)
     items = [
         ARIAConversationItem(
             role=r["role"],
