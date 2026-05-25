@@ -41,8 +41,13 @@ def fetch_aria_context(supabase: SupabaseService, client_id: str) -> Optional[di
         ctx["social_accounts"] = sa.data or []
         cl = supabase.client.table("clients").select("name, industry, region").eq("id", client_id).limit(1).execute()
         ctx["_client"] = cl.data[0] if cl.data else {}
-        ba = supabase.client.table("client_brand_assets").select("primary_color, logo_file_id").eq("client_id", client_id).limit(1).execute()
+        ba = supabase.client.table("client_brand_assets").select("primary_color, secondary_color, logo_file_id").eq("client_id", client_id).limit(1).execute()
         ctx["_brand_assets"] = ba.data[0] if ba.data else {}
+        logo_id = ctx["_brand_assets"].get("logo_file_id")  # logo_file_id → brand_files.storage_url (ARIA sabe que existe + URL)
+        ctx["_logo_url"] = None
+        if logo_id:
+            bf = supabase.client.table("brand_files").select("storage_url").eq("id", logo_id).limit(1).execute()
+            ctx["_logo_url"] = bf.data[0].get("storage_url") if bf.data else None
         sc = supabase.client.table("brand_voice_corpus").select("id", count="exact").eq("client_id", client_id).eq("source", "manual_upload").execute()
         ctx["_samples_count"] = sc.count or 0
         return ctx

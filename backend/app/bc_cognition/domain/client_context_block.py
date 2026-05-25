@@ -69,12 +69,23 @@ def build_client_context_block(ctx: dict[str, Any]) -> str:
     aud = _joined(ctx, ("target_audience", "audience_age_range", "audience_gender"))
     if aud:
         lines.append(f"Audiencia: {aud}")
+    comps = [str(c.get("name") if isinstance(c, dict) else c) for c in (ctx.get("competitors") or [])]
+    comps = [c for c in comps if c and c != "None"]
+    if comps:
+        lines.append(f"Competidores: {', '.join(comps[:8])}")
     goals = _joined(ctx, ("primary_goal", "goal_this_month"))
     if goals:
         lines.append(f"Objetivos: {goals}")
     voice = _joined(ctx, ("tone", "emoji_usage", "hashtag_strategy"))
     if voice:
         lines.append(f"Voz de marca: {voice}")
+    # Identidad visual · ARIA no VE la imagen pero sabe que existe + su URL (P2)
+    logo_url = ctx.get("_logo_url")
+    lines.append(f"Logo: disponible (URL: {logo_url})" if logo_url else "Logo: no cargado")
+    ba = ctx.get("_brand_assets") or {}
+    brand_colors = [c for c in (ba.get("primary_color"), ba.get("secondary_color")) if c]
+    if brand_colors:
+        lines.append(f"Colores de marca: {', '.join(brand_colors)}")
     lines.append(_accounts_line(ctx.get("social_accounts") or []))
     if ctx.get("uploaded_context_text"):
         lines.append("Documento de referencia del cliente:\n" + str(ctx["uploaded_context_text"])[:_UPLOADED_CAP])

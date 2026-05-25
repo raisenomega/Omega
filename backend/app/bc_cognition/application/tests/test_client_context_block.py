@@ -57,6 +57,20 @@ def test_profile_completion_counts_and_lists():
     assert "❌ Ejemplos de contenido: sin datos" in out
 
 
+def test_competitors_logo_colors():
+    """P1 competidores + P2 logo (existe+URL / no cargado) + colores de marca."""
+    ctx = {
+        "competitors": [{"name": "Comp A", "url": "x"}, {"name": "Comp B"}],
+        "_logo_url": "https://cdn/logo.png",
+        "_brand_assets": {"primary_color": "#FF0000", "secondary_color": "#00FF00"},
+    }
+    out = build_client_context_block(ctx)
+    assert "Competidores: Comp A, Comp B" in out
+    assert "Logo: disponible (URL: https://cdn/logo.png)" in out
+    assert "Colores de marca: #FF0000, #00FF00" in out
+    assert "Logo: no cargado" in build_client_context_block({})  # sin logo
+
+
 def test_profile_mirror_backend_frontend():
     """Convergencia de los 3 calculadores (wizard=backend=ARIA): identidad sin región = ❌;
     audiencia solo edad = ✅; voz solo preferred_formats = ✅ (espejo de c12ef86)."""
