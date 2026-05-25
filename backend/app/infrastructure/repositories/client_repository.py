@@ -32,7 +32,16 @@ class ClientRepository:
                 .neq("status", "deleted")
 
             if role == "reseller":
-                query = query.eq("reseller_id", reseller_id)
+                # BUG B: resolver los resellers que posee el user desde la tabla
+                # (owner_user_id), NO el claim reseller_id del JWT (ausente/stale/
+                # single-valor escondía clientes reales como 'La Milagrosa'). Alinea
+                # el picker con la RLS de /clients · soporta múltiples resellers.
+                res = self.service.client.table("resellers")\
+                    .select("id").eq("owner_user_id", authenticated_id).execute()
+                owned_ids = [r["id"] for r in (res.data or [])]
+                if not owned_ids:
+                    return []
+                query = query.in_("reseller_id", owned_ids)
 
             if status:
                 query = query.eq("status", status)
