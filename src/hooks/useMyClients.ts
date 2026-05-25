@@ -16,14 +16,16 @@ interface ClientProfileResponse {
 }
 
 export function useMyClients() {
-  const { isClient, clientId, loading: planLoading } = useMyPlanStatus();
+  const { isClient, isOwner, clientId, loading: planLoading } = useMyPlanStatus();
 
   return useQuery<ClientOption[]>({
-    queryKey: ["my_clients", isClient ? `client:${clientId ?? ""}` : "admin"],
+    queryKey: ["my_clients", isOwner ? "owner" : isClient && clientId ? `client:${clientId}` : "none"],
     queryFn: async () => {
-      if (isClient && clientId) {
-        // DEBT-CL-016 cerrada (23 may 2026): backend ClientProfile saneado
-        // (PlanOption +adopcion · 6 fields → Optional). Restaurado apiGet.
+      // AUDIT 2: el dueño de reseller ve TODOS sus clientes vía /clients/ (fix BUG B).
+      // isClient/isOwner NO son excluyentes (trigger 00006 auto-crea una client row a todo
+      // usuario) → priorizar isOwner para no caer en la rama single-client y esconder clientes.
+      if (!isOwner && isClient && clientId) {
+        // DEBT-CL-016 cerrada (23 may 2026): backend ClientProfile saneado · apiGet restaurado.
         const r = await apiGet<ClientProfileResponse>(`/clients/${clientId}`);
         if (!r.data) throw new Error("client_not_found");
         return [{ id: r.data.id, name: r.data.name ?? "Sin nombre" }];
