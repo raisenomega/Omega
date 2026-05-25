@@ -15,11 +15,11 @@ async def get_system_stats(request: Request):
 
     Returns real-time counts of:
     - total_endpoints: FastAPI routes count
-    - total_agents: Active agents in database
-    - active_agents: Agents with status='active'
-    - total_clients: Active clients
-    - total_scheduled_posts: Active scheduled posts
-    - content_generated_today: Content created today
-    - agent_executions_today: Agent executions today
+    - total_agents / active_agents: agents with is_active=True
+    - total_clients: clients (all · borrado es hard-delete)
+    - total_scheduled_posts: scheduled posts activos (status='pending')
+    - content_generated_today: content created today
+
+    Cada count está aislado (degradación parcial · una query rota → 0, no 500).
     """
     return await handle_get_stats(request.app)

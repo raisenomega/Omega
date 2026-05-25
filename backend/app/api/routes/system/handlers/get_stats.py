@@ -3,7 +3,7 @@ Handler: Get System Stats
 Dynamic system statistics - no hardcoding
 Filosofía: No velocity, only precision 🐢💎
 """
-from typing import Dict, Any
+from typing import Callable, Dict, Any
 from fastapi import HTTPException, FastAPI
 import logging
 from datetime import date
@@ -18,86 +18,51 @@ def count_routes(app: FastAPI) -> int:
     return len([r for r in app.routes if hasattr(r, 'methods')])
 
 
+def _safe_count(label: str, build: Callable[[], Any]) -> int:
+    """Count aislado · si la query falla (tabla/columna inexistente, etc.) loguea y
+    devuelve 0. Una query rota NO tumba el endpoint completo (degradación parcial ·
+    reemplaza el try monolítico previo)."""
+    try:
+        return build().count or 0
+    except Exception as e:
+        logger.warning(f"get_stats.{label} count failed: {e}")
+        return 0
+
+
 async def handle_get_stats(app: FastAPI) -> Dict[str, Any]:
     """
-    Get dynamic system statistics
+    Estadísticas dinámicas del sistema. Cada count está aislado (try/except propio):
+    si una query falla, ese campo cae a 0 y el resto responde igual.
 
-    Returns:
-        Dict with:
-        - total_endpoints: Count of registered FastAPI routes
-        - total_agents: Count of active agents in database
-        - active_agents: Count of agents with status='active'
-        - total_clients: Count of active clients
-        - total_scheduled_posts: Count of active scheduled posts
-        - content_generated_today: Count of content generated today
-        - agent_executions_today: Count of agent executions today
+    Returns dict:
+        - total_endpoints: rutas FastAPI registradas
+        - total_agents / active_agents: agentes con is_active=True
+        - total_clients: clientes (todos · borrado es hard-delete, no soft via status)
+        - total_scheduled_posts: posts programados activos (status='pending')
+        - content_generated_today: contenido generado hoy
 
-    Raises:
-        HTTPException 500: Database error
+    Raises HTTPException 500 solo si falla la inicialización de Supabase.
     """
     try:
-        supabase = get_supabase_service()
-        today = date.today().isoformat()
-
-        # 1. Count total endpoints (FastAPI routes)
-        total_endpoints = count_routes(app)
-
-        # 2. Count total agents (is_active=true)
-        agents_resp = supabase.client.table("agents")\
-            .select("id", count="exact")\
-            .eq("is_active", True)\
-            .execute()
-        total_agents = agents_resp.count if agents_resp.count else 0
-
-        # 3. Count active agents · is_active=True (agents NO tiene columna 'status' en V3)
-        active_agents_resp = supabase.client.table("agents")\
-            .select("id", count="exact")\
-            .eq("is_active", True)\
-            .execute()
-        active_agents = active_agents_resp.count if active_agents_resp.count else 0
-
-        # 4. Count total clients (exclude deleted)
-        clients_resp = supabase.client.table("clients")\
-            .select("id", count="exact")\
-            .neq("status", "deleted")\
-            .execute()
-        total_clients = clients_resp.count if clients_resp.count else 0
-
-        # 5. Count scheduled posts activos · status='pending' (is_active NO existe en scheduled_posts V3)
-        posts_resp = supabase.client.table("scheduled_posts")\
-            .select("id", count="exact")\
-            .eq("status", "pending")\
-            .execute()
-        total_scheduled_posts = posts_resp.count if posts_resp.count else 0
-
-        # 6. Count content generated today
-        content_today_resp = supabase.client.table("content_lab_generated")\
-            .select("id", count="exact")\
-            .gte("created_at", f"{today}T00:00:00")\
-            .lte("created_at", f"{today}T23:59:59")\
-            .execute()
-        content_generated_today = content_today_resp.count if content_today_resp.count else 0
-
-        # 7. Count agent executions today
-        executions_today_resp = supabase.client.table("agent_executions")\
-            .select("id", count="exact")\
-            .gte("started_at", f"{today}T00:00:00")\
-            .lte("started_at", f"{today}T23:59:59")\
-            .execute()
-        agent_executions_today = executions_today_resp.count if executions_today_resp.count else 0
-
-        logger.info(f"System stats: {total_endpoints} endpoints, {total_agents} agents, {total_clients} clients")
-
-        return {
-            "total_endpoints": total_endpoints,
-            "total_agents": total_agents,
-            "active_agents": active_agents,
-            "total_clients": total_clients,
-            "total_scheduled_posts": total_scheduled_posts,
-            "content_generated_today": content_generated_today,
-            "agent_executions_today": agent_executions_today
-        }
-
+        sb = get_supabase_service().client
     except Exception as e:
-        logger.error(f"Error getting system stats: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
+        logger.error(f"get_stats · supabase init failed: {e}")
+        raise HTTPException(status_code=500, detail="stats_unavailable")
+
+    today = date.today().isoformat()
+    total_endpoints = count_routes(app)
+    total_agents = _safe_count("agents", lambda: sb.table("agents").select("id", count="exact").eq("is_active", True).execute())
+    active_agents = _safe_count("active_agents", lambda: sb.table("agents").select("id", count="exact").eq("is_active", True).execute())
+    total_clients = _safe_count("clients", lambda: sb.table("clients").select("id", count="exact").execute())
+    total_scheduled_posts = _safe_count("scheduled_posts", lambda: sb.table("scheduled_posts").select("id", count="exact").eq("status", "pending").execute())
+    content_generated_today = _safe_count("content_today", lambda: sb.table("content_lab_generated").select("id", count="exact").gte("created_at", f"{today}T00:00:00").lte("created_at", f"{today}T23:59:59").execute())
+
+    logger.info(f"System stats: {total_endpoints} endpoints, {total_agents} agents, {total_clients} clients")
+    return {
+        "total_endpoints": total_endpoints,
+        "total_agents": total_agents,
+        "active_agents": active_agents,
+        "total_clients": total_clients,
+        "total_scheduled_posts": total_scheduled_posts,
+        "content_generated_today": content_generated_today,
+    }
