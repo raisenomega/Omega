@@ -16,29 +16,6 @@ GLOBAL_TABLES = {
 }
 
 
-async def _log_tool_call(
-    agent_code: str,
-    client_id: str | None,
-    input_summary: str,
-    success: bool,
-    duration_ms: int
-) -> None:
-    """Audit log — R-OPS-001"""
-    try:
-        supabase = get_supabase_service()
-        supabase.client.table("omega_tool_calls").insert({
-            "id": str(int(time.time() * 1000)),
-            "agent_code": agent_code,
-            "tool_name": "supabase_read",
-            "client_id": client_id,
-            "input_summary": input_summary[:200],
-            "success": success,
-            "duration_ms": duration_ms,
-        }).execute()
-    except Exception:
-        pass
-
-
 async def supabase_read(
     table: str,
     agent_code: str,
@@ -89,12 +66,6 @@ async def supabase_read(
         duration_ms = int((time.time() - start) * 1000)
         rows = result.data or []
 
-        await _log_tool_call(
-            agent_code, client_id,
-            f"table={table} filters={list(filters.keys())} limit={limit}",
-            True, duration_ms
-        )
-
         return {
             "success":     True,
             "table":       table,
@@ -104,12 +75,6 @@ async def supabase_read(
         }
 
     except Exception as e:
-        duration_ms = int((time.time() - start) * 1000)
-        await _log_tool_call(
-            agent_code, client_id,
-            f"table={table}",
-            False, duration_ms
-        )
         return {
             "success": False,
             "error":   str(e)[:200],
@@ -158,12 +123,6 @@ async def supabase_write(
 
         duration_ms = int((time.time() - start) * 1000)
 
-        await _log_tool_call(
-            agent_code, client_id,
-            f"table={table} op={operation}",
-            True, duration_ms
-        )
-
         return {
             "success":     True,
             "table":       table,
@@ -172,12 +131,6 @@ async def supabase_write(
         }
 
     except Exception as e:
-        duration_ms = int((time.time() - start) * 1000)
-        await _log_tool_call(
-            agent_code, client_id,
-            f"table={table} op={operation}",
-            False, duration_ms
-        )
         return {
             "success": False,
             "error":   str(e)[:200],

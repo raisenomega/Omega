@@ -50,7 +50,7 @@ async def research(
     user = await get_current_user(authorization)
     result = await web_search(
         query=request.query,
-        agent_code="content_creator",      # audit log tag para omega_tool_calls
+        agent_code="content_creator",      # tag de agente para el tool call
         client_id=str(user.get("id") or ""),
         max_results=request.max_results,
     )

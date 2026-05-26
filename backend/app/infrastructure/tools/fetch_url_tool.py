@@ -7,7 +7,6 @@ from __future__ import annotations
 import time
 import httpx
 from typing import Any
-from app.infrastructure.supabase_service import get_supabase_service
 
 # URLs bloqueadas por ToS — R-LEGAL-001
 BLOCKED_DOMAINS = {
@@ -40,29 +39,6 @@ def _extract_text(html: str) -> str:
     html = re.sub(r'<[^>]+>', ' ', html)
     html = re.sub(r'\s+', ' ', html)
     return html.strip()[:MAX_CONTENT_CHARS]
-
-
-async def _log_tool_call(
-    agent_code: str,
-    client_id: str | None,
-    url: str,
-    success: bool,
-    duration_ms: int
-) -> None:
-    """Audit log — R-OPS-001"""
-    try:
-        supabase = get_supabase_service()
-        supabase.client.table("omega_tool_calls").insert({
-            "id": str(int(time.time() * 1000)),
-            "agent_code": agent_code,
-            "tool_name": "fetch_url",
-            "client_id": client_id,
-            "input_summary": url[:200],
-            "success": success,
-            "duration_ms": duration_ms,
-        }).execute()
-    except Exception:
-        pass
 
 
 async def fetch_url(
@@ -131,10 +107,6 @@ async def fetch_url(
         else:
             content = raw_text
 
-        await _log_tool_call(
-            agent_code, client_id, url, True, duration_ms
-        )
-
         return {
             "success":     True,
             "url":         url,
@@ -144,8 +116,6 @@ async def fetch_url(
         }
 
     except httpx.HTTPStatusError as e:
-        duration_ms = int((time.time() - start) * 1000)
-        await _log_tool_call(agent_code, client_id, url, False, duration_ms)
         return {
             "success": False,
             "error": f"HTTP {e.response.status_code} — {url}",
@@ -153,8 +123,6 @@ async def fetch_url(
         }
 
     except httpx.TimeoutException:
-        duration_ms = int((time.time() - start) * 1000)
-        await _log_tool_call(agent_code, client_id, url, False, duration_ms)
         return {
             "success": False,
             "error": f"Timeout — la URL no respondió en {REQUEST_TIMEOUT}s",
@@ -162,8 +130,6 @@ async def fetch_url(
         }
 
     except Exception as e:
-        duration_ms = int((time.time() - start) * 1000)
-        await _log_tool_call(agent_code, client_id, url, False, duration_ms)
         return {
             "success": False,
             "error": str(e)[:200],

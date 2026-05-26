@@ -128,10 +128,10 @@ READ_ALLOWED_TABLES = {
     "omega_agents", "omega_activity", "omega_approval_requests",
     "omega_worker_logs", "scheduled_posts", "brand_files",
     "clients", "social_accounts", "content_pieces",
-    "omega_tool_calls", "sentinel_scans",
+    "sentinel_scans",
 }
 
 WRITE_ALLOWED_TABLES = {
     "omega_approval_requests", "omega_activity", "omega_worker_logs",
-    "scheduled_posts", "content_pieces", "omega_tool_calls",
+    "scheduled_posts", "content_pieces",
 }

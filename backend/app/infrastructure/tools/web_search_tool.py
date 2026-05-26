@@ -8,34 +8,10 @@ import os
 import time
 import httpx
 from typing import Any
-from app.infrastructure.supabase_service import get_supabase_service
 
 BRAVE_API_KEY = os.getenv("BRAVE_API_KEY", "")
 BRAVE_URL     = "https://api.search.brave.com/res/v1/web/search"
 RATE_LIMIT_PER_HOUR = 60
-
-
-async def _log_tool_call(
-    agent_code: str,
-    client_id: str | None,
-    input_summary: str,
-    success: bool,
-    duration_ms: int
-) -> None:
-    """Audit log de cada tool call — R-OPS-001"""
-    try:
-        supabase = get_supabase_service()
-        supabase.client.table("omega_tool_calls").insert({
-            "id": str(int(time.time() * 1000)),
-            "agent_code": agent_code,
-            "tool_name": "web_search",
-            "client_id": client_id,
-            "input_summary": input_summary[:200],
-            "success": success,
-            "duration_ms": duration_ms,
-        }).execute()
-    except Exception:
-        pass  # log no debe crashear el agente
 
 
 async def web_search(
@@ -100,12 +76,6 @@ async def web_search(
 
         answer = data.get("query", {}).get("altered", "")
 
-        await _log_tool_call(
-            agent_code, client_id,
-            f"query={query[:100]}",
-            True, duration_ms
-        )
-
         return {
             "success":  True,
             "query":    query,
@@ -116,8 +86,6 @@ async def web_search(
         }
 
     except httpx.HTTPStatusError as e:
-        duration_ms = int((time.time() - start) * 1000)
-        await _log_tool_call(agent_code, client_id, query[:100], False, duration_ms)
         return {
             "success": False,
             "error": f"Brave HTTP {e.response.status_code}",
@@ -125,8 +93,6 @@ async def web_search(
         }
 
     except httpx.TimeoutException:
-        duration_ms = int((time.time() - start) * 1000)
-        await _log_tool_call(agent_code, client_id, query[:100], False, duration_ms)
         return {
             "success": False,
             "error": "Timeout — Brave no respondió en 8s",
@@ -134,8 +100,6 @@ async def web_search(
         }
 
     except Exception as e:
-        duration_ms = int((time.time() - start) * 1000)
-        await _log_tool_call(agent_code, client_id, query[:100], False, duration_ms)
         return {
             "success": False,
             "error": str(e),
