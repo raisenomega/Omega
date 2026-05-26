@@ -34,21 +34,27 @@
 - **Sprint 3 (23-24 may):** Content Lab completo (texto/imagen/video) · 20 DEBT-CL (003→022) · DEBT-VID-001 · DEBT-037 (ARIA Premium client) · DEBT-CL-017/018/020.
 - **Sprint 4A (25 may):** SENTINEL subagent + builders · `input_sanitizer` · DEBT-002 analytics honesto · config fail-secure.
 - **Sesión 25 may (día):** DEBT-031 (calendar legacy) · AUDIT 1/2 wizard% + picker · BUG A persistencia · wizard 3 fixes · 🔒 role server-side (`33166e4`) · hard-delete cliente · logo overlay Fase 1 · ARIA contexto ampliado.
-- **Sesión 25 may (noche):** ARIA history DESC+reversed (`3a85fe1`) · ARIA deadlock input (`cece228`) · KPI Posts Programados (`44ca9d5`) · TAREA 2 popup 3 botones + 00025 `published_manual` · FIX P1 update_status (`84a05fe`) · FIX P5 conteos (`b2ab2fe`) · get_stats verde (`f807f2c`) · ISSUE 1 FK al agendar 409 (`59d182a`+`c9bfdb0`) · **outcome_evaluator 4A-2** (`5a834ed`+`3490ce0`+`8016531` · 00026) · **SENTINEL 8 endpoints superadmin** (`14b5d37`) · **alert_dispatcher** (`062353b`) · fix tablas fantasma sentinel (`91ad252`) · test regresión auth role (`f4c01b2`).
+- **Sesión 25 may (noche):** ARIA history DESC+reversed (`3a85fe1`) · ARIA deadlock input (`cece228`) · KPI Posts Programados (`44ca9d5`) · TAREA 2 popup 3 botones + 00025 `published_manual` · FIX P1 update_status (`84a05fe`) · FIX P5 conteos (`b2ab2fe`) · get_stats verde (`f807f2c`) · ISSUE 1 FK al agendar 409 (`59d182a`+`c9bfdb0`) · **outcome_evaluator 4A-2** (`5a834ed`+`3490ce0`+`8016531` · 00026) · **SENTINEL 8 endpoints superadmin** (`14b5d37`) · **alert_dispatcher** (`062353b`) · fix tablas fantasma sentinel (`91ad252`) · test regresión auth role (`f4c01b2`) · **DEBT-054 Info Tab → client_context** (`0946be5`) · consolidación docs → ESTADO_OMEGA único (`5858b12`+`92caa52`+`e8bdfcb`).
 
 ---
 
-## 3 · DEBTs ABIERTAS · ~180h (~4.5 semanas full-time)
+## 3 · DEBTs ABIERTAS · ~200h (~5 semanas full-time)
+
+> **Audit cliente E2E (25 may):** +10 DEBTs nuevas (057-066 · ver tablas) · % real cliente: core ~83% · superficie completa ~68%. Las 🔴 críticas concentran las brechas que rompen promesa o violan reglas inviolables (Tab AI Solo-Anthropic, logo, crisis P4).
 
 > Detalle/contexto de cada una: `SOURCE_OF_TRUTH.md §6`. Aquí: ID · 1-línea · horas · dependencia · sprint.
 
-### 🔴 CRÍTICAS (~84h)
+### 🔴 CRÍTICAS (~98h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
 |---|---|---|---|---|
 | DEBT-040 | OAuth Meta + Google (Centro Inteligencia · publicación real) | 80h | — | 5-6 |
 | DEBT-046 | ARIA Premium reseller variant ($25/mes · `resellers.addons`) | 4h | — | 4B |
+| DEBT-057 | **Tab AI viola Solo-Anthropic** (Lovable legacy · vende multi-proveedor) | 6h | — | 4B |
+| DEBT-058 | Tab AI tablas fantasma (`ai_providers`/`client_ai_config`) | 0h | DEBT-057 | 4B |
+| DEBT-059 | **Logo wizard no persiste** → "usar mi logo" no-op (P1) | 5h | — | 4B |
+| DEBT-061 | crisis_manager sin guardrail P4 + model inválido | 3h | — | — |
 
-### 🟠 ALTAS (~46h)
+### 🟠 ALTAS (~56h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
 |---|---|---|---|---|
 | DEBT-050 | Capa multi-agente stubeada (monitor/orchestrator/execute fabrican éxito · P1 cuando dispara) | 16h | — | — |
@@ -56,18 +62,24 @@
 | DEBT-049 | `agent_executions` inexistente + NOVA `infrastructure/calendar` schema fantasma | 6h | — | 4B |
 | DEBT-047 | APScheduler persistent jobstore (Python 3.13 + SQLAlchemy 2.0.25 incompat) | 4h | — | — |
 | DEBT-038 | Stripe Customer Portal embed (PaymentSection) | 6h | — | — |
+| DEBT-062 | INSERT social_accounts escribe columnas inexistentes (CRUD roto) | 2h | — | 4B |
+| DEBT-063 | ARIA Premium: cliente que pagó ve "Actualizar a 4.0" (comercial) | 1h | — | 4B |
+| DEBT-064 | Routers legacy `/content-lab` colisionan (desmontar legacy) | 1h | — | — |
+| DEBT-065 | `clients.assigned_to` inexistente · Tab Agente sin nivel ARIA | 2h | DEBT-033 | 4B |
+| DEBT-060 | Bucket `media` no existe en migraciones (galería rota) | 2h | — | 4B |
 
-### 🟡 MEDIAS (~34h)
+### 🟡 MEDIAS (~31h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
 |---|---|---|---|---|
 | DEBT-052 | AI Tab · créditos prepagados por agente (3 packs verticales · revenue) | 20h | DEBT-049 | 5 |
 | DEBT-053 | Posts Tab · actividad por agente (cliente ve ROI) | 8h | **DEBT-049** | 5 |
 | DEBT-042 | Regions display en ProfileSection (chips vs string crudo) | 3h | — | — |
-| DEBT-054 | Info Tab · conectar a `client_context` (hoy vacío) | 3h | — | 4B/5 |
+| ~~DEBT-054~~ | ✅ **CERRADA** (`0946be5`) Info Tab muestra client_context dinámico | — | — | — |
 
-### 🟢 BAJAS (~12h)
+### 🟢 BAJAS (~14.5h)
 | DEBT | Descripción | Horas | Sprint |
 |---|---|---|---|
+| DEBT-066 | Header ClientDetail cols inexistentes (email/company/phone) | 0.5h | 4B |
 | DEBT-SEC-003 | EXIF strip en imágenes subidas | 4h | — |
 | DEBT-SEC-004 | Magic bytes verification (uploads) | 4h | — |
 | DEBT-051 | `aria_repository.py` split (extraer `fetch_aria_context` · 99/100L) | 2h | — |
