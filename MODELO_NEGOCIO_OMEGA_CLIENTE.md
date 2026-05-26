@@ -1,5 +1,5 @@
 # MODELO DE NEGOCIO — CLIENTE PYME
-## OmegaRaisen · Documento canónico · Versión 1.0 · 17 mayo 2026
+## OmegaRaisen · Documento canónico · Versión 1.1 · 26 mayo 2026
 ### Clasificación: INTERNO · Firmado: Ibrain Raisen × Claude
 ### 🐢💎 No velocity, only precision
 
@@ -32,9 +32,9 @@ ADOPCIÓN (7 días gratis)
 BÁSICO ($29/mes)
     ↓  usa Content Lab + Brand Voice · ARIA motiva el siguiente paso
 PRO ($65/mes)
-    ↓  acceso completo · ARIA proactiva · reportes descargables
-PRO + Add-ons
-    ↓  ARIA Nivel 4 activado · máxima inteligencia
+    ↓  acceso completo + Centro Inteligencia · ARIA proactiva · reportes
+ENTERPRISE ($199/mes)
+    ↓  todo de PRO ×3 · ARIA Nivel 4 incluido · análisis semanal · soporte prioritario
 RESELLER
     → La PYME tiene suficientes clientes propios para revender OMEGA
     → En todo momento ARIA y el sistema la empujan hacia este paso
@@ -97,6 +97,9 @@ ALERTAS
                80% consumido  → banner amarillo "Te quedan X posts"
                95% consumido  → banner rojo + botón "Upgrade a PRO"
                100% consumido → Content Lab pausado + "Comprar 20 posts - $9"
+
+COSTO OMEGA    ~$3.10/mes (Claude + Nano Banana mínimo + Supabase compartido)
+MARGEN         89% · ~$25.90/mes neto
 ```
 
 ### PRO — $65/mes
@@ -108,6 +111,7 @@ FUNCIONES    Todo habilitado
                ✅ Content Lab    ✅ Brand Voice
                ✅ Analytics      ✅ Crisis Room
                ✅ Calendario     ✅ Imagen (Nano Banana ilimitado dentro de cuota)
+               ✅ Centro de Inteligencia (web analysis · SEO/GEO/AEO)
                ✅ Video          2 videos × 8s incluidos/mes
                                  Más videos → Video Packs $39-$125/mes (§4.4)
 ARIA         Nivel 3 · ES/EN
@@ -119,6 +123,7 @@ ARIA         Nivel 3 · ES/EN
                · CTA constante hacia add-ons y hacia Reseller path
 
 DESCARGAS    · Reporte semanal ARIA (PDF · .MD)
+             · Reporte ejecutivo MENSUAL PDF (compartible con equipo/inversores)
              · Exportar calendario editorial
              · Exportar analytics por plataforma
              · Exportar brand voice corpus
@@ -127,6 +132,9 @@ DATOS        ARIA captura nivel avanzado: patrones de decisión ·
              preferencias de formato · respuesta a sugerencias ·
              comportamiento de audiencia por plataforma
              Todo → agent_memory + training_pairs + brand_voice_corpus
+
+COSTO OMEGA  ~$7.76/mes (Claude + imágenes + Centro Inteligencia + Supabase)
+MARGEN       88% · ~$57.24/mes neto
 ```
 
 ### PRO + 3 ADD-ONS ESPECIALIZADOS → ARIA Nivel 4 (automático · gratis)
@@ -134,6 +142,7 @@ DATOS        ARIA captura nivel avanzado: patrones de decisión ·
 ```
 CONDICIÓN    PRO activo + cualquier 3 agentes especializados activos
 ACTIVACIÓN   Automática · sin cargo adicional · ARIA sube a Nivel 4
+TAMBIÉN      ENTERPRISE ($199) incluye ARIA Nivel 4 de base · sin add-ons
 
 ARIA Nivel 4 añade:
   · Análisis profundo de audiencia por plataforma
@@ -143,6 +152,29 @@ ARIA Nivel 4 añade:
   · Reporte ejecutivo mensual PDF (compartible con equipo o inversores)
   · Dashboard de decisiones: "Posts que ARIA sugirió vs los que tú
     creaste — comparación de engagement"
+```
+
+### ENTERPRISE — $199/mes
+
+```
+REDES        3 cuentas por red (IG · FB · TikTok · LinkedIn) · 12 total
+VOLUMEN      192 posts/mes (todo de PRO ×3)
+FUNCIONES    Todo de PRO ×3 · sin features bloqueadas
+               ✅ Content Lab    ✅ Brand Voice
+               ✅ Analytics      ✅ Crisis Room
+               ✅ Calendario     ✅ Centro de Inteligencia
+               ✅ Imagen         300 imágenes extra/mes (Nano Banana)
+               ✅ SEO/GEO/AEO    150 análisis/mes (Centro Inteligencia)
+               ✅ Brave Search   ilimitado
+INTELIGENCIA · Análisis SEMANAL automático del sitio (web + SEO/GEO/AEO)
+             · Reporte ejecutivo SEMANAL PDF (vs mensual en PRO)
+ARIA         Nivel 4 INCLUIDO (sin necesidad de add-ons)
+               · Análisis profundo de audiencia · predicciones a 30 días
+               · Benchmark vs industria · dashboard de decisiones
+SOPORTE      Prioritario
+VIDEO        SIEMPRE por separado vía Video Packs (§4.4) · sin inclusión base
+COSTO OMEGA  ~$33/mes (Claude + 300 imgs + 150 análisis + Brave + Supabase)
+MARGEN       83% · ~$166/mes neto
 ```
 
 ---
@@ -193,8 +225,8 @@ INCLUSIONES BASE   Básico incluye 1 video × 8s GRATIS lifetime (cebo · 1 sola
                    PRO incluye 2 videos × 8s/mes (renueva con la suscripción)
 RENOVACIÓN         Los videos del pack NO se acumulan al mes siguiente
 GENERACIÓN         100% Veo 3.1 (Google · audio nativo · 1080p)
-COSTO REAL OMEGA   ~$2 (8s) · ~$5 (30s) · ~$10 (60s) por video generado
-                   Margen sano incluso en Cinematic Pro
+COSTO REAL OMEGA   Starter ~$12 (6×8s) · Creator ~$25 (5×30s) · Cinematic ~$24 (3×60s)
+MÁRGENES           Starter 69% · Creator 74% · Cinematic Pro 81%
 
 POR QUÉ ASÍ
   · Cebo en Básico = el cliente PRUEBA antes de pagar más
@@ -210,31 +242,36 @@ POR QUÉ ASÍ
 ### Mínimo y máximo mensual
 
 ```
-ADOPCIÓN          $0    (7 días · 1 solo intento por email)
-BÁSICO mínimo     $29/mes
-BÁSICO máximo     $29 + $25 + $29 + $19 + $9 + $9 + $125 + $15 = $260/mes
-                   (base + Crisis + CompIntel + SEO + Posts + Img + Cinematic Pro + Cta)
-PRO mínimo        $65/mes
-PRO máximo        $65 + $29 + $19 + $9 + $9 + $125 + $15 = $271/mes
-                   (base + CompIntel + SEO + Posts + Img + Cinematic Pro + Cta)
-                   (Crisis Room ya incluido en PRO · sin doble cobro)
+ADOPCIÓN           $0    (7 días · 1 solo intento por email)
+BÁSICO mínimo      $29/mes
+BÁSICO máximo      $29 + $25 + $29 + $19 + $9 + $9 + $125 + $15 = $260/mes
+                    (base + Crisis + CompIntel + SEO + Posts + Img + Cinematic Pro + Cta)
+PRO mínimo         $65/mes
+PRO máximo         $65 + $29 + $19 + $9 + $9 + $125 + $15 = $271/mes
+                    (base + CompIntel + SEO + Posts + Img + Cinematic Pro + Cta)
+                    (Crisis Room ya incluido en PRO · sin doble cobro)
+ENTERPRISE mínimo  $199/mes
+ENTERPRISE máximo  $199 + $125 (Cinematic Pro) = $324/mes
+                    (todo incluido · solo Video Packs se suman · sin add-ons de volumen)
 ```
 
-### Costo real para OMEGA por cliente (API + infra)
+### Costo real para OMEGA por cliente (API + infra) · 3 planes definitivos
 
 ```
 Claude API (Anthropic):  ~$2-5/mes   (límite en limits_omega.py $5/día)
-Nano Banana (imágenes):  ~$0.10-$0.50/mes
-Veo 3.1 (video):         ~$2 (8s) · ~$5 (30s) · ~$10 (60s) por video
+Nano Banana (imágenes):  ~$0.10-$0.50/mes (Básico/PRO) · ~$15/mes (Enterprise · 300 imgs)
+Centro Inteligencia:     ~$12-15/mes (solo Enterprise · 150 análisis SEO/GEO/AEO + Brave)
+Veo 3.1 (video):         SIEMPRE por Video Pack separado (§4.4) · no toca el plan base
 Supabase (compartido):   ~$0.50/mes por cliente
 ─────────────────────────────────────────────
-Costo estimado Básico:   ~$3-6/mes        → Margen: $23-26/mes
-Costo estimado PRO:      ~$9-14/mes       → Margen: $51-56/mes
-                          (incluye 2 videos × 8s base)
-Margen por Video Pack:
-  Starter $39  - 6×8s   = $39 - ~$12 API = ~$27/mes
-  Creator $95  - 5×30s  = $95 - ~$25 API = ~$70/mes
-  Cinematic $125 - 3×60s = $125 - ~$30 API = ~$95/mes
+BÁSICO      $29/mes   →  costo ~$3.10/mes   →  MARGEN 89% (~$25.90 neto)
+PRO         $65/mes   →  costo ~$7.76/mes   →  MARGEN 88% (~$57.24 neto)
+ENTERPRISE  $199/mes  →  costo ~$33/mes     →  MARGEN 83% (~$166 neto)
+─────────────────────────────────────────────
+Margen por Video Pack (recurrente · siempre separado del plan):
+  Starter       $39  - 6×8s   - costo ~$12  →  MARGEN 69% (~$27/mes)
+  Creator       $95  - 5×30s  - costo ~$25  →  MARGEN 74% (~$70/mes)
+  Cinematic Pro $125 - 3×60s  - costo ~$24  →  MARGEN 81% (~$101/mes)
 ```
 
 ### MRR targets
@@ -291,7 +328,7 @@ NIVEL 3 · PRO
   Predice engagement antes de publicar
   CTA constante hacia add-ons y Reseller path
 
-NIVEL 4 · PRO + 3 ADD-ONS (automático · gratis)
+NIVEL 4 · ENTERPRISE (incluido) o PRO + 3 ADD-ONS (automático · gratis)
   Análisis profundo de audiencia por plataforma
   Predicciones a 30 días
   Benchmark vs industria (anónimo)
@@ -551,7 +588,7 @@ REQUISITO PREVIO
 
 ```
 MODELO_NEGOCIO_OMEGA_CLIENTE.md
-Versión 1.0 · 17 mayo 2026
+Versión 1.1 · 26 mayo 2026
 Aplica a: toda la implementación del plan de cliente PYME
 Compatible con: SOURCE_OF_TRUTH.md · BC_COGNITION_OMEGA.md · MCP_ARSENAL_OMEGA.md
 Próxima revisión: al cerrar implementación del dashboard cliente (Fase 3)

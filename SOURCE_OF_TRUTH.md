@@ -445,6 +445,53 @@ Continuación del 24 may (§10-13). Cliente piloto: Jorge / La Milagrosa Softwar
 
 ---
 
+## SECCIÓN 15 — MODELO COMERCIAL · 3 PLANES DEFINITIVOS (26 may 2026)
+
+Fuente canónica del pricing: `MODELO_NEGOCIO_OMEGA_CLIENTE.md` §3-5 (v1.1). Aquí: resumen ejecutivo + márgenes + proyección a escala.
+
+### 3 planes definitivos
+
+| Plan | Precio | Cuentas/red (total) | Posts/mes | Funciones | ARIA | Costo OMEGA | Margen |
+|---|---|---|---|---|---|---|---|
+| **BÁSICO** | $29/mes | 1 (4) | 32 | Content Lab + Brand Voice | Nivel 1-2 | ~$3.10 | **89%** |
+| **PRO** | $65/mes | 2 (8) | 64 | Todo + Centro Inteligencia · reporte ejecutivo mensual PDF | Nivel 3 | ~$7.76 | **88%** |
+| **ENTERPRISE** | $199/mes | 3 (12) | 192 | Todo ×3 · 150 análisis SEO/GEO/AEO/mes · 300 imágenes extra/mes · Brave ilimitado · análisis semanal del sitio · reporte ejecutivo semanal PDF · soporte prioritario | Nivel 4 incluido | ~$33 | **83%** |
+
+Trial: **ADOPCIÓN** $0 · 7 días · 1 intento por email. Video: **SIEMPRE separado** vía Video Packs (cero "videos sueltos" → facturación predecible).
+
+Rango mensual con Video Packs/add-ons: Básico $29-$260 · PRO $65-$271 · Enterprise $199-$324 (detalle en `MODELO_NEGOCIO_OMEGA_CLIENTE.md` §5).
+
+### Video Packs (recurrentes · siempre separados · Básico/PRO/Enterprise)
+
+| Pack | Precio | Volumen | Costo OMEGA | Margen |
+|---|---|---|---|---|
+| **Starter** | $39/mes | 6 × 8s | ~$12 | **69%** |
+| **Creator** | $95/mes | 5 × 30s | ~$25 | **74%** |
+| **Cinematic Pro** | $125/mes | 3 × 60s | ~$24 | **81%** |
+
+### Por qué los márgenes son sanos
+
+- Texto/razonamiento 100% Anthropic con tope `limits_omega.py` ($5/día/cliente) → costo Claude acotado y predecible (G2).
+- Imágenes Nano Banana baratas (~$0.03-0.05 c/u) → Enterprise 300 imgs ≈ $15/mes.
+- **Video DESACOPLADO del plan base** → el costo Veo (volátil) nunca erosiona el margen del plan; vive en su propio pack con margen propio (69-81%).
+- Supabase compartido → ~$0.50/cliente. Infra marginal.
+- **Resultado: 83-89% margen bruto en los 3 planes · 69-81% en Video Packs.**
+
+### Proyección a escala (MRR · mix conservador — ASUNCIÓN, no dato medido)
+
+Mix asumido 60% Básico / 30% PRO / 10% Enterprise → ARPU ≈ **$57/mes** · costo medio ≈ $7.49/cliente:
+
+| Escala | Clientes | MRR (planes) | Costo OMEGA/mes | Margen bruto/mes |
+|---|---|---|---|---|
+| Fase 1 | 10 | ~$570 | ~$75 | ~$495 (87%) |
+| Fase 2 | 50 | ~$2,840 | ~$375 | ~$2,465 (87%) |
+| Fase 3 | 200 | ~$11,360 | ~$1,500 | ~$9,860 (87%) |
+| Escala | 1,000 | ~$56,800 | ~$7,490 | ~$49,310 (87%) |
+
+Video Packs y add-ons suman ARPU **por encima** de esto (no incluidos en la tabla · margen 69-81% adicional). Trigger de salto a infra multi-instancia + Redis (rate limit distribuido): **>$10,000 MRR** (~200 clientes · ver nota multi-instancia en DEBT-070). El mix es asunción de planeación — recalcular con datos reales cuando haya ≥20 clientes pagos.
+
+---
+
 > **Regla:** Si está en "lo que existe" pero no puedes mostrar el archivo
 > de código donde vive → se mueve a "no existe". Sin excepciones.
-> **Última actualización:** 25 mayo 2026 (sesión prod fixes + seguridad role server-side + logo overlay) · firmado: Claude Opus 4.7 (1M context) + Ibrain (CEO)
+> **Última actualización:** 26 mayo 2026 (§15 modelo comercial · 3 planes definitivos + márgenes + proyección a escala) · firmado: Claude Opus 4.7 (1M context) + Ibrain (CEO)
