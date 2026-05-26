@@ -20,7 +20,7 @@ function fmt(at: string): string {
 }
 
 export function SecurityKPICard() {
-  const { data, isLoading, isError } = useSessionReport();
+  const { data, isLoading, isError, refetch } = useSessionReport();
   const { toast } = useToast();
   const revisar = data?.status === "revisar";
   const [scanning, setScanning] = useState(false);
@@ -28,14 +28,14 @@ export function SecurityKPICard() {
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
-  // Cliente NO puede llamar /sentinel/scan (superadmin-only) · feedback best-effort
-  const handleScan = () => {
+  // Refetch del reporte real de seguridad (datos ya en DB vía Guardian login trigger · sin backend extra · P1 honesto)
+  const handleRefresh = () => {
     setScanning(true);
-    toast({ title: "Escaneando tu cuenta…" });
+    refetch();
     timer.current = setTimeout(() => {
       setScanning(false);
-      toast({ title: "Cuenta verificada ✓" });
-    }, 2000);
+      toast({ title: "Datos actualizados" });
+    }, 500);
   };
 
   return (
@@ -43,8 +43,8 @@ export function SecurityKPICard() {
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">Seguridad de tu cuenta</CardTitle>
         <div className="flex items-center gap-1.5">
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleScan}
-            disabled={scanning} aria-label="Escanear cuenta">
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleRefresh}
+            disabled={scanning} aria-label="Actualizar datos de seguridad">
             <RefreshCw className={`h-3.5 w-3.5 text-muted-foreground ${scanning ? "animate-spin" : ""}`} />
           </Button>
           {data && (revisar

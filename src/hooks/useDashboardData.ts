@@ -44,7 +44,7 @@ export function useDashboardData() {
       const { count, error } = await supabase
         .from("scheduled_posts")
         .select("*", { count: "exact", head: true })
-        .in("status", ["pending", "scheduled"])  // 'scheduled' es etiqueta UI · 'pending' es DB canónico
+        .in("status", ["pending"])  // 'pending' es el único status DB canónico de un post futuro (CHECK 00001:235)
         .gte("scheduled_for", startOfTodayIso())  // desde 00:00 de hoy · no excluye posts cuya hora ya pasó hoy
         .lte("scheduled_for", isoDaysFromNow(7));
       if (error) throw error;

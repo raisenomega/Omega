@@ -6,7 +6,7 @@ import { Radio, Shield, CalendarClock, Globe, Sparkles, ArrowRight, type LucideI
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { useWebAnalysis } from "@/hooks/useWebAnalysis";
-import { useCalendarList, type CalendarPost } from "@/hooks/useCalendarData";
+import { useNextScheduledPost, type NextScheduledPost } from "@/hooks/useNextScheduledPost";
 import { useBrandVoiceSummary } from "@/hooks/useBrandVoiceSummary";
 import { useSessionReport } from "@/hooks/useSessionReport";
 
@@ -17,22 +17,9 @@ interface Observation {
   time?: string;
 }
 
-function currentMonthKey(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function nextScheduledPost(items: CalendarPost[]): CalendarPost | null {
-  const now = Date.now();
-  const future = items
-    .filter((p) => p.status === "pending" && new Date(p.scheduled_for).getTime() >= now)
-    .sort((a, b) => new Date(a.scheduled_for).getTime() - new Date(b.scheduled_for).getTime());
-  return future[0] ?? null;
-}
-
 interface Sources {
   security?: { status: string };
-  nextPost: CalendarPost | null;
+  nextPost: NextScheduledPost | null;
   webScore: number;
   webGeneratedAt: string | null;
   corpusCount: number;
@@ -60,7 +47,7 @@ function buildObservations(s: Sources): Observation[] {
 export function ObservationsFeed({ clientId }: { clientId: string | null }) {
   const navigate = useNavigate();
   const web = useWebAnalysis(clientId ?? "");
-  const calendar = useCalendarList(currentMonthKey(), "scheduled");
+  const nextPost = useNextScheduledPost(clientId);
   const voice = useBrandVoiceSummary();
   const session = useSessionReport();
 
@@ -68,12 +55,12 @@ export function ObservationsFeed({ clientId }: { clientId: string | null }) {
     () =>
       buildObservations({
         security: session.data ? { status: session.data.status } : undefined,
-        nextPost: nextScheduledPost(calendar.data?.items ?? []),
+        nextPost: nextPost.data ?? null,
         webScore: web.query.data?.score ?? 0,
         webGeneratedAt: web.query.data?.generated_at ?? null,
         corpusCount: voice.data?.corpus_count ?? 0,
       }),
-    [session.data, calendar.data, web.query.data, voice.data]
+    [session.data, nextPost.data, web.query.data, voice.data]
   );
 
   return (
