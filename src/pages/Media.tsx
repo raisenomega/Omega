@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
+import { MediaCardActions } from "@/components/media/MediaCardActions";
 import {
   ImageIcon,
   Upload,
   Loader2,
-  Trash2,
   Search,
   FileImage,
   FileVideo,
@@ -168,16 +168,12 @@ export default function Media() {
                   ) : (
                     <Icon className="h-12 w-12 text-muted-foreground/30" />
                   )}
-                  <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(file.name)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <MediaCardActions
+                    fileName={file.name}
+                    publicUrl={getPublicUrl(file.name)}
+                    isImage={!!isImage}
+                    onDelete={handleDelete}
+                  />
                 </div>
                 <CardContent className="p-3">
                   <p className="text-xs font-medium truncate">{file.name}</p>

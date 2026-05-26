@@ -21,10 +21,35 @@ export function useContentLabState() {
   // Brief CTA (Centro de Inteligencia): si llegamos con location.state.brief, lo pre-cargamos en el topic.
   // Defensivo: si no hay brief válido → INITIAL_FORM intacto.
   const location = useLocation();
+  const navState = location.state as { brief?: unknown; referenceImageUrl?: unknown } | null;
+  const refImageUrl = typeof navState?.referenceImageUrl === "string" && navState.referenceImageUrl.trim()
+    ? navState.referenceImageUrl : undefined;
   const [form, setForm] = useState<FormState>(() => {
-    const brief = (location.state as { brief?: unknown } | null)?.brief;
-    return typeof brief === "string" && brief.trim() ? { ...INITIAL_FORM, topic: brief } : INITIAL_FORM;
+    const brief = navState?.brief;
+    const base = typeof brief === "string" && brief.trim() ? { ...INITIAL_FORM, topic: brief } : INITIAL_FORM;
+    // TAREA 2 · si llegamos con referenceImageUrl, arrancamos en type=image desde el 1er render.
+    // Así el reset por cambio de type (DEBT-CL-020) NO se dispara al setear la imagen async (evita wipe).
+    return refImageUrl ? { ...base, type: "image" } : base;
   });
+  // TAREA 2 · "Usar en Content Lab" desde Media: fetch de referenceImageUrl → base64 raw
+  // (sin prefijo data: · igual que PromptAttachmentControls) → reference_image_b64.
+  // Best-effort: si el fetch falla, toast suave y form intacto. Sin referenceImageUrl → comportamiento intacto.
+  useEffect(() => {
+    if (!refImageUrl) return;
+    let cancelled = false;
+    fetch(refImageUrl)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.blob(); })
+      .then(blob => new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(",")[1] ?? "");
+        reader.onerror = () => reject(reader.error ?? new Error("read failed"));
+        reader.readAsDataURL(blob);
+      }))
+      .then(b64 => { if (!cancelled && b64) setForm(prev => ({ ...prev, reference_image_b64: b64 })); })
+      .catch(() => { if (!cancelled) toast({ title: "No se pudo cargar la imagen de referencia" }); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // DEBT-CL-015: reset accountId cuando cambia clientId o platform (evita huérfanos)
   useEffect(() => { setForm(prev => ({ ...prev, accountId: "" })); }, [form.clientId, form.platform]);
   // DEBT-CL-020: reset attachments cuando cambia type (un caption no necesita imagen ref · evita confusión)
