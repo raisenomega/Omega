@@ -75,6 +75,9 @@ async def generate_image(
     except StorageUploadError as e:
         raise HTTPException(status_code=502, detail=f"storage_upload_error:{e}")
     except Exception as e:
+        # DEBT-071: cuota de Google (rate_limited) → 429 + Retry-After en vez de 503 opaco.
+        if "rate_limited" in str(e):
+            raise HTTPException(status_code=429, detail="image_gen_rate_limited", headers={"Retry-After": "30"})
         raise HTTPException(status_code=503, detail=f"image_gen_error:{e}")
     if not urls:
         raise HTTPException(status_code=503, detail="image_gen_empty")

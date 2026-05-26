@@ -19,6 +19,7 @@ from google.genai import types
 
 from app.bc_cognition.infrastructure._nano_banana_types import (
     ImageRoute, MODEL_BY_ROUTE, ImageResponse, ImageError,
+    MAX_ATTEMPTS, classify_error, backoff_delay,            # DEBT-071
 )
 
 # google-genai 2.6 ImageConfig.aspect_ratio · supported values (DEBT-CL-011)
@@ -63,33 +64,36 @@ async def generate(
                 data=base64.b64decode(img), mime_type="image/png",
             ))
 
-    start = time.monotonic()
-    try:
-        resp = await asyncio.wait_for(
-            _get_client().aio.models.generate_content(
-                model=model,
-                contents=contents,
-                # DEBT-CL-011 cerrada (23 may 2026 · Sprint 3): google-genai 2.6
-                # trajo types.ImageConfig de vuelta · aspect_ratio honrado por SDK.
-                config=types.GenerateContentConfig(
-                    response_modalities=["IMAGE"],
-                    image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
-                ),
-            ),
-            timeout=_GENERATION_TIMEOUT_S,
-        )
-    except asyncio.TimeoutError:                                    # DEBT-069
-        return None, ImageError("timeout", f"Nano Banana excedió {_GENERATION_TIMEOUT_S:.0f}s")
-    except Exception as e:                                          # noqa: BLE001
-        return None, ImageError("api_error", str(e))
+    # DEBT-CL-011: google-genai 2.6 → types.ImageConfig honra aspect_ratio en el SDK.
+    config = types.GenerateContentConfig(
+        response_modalities=["IMAGE"],
+        image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
+    )
+    # DEBT-071: retry acotado con backoff+jitter para errores transitorios (429/5xx).
+    for attempt in range(MAX_ATTEMPTS):
+        start = time.monotonic()
+        try:
+            resp = await asyncio.wait_for(
+                _get_client().aio.models.generate_content(model=model, contents=contents, config=config),
+                timeout=_GENERATION_TIMEOUT_S,
+            )
+        except asyncio.TimeoutError:                                # DEBT-069 · no se reintenta
+            return None, ImageError("timeout", f"Nano Banana excedió {_GENERATION_TIMEOUT_S:.0f}s")
+        except Exception as e:                                      # noqa: BLE001
+            kind = classify_error(e)
+            if kind in ("rate_limited", "transient") and attempt < MAX_ATTEMPTS - 1:
+                await asyncio.sleep(backoff_delay(attempt))
+                continue
+            return None, ImageError("rate_limited" if kind == "rate_limited" else "api_error", str(e))
 
-    latency_ms = int((time.monotonic() - start) * 1000)
-    for part in resp.candidates[0].content.parts:
-        if part.inline_data and part.inline_data.data:
-            return ImageResponse(
-                image_b64=base64.b64encode(part.inline_data.data).decode("ascii"),
-                mime_type=part.inline_data.mime_type or "image/png",
-                model_used=model,
-                latency_ms=latency_ms,
-            ), None
-    return None, ImageError("safety_block", "Sin imagen en response (posible safety filter)")
+        latency_ms = int((time.monotonic() - start) * 1000)
+        for part in resp.candidates[0].content.parts:
+            if part.inline_data and part.inline_data.data:
+                return ImageResponse(
+                    image_b64=base64.b64encode(part.inline_data.data).decode("ascii"),
+                    mime_type=part.inline_data.mime_type or "image/png",
+                    model_used=model,
+                    latency_ms=latency_ms,
+                ), None
+        return None, ImageError("safety_block", "Sin imagen en response (posible safety filter)")
+    return None, ImageError("api_error", "Nano Banana: reintentos agotados")
