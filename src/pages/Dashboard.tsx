@@ -7,6 +7,9 @@ import { AccountDistributionChart } from "@/components/dashboard/PlatformCharts"
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { PlatformStatus } from "@/components/dashboard/PlatformStatus";
 import { SecurityKPICard } from "@/components/dashboard/SecurityKPICard";
+import { AriaSuggestionsCard } from "@/components/dashboard/AriaSuggestionsCard";
+import { AgentActivityChart } from "@/components/dashboard/AgentActivityChart";
+import { ObservationsFeed } from "@/components/dashboard/ObservationsFeed";
 import { SentinelDashboardCard } from "@/components/dashboard/SentinelDashboardCard";
 import { PlanStatusBar } from "@/components/clients/PlanStatusBar";
 
@@ -81,11 +84,21 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* GUARDIAN 4B-4 · seguridad de la cuenta (solo cliente · superadmin ve SentinelDashboardCard) */}
-      {!myPlan.isOwner && <SecurityKPICard />}
+      {/* CAMBIO 1 · grid 2-col: seguridad (2 eventos + scan) + sugerencias de ARIA · solo cliente
+          (superadmin ve SentinelDashboardCard abajo) */}
+      {!myPlan.isOwner && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <SecurityKPICard />
+          <AriaSuggestionsCard clientId={myPlan.clientId ?? null} />
+        </div>
+      )}
 
-      {/* Distribución de cuentas (única chart con data real) */}
-      <AccountDistributionChart data={platformCounts} />
+      {/* CAMBIO 3+4 · actividad de agentes · distribución de cuentas (donut) · observaciones — mismo nivel */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <AgentActivityChart />
+        <AccountDistributionChart data={platformCounts} />
+        <ObservationsFeed clientId={myPlan.clientId ?? null} />
+      </div>
 
       {/* Activity + Platform Status */}
       <div className="grid gap-4 lg:grid-cols-2">
