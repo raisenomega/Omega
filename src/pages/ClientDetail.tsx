@@ -10,7 +10,6 @@ import { ArrowLeft, Users, Globe, UserCheck, FileText, Loader2, Bot } from "luci
 import { ariaLevelInfo } from "@/lib/aria-levels";
 import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts";
 import { ClientAIConfig } from "@/components/clients/ClientAIConfig";
-import { PlanStatusBar } from "@/components/clients/PlanStatusBar";
 import { fetchOnboardingData } from "@/lib/onboarding-api";
 import { buildContextRows, type InfoRow } from "@/lib/client-info-fields";
 
@@ -83,9 +82,6 @@ export default function ClientDetail() {
           </p>
         </div>
       </div>
-
-      {/* Plan Status Bar (Step 3 · MODELO §7) */}
-      <PlanStatusBar clientId={id!} />
 
       {/* Tabs */}
       <Tabs defaultValue="social" className="space-y-4">
