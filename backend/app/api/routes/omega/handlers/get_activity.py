@@ -27,7 +27,7 @@ async def handle_get_activity(limit: int = 50) -> Dict[str, Any]:
 
         # 1. Recent content generated
         content_resp = supabase.client.table("content_lab_generated")\
-            .select("id, content_type, provider, created_at, client_id")\
+            .select("id, content_type, agent_code, created_at, client_id")\
             .order("created_at", desc=True)\
             .limit(20)\
             .execute()
@@ -35,7 +35,7 @@ async def handle_get_activity(limit: int = 50) -> Dict[str, Any]:
         for item in (content_resp.data or []):
             activities.append({
                 "type": "content_generated",
-                "description": f"Generated {item.get('content_type')} via {item.get('provider')}",
+                "description": f"Generated {item.get('content_type')} via {item.get('agent_code')}",
                 "timestamp": item.get("created_at"),
                 "client_id": item.get("client_id")
             })
@@ -57,7 +57,7 @@ async def handle_get_activity(limit: int = 50) -> Dict[str, Any]:
 
         # 3. Recent posts scheduled
         posts_resp = supabase.client.table("scheduled_posts")\
-            .select("id, status, scheduled_date, created_at, client_id, agent_assigned, account_id")\
+            .select("id, status, scheduled_for, created_at, client_id")\
             .order("created_at", desc=True)\
             .limit(20)\
             .execute()
@@ -65,30 +65,10 @@ async def handle_get_activity(limit: int = 50) -> Dict[str, Any]:
         for item in (posts_resp.data or []):
             activities.append({
                 "type": "post_scheduled",
-                "description": f"Post programado {item.get('scheduled_date', '')[:10]}",
-                "agent_code": item.get("agent_assigned", "DUDA"),
+                "description": f"Post programado {item.get('scheduled_for', '')[:10]}",
                 "timestamp": item.get("created_at"),
                 "client_id": item.get("client_id"),
                 "status": item.get("status")
-            })
-
-        # 4. Recent agent tasks
-        tasks_resp = supabase.client.table("agent_tasks")\
-            .select("id, agent_code, title, status, client_id, tokens_used, provider, created_at, completed_at")\
-            .order("created_at", desc=True)\
-            .limit(20)\
-            .execute()
-
-        for item in (tasks_resp.data or []):
-            activities.append({
-                "type": "agent_task",
-                "description": f"{item.get('agent_code')} — {item.get('title', '')[:80]}",
-                "agent_code": item.get("agent_code"),
-                "status": item.get("status"),
-                "timestamp": item.get("created_at"),
-                "client_id": item.get("client_id"),
-                "tokens_used": item.get("tokens_used", 0),
-                "provider": item.get("provider", "")
             })
 
         # Sort all activities by timestamp and limit
