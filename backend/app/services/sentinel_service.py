@@ -90,7 +90,7 @@ class SentinelService:
                 "agents_scanned": len(results),
                 "issues": all_issues,
             }
-            if global_score < 100:  # TEST · REVERTIR a < 80 · alerta best-effort (Resend + Telegram) · no rompe el scan
+            if global_score < 80:  # alerta best-effort (Email Resend + Telegram opcional) · no rompe el scan
                 from app.bc_cognition.application.alert_dispatcher import dispatch_sentinel_alert
                 try:
                     await dispatch_sentinel_alert(global_score, all_issues, datetime.now(timezone.utc).isoformat())
