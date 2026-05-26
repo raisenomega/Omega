@@ -14,6 +14,8 @@ from app.services.crisis_detector import (
     CrisisLevel,
     RecoveryStep
 )
+from app.bc_cognition.domain.limits_omega import is_action_prohibited
+from app.bc_cognition.domain.routing_table import resolve_model
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +29,15 @@ class CrisisManagerAgent(BaseAgent):
     - Recovery planning
     """
     
+    # AS-R2 / P4 (regla INVIOLABLE): el crisis manager NUNCA publica de forma autónoma.
+    # Solo produce DRAFTS; toda acción pública requiere firma humana explícita.
+    AUTONOMOUS_PUBLISH_ALLOWED: bool = False
+
     def __init__(self, agent_id: str = "crisis_manager_001"):
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.CRISIS_MANAGER,
-            model="claude-opus-4",
+            model=resolve_model("crisis_manager"),  # I2: la routing_table decide (opus · claude-opus-4-7)
             tools=[
                 "crisis_assessor",
                 "response_strategist",
@@ -39,11 +45,24 @@ class CrisisManagerAgent(BaseAgent):
                 "recovery_planner"
             ]
         )
-    
+
+    def _assert_human_in_the_loop(self, requested_action: str | None) -> None:
+        """AS-R2/P4: bloquea acciones públicas autónomas (ACCIONES_PROHIBIDAS de limits_omega:
+        respond_to_complaint_publicly, post_apology_for_crisis, ...). El crisis manager solo
+        genera drafts — cualquier acción publicable requiere aprobación humana explícita."""
+        if requested_action and is_action_prohibited(requested_action):
+            raise PermissionError(
+                f"P4/AS-R2: el crisis manager no ejecuta '{requested_action}' de forma autónoma "
+                f"— requiere firma humana explícita (solo produce drafts)."
+            )
+
     async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Execute crisis management task"""
         self.set_state(AgentState.WORKING)
-        
+        # AS-R2/P4 · guardrail ANTES de cualquier output: si la task pide una acción pública
+        # prohibida, se bloquea aquí (el crisis manager nunca publica solo).
+        self._assert_human_in_the_loop(task.get("action"))
+
         try:
             task_type = task.get("type")
             
@@ -158,7 +177,7 @@ class CrisisManagerAgent(BaseAgent):
         self,
         assessment: CrisisImpactAssessment,
         brand_profile: Dict[str, str]
-    ) -> Dict[str, str | List[str]]:
+    ) -> Dict[str, Any]:
         """Generate crisis response strategy"""
         prompt = (
             f"Crisis Response Strategy:\n"
@@ -182,7 +201,8 @@ class CrisisManagerAgent(BaseAgent):
         return {
             "strategy": strategy,
             "priority": assessment.crisis_level.level,
-            "immediate_action_required": assessment.requires_immediate_action
+            "immediate_action_required": assessment.requires_immediate_action,
+            "requires_human_approval": True,  # AS-R2/P4 · estrategia para revisión humana
         }
     
     async def draft_official_statement(
@@ -190,8 +210,8 @@ class CrisisManagerAgent(BaseAgent):
         assessment: CrisisImpactAssessment,
         brand_voice: str,
         brand_name: str
-    ) -> str:
-        """Draft official crisis statement"""
+    ) -> Dict[str, Any]:
+        """Draft official crisis statement · AS-R2/P4: SOLO draft, nunca auto-publicado."""
         prompt = (
             f"Draft official statement for {brand_name}:\n"
             f"Crisis level: {assessment.crisis_level.level}\n"
@@ -210,8 +230,13 @@ class CrisisManagerAgent(BaseAgent):
             max_tokens=250,
             temperature=0.7
         )
-        
-        return statement.strip()
+
+        # AS-R2/P4: se devuelve como DRAFT marcado · jamás se publica sin firma humana.
+        return {
+            "draft_statement": statement.strip(),
+            "requires_human_approval": True,
+            "auto_publish": False,
+        }
     
     async def create_recovery_plan(
         self,

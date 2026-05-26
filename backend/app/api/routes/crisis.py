@@ -139,8 +139,8 @@ async def draft_statement(request: DraftStatementRequest) -> CrisisAPIResponse:
 
         return CrisisAPIResponse(
             success=True,
-            data={"statement": result},
-            message="Statement drafted successfully"
+            data=result,  # {draft_statement, requires_human_approval, auto_publish} · AS-R2/P4
+            message="Statement drafted (requires human approval before publishing)"
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
