@@ -38,7 +38,7 @@
 
 ---
 
-## 3 · DEBTs ABIERTAS · ~197.5h (~5 semanas full-time)
+## 3 · DEBTs ABIERTAS · ~191.5h (~5 semanas full-time)
 
 > **Audit cliente E2E (25 may):** +10 DEBTs nuevas (057-066) · **DEBT-057/058/059/061 ya CERRADAS** (Tab AI Anthropic-only · logo wizard · crisis P4 · ver §2). % real cliente: core ~83% · superficie completa ~68%.
 > **Audit rendimiento imagen (26 may):** +4 DEBTs (068-071) · **TODAS CERRADAS** (uploads async · timeout Nano Banana · rate-limit cableado · retry+backoff · ver §2). La generación de imagen ya no bloquea el event loop, no cuelga, está rate-limitada y reintenta transitorios.
@@ -51,16 +51,16 @@
 | DEBT-040 | OAuth Meta + Google (Centro Inteligencia · publicación real) | 80h | — | 5-6 |
 | DEBT-046 | ARIA Premium reseller variant ($25/mes · `resellers.addons`) | 4h | — | 4B |
 
-### 🟠 ALTAS (~62h)
+### 🟠 ALTAS (~56h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
 |---|---|---|---|---|
 | DEBT-050 | Capa multi-agente stubeada (monitor/orchestrator/execute fabrican éxito · P1 cuando dispara) | 16h | — | — |
 | DEBT-074 | `safe_insert` sync bloquea event loop (INSERTs inline · transversal · 5 repos · ~20 call sites) | 4h | — | — |
 | DEBT-048 | ARIA attention memory + embeddings (Voyage · nueva excepción I1) | 16h | — | — |
-| DEBT-049 | `agent_executions` inexistente + NOVA `infrastructure/calendar` schema fantasma | 6h | — | 4B |
+| DEBT-049 | `agent_executions` inexistente + NOVA calendar schema fantasma + **agent_repository alignment** (find_by_agent_id agent_id→code · `/agents/{id}/execute` 500 · subsume DEBT-077 caso B) | 8h | — | 4B |
 | DEBT-047 | APScheduler persistent jobstore (Python 3.13 + SQLAlchemy 2.0.25 incompat) | 4h | — | — |
 | DEBT-038 | Stripe Customer Portal embed (PaymentSection) | 6h | — | — |
-| DEBT-077 | ⚠️ NO es rename · mismatch ESTRUCTURAL (código vs schema migrado · cols inexistentes/CHECK/NOT NULL · solapa DEBT-049/050) · reescribir código a cols reales O migrar cols, por caso | 8h | — | — |
+| ~~DEBT-077~~ | ✅ **RESUELTA** (A `25ab75a`+migración 00031 agent_working_memory · pendiente db push · B→DEBT-049 · C `91adfff` dead-code eliminado) | — | — | — |
 | ~~DEBT-064~~ | ✅ **CERRADA** (`d23c632`) router legacy `/content-lab` desmontado (paquete preservado para prompt_builder · frontend usa solo v3) | — | — | — |
 | DEBT-060 | Bucket `media` no existe en migraciones (galería rota) | 2h | — | 4B |
 
