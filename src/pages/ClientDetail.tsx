@@ -10,6 +10,7 @@ import { ArrowLeft, Users, Globe, UserCheck, FileText, Loader2, Bot } from "luci
 import { ariaLevelInfo } from "@/lib/aria-levels";
 import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts";
 import { ClientAIConfig } from "@/components/clients/ClientAIConfig";
+import { ClientAgentsActive } from "@/components/clients/ClientAgentsActive";
 import { fetchOnboardingData } from "@/lib/onboarding-api";
 import { buildContextRows, type InfoRow } from "@/lib/client-info-fields";
 
@@ -132,6 +133,10 @@ export default function ClientDetail() {
               </div>
             </CardContent>
           </Card>
+          {/* TAREA 2: agentes activos (add-ons agent_*) · honesto vacío hoy → CTA /add-ons */}
+          <div className="mt-4">
+            <ClientAgentsActive clientId={client.id} />
+          </div>
         </TabsContent>
 
         {/* AI Config Tab · DEBT-057/058 · panel honesto Anthropic-only (read-only) */}
