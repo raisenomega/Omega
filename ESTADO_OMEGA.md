@@ -38,7 +38,7 @@
 
 ---
 
-## 3 · DEBTs ABIERTAS · ~193.5h (~5 semanas full-time)
+## 3 · DEBTs ABIERTAS · ~197.5h (~5 semanas full-time)
 
 > **Audit cliente E2E (25 may):** +10 DEBTs nuevas (057-066) · **DEBT-057/058/059/061 ya CERRADAS** (Tab AI Anthropic-only · logo wizard · crisis P4 · ver §2). % real cliente: core ~83% · superficie completa ~68%.
 > **Audit rendimiento imagen (26 may):** +4 DEBTs (068-071) · **TODAS CERRADAS** (uploads async · timeout Nano Banana · rate-limit cableado · retry+backoff · ver §2). La generación de imagen ya no bloquea el event loop, no cuelga, está rate-limitada y reintenta transitorios.
@@ -51,7 +51,7 @@
 | DEBT-040 | OAuth Meta + Google (Centro Inteligencia · publicación real) | 80h | — | 5-6 |
 | DEBT-046 | ARIA Premium reseller variant ($25/mes · `resellers.addons`) | 4h | — | 4B |
 
-### 🟠 ALTAS (~56h)
+### 🟠 ALTAS (~62h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
 |---|---|---|---|---|
 | DEBT-050 | Capa multi-agente stubeada (monitor/orchestrator/execute fabrican éxito · P1 cuando dispara) | 16h | — | — |
@@ -60,11 +60,11 @@
 | DEBT-049 | `agent_executions` inexistente + NOVA `infrastructure/calendar` schema fantasma | 6h | — | 4B |
 | DEBT-047 | APScheduler persistent jobstore (Python 3.13 + SQLAlchemy 2.0.25 incompat) | 4h | — | — |
 | DEBT-038 | Stripe Customer Portal embed (PaymentSection) | 6h | — | — |
-| DEBT-077 | 3 bugs de nombre de tabla en código activo (omega_agent_memory→agent_memory · agent_logs→agent_log · upsell_solicitudes→upsell_requests · 6 archivos) | 2h | — | — |
+| DEBT-077 | ⚠️ NO es rename · mismatch ESTRUCTURAL (código vs schema migrado · cols inexistentes/CHECK/NOT NULL · solapa DEBT-049/050) · reescribir código a cols reales O migrar cols, por caso | 8h | — | — |
 | ~~DEBT-064~~ | ✅ **CERRADA** (`d23c632`) router legacy `/content-lab` desmontado (paquete preservado para prompt_builder · frontend usa solo v3) | — | — | — |
 | DEBT-060 | Bucket `media` no existe en migraciones (galería rota) | 2h | — | 4B |
 
-### 🟡 MEDIAS (~40h)
+### 🟡 MEDIAS (~39h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
 |---|---|---|---|---|
 | DEBT-052 | AI Tab · créditos prepagados por agente (3 packs verticales · revenue) | 20h | DEBT-049 | 5 |
@@ -72,10 +72,10 @@
 | DEBT-053 | Posts Tab · actividad por agente (cliente ve ROI) | 8h | **DEBT-049** | 5 |
 | DEBT-067 | `claude_service` ignora model del agente → agents/ corre en Sonnet (I2 runtime · legacy) | 3h | — | — |
 | DEBT-076 | Backend cambios de plan: downgrade programado a fin de ciclo + checkout Enterprise + computeLostItems cruce add-ons (no marcar Crisis Room si add-on $25) | 6h | — | 5 |
-| DEBT-078 | Vista `agent_performance_stats` sin RLS expuesta a authenticated · REVOKE o security_invoker | 1h | — | — |
+| ~~DEBT-078~~ | ✅ **RESUELTA** (`1635884` · migración 00030 REVOKE authenticated/anon · pendiente db push) | — | — | — |
 | ~~DEBT-054~~ | ✅ **CERRADA** (`0946be5`) Info Tab muestra client_context dinámico | — | — | — |
 
-### 🟢 BAJAS (~12h)
+### 🟢 BAJAS (~11h)
 | DEBT | Descripción | Horas | Sprint |
 |---|---|---|---|
 | ~~DEBT-066~~ | ✅ **CERRADA** (26 may) header ClientDetail → cols reales business_email/website/industry | — | — |
@@ -84,7 +84,7 @@
 | DEBT-051 | `aria_repository.py` split (extraer `fetch_aria_context` · 99/100L) | 2h | — |
 | DEBT-055 | Remover endpoint diagnóstico `run-now` (tras validar cron en prod) | 0.5h | — |
 | DEBT-056 | `sentinel_check.sh` URL stale + Bearer · script X1 GET→POST+auth | 0.5h | — |
-| DEBT-079 | `omega_tool_calls` inexistente · logging best-effort nunca persiste (crear tabla o eliminar writes) | 1h | — |
+| ~~DEBT-079~~ | ✅ **CERRADA** (`91b14d2`) writes muertos eliminados · cero readers · no se creó tabla | — | — |
 | ~~Logo Fase 2~~ | ✅ **CERRADA** (vía DEBT-059) Persistir logo → `brand_files` + `client_brand_assets.logo_file_id` | — | — |
 
 ### Business backlog (sin estimar)
