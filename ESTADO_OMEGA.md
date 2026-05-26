@@ -34,11 +34,11 @@
 - **Sprint 3 (23-24 may):** Content Lab completo (texto/imagen/video) · 20 DEBT-CL (003→022) · DEBT-VID-001 · DEBT-037 (ARIA Premium client) · DEBT-CL-017/018/020.
 - **Sprint 4A (25 may):** SENTINEL subagent + builders · `input_sanitizer` · DEBT-002 analytics honesto · config fail-secure.
 - **Sesión 25 may (día):** DEBT-031 (calendar legacy) · AUDIT 1/2 wizard% + picker · BUG A persistencia · wizard 3 fixes · 🔒 role server-side (`33166e4`) · hard-delete cliente · logo overlay Fase 1 · ARIA contexto ampliado.
-- **Sesión 25 may (noche):** ARIA history DESC+reversed (`3a85fe1`) · ARIA deadlock input (`cece228`) · KPI Posts Programados (`44ca9d5`) · TAREA 2 popup 3 botones + 00025 `published_manual` · FIX P1 update_status (`84a05fe`) · FIX P5 conteos (`b2ab2fe`) · get_stats verde (`f807f2c`) · ISSUE 1 FK al agendar 409 (`59d182a`+`c9bfdb0`) · **outcome_evaluator 4A-2** (`5a834ed`+`3490ce0`+`8016531` · 00026) · **SENTINEL 8 endpoints superadmin** (`14b5d37`) · **alert_dispatcher** (`062353b`) · fix tablas fantasma sentinel (`91ad252`) · test regresión auth role (`f4c01b2`) · **DEBT-054 Info Tab → client_context** (`0946be5`) · consolidación docs → ESTADO_OMEGA único (`5858b12`+`92caa52`+`e8bdfcb`) · **Agente Publicador add-on** (`fd980ff`) · **DEBT-057+058 Tab AI → panel honesto Anthropic-only** (I1 · elimina multi-proveedor legacy + tablas fantasma) · **DEBT-059 logo wizard persiste** (`useUploadBrandLogo` · sube logo_files → `client_brand_assets.logo_file_id` · cierra overlay = Logo Fase 2 · P1) · **DEBT-061 crisis_manager guardrail P4** (`_assert_human_in_the_loop` enforza ACCIONES_PROHIBIDAS · `AUTONOMOUS_PUBLISH_ALLOWED=False` · model vía routing_table I2 · test G2 6/6) · **DEBT-066 + DEBT-072 + DEBT-073** familia "col inexistente" en clientes: header ClientDetail + tarjetas lista + buscador → cols reales (`business_email`/`website`/`industry`) · dot "activo" → `status === "active"` (antes `client.active` inexistente) · **DEBT-063** ARIA level real del backend (`max(plan, aria_level)`) → cliente que pagó Premium no ve "Actualizar" · **DEBT-062** social_accounts INSERT/render → cols reales (`approx_followers`/`status`) · CRUD "Agregar cuenta" destrabado · **DEBT-065** Tab Agente rediseñado a nivel ARIA del cliente + estado (`aria-levels.ts` compartido · sin legacy assigned_to).
+- **Sesión 25 may (noche):** ARIA history DESC+reversed (`3a85fe1`) · ARIA deadlock input (`cece228`) · KPI Posts Programados (`44ca9d5`) · TAREA 2 popup 3 botones + 00025 `published_manual` · FIX P1 update_status (`84a05fe`) · FIX P5 conteos (`b2ab2fe`) · get_stats verde (`f807f2c`) · ISSUE 1 FK al agendar 409 (`59d182a`+`c9bfdb0`) · **outcome_evaluator 4A-2** (`5a834ed`+`3490ce0`+`8016531` · 00026) · **SENTINEL 8 endpoints superadmin** (`14b5d37`) · **alert_dispatcher** (`062353b`) · fix tablas fantasma sentinel (`91ad252`) · test regresión auth role (`f4c01b2`) · **DEBT-054 Info Tab → client_context** (`0946be5`) · consolidación docs → ESTADO_OMEGA único (`5858b12`+`92caa52`+`e8bdfcb`) · **Agente Publicador add-on** (`fd980ff`) · **DEBT-057+058 Tab AI → panel honesto Anthropic-only** (I1 · elimina multi-proveedor legacy + tablas fantasma) · **DEBT-059 logo wizard persiste** (`useUploadBrandLogo` · sube logo_files → `client_brand_assets.logo_file_id` · cierra overlay = Logo Fase 2 · P1) · **DEBT-061 crisis_manager guardrail P4** (`_assert_human_in_the_loop` enforza ACCIONES_PROHIBIDAS · `AUTONOMOUS_PUBLISH_ALLOWED=False` · model vía routing_table I2 · test G2 6/6) · **DEBT-066 + DEBT-072 + DEBT-073** familia "col inexistente" en clientes: header ClientDetail + tarjetas lista + buscador → cols reales (`business_email`/`website`/`industry`) · dot "activo" → `status === "active"` (antes `client.active` inexistente) · **DEBT-063** ARIA level real del backend (`max(plan, aria_level)`) → cliente que pagó Premium no ve "Actualizar" · **DEBT-062** social_accounts INSERT/render → cols reales (`approx_followers`/`status`) · CRUD "Agregar cuenta" destrabado · **DEBT-065** Tab Agente rediseñado a nivel ARIA del cliente + estado (`aria-levels.ts` compartido · sin legacy assigned_to) · **DEBT-042** regiones como chips con labels legibles en Info Tab (`REGION_LABELS` · `InfoRow.chips`).
 
 ---
 
-## 3 · DEBTs ABIERTAS · ~197.5h (~5 semanas full-time)
+## 3 · DEBTs ABIERTAS · ~194.5h (~5 semanas full-time)
 
 > **Audit cliente E2E (25 may):** +10 DEBTs nuevas (057-066) · **DEBT-057/058/059/061 ya CERRADAS** (Tab AI Anthropic-only · logo wizard · crisis P4 · ver §2). % real cliente: core ~83% · superficie completa ~68%.
 > **Audit rendimiento imagen (26 may):** +4 DEBTs (068-071) · 🔴 DEBT-068 (upload síncrono bloquea event loop · el de mayor impacto a escala) + DEBT-069 (sin timeout Nano Banana) · 🟠 DEBT-070 (rate-limit config muerta · P1) + DEBT-071 (cero retry/fallback). NO arreglados aún (solo diagnóstico).
@@ -66,12 +66,11 @@
 | DEBT-071 | Cero retry/backoff/fallback en generación de imagen (503 inmediato en transitorios) | 4h | — | — |
 | DEBT-070 | Rate-limit configurado pero nunca cableado (config muerta · P1) | 2h | — | — |
 
-### 🟡 MEDIAS (~34h)
+### 🟡 MEDIAS (~31h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
 |---|---|---|---|---|
 | DEBT-052 | AI Tab · créditos prepagados por agente (3 packs verticales · revenue) | 20h | DEBT-049 | 5 |
 | DEBT-053 | Posts Tab · actividad por agente (cliente ve ROI) | 8h | **DEBT-049** | 5 |
-| DEBT-042 | Regions display en ProfileSection (chips vs string crudo) | 3h | — | — |
 | DEBT-067 | `claude_service` ignora model del agente → agents/ corre en Sonnet (I2 runtime · legacy) | 3h | — | — |
 | ~~DEBT-054~~ | ✅ **CERRADA** (`0946be5`) Info Tab muestra client_context dinámico | — | — | — |
 
@@ -96,18 +95,17 @@
 
 | Sprint | Foco | Incluye |
 |---|---|---|
-| **Sprint 4B** | Revenue rápido + desbloqueos | DEBT-054 Info Tab · DEBT-046 ARIA Premium reseller · DEBT-042 regions · Logo Fase 2 · DEBT-049 agent_executions (desbloquea DEBT-053) |
+| **Sprint 4B** | Revenue rápido + desbloqueos | DEBT-046 ARIA Premium reseller · DEBT-049 agent_executions (desbloquea DEBT-053) |
 | **Sprint 5** | Centro de Inteligencia + tabs cliente | DEBT-040 (Google OAuth) · DEBT-052 AI Tab · DEBT-053 Posts Tab |
 | **Sprint 6** | Meta Business | DEBT-040 (Meta OAuth · Instagram/Facebook publicación real) |
 | **Sprint 7** | Google Ads | (post-Centro Inteligencia) |
 
-### Orden recomendado próxima sesión (~27h · 3-4 sesiones)
-1. DEBT-054 Info Tab (3h) — quick win · UX visible
-2. DEBT-046 ARIA Premium reseller (4h) — revenue directo
-3. DEBT-042 regions display (3h) — cosmético notable
-4. Logo Fase 2 (3h) — completa feature ya empezada
-5. DEBT-049 agent_executions (6h) — desbloquea DEBT-053
-6. DEBT-053 Posts Tab (8h) — cliente ve ROI
+### Orden recomendado próxima sesión (~18h)
+1. DEBT-046 ARIA Premium reseller (4h) — revenue directo · única 🔴 abordable sin OAuth
+2. DEBT-049 agent_executions (6h) — desbloquea DEBT-053
+3. DEBT-053 Posts Tab (8h) — cliente ve ROI
+
+> **Cerradas 25-26 may:** DEBT-054/057/058/059/061/062/063/065/066/072/073 + DEBT-042 + Logo Fase 2 (vía DEBT-059). Quedan registradas 068-071 (audit rendimiento imagen · 🔴/🟠 · NO arregladas).
 
 ---
 

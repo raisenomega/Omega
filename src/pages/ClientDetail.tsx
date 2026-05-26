@@ -12,7 +12,7 @@ import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts"
 import { ClientAIConfig } from "@/components/clients/ClientAIConfig";
 import { PlanStatusBar } from "@/components/clients/PlanStatusBar";
 import { fetchOnboardingData } from "@/lib/onboarding-api";
-import { buildContextRows } from "@/lib/client-info-fields";
+import { buildContextRows, type InfoRow } from "@/lib/client-info-fields";
 
 export default function ClientDetail() {
   const { id } = useParams<{ id: string }>();
@@ -193,17 +193,25 @@ export default function ClientDetail() {
               <CardTitle className="text-sm font-medium">Información del Cliente</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {[
+              {([
                 { label: "Nombre", value: client.name },
                 { label: "Plan", value: client.plan },
                 { label: "Creado", value: new Date(client.created_at).toLocaleDateString() },
                 ...buildContextRows(onboarding),  // DEBT-054 · campos del wizard poblados (dinámico)
-              ].map((item) => (
+              ] as InfoRow[]).map((item) => (
                 <div key={item.label} className="flex justify-between items-start py-2 border-b border-border/20 last:border-0">
                   <span className="text-sm text-muted-foreground">{item.label}</span>
-                  <span className="text-sm font-medium text-right max-w-[60%] whitespace-pre-wrap">
-                    {item.value || "—"}
-                  </span>
+                  {item.chips ? (
+                    <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
+                      {item.chips.map((c) => (
+                        <Badge key={c} variant="secondary" className="text-xs">{c}</Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-sm font-medium text-right max-w-[60%] whitespace-pre-wrap">
+                      {item.value || "—"}
+                    </span>
+                  )}
                 </div>
               ))}
               {buildContextRows(onboarding).length === 0 && (

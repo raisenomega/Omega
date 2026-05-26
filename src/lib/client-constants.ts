@@ -11,3 +11,9 @@ export const REGIONS = [
 
 export type Industry = typeof INDUSTRIES[number];
 export type Region = typeof REGIONS[number];
+
+// DEBT-042: labels legibles para mostrar las regiones como chips (no códigos crudos).
+export const REGION_LABELS: Record<Region, string> = {
+  PR: "Puerto Rico", USA: "Estados Unidos", DO: "Rep. Dominicana", MX: "México",
+  CO: "Colombia", AR: "Argentina", ES: "España", otros: "Otros",
+};

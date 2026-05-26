@@ -1,14 +1,23 @@
 // DEBT-054 · Info Tab del cliente · arma las filas del client_context (wizard) que SÍ
 // tienen valor (dinámico · sin huecos). Acceso anidado por sección · read-only.
 import type { OnboardingForm } from "./onboarding-schema";
+import { REGION_LABELS, type Region } from "./client-constants";
 
 export interface InfoRow {
   label: string;
   value: string;
+  chips?: string[];  // DEBT-042: si presente, el Info Tab renderiza chips en vez de texto.
 }
 
 function joinArr(x: unknown): string {
   return Array.isArray(x) ? x.filter(Boolean).join(", ") : "";
+}
+
+// DEBT-042: regiones (códigos PR/USA/...) → labels legibles para chips.
+function regionLabels(x: unknown): string[] {
+  return Array.isArray(x)
+    ? x.filter(Boolean).map((r) => REGION_LABELS[r as Region] ?? String(r))
+    : [];
 }
 
 function joinCompetitors(x: unknown): string {
@@ -22,10 +31,11 @@ function joinCompetitors(x: unknown): string {
 /** Filas del client_context con valor · solo las pobladas (refleja el % real del perfil). */
 export function buildContextRows(d: OnboardingForm | undefined): InfoRow[] {
   if (!d) return [];
+  const regions = regionLabels(d.identity?.regions);
   const rows: InfoRow[] = [
     { label: "Sitio web", value: d.identity?.website ?? "" },
     { label: "Email de negocio", value: d.identity?.business_email ?? "" },
-    { label: "Regiones", value: joinArr(d.identity?.regions) },
+    { label: "Regiones", value: regions.join(", "), chips: regions.length ? regions : undefined },
     { label: "Nicho", value: d.business?.niche ?? "" },
     { label: "Vertical", value: d.business?.vertical ?? "" },
     { label: "Qué hace", value: d.business?.business_what ?? "" },
