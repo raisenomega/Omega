@@ -63,7 +63,7 @@ async def handle_get_omega_dashboard() -> Dict[str, Any]:
             return (supabase.client.table("scheduled_posts").select("id, status, scheduled_date").eq("is_active", True).execute()).data or []
 
         def q_agents():
-            return (supabase.client.table("agents").select("id, agent_id, name, department, status").eq("is_active", True).order("department").execute()).data or []
+            return (supabase.client.table("agents").select("id, code, name, category, model_tier, is_active").eq("is_active", True).order("name").execute()).data or []
 
         (
             resellers_data, clients_data, content_data,
@@ -102,14 +102,14 @@ async def handle_get_omega_dashboard() -> Dict[str, Any]:
         published_month = [p for p in posts_data if p.get("status") in ("published", "published_manual") and p.get("scheduled_date", "")[:10] >= first_of_month]
         next_7days = (today + timedelta(days=7)).isoformat()
         upcoming = [p for p in scheduled if today.isoformat() <= p.get("scheduled_date", "")[:10] <= next_7days]
-        by_department = {}
+        by_category = {}
         for agent in agents_detail_data:
-            dept = agent.get("department", "unknown")
-            if dept not in by_department:
-                by_department[dept] = []
-            by_department[dept].append(agent)
-        active_agents_count = sum(1 for a in agents_detail_data if a.get("status") == "active")
-        running_agents_count = sum(1 for a in agents_detail_data if a.get("status") == "running")
+            cat = agent.get("category", "unknown")
+            if cat not in by_category:
+                by_category[cat] = []
+            by_category[cat].append(agent)
+        # `is_active=True` ya filtra el query; todos los devueltos están activos.
+        active_agents_count = sum(1 for a in agents_detail_data if a.get("is_active", True))
         logger.info(f"OMEGA Dashboard: {len(resellers_data)} resellers, {len(clients_data)} clients")
 
         return {
@@ -139,16 +139,15 @@ async def handle_get_omega_dashboard() -> Dict[str, Any]:
                 "videos_generated": videos_total
             },
             "agents": {
-                "total": 37,
+                "total": len(agents_detail_data),
                 "executions_total": len(exec_data),
                 "executions_this_month": len(exec_month),
                 "success_rate": success_rate
             },
             "agents_detail": {
                 "total": len(agents_detail_data),
-                "by_department": by_department,
-                "active_count": active_agents_count,
-                "running_count": running_agents_count
+                "by_category": by_category,
+                "active_count": active_agents_count
             },
             "social_accounts": {
                 "total": len(accounts_data),

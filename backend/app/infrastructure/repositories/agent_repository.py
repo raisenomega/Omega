@@ -19,16 +19,12 @@ class AgentRepository:
     def __init__(self, supabase: SupabaseService):
         self.supabase = supabase
 
-    def find_all(self, department: Optional[str] = None, status: Optional[str] = None) -> list[Agent]:
-        """Find all agents with optional filters"""
-        query = self.supabase.client.table("agents").select("*").eq("is_active", True)
-
-        if department:
-            query = query.eq("department", department)
-        if status:
-            query = query.eq("status", status)
-
-        query = query.order("name")
+    def find_all(self) -> list[Agent]:
+        """Find all active agents (DEBT-080: tabla agents no tiene department/status)"""
+        query = self.supabase.client.table("agents")\
+            .select("*")\
+            .eq("is_active", True)\
+            .order("name")
         response = query.execute()
 
         return [map_agent_to_entity(row) for row in response.data]

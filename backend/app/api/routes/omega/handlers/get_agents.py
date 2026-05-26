@@ -24,45 +24,44 @@ async def handle_get_agents() -> Dict[str, Any]:
     try:
         supabase = get_supabase_service()
 
-        # Get all active agents
+        # Get all active agents (DEBT-080: cols reales de la tabla agents)
         agents_resp = supabase.client.table("agents")\
             .select("*")\
             .eq("is_active", True)\
-            .order("department, agent_id")\
+            .order("category, code")\
             .execute()
         agents_data = agents_resp.data or []
 
-        # Group by department
-        by_department = {}
+        # Group by category (la tabla no tiene `department`)
+        by_category = {}
         for agent in agents_data:
-            dept = agent.get("department", "unknown")
-            if dept not in by_department:
-                by_department[dept] = []
-            by_department[dept].append({
+            cat = agent.get("category", "unknown")
+            if cat not in by_category:
+                by_category[cat] = []
+            is_active = agent.get("is_active", True)
+            by_category[cat].append({
                 "id": agent.get("id"),
-                "agent_id": agent.get("agent_id"),
+                "code": agent.get("code"),
                 "name": agent.get("name"),
                 "description": agent.get("description"),
-                "status": agent.get("status"),
+                "status": "active" if is_active else "inactive",
                 "category": agent.get("category")
             })
 
-        # Count by status
-        active_count = sum(1 for a in agents_data if a.get("status") == "active")
-        running_count = sum(1 for a in agents_data if a.get("status") == "running")
-        inactive_count = sum(1 for a in agents_data if a.get("status") == "inactive")
+        # Count by status derived from is_active (no existe col `status`)
+        active_count = sum(1 for a in agents_data if a.get("is_active", True))
+        inactive_count = sum(1 for a in agents_data if not a.get("is_active", True))
 
-        logger.info(f"Retrieved {len(agents_data)} agents across {len(by_department)} departments")
+        logger.info(f"Retrieved {len(agents_data)} agents across {len(by_category)} categories")
 
         return {
             "total": len(agents_data),
-            "by_department": by_department,
+            "by_category": by_category,
             "stats": {
                 "active": active_count,
-                "running": running_count,
                 "inactive": inactive_count
             },
-            "departments": list(by_department.keys())
+            "categories": list(by_category.keys())
         }
 
     except Exception as e:
