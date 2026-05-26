@@ -56,8 +56,18 @@ export function ActivityFeed({ recentClients, recentAccounts }: ActivityFeedProp
 
   return (
     <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle className="text-lg">Actividad Reciente</CardTitle>
+        {all.length > 0 && (
+          <Button
+            size="sm"
+            className="h-8 gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
+            onClick={() => setHistoryOpen(true)}
+          >
+            <History className="h-4 w-4" />
+            Ver historial
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         {top3.length === 0 ? (
@@ -67,36 +77,25 @@ export function ActivityFeed({ recentClients, recentAccounts }: ActivityFeedProp
             <p className="text-xs mt-1">Agrega clientes y cuentas para empezar</p>
           </div>
         ) : (
-          <>
-            <div className="space-y-3">
-              {top3.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="flex items-center gap-3 rounded-lg border border-border/30 bg-muted/30 p-3 transition-colors hover:bg-muted/50"
-                >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
-                    <activity.icon className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{activity.title}</p>
-                    <p className="text-xs text-muted-foreground">{activity.subtitle}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {formatDistanceToNow(new Date(activity.time), { addSuffix: true, locale: es })}
-                  </span>
+          <div className="space-y-3">
+            {top3.map((activity) => (
+              <div
+                key={activity.id}
+                className="flex items-center gap-3 rounded-lg border border-border/30 bg-muted/30 p-3 transition-colors hover:bg-muted/50"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
+                  <activity.icon className="h-4 w-4 text-primary" />
                 </div>
-              ))}
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-3 w-full"
-              onClick={() => setHistoryOpen(true)}
-            >
-              <History className="h-4 w-4" />
-              Ver historial
-            </Button>
-          </>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{activity.title}</p>
+                  <p className="text-xs text-muted-foreground">{activity.subtitle}</p>
+                </div>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  {formatDistanceToNow(new Date(activity.time), { addSuffix: true, locale: es })}
+                </span>
+              </div>
+            ))}
+          </div>
         )}
       </CardContent>
       <ActivityHistoryDialog activities={all} open={historyOpen} onOpenChange={setHistoryOpen} />
