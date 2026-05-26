@@ -17,7 +17,14 @@ export function AriaSuggestionsCard({ clientId }: Props) {
   const top = unread.slice(0, 3);
 
   return (
-    <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+    <Card className="flex flex-row overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm">
+      {/* Banner vertical · rostro de ARIA · 30% izq · full-height (object-top mantiene el rostro visible) */}
+      <img
+        src="/Agentes/Aria.jpg"
+        alt="ARIA"
+        className="w-[30%] shrink-0 self-stretch rounded-l-lg object-cover object-top"
+      />
+      <div className="min-w-0 flex-1">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">Sugerencias de ARIA</CardTitle>
         <Sparkles className="h-4 w-4 text-primary" />
@@ -52,6 +59,7 @@ export function AriaSuggestionsCard({ clientId }: Props) {
           </Button>
         )}
       </CardContent>
+      </div>
       <AriaSuggestionsDialog open={open} onOpenChange={setOpen}
         suggestions={suggestions} onMarkRead={(id) => markRead.mutate(id)} />
     </Card>
