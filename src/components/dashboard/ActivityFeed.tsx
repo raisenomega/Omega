@@ -60,8 +60,9 @@ export function ActivityFeed({ recentClients, recentAccounts }: ActivityFeedProp
         <CardTitle className="text-lg">Actividad Reciente</CardTitle>
         {all.length > 0 && (
           <Button
+            variant="outline"
             size="sm"
-            className="h-8 gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
+            className="h-8 gap-1.5 border-emerald-600 text-white hover:bg-emerald-600/10 hover:text-white"
             onClick={() => setHistoryOpen(true)}
           >
             <History className="h-4 w-4" />
