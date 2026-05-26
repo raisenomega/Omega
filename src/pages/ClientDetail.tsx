@@ -105,7 +105,8 @@ export default function ClientDetail() {
             {client.active && <div className="h-2.5 w-2.5 rounded-full bg-success" />}
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            {[client.company, client.email, client.phone].filter(Boolean).join(" · ")}
+            {/* DEBT-066: columnas reales de clients V3 (00024) · antes leía company/email/phone inexistentes */}
+            {[client.business_email, client.website, client.industry].filter(Boolean).join(" · ")}
           </p>
         </div>
       </div>

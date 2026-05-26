@@ -38,7 +38,7 @@
 
 ---
 
-## 3 · DEBTs ABIERTAS · ~203h (~5 semanas full-time)
+## 3 · DEBTs ABIERTAS · ~202.5h (~5 semanas full-time)
 
 > **Audit cliente E2E (25 may):** +10 DEBTs nuevas (057-066) · **DEBT-057/058/059/061 ya CERRADAS** (Tab AI Anthropic-only · logo wizard · crisis P4 · ver §2). % real cliente: core ~83% · superficie completa ~68%.
 > **Audit rendimiento imagen (26 may):** +4 DEBTs (068-071) · 🔴 DEBT-068 (upload síncrono bloquea event loop · el de mayor impacto a escala) + DEBT-069 (sin timeout Nano Banana) · 🟠 DEBT-070 (rate-limit config muerta · P1) + DEBT-071 (cero retry/fallback). NO arreglados aún (solo diagnóstico).
@@ -78,10 +78,10 @@
 | DEBT-067 | `claude_service` ignora model del agente → agents/ corre en Sonnet (I2 runtime · legacy) | 3h | — | — |
 | ~~DEBT-054~~ | ✅ **CERRADA** (`0946be5`) Info Tab muestra client_context dinámico | — | — | — |
 
-### 🟢 BAJAS (~11.5h)
+### 🟢 BAJAS (~11h)
 | DEBT | Descripción | Horas | Sprint |
 |---|---|---|---|
-| DEBT-066 | Header ClientDetail cols inexistentes (email/company/phone) | 0.5h | 4B |
+| ~~DEBT-066~~ | ✅ **CERRADA** (26 may) header ClientDetail → cols reales business_email/website/industry | — | — |
 | DEBT-SEC-003 | EXIF strip en imágenes subidas | 4h | — |
 | DEBT-SEC-004 | Magic bytes verification (uploads) | 4h | — |
 | DEBT-051 | `aria_repository.py` split (extraer `fetch_aria_context` · 99/100L) | 2h | — |
