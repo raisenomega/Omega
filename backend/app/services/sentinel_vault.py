@@ -21,7 +21,7 @@ REQUIRED_VARS = [
     "SECRET_KEY",
     "JWT_SECRET_KEY",
     "STRIPE_WEBHOOK_SECRET",
-    "TAVILY_API_KEY",
+    "BRAVE_API_KEY",
 ]
 
 FORMAT_CHECKS: Dict[str, Any] = {

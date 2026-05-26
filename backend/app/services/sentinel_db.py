@@ -14,21 +14,16 @@ logger = logging.getLogger(__name__)
 
 # ── CONFIG ────────────────────────────────────────────────────
 
-# Todas las tablas que deben existir y ser accesibles
+# Todas las tablas que deben existir y ser accesibles.
+# Cada entrada verificada contra supabase/migrations/ (cero check fantasma · P1).
 TABLES_CRITICAL = [
     # Core operativo
-    "agents",  # era 'omega_agents' (fantasma) → tabla real 00001:255
-    "omega_agent_memory",
-    "nova_data",
-    "resellers",
-    "clients",
+    "agents",          # 00001:255 CREATE TABLE agents
+    "agent_memory",    # 00002:12  (era 'omega_agent_memory' fantasma)
+    "resellers",       # 00001:39
+    "clients",         # 00001:94
     # Funcionalidad
-    "scheduled_posts",
-    "agent_tasks",
-    # Infraestructura SENTINEL (sentinel_scans removida · no existe en ninguna migración)
-    "sentinel_rules",
-    "sentinel_risk_scores",
-    "omega_tech_debt",
+    "scheduled_posts",  # 00001:229
 ]
 
 # Tablas con un mínimo de filas esperadas
