@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useMyClients } from "@/hooks/useMyClients";
 import { useGenerateText } from "@/hooks/useGenerateText";
@@ -17,7 +18,13 @@ const INITIAL_BLOCK: BlockState = { items: [] };
 
 export function useContentLabState() {
   const { toast } = useToast();
-  const [form, setForm] = useState<FormState>(INITIAL_FORM);
+  // Brief CTA (Centro de Inteligencia): si llegamos con location.state.brief, lo pre-cargamos en el topic.
+  // Defensivo: si no hay brief válido → INITIAL_FORM intacto.
+  const location = useLocation();
+  const [form, setForm] = useState<FormState>(() => {
+    const brief = (location.state as { brief?: unknown } | null)?.brief;
+    return typeof brief === "string" && brief.trim() ? { ...INITIAL_FORM, topic: brief } : INITIAL_FORM;
+  });
   // DEBT-CL-015: reset accountId cuando cambia clientId o platform (evita huérfanos)
   useEffect(() => { setForm(prev => ({ ...prev, accountId: "" })); }, [form.clientId, form.platform]);
   // DEBT-CL-020: reset attachments cuando cambia type (un caption no necesita imagen ref · evita confusión)

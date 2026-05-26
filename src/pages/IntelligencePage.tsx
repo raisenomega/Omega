@@ -3,19 +3,14 @@ import { Brain } from "lucide-react";
 import { useMyPlanStatus } from "@/hooks/useMyPlanStatus";
 import { useClientPlanStatus } from "@/hooks/useClientPlanStatus";
 import { IntelligenceChips } from "@/components/intelligence/IntelligenceChips";
-import { ChipPlaceholder } from "@/components/intelligence/ChipPlaceholder";
+import { ResumenChip } from "@/components/intelligence/ResumenChip";
 import { SeoChip } from "@/components/intelligence/SeoChip";
+import { GeoChip } from "@/components/intelligence/GeoChip";
+import { AeoChip } from "@/components/intelligence/AeoChip";
+import { MetaChip } from "@/components/intelligence/MetaChip";
+import { GoogleChip } from "@/components/intelligence/GoogleChip";
 import { IntelligenceLoading, IntelligencePlanGate } from "@/components/intelligence/IntelligenceGate";
 import { type ChipId } from "@/components/intelligence/_chips";
-
-const CHIP_LABELS: Record<ChipId, string> = {
-  resumen: "Resumen General",
-  seo:     "Posicionamiento SEO",
-  geo:     "GEO · Search generativa",
-  aeo:     "AEO · Answer Engine",
-  meta:    "Meta · Rendimiento de anuncios",
-  google:  "Google · Performance",
-};
 
 export default function IntelligencePage() {
   const { clientId, loading } = useMyPlanStatus();
@@ -43,11 +38,12 @@ export default function IntelligencePage() {
 
       <IntelligenceChips active={active} onSelect={setActive} />
 
-      {active === "seo" ? (
-        <SeoChip clientId={clientId ?? ""} />
-      ) : (
-        <ChipPlaceholder title={CHIP_LABELS[active]} />
-      )}
+      {active === "resumen" && <ResumenChip clientId={clientId ?? ""} />}
+      {active === "seo" && <SeoChip clientId={clientId ?? ""} />}
+      {active === "geo" && <GeoChip clientId={clientId ?? ""} />}
+      {active === "aeo" && <AeoChip clientId={clientId ?? ""} />}
+      {active === "meta" && <MetaChip />}
+      {active === "google" && <GoogleChip />}
     </div>
   );
 }
