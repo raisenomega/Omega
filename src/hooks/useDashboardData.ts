@@ -77,8 +77,8 @@ export function useDashboardData() {
     activeCount: socialAccountsQuery.data?.filter((a) => a.platform === p && a.status === "active").length ?? 0,
   }));
 
-  const recentClients = clientsQuery.data?.slice(0, 5) ?? [];
-  const recentAccounts = socialAccountsQuery.data?.slice(0, 5) ?? [];
+  const recentClients = clientsQuery.data?.slice(0, 30) ?? [];
+  const recentAccounts = socialAccountsQuery.data?.slice(0, 30) ?? [];
 
   return {
     loading:

@@ -21,3 +21,13 @@ const FALLBACK: NetworkIconConfig = { icon: Globe, label: "Otra red" };
 export function getNetworkIcon(platform: string): NetworkIconConfig {
   return ICONS[platform] ?? FALLBACK;
 }
+
+// Etiquetas display por plataforma (incluye redes sin icono específico).
+export const PLATFORM_LABELS: Record<string, string> = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+  tiktok: "TikTok",
+  twitter: "X/Twitter",
+  linkedin: "LinkedIn",
+  youtube: "YouTube",
+};
