@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { Package, Video, Send } from "lucide-react";
+import { Package, Video, Send, Wand2, TrendingUp } from "lucide-react";
 import { VideoPackCard } from "@/components/addons/VideoPackCard";
 import { VIDEO_PACKS } from "@/components/addons/_video_packs_data";
 import { PUBLISHER_PACKS } from "@/components/addons/_publisher_packs_data";
+import { CREATIVE_PACKS } from "@/components/addons/_creative_packs_data";
+import { TRENDS_PACK } from "@/components/addons/_trends_pack_data";
 import { useVideoPackCheckout } from "@/hooks/useVideoPackCheckout";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,6 +18,10 @@ export default function AddOnsPage() {
   const videoRef = useRef<HTMLElement>(null);
   const checkout = useVideoPackCheckout();  // DEBT-VID-001
   const { toast } = useToast();
+
+  // Add-ons sin Stripe product aún → toast honesto (P1 · no cobra por lo no construido).
+  const comingSoon = () =>
+    toast({ title: "Próximamente", description: "Disponible pronto · contáctanos para early access." });
 
   useEffect(() => {
     const state = location.state as NavState | null;
@@ -78,6 +84,45 @@ export default function AddOnsPage() {
               }
             />
           ))}
+        </div>
+      </section>
+
+      <section id="agente-creativo" className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Wand2 className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">Agente Creativo</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">Tu creador de contenido con IA y voz de marca aplicada</p>
+        <div className="grid gap-4 md:grid-cols-2">
+          {CREATIVE_PACKS.map((p) => (
+            <VideoPackCard
+              key={p.code}
+              name={p.name}
+              price={p.price}
+              bullets={p.bullets}
+              idealFor={p.idealFor}
+              ctaLabel="Activar"
+              onActivate={comingSoon}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section id="agente-tendencias" className="space-y-3">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">Agente de Tendencias</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">Siempre al día con tu mercado y tu competencia</p>
+        <div className="grid gap-4 md:grid-cols-2">
+          <VideoPackCard
+            name={TRENDS_PACK.name}
+            price={TRENDS_PACK.price}
+            bullets={TRENDS_PACK.bullets}
+            idealFor={TRENDS_PACK.idealFor}
+            ctaLabel="Activar"
+            onActivate={comingSoon}
+          />
         </div>
       </section>
 
