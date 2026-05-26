@@ -1,12 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Package, Video, Send, Wand2, TrendingUp } from "lucide-react";
+import { Package, Video, Bot } from "lucide-react";
 import { VideoPackCard } from "@/components/addons/VideoPackCard";
 import { SectionDivider } from "@/components/addons/SectionDivider";
+import { AgentCard } from "@/components/addons/AgentCard";
+import { AgentDetailModal } from "@/components/addons/AgentDetailModal";
 import { VIDEO_PACKS } from "@/components/addons/_video_packs_data";
-import { PUBLISHER_PACKS } from "@/components/addons/_publisher_packs_data";
-import { CREATIVE_PACKS } from "@/components/addons/_creative_packs_data";
-import { TRENDS_PACK } from "@/components/addons/_trends_pack_data";
+import { AGENTS, type Agent } from "@/components/addons/_agents_data";
 import { useVideoPackCheckout } from "@/hooks/useVideoPackCheckout";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,6 +19,7 @@ export default function AddOnsPage() {
   const videoRef = useRef<HTMLElement>(null);
   const checkout = useVideoPackCheckout();  // DEBT-VID-001
   const { toast } = useToast();
+  const [openAgent, setOpenAgent] = useState<Agent | null>(null);
 
   // Add-ons sin Stripe product aún → toast honesto (P1 · no cobra por lo no construido).
   const comingSoon = () =>
@@ -64,74 +65,27 @@ export default function AddOnsPage() {
 
       <SectionDivider />
 
-      <section id="agente-publicador" className="space-y-3">
+      <section id="agentes" className="space-y-3">
         <div className="flex items-center gap-2">
-          <Send className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">Agente Publicador</h2>
+          <Bot className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">Agentes IA</h2>
         </div>
-        <p className="text-xs text-muted-foreground">Tu agente que gestiona y recuerda tu calendario de publicación</p>
-        <div className="grid gap-4 md:grid-cols-2">
-          {PUBLISHER_PACKS.map((p) => (
-            <VideoPackCard
-              key={p.code}
-              name={p.name}
-              price={p.price}
-              bullets={p.bullets}
-              idealFor={p.idealFor}
-              ctaLabel="Activar"
-              onActivate={() =>
-                toast({
-                  title: "Próximamente",
-                  description: "El Agente Publicador estará disponible pronto · contáctanos para early access.",
-                })
-              }
-            />
+        <p className="text-xs text-muted-foreground">Tu equipo de agentes especializados · activá los que tu marca necesita</p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {AGENTS.map((agent) => (
+            <AgentCard key={agent.id} agent={agent} onOpen={() => setOpenAgent(agent)} />
           ))}
         </div>
       </section>
 
-      <SectionDivider />
-
-      <section id="agente-creativo" className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Wand2 className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">Agente Creativo</h2>
-        </div>
-        <p className="text-xs text-muted-foreground">Tu creador de contenido con IA y voz de marca aplicada</p>
-        <div className="grid gap-4 md:grid-cols-2">
-          {CREATIVE_PACKS.map((p) => (
-            <VideoPackCard
-              key={p.code}
-              name={p.name}
-              price={p.price}
-              bullets={p.bullets}
-              idealFor={p.idealFor}
-              ctaLabel="Activar"
-              onActivate={comingSoon}
-            />
-          ))}
-        </div>
-      </section>
-
-      <SectionDivider />
-
-      <section id="agente-tendencias" className="space-y-3">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">Agente de Tendencias</h2>
-        </div>
-        <p className="text-xs text-muted-foreground">Siempre al día con tu mercado y tu competencia</p>
-        <div className="grid gap-4 md:grid-cols-2">
-          <VideoPackCard
-            name={TRENDS_PACK.name}
-            price={TRENDS_PACK.price}
-            bullets={TRENDS_PACK.bullets}
-            idealFor={TRENDS_PACK.idealFor}
-            ctaLabel="Activar"
-            onActivate={comingSoon}
-          />
-        </div>
-      </section>
+      <AgentDetailModal
+        agent={openAgent}
+        onClose={() => setOpenAgent(null)}
+        onActivate={() => {
+          setOpenAgent(null);
+          comingSoon();
+        }}
+      />
 
       {/* Sprint 4+: section ARIA Premium · etc */}
     </div>
