@@ -6,9 +6,9 @@ Filosofía: No velocity, only precision 🐢💎
 from typing import Optional
 import logging
 
-from app.domain.agents.entities import Agent, AgentExecution, AgentLog
+from app.domain.agents.entities import Agent, AgentExecution
 from app.infrastructure.supabase_service import SupabaseService
-from .agent_mapper import map_agent_to_entity, map_execution_to_entity, map_log_to_entity
+from .agent_mapper import map_agent_to_entity, map_execution_to_entity
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +34,10 @@ class AgentRepository:
         return [map_agent_to_entity(row) for row in response.data]
 
     def find_by_agent_id(self, agent_id: str) -> Optional[Agent]:
-        """Find agent by agent_id"""
+        """Find agent by its unique code (the path param is the agent code)"""
         response = self.supabase.client.table("agents")\
             .select("*")\
-            .eq("agent_id", agent_id)\
+            .eq("code", agent_id)\
             .eq("is_active", True)\
             .single()\
             .execute()
@@ -109,27 +109,3 @@ class AgentRepository:
 
         response = query.execute()
         return response.count if hasattr(response, 'count') else 0
-
-    def create_log(self, log: AgentLog) -> AgentLog:
-        """Create log entry"""
-        data = {
-            "execution_id": log.execution_id,
-            "agent_id": log.agent_id,
-            "level": log.level,
-            "message": log.message,
-            "details": log.details,
-        }
-
-        response = self.supabase.client.table("agent_logs").insert(data).execute()
-        return map_log_to_entity(response.data[0])
-
-    def find_logs_by_execution(self, execution_id: str, limit: int = 100) -> list[AgentLog]:
-        """Find logs for an execution"""
-        response = self.supabase.client.table("agent_logs")\
-            .select("*")\
-            .eq("execution_id", execution_id)\
-            .order("logged_at", desc=True)\
-            .limit(limit)\
-            .execute()
-
-        return [map_log_to_entity(row) for row in response.data]

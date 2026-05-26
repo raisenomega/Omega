@@ -6,14 +6,14 @@ Filosofía: No velocity, only precision 🐢💎
 from typing import Optional
 from datetime import datetime
 
-from app.domain.agents.entities import Agent, AgentExecution, AgentLog
+from app.domain.agents.entities import Agent, AgentExecution
 
 
 def map_agent_to_entity(row: dict) -> Agent:
     """Map database row to Agent entity"""
     return Agent(
         id=row.get("id"),
-        agent_id=row.get("agent_id", ""),
+        agent_id=row.get("code", ""),  # DEBT-049: la tabla agents usa `code` (no agent_id)
         name=row.get("name", ""),
         description=row.get("description"),
         department=row.get("department", ""),
@@ -54,20 +54,6 @@ def map_execution_to_entity(row: dict) -> AgentExecution:
         execution_time_ms=row.get("execution_time_ms"),
         metadata=row.get("metadata", {}),
         is_active=row.get("is_active", True),
-        created_at=parse_datetime(row.get("created_at")),
-    )
-
-
-def map_log_to_entity(row: dict) -> AgentLog:
-    """Map database row to AgentLog entity"""
-    return AgentLog(
-        id=row.get("id"),
-        execution_id=row.get("execution_id", ""),
-        agent_id=row.get("agent_id", ""),
-        level=row.get("level", "info"),
-        message=row.get("message", ""),
-        details=row.get("details", {}),
-        logged_at=parse_datetime(row.get("logged_at")),
         created_at=parse_datetime(row.get("created_at")),
     )
 
