@@ -9,6 +9,7 @@ Tipos y routing: _nano_banana_types.py
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import os
 import time
@@ -24,6 +25,10 @@ from app.bc_cognition.infrastructure._nano_banana_types import (
 _VALID_ASPECT_RATIOS: frozenset[str] = frozenset({
     "1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "21:9",
 })
+
+# DEBT-069: el SDK google-genai no impone un timeout agresivo · sin esto una llamada
+# colgada retiene la corrutina indefinidamente. asyncio.wait_for corta y mapea a ImageError.
+_GENERATION_TIMEOUT_S: float = 90.0
 
 _client: genai.Client | None = None
 
@@ -60,16 +65,21 @@ async def generate(
 
     start = time.monotonic()
     try:
-        resp = await _get_client().aio.models.generate_content(
-            model=model,
-            contents=contents,
-            # DEBT-CL-011 cerrada (23 may 2026 · Sprint 3): google-genai 2.6
-            # trajo types.ImageConfig de vuelta · aspect_ratio honrado por SDK.
-            config=types.GenerateContentConfig(
-                response_modalities=["IMAGE"],
-                image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
+        resp = await asyncio.wait_for(
+            _get_client().aio.models.generate_content(
+                model=model,
+                contents=contents,
+                # DEBT-CL-011 cerrada (23 may 2026 · Sprint 3): google-genai 2.6
+                # trajo types.ImageConfig de vuelta · aspect_ratio honrado por SDK.
+                config=types.GenerateContentConfig(
+                    response_modalities=["IMAGE"],
+                    image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
+                ),
             ),
+            timeout=_GENERATION_TIMEOUT_S,
         )
+    except asyncio.TimeoutError:                                    # DEBT-069
+        return None, ImageError("timeout", f"Nano Banana excedió {_GENERATION_TIMEOUT_S:.0f}s")
     except Exception as e:                                          # noqa: BLE001
         return None, ImageError("api_error", str(e))
 
