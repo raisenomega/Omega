@@ -38,7 +38,7 @@
 
 ---
 
-## 3 · DEBTs ABIERTAS · ~183h (~5 semanas full-time)
+## 3 · DEBTs ABIERTAS · ~186h (~5 semanas full-time)
 
 > **Audit cliente E2E (25 may):** +10 DEBTs nuevas (057-066) · de las cuales **DEBT-057 + DEBT-058 + DEBT-059 + DEBT-061 ya CERRADAS** (Tab AI → panel honesto Anthropic-only · logo wizard persiste → cierra overlay/Logo Fase 2 · crisis_manager guardrail P4 · ver §2). % real cliente: core ~83% · superficie completa ~68%. Las 🔴 restantes son solo OAuth (DEBT-040 · el grueso, 80h) + ARIA Premium reseller (4h). **Las 3 🔴 que rompían promesa/marca/regla-inviolable están cerradas.**
 
@@ -64,12 +64,13 @@
 | DEBT-065 | `clients.assigned_to` inexistente · Tab Agente sin nivel ARIA | 2h | DEBT-033 | 4B |
 | DEBT-060 | Bucket `media` no existe en migraciones (galería rota) | 2h | — | 4B |
 
-### 🟡 MEDIAS (~31h)
+### 🟡 MEDIAS (~34h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
 |---|---|---|---|---|
 | DEBT-052 | AI Tab · créditos prepagados por agente (3 packs verticales · revenue) | 20h | DEBT-049 | 5 |
 | DEBT-053 | Posts Tab · actividad por agente (cliente ve ROI) | 8h | **DEBT-049** | 5 |
 | DEBT-042 | Regions display en ProfileSection (chips vs string crudo) | 3h | — | — |
+| DEBT-067 | `claude_service` ignora model del agente → agents/ corre en Sonnet (I2 runtime · legacy) | 3h | — | — |
 | ~~DEBT-054~~ | ✅ **CERRADA** (`0946be5`) Info Tab muestra client_context dinámico | — | — | — |
 
 ### 🟢 BAJAS (~11.5h)
