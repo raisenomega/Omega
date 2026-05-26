@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useDemoMode } from "./useDemoMode";
 import {
   getPlanConfig,
   getUnlockedFeatures,
@@ -24,6 +25,7 @@ export interface PlanStatusData {
 }
 
 export function useClientPlanStatus(clientId: string): PlanStatusData {
+  const demo = useDemoMode();  // override SOLO si email === cliente@omega.com (cero impacto real)
   const planQuery = useQuery({
     queryKey: ["client_plans", clientId],
     queryFn: async () => {
@@ -70,7 +72,9 @@ export function useClientPlanStatus(clientId: string): PlanStatusData {
   const hasPlan = !!planQuery.data;
   // Default a 'adopcion' (entry tier · spec §3) cuando no hay row en client_plans:
   // cliente pre-activación ve la bar con valores zero del trial de 7 días.
-  const planCode = (planQuery.data?.plan ?? "adopcion") as PlanCode;
+  const realPlanCode = (planQuery.data?.plan ?? "adopcion") as PlanCode;
+  // Demo Mode: cliente@omega.com puede simular el plan ('pro'/'basic') · resto = plan real DB.
+  const planCode: PlanCode = demo.isDemoAccount ? demo.demoMode : realPlanCode;
   const planConfig = getPlanConfig(planCode);
   const postsUsed = postsQuery.data ?? 0;
   const postsTotal = planConfig.postsPerCycle === Infinity ? 0 : planConfig.postsPerCycle;

@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "./use-toast";
+import { useDemoMode } from "./useDemoMode";
 import { apiPost } from "@/lib/api-client";
 import type { VideoPackCode } from "@/components/addons/_video_packs_data";
 
@@ -17,8 +18,14 @@ interface CheckoutInput {
 // Backend valida JWT + plan basic/pro + 1 pack-a-la-vez.
 export function useVideoPackCheckout() {
   const { toast } = useToast();
+  const { isDemoAccount } = useDemoMode();
   return useMutation({
     mutationFn: async ({ video_pack_code }: CheckoutInput) => {
+      // Demo Mode: la cuenta demo NUNCA dispara Stripe real.
+      if (isDemoAccount) {
+        toast({ title: "Modo demo", description: "Los Video Packs no se cobran en la cuenta de demo." });
+        return;
+      }
       const data = await apiPost<CheckoutResponse>(
         `/billing/checkout-video-pack`, { video_pack_code },
       );
