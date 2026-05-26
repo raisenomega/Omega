@@ -6,7 +6,7 @@
 TOOL_DEFINITIONS: dict[str, dict] = {
     "web_search": {
         "name": "web_search",
-        "description": "Busca información actual en internet via Tavily. Retorna resultados verificados con fuentes.",
+        "description": "Busca información actual en internet via Brave. Retorna resultados verificados con fuentes.",
         "input_schema": {
             "type": "object",
             "properties": {
