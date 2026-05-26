@@ -51,7 +51,7 @@
 | DEBT-040 | OAuth Meta + Google (Centro Inteligencia · publicación real) | 80h | — | 5-6 |
 | DEBT-046 | ARIA Premium reseller variant ($25/mes · `resellers.addons`) | 4h | — | 4B |
 
-### 🟠 ALTAS (~55h)
+### 🟠 ALTAS (~54h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
 |---|---|---|---|---|
 | DEBT-050 | Capa multi-agente stubeada (monitor/orchestrator/execute fabrican éxito · P1 cuando dispara) | 16h | — | — |
@@ -60,7 +60,7 @@
 | DEBT-049 | `agent_executions` inexistente + NOVA `infrastructure/calendar` schema fantasma | 6h | — | 4B |
 | DEBT-047 | APScheduler persistent jobstore (Python 3.13 + SQLAlchemy 2.0.25 incompat) | 4h | — | — |
 | DEBT-038 | Stripe Customer Portal embed (PaymentSection) | 6h | — | — |
-| DEBT-064 | Routers legacy `/content-lab` colisionan (desmontar legacy) | 1h | — | — |
+| ~~DEBT-064~~ | ✅ **CERRADA** (`d23c632`) router legacy `/content-lab` desmontado (paquete preservado para prompt_builder · frontend usa solo v3) | — | — | — |
 | DEBT-060 | Bucket `media` no existe en migraciones (galería rota) | 2h | — | 4B |
 
 ### 🟡 MEDIAS (~33h)
