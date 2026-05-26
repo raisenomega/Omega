@@ -61,7 +61,7 @@ _AGENT_TIER_RAW: dict[str, ModelTier] = {
     "aria_1":                     "haiku",
     "aria_2":                     "sonnet",
     "aria_3":                     "sonnet",
-    "aria_4":                     "sonnet",
+    "aria_4":                     "sonnet",   # Nivel 4 · Enterprise incluido o PRO+addons
 
     # OPUS — decisiones críticas / reputacionales / briefing ejecutivo
     "orchestrator":               "opus",
