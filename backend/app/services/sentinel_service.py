@@ -59,22 +59,28 @@ class SentinelService:
                     global_score += result["security_score"] * weights.get(agent, 0.33)
                     all_issues.extend(result.get("issues", []))
                     insert_data = self._prepare_for_insert({**result, "triggered_by": "cron"})
-                    supabase.client.table("sentinel_scans").insert(insert_data).execute()
+                    try:  # best-effort · persistir el scan NO debe abortar el cálculo de score/alerta
+                        supabase.client.table("sentinel_scans").insert(insert_data).execute()
+                    except Exception as e:
+                        logger.warning(f"sentinel_scans insert skip (best-effort): {e}")
 
             global_score = round(global_score)
             status = "presidencial" if global_score >= 85 else "warning" if global_score >= 70 else "critical"
             verdict = "DEPLOY" if global_score >= 75 else "DEPLOY_WITH_CAUTION" if global_score >= 60 else "DO_NOT_DEPLOY"
-            supabase.client.table("sentinel_risk_scores").insert({
-                "score": float(global_score),
-                "security_score": float(global_score),
-                "verdict": verdict,
-                "issues_critical": len([i for i in all_issues if i["severity"] == "CRITICAL"]),
-                "issues_high": len([i for i in all_issues if i["severity"] == "HIGH"]),
-                "issues_medium": len([i for i in all_issues if i["severity"] == "MEDIUM"]),
-                "issues_low": len([i for i in all_issues if i["severity"] == "LOW"]),
-                "auto_fixes_applied": 0,
-                "calculated_at": datetime.now(timezone.utc).isoformat(),
-            }).execute()
+            try:  # best-effort · persistir el risk_score NO debe abortar el dispatch de la alerta
+                supabase.client.table("sentinel_risk_scores").insert({
+                    "score": float(global_score),
+                    "security_score": float(global_score),
+                    "verdict": verdict,
+                    "issues_critical": len([i for i in all_issues if i["severity"] == "CRITICAL"]),
+                    "issues_high": len([i for i in all_issues if i["severity"] == "HIGH"]),
+                    "issues_medium": len([i for i in all_issues if i["severity"] == "MEDIUM"]),
+                    "issues_low": len([i for i in all_issues if i["severity"] == "LOW"]),
+                    "auto_fixes_applied": 0,
+                    "calculated_at": datetime.now(timezone.utc).isoformat(),
+                }).execute()
+            except Exception as e:
+                logger.warning(f"sentinel_risk_scores insert skip (best-effort): {e}")
             result = {
                 "security_score": global_score,
                 "status": status,

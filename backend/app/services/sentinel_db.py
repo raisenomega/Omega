@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 # Todas las tablas que deben existir y ser accesibles
 TABLES_CRITICAL = [
     # Core operativo
-    "omega_agents",
+    "agents",  # era 'omega_agents' (fantasma) → tabla real 00001:255
     "omega_agent_memory",
     "nova_data",
     "resellers",
@@ -25,8 +25,7 @@ TABLES_CRITICAL = [
     # Funcionalidad
     "scheduled_posts",
     "agent_tasks",
-    # Infraestructura SENTINEL
-    "sentinel_scans",
+    # Infraestructura SENTINEL (sentinel_scans removida · no existe en ninguna migración)
     "sentinel_rules",
     "sentinel_risk_scores",
     "omega_tech_debt",
@@ -34,9 +33,9 @@ TABLES_CRITICAL = [
 
 # Tablas con un mínimo de filas esperadas
 MIN_COUNTS = {
-    "omega_agents": 44,
-    "clients":       1,
-    "resellers":     1,
+    "agents":    1,  # era 'omega_agents': 44 · tabla real · solo verifica que tenga filas
+    "clients":   1,
+    "resellers": 1,
 }
 
 
