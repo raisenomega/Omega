@@ -7,6 +7,7 @@ import { onboardingSchema, type OnboardingForm } from "@/lib/onboarding-schema";
 import { sectionsFilled, completionPercent } from "@/lib/onboarding-completion";
 import { fetchOnboardingData, postOnboarding, patchOnboarding } from "@/lib/onboarding-api";
 import { useUploadClientContext } from "./useUploadClientContext";
+import { useUploadBrandLogo } from "./useUploadBrandLogo";
 import { onboardingErrorToast } from "@/lib/onboarding-error-toast";
 
 const DEFAULTS: Partial<OnboardingForm> = {
@@ -35,6 +36,7 @@ export function useOnboardingForm(opts: UseOnboardingFormOptions = {}): UseOnboa
   const { clientId, onSuccess } = opts;
   const isEditing = !!clientId;
   const upload = useUploadClientContext();
+  const logoUpload = useUploadBrandLogo();  // DEBT-059 · persiste logo_files del wizard
   const [pendingFile, setPendingFile] = useState<File | null>(null);  // FIX 1
 
   const form = useForm<OnboardingForm>({
@@ -59,12 +61,15 @@ export function useOnboardingForm(opts: UseOnboardingFormOptions = {}): UseOnboa
 
   const mutation = useMutation({
     mutationFn: (data: OnboardingForm) => (clientId ? patchOnboarding(clientId, data) : postOnboarding(data)),
-    onSuccess: (r) => {
+    onSuccess: (r, variables) => {
       // FIX 1: en creación ya existe clientId → subir el doc de contexto retenido (best-effort).
       if (!isEditing && pendingFile) {
         upload.mutate({ clientId: r.client_id, file: pendingFile });
         setPendingFile(null);
       }
+      // DEBT-059: subir archivos de marca capturados (File[] no viajan en JSON) + enlazar logo_file_id · best-effort.
+      const logoFiles = variables.brand_assets?.logo_files ?? [];
+      if (logoFiles.length > 0) logoUpload.mutate({ clientId: r.client_id, files: logoFiles, data: variables });
       toast({ title: isEditing ? "Cliente actualizado" : "Cliente creado", description: `${r.completion_percent}% · ${r.onboarding_complete ? "completo" : "parcial"}` });
       onSuccess?.(r.client_id);
     },
