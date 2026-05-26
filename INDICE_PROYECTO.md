@@ -41,7 +41,7 @@ DECISIONES OWNER (17 may 2026)
 
 ## SECCIÓN 2 — ORDEN DE LECTURA OBLIGATORIO
 
-### 🔴 TIER 1 — LECTURA SIEMPRE (3 archivos · ~5 min)
+### 🔴 TIER 1 — LECTURA SIEMPRE (5 archivos · ~6 min)
 
 Antes de cualquier acción técnica en CUALQUIER sesión:
 
@@ -49,10 +49,11 @@ Antes de cualquier acción técnica en CUALQUIER sesión:
 1. INDICE_PROYECTO.md           ← este documento · ya lo estás leyendo
 2. IDENTIDAD_GIT_CRITICA.md     ← bloqueante · 4 verificaciones git
 3. CLAUDE.md                    ← constitución (60L) · reglas non-negotiable
-4. SOURCE_OF_TRUTH.md           ← qué existe · qué no · 11 deudas técnicas
+4. ESTADO_OMEGA.md              ← documento vivo OPERACIONAL · qué está hecho/falta · roadmap · DEBTs
+5. SOURCE_OF_TRUTH.md           ← fuente TÉCNICA · qué existe · qué no · detalle de deudas
 ```
 
-**Sin estos 4 leídos:** no escribir código, no commitear, no proponer cambios.
+**Sin estos 5 leídos:** no escribir código, no commitear, no proponer cambios.
 
 ### 🟠 TIER 2 — LECTURA SEGÚN SCOPE DE LA SESIÓN
 
@@ -110,7 +111,8 @@ D:\Omega Master redes\
 │   ├── INDICE_PROYECTO.md              ⭐ ESTE archivo · mapa maestro
 │   ├── IDENTIDAD_GIT_CRITICA.md        ⚠️ bloqueante git
 │   ├── CLAUDE.md                       constitución 60L
-│   ├── SOURCE_OF_TRUTH.md              estado verificado · deudas
+│   ├── ESTADO_OMEGA.md                 ⭐ documento vivo OPERACIONAL (estado/DEBTs/roadmap)
+│   ├── SOURCE_OF_TRUTH.md              fuente técnica · estado verificado · deudas
 │   ├── PRD_RECONSTRUIDO.md             visión del producto
 │   ├── DDD_REGLAS_OMEGA.md             contrato técnico inviolable
 │   ├── BC_COGNITION_OMEGA.md           arquitectura cerebro IA
@@ -236,8 +238,8 @@ Esta sesión **NO puede empezar a trabajar** hasta que estos 6 ítems estén ✅
        git remote -v                  → https://github.com/raisenomega/Omega.git
        pwd                            → D:\Omega Master redes\
 
-[ ] 3. LEÍ TIER 1 COMPLETO
-       INDICE_PROYECTO.md (este)  ·  IDENTIDAD_GIT_CRITICA  ·  CLAUDE.md  ·  SOURCE_OF_TRUTH
+[ ] 3. LEÍ TIER 1 COMPLETO (5 archivos)
+       INDICE_PROYECTO.md (este)  ·  IDENTIDAD_GIT_CRITICA  ·  CLAUDE.md  ·  ESTADO_OMEGA  ·  SOURCE_OF_TRUTH
 
 [ ] 4. LEÍ TIER 2 SEGÚN MI SCOPE DE HOY
        Si voy a tocar bc_cognition → DDD_REGLAS + BC_COGNITION_OMEGA

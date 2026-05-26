@@ -357,7 +357,7 @@ Sin esto: 500 en `/calendar-v3/schedule/` y `/clients/{id}/upload-context`.
 
 **4A-3 · cobertura lograda:** todo input no confiable que alimenta un prompt de Claude o `agent_memory` pasa por `input_sanitizer`. Módulo `bc_cognition/{domain/input_threats,application/input_sanitizer}.py` (9 tests) + 5 consumidores: (#1) `_attachment_extractor` docs subidos · (#2) research/Brave snippets · (#3) generate_text topic · (#4) ARIA chat (refusal conversacional) · (#5) writes a `agent_memory` PII-redacted en 3 choke points. Cada commit: guardian APPROVE + gate 10/10. Spec firmada `PROTOCOLO_SEGURIDAD_INPUT_OMEGA.md` (gitignored · cap UPLOADED 20K). Capa 2 (Haiku · anti-FP) → Sprint 5 (DEBT-INPUT-FP nueva si aplica).
 
-**Otros cierres 4A:** `.gitignore` protege 5 docs estratégicos untracked (`a813477`); boilerplate "NUNCA SE COMMITEA" corregido en PENDIENTES (`33f5a21`); `MODELO_NEGOCIO_OMEGA_CLIENTE.md` confirmado committable (Opción A · sin secretos).
+**Otros cierres 4A:** `.gitignore` protege 5 docs estratégicos untracked (`a813477`); boilerplate "NUNCA SE COMMITEA" corregido en los docs de pendientes diarios (`33f5a21` · ahora en git history); `MODELO_NEGOCIO_OMEGA_CLIENTE.md` confirmado committable (Opción A · sin secretos).
 
 ## SECCIÓN 12 — SPRINT 4B · GUARDIAN (seguridad usuario/sesión) · CIERRE (24 may 2026)
 
