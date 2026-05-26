@@ -4,6 +4,7 @@ import { useMyPlanStatus } from "@/hooks/useMyPlanStatus";
 import { useClientPlanStatus } from "@/hooks/useClientPlanStatus";
 import { IntelligenceChips } from "@/components/intelligence/IntelligenceChips";
 import { ChipPlaceholder } from "@/components/intelligence/ChipPlaceholder";
+import { SeoChip } from "@/components/intelligence/SeoChip";
 import { IntelligenceLoading, IntelligencePlanGate } from "@/components/intelligence/IntelligenceGate";
 import { type ChipId } from "@/components/intelligence/_chips";
 
@@ -42,7 +43,11 @@ export default function IntelligencePage() {
 
       <IntelligenceChips active={active} onSelect={setActive} />
 
-      <ChipPlaceholder title={CHIP_LABELS[active]} />
+      {active === "seo" ? (
+        <SeoChip clientId={clientId ?? ""} />
+      ) : (
+        <ChipPlaceholder title={CHIP_LABELS[active]} />
+      )}
     </div>
   );
 }
