@@ -18,6 +18,7 @@ import ContentLabPageV2 from "./pages/ContentLabPageV2";
 import CalendarPage from "./pages/Calendar";
 import Media from "./pages/Media";
 import Analytics from "./pages/Analytics";
+import IntelligencePage from "./pages/IntelligencePage";
 import BrandVoicePage from "./pages/BrandVoicePage";
 import CrisisPage from "./pages/CrisisPage";
 import AddOnsPage from "./pages/AddOnsPage";
@@ -100,6 +101,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <AppLayout><Analytics /></AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/intelligence"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout><IntelligencePage /></AppLayout>
                   </ProtectedRoute>
                 }
               />
