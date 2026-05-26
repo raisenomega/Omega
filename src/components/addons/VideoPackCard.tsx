@@ -34,7 +34,7 @@ export function VideoPackCard({ name, price, bullets, idealFor, onActivate, isPe
         <Button
           onClick={onActivate}
           disabled={isPending}
-          className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+          className="w-full border border-amber-500 bg-transparent text-white transition-colors duration-200 hover:bg-emerald-600 hover:border-emerald-600 hover:text-white"
         >
           {isPending ? "Redirigiendo a Stripe…" : ctaLabel}
         </Button>

@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { Package, Video, Send, Wand2, TrendingUp } from "lucide-react";
 import { VideoPackCard } from "@/components/addons/VideoPackCard";
+import { SectionDivider } from "@/components/addons/SectionDivider";
 import { VIDEO_PACKS } from "@/components/addons/_video_packs_data";
 import { PUBLISHER_PACKS } from "@/components/addons/_publisher_packs_data";
 import { CREATIVE_PACKS } from "@/components/addons/_creative_packs_data";
@@ -61,6 +62,8 @@ export default function AddOnsPage() {
         </div>
       </section>
 
+      <SectionDivider />
+
       <section id="agente-publicador" className="space-y-3">
         <div className="flex items-center gap-2">
           <Send className="h-4 w-4 text-muted-foreground" />
@@ -87,6 +90,8 @@ export default function AddOnsPage() {
         </div>
       </section>
 
+      <SectionDivider />
+
       <section id="agente-creativo" className="space-y-3">
         <div className="flex items-center gap-2">
           <Wand2 className="h-4 w-4 text-muted-foreground" />
@@ -107,6 +112,8 @@ export default function AddOnsPage() {
           ))}
         </div>
       </section>
+
+      <SectionDivider />
 
       <section id="agente-tendencias" className="space-y-3">
         <div className="flex items-center gap-2">
