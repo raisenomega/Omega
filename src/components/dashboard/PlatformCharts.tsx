@@ -146,6 +146,8 @@ export function AccountDistributionChart({ data }: PlatformChartsProps) {
                 borderRadius: "8px",
                 color: "hsl(var(--foreground))",
               }}
+              itemStyle={{ color: "#fff" }}
+              labelStyle={{ color: "#fff" }}
             />
           </PieChart>
         </ResponsiveContainer>
