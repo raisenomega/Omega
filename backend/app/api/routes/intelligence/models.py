@@ -19,3 +19,15 @@ class WebAnalysisResponse(BaseModel):
     cached: bool = False
     generated_at: Optional[str] = None
     message: Optional[str] = None
+
+
+class GeoCheckResponse(BaseModel):
+    """Visibilidad GEO/AEO · honesto (analyzed=False + message si no aplica)."""
+    status: str = "unknown"
+    summary: Optional[str] = None
+    tips: list[str] = Field(default_factory=list)
+    queries: list[str] = Field(default_factory=list)
+    analyzed: bool = False
+    cached: bool = False
+    generated_at: Optional[str] = None
+    message: Optional[str] = None

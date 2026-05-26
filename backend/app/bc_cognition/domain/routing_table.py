@@ -55,6 +55,7 @@ _AGENT_TIER_RAW: dict[str, ModelTier] = {
     "quality_control":            "sonnet",
     "news_monitor":               "sonnet",
     "competitor_tracker":         "sonnet",
+    "intelligence":               "sonnet",
 
     # ARIA — proyección de NOVA · 4 niveles · spec ARIA_NOVA_INTELLIGENCE §6
     "aria_1":                     "haiku",
@@ -93,7 +94,7 @@ def is_registered(agent_code: str) -> bool:
 
 
 # Self-check al importar
-assert len(AGENT_TIER) >= 37, \
-    f"❌ Routing table incompleta: {len(AGENT_TIER)} agentes (esperado ≥37)"
+assert len(AGENT_TIER) >= 38, \
+    f"❌ Routing table incompleta: {len(AGENT_TIER)} agentes (esperado ≥38)"
 assert MODEL_IDS["sonnet"] == "claude-sonnet-4-6", \
     "❌ Sonnet model_id incorrecto"
