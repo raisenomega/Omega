@@ -31,3 +31,15 @@ class GeoCheckResponse(BaseModel):
     cached: bool = False
     generated_at: Optional[str] = None
     message: Optional[str] = None
+
+
+class AeoCheckResponse(BaseModel):
+    """Answer Engine Optimization · FAQ del vertical y cobertura del sitio."""
+    analyzed: bool = False
+    questions: list[str] = Field(default_factory=list)
+    answered: list[str] = Field(default_factory=list)
+    gaps: list[str] = Field(default_factory=list)
+    tips: list[str] = Field(default_factory=list)
+    cached: bool = False
+    generated_at: Optional[str] = None
+    message: Optional[str] = None
