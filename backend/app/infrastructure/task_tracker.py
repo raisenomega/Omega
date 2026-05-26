@@ -1,6 +1,7 @@
 """
 Task Tracker - Registers and tracks agent task execution.
 DDD: Infrastructure layer. Max 200L strict.
+DEBT-083: retargeted to agent_executions table for agent run telemetry.
 """
 from typing import Optional
 from datetime import datetime
@@ -16,8 +17,7 @@ class TaskTracker:
     """
     Tracks agent tasks from creation to completion.
 
-    Records task metadata in agent_tasks table and updates
-    performance metrics in omega_agents table.
+    Records agent run telemetry in agent_executions (DEBT-083).
     """
 
     async def create_task(
@@ -29,7 +29,7 @@ class TaskTracker:
         requested_by: str = "NOVA"
     ) -> str:
         """
-        Create new agent task record.
+        Create new agent execution record.
 
         Args:
             agent_code: Agent executing the task (e.g., "ATLAS")
@@ -53,31 +53,33 @@ class TaskTracker:
             # Guard against empty string client_id (UUID field requires valid UUID or null)
             safe_client_id = client_id if client_id and str(client_id).strip() else None
 
-            # Prepare task data
-            task_data = {
+            # Prepare execution record
+            execution_data = {
                 "id": task_id,
-                "agent_code": agent_code,
-                "title": title[:200],  # Truncate to DB limit
-                "description": description[:1000] if description else "",
+                "agent_id": agent_code,
                 "client_id": safe_client_id,
-                "requested_by": requested_by,
-                "status": "in_progress",
-                "created_at": datetime.utcnow().isoformat()
+                "triggered_by": requested_by,
+                "status": "running",
+                "started_at": datetime.utcnow().isoformat(),
+                "input_data": {
+                    "title": title[:200],
+                    "description": description[:1000] if description else ""
+                }
             }
 
-            # Insert task
-            result = supabase.client.table("agent_tasks")\
-                .insert(task_data)\
+            # Insert into agent_executions
+            result = supabase.client.table("agent_executions")\
+                .insert(execution_data)\
                 .execute()
 
             if not result.data:
-                raise Exception("Failed to create task - no data returned")
+                raise Exception("Failed to create agent_executions record - no data returned")
 
-            logger.info(f"Task created: {task_id} for {agent_code} - {title[:50]}")
+            logger.info(f"agent_executions record created: {task_id} for {agent_code} - {title[:50]}")
             return task_id
 
         except Exception as e:
-            logger.error(f"Failed to create task for {agent_code}: {e}")
+            logger.error(f"Failed to create agent_executions record for {agent_code}: {e}")
             raise
 
 
@@ -89,85 +91,46 @@ class TaskTracker:
         model: str = ""
     ) -> bool:
         """
-        Mark task as completed and update agent performance metrics.
+        Mark agent execution as completed.
 
         Args:
             task_id: Task UUID to complete
             tokens_used: Total tokens consumed
-            provider: AI provider used (e.g., "openai", "anthropic")
-            model: Model used (e.g., "gpt-4o-mini")
+            provider: AI provider used (e.g., "anthropic")
+            model: Model used (e.g., "claude-sonnet-4-6")
 
         Returns:
             True if successful, False otherwise
-
-        Note:
-            Also increments tasks_completed_total in omega_agents table
         """
         try:
             supabase = get_supabase_service()
 
-            # Get agent_code from task
-            task_resp = supabase.client.table("agent_tasks")\
-                .select("agent_code")\
-                .eq("id", task_id)\
-                .limit(1)\
-                .execute()
-
-            if not task_resp.data:
-                logger.warning(f"Task not found: {task_id}")
-                return False
-
-            agent_code = task_resp.data[0]["agent_code"]
-
-            # Update task status
+            # Update agent_executions record to completed
             update_data = {
                 "status": "completed",
                 "completed_at": datetime.utcnow().isoformat(),
-                "tokens_used": tokens_used,
-                "provider": provider,
-                "model": model
+                "output_data": {
+                    "tokens_used": tokens_used,
+                    "provider": provider,
+                    "model": model
+                }
             }
 
-            task_update = supabase.client.table("agent_tasks")\
+            task_update = supabase.client.table("agent_executions")\
                 .update(update_data)\
                 .eq("id", task_id)\
                 .execute()
 
             if not task_update.data:
-                logger.warning(f"Failed to update task: {task_id}")
+                logger.warning(f"Failed to update agent_executions record: {task_id}")
                 return False
 
-            # Increment agent's completed tasks counter
-            # Using PostgreSQL increment function
-            agent_update = supabase.client.rpc(
-                "increment_agent_tasks",
-                {"agent_code_param": agent_code}
-            ).execute()
-
-            # Fallback if RPC doesn't exist: manual increment
-            if not agent_update.data:
-                logger.info(f"RPC not available, using fallback increment for {agent_code}")
-                # Get current count
-                agent_resp = supabase.client.table("omega_agents")\
-                    .select("tasks_completed_total")\
-                    .eq("agent_code", agent_code)\
-                    .limit(1)\
-                    .execute()
-
-                if agent_resp.data:
-                    current_count = agent_resp.data[0].get("tasks_completed_total", 0)
-                    # Update with incremented value
-                    supabase.client.table("omega_agents")\
-                        .update({"tasks_completed_total": current_count + 1})\
-                        .eq("agent_code", agent_code)\
-                        .execute()
-
             logger.info(
-                f"Task completed: {task_id} by {agent_code} "
+                f"agent_executions record completed: {task_id} "
                 f"({tokens_used} tokens, {provider}/{model})"
             )
             return True
 
         except Exception as e:
-            logger.error(f"Failed to complete task {task_id}: {e}")
+            logger.error(f"Failed to complete agent_executions record {task_id}: {e}")
             return False
