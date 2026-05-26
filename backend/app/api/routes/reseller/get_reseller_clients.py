@@ -91,14 +91,14 @@ async def get_reseller_clients(
             supabase.client.table("scheduled_posts")
             .select("*")
             .eq("client_id", cid)
-            .gte("scheduled_date", datetime.now(timezone.utc).replace(day=1).date().isoformat())
+            .gte("scheduled_for", datetime.now(timezone.utc).replace(day=1).date().isoformat())
             .execute()
         )
         posts = posts_rows.data or []
         posts_month = len(posts)
 
         # ── COMPUTE HEALTH & ALERTS ───────────────────────────────────────────
-        last_post = max((p.get("scheduled_date", "") for p in posts), default=None)
+        last_post = max((p.get("scheduled_for", "") for p in posts), default=None)
         alerts = build_client_alerts(c, accounts, posts_month, plan, last_post)
         health = compute_client_health(accounts, posts_month, plan, last_post)
 
@@ -111,7 +111,7 @@ async def get_reseller_clients(
                 status=c.get("status", "active"),
                 health=health,
                 posts_this_month=posts_month,
-                connected_accounts=len([a for a in accounts if a.get("connected")]),
+                connected_accounts=len([a for a in accounts if a.get("status") == "active"]),
                 total_accounts=len(accounts),
                 alerts_count=len(alerts),
                 last_post_date=last_post,

@@ -68,7 +68,7 @@ async def get_feature_usage(
         supabase.client.table("scheduled_posts")
         .select("id", count="exact")
         .eq("client_id", client_id)
-        .gte("scheduled_date", month_start)
+        .gte("scheduled_for", month_start)
         .execute()
     )
     posts_used = posts_rows.count or 0

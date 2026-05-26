@@ -68,21 +68,21 @@ async def get_reseller_home(
             supabase.client.table("scheduled_posts")
             .select("*")
             .eq("client_id", cid)
-            .gte("scheduled_date", datetime.now(timezone.utc).replace(day=1).date().isoformat())
+            .gte("scheduled_for", datetime.now(timezone.utc).replace(day=1).date().isoformat())
             .execute()
         )
         posts = posts_rows.data or []
         posts_month = len(posts)
         total_posts += posts_month
 
-        upcoming = [p for p in posts if p.get("scheduled_date", "") >= TODAY][:5]
-        last_post = max((p.get("scheduled_date", "") for p in posts), default=None)
+        upcoming = [p for p in posts if p.get("scheduled_for", "") >= TODAY][:5]
+        last_post = max((p.get("scheduled_for", "") for p in posts), default=None)
 
         social = [
             ResellerSocialAccount(
                 id=a["id"], platform=a.get("platform",""),
-                username=a.get("username"), connected=a.get("connected", False),
-                is_active=a.get("is_active", False),
+                username=a.get("account_name"), connected=(a.get("status") == "active"),
+                is_active=(a.get("status") == "active"),
             ) for a in accounts
         ]
 
@@ -92,21 +92,22 @@ async def get_reseller_home(
         health = compute_client_health(accounts, posts_month, plan, last_post)
         health_counts[health] = health_counts.get(health, 0) + 1
 
+        acct_by_id = {a["id"]: a for a in accounts}
         up_posts = [
             ResellerUpcomingPost(
-                id=p["id"], scheduled_date=p.get("scheduled_date",""),
-                scheduled_time=p.get("scheduled_time"), text_content=p.get("text_content"),
-                status=p.get("status","pending"), platform=p.get("platform"),
-                has_connected_account=any(
-                    a.get("platform") == p.get("platform") and a.get("connected")
-                    for a in accounts
+                id=p["id"], scheduled_date=p.get("scheduled_for",""),
+                scheduled_time=None, text_content=None,
+                status=p.get("status","pending"),
+                platform=(acct_by_id.get(p.get("social_account_id")) or {}).get("platform"),
+                has_connected_account=(
+                    (acct_by_id.get(p.get("social_account_id")) or {}).get("status") == "active"
                 ),
             ) for p in upcoming
         ]
 
         upsell_input.append({
             "id": cid, "name": c.get("name",""), "plan": plan,
-            "posts_month": posts_month, "connected_accounts": len([a for a in accounts if a.get("connected")]),
+            "posts_month": posts_month, "connected_accounts": len([a for a in accounts if a.get("status") == "active"]),
             "days_since_created": 0,
         })
 
@@ -115,7 +116,7 @@ async def get_reseller_home(
             plan=plan, status=c.get("status","active"), health=health,
             social_accounts=social, upcoming_posts=up_posts,
             stats=ResellerClientStats(
-                posts_this_month=posts_month, connected_accounts=len([a for a in accounts if a.get("connected")]),
+                posts_this_month=posts_month, connected_accounts=len([a for a in accounts if a.get("status") == "active"]),
                 total_accounts=len(accounts), revenue_monthly=get_client_revenue(plan), plan=plan,
             ),
             alerts=alerts, last_activity_days=0,

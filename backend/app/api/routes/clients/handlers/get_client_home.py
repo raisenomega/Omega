@@ -81,11 +81,9 @@ async def get_client_home(
         upcoming_response = supabase.client.table("scheduled_posts")\
             .select("*")\
             .eq("client_id", client_id)\
-            .eq("is_active", True)\
-            .gte("scheduled_date", today.isoformat())\
-            .lte("scheduled_date", seven_days_ahead.isoformat())\
-            .order("scheduled_date", desc=False)\
-            .order("scheduled_time", desc=False)\
+            .gte("scheduled_for", today.isoformat())\
+            .lte("scheduled_for", seven_days_ahead.isoformat())\
+            .order("scheduled_for", desc=False)\
             .execute()
 
         upcoming_posts_data = upcoming_response.data if upcoming_response.data else []
@@ -101,9 +99,8 @@ async def get_client_home(
         month_response = supabase.client.table("scheduled_posts")\
             .select("id", count="exact")\
             .eq("client_id", client_id)\
-            .eq("is_active", True)\
-            .gte("scheduled_date", first_day.isoformat())\
-            .lte("scheduled_date", last_day.isoformat())\
+            .gte("scheduled_for", first_day.isoformat())\
+            .lte("scheduled_for", last_day.isoformat())\
             .execute()
 
         month_count = month_response.count if hasattr(month_response, 'count') else 0
@@ -112,13 +109,12 @@ async def get_client_home(
         all_response = supabase.client.table("scheduled_posts")\
             .select("id", count="exact")\
             .eq("client_id", client_id)\
-            .eq("is_active", True)\
             .execute()
 
         all_count = all_response.count if hasattr(all_response, 'count') else 0
 
         # Count connected accounts
-        connected_accounts = len([acc for acc in social_accounts_data if acc.get("connected")])
+        connected_accounts = len([acc for acc in social_accounts_data if acc.get("status") == "active"])
 
         stats = ClientHomeStats(
             total_posts=all_count,
