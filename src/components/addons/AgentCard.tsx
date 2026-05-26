@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { AgentAvatar } from "./AgentAvatar";
 import type { Agent } from "./_agents_data";
 
 interface AgentCardProps {
@@ -13,10 +14,10 @@ export function AgentCard({ agent, onOpen }: AgentCardProps) {
   return (
     <Card className="flex flex-col h-full">
       <CardContent className="flex flex-col items-center gap-3 p-5 flex-1 text-center">
-        <img
+        <AgentAvatar
           src={agent.image}
-          alt={agent.persona}
-          className="h-24 w-24 rounded-full object-cover border-2 border-amber-500/40"
+          name={agent.persona}
+          className="h-24 w-24 rounded-full border-2 border-amber-500/40"
         />
         <div>
           <h3 className="text-lg font-bold leading-tight">{agent.persona}</h3>

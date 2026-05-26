@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
+import { AgentAvatar } from "./AgentAvatar";
 import type { Agent } from "./_agents_data";
 
 interface AgentDetailModalProps {
@@ -25,10 +26,10 @@ export function AgentDetailModal({ agent, onClose, onActivate }: AgentDetailModa
     <Dialog open={!!agent} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="sm:max-w-2xl">
         <div className="flex flex-col gap-4 sm:flex-row">
-          <img
+          <AgentAvatar
             src={agent.image}
-            alt={agent.persona}
-            className="mx-auto h-28 w-28 shrink-0 rounded-xl border-2 border-amber-500/40 object-cover sm:mx-0"
+            name={agent.persona}
+            className="mx-auto h-28 w-28 shrink-0 rounded-xl border-2 border-amber-500/40 sm:mx-0"
           />
           <DialogHeader className="flex-1">
             <DialogTitle className="text-xl">{agent.persona}</DialogTitle>
@@ -45,10 +46,10 @@ export function AgentDetailModal({ agent, onClose, onActivate }: AgentDetailModa
               <button
                 key={t.label}
                 onClick={() => setTierIdx(i)}
-                className={`flex-1 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors duration-200 ${
                   i === tierIdx
-                    ? "border-amber-500 bg-amber-500/10 text-foreground"
-                    : "border-border/40 text-muted-foreground hover:border-amber-500/50"
+                    ? "border-amber-500 bg-amber-500 text-black"
+                    : "border-border/40 bg-transparent text-muted-foreground hover:border-amber-500/50"
                 }`}
               >
                 {t.label} · {t.price}
