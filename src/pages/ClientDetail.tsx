@@ -1,20 +1,13 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Users, Globe, UserCheck, FileText, Loader2, Bot } from "lucide-react";
+import { ariaLevelInfo } from "@/lib/aria-levels";
 import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts";
 import { ClientAIConfig } from "@/components/clients/ClientAIConfig";
 import { PlanStatusBar } from "@/components/clients/PlanStatusBar";
@@ -24,8 +17,6 @@ import { buildContextRows } from "@/lib/client-info-fields";
 export default function ClientDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const { data: client, isLoading } = useQuery({
     queryKey: ["client", id],
@@ -48,27 +39,9 @@ export default function ClientDetail() {
     enabled: !!id,
   });
 
-  // DEBT-033: queries removidas — tablas `profiles` y `posts` no existen en V3.
-  // teamMembers + posts retornan arrays vacíos. Las tabs "Agente" y "Posts"
-  // muestran estado vacío en lugar de generar errores. Fase 3 §3.x rewrite.
-  const teamMembers: { user_id: string; full_name: string | null; avatar_url: string | null }[] = [];
+  // DEBT-033: tabla `posts` no existe en V3 · posts retorna [] (Posts tab muestra vacío).
+  // DEBT-065: Tab Agente rediseñado a nivel ARIA del cliente (sin team-member/assigned_to legacy).
   const posts: { id: string; title?: string; status?: string; created_at?: string }[] = [];
-
-  const assignMutation = useMutation({
-    mutationFn: async (userId: string | null) => {
-      const { error } = await supabase
-        .from("clients")
-        .update({ assigned_to: userId } as any)
-        .eq("id", id!);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["client", id] });
-      queryClient.invalidateQueries({ queryKey: ["clients"] });
-      toast({ title: "Agente asignado correctamente" });
-    },
-    onError: (e) => toast({ title: "Error", description: e.message, variant: "destructive" }),
-  });
 
   if (isLoading) {
     return (
@@ -89,7 +62,7 @@ export default function ClientDetail() {
     );
   }
 
-  const assignedMember = teamMembers?.find((m) => m.user_id === (client as any).assigned_to);
+  const ariaInfo = ariaLevelInfo(client.aria_level);
 
   return (
     <div className="space-y-6">
@@ -144,43 +117,23 @@ export default function ClientDetail() {
           <ClientSocialAccounts clientId={client.id} />
         </TabsContent>
 
-        {/* Agent Assignment Tab */}
+        {/* Agent Tab · DEBT-065 · nivel ARIA del cliente + estado (sin team-member/assigned_to legacy) */}
         <TabsContent value="agent">
           <Card className="border-border/50 bg-card/60">
             <CardHeader>
-              <CardTitle className="text-sm font-medium">Agente Asignado</CardTitle>
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <UserCheck className="h-4 w-4" /> Nivel ARIA del cliente
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Selecciona el miembro del equipo responsable de gestionar este cliente.
-              </p>
-              <Select
-                value={(client as any).assigned_to ?? "none"}
-                onValueChange={(v) => assignMutation.mutate(v === "none" ? null : v)}
-              >
-                <SelectTrigger className="w-full max-w-sm">
-                  <SelectValue placeholder="Sin agente asignado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sin agente asignado</SelectItem>
-                  {teamMembers?.map((m) => (
-                    <SelectItem key={m.user_id} value={m.user_id}>
-                      {m.full_name || "Sin nombre"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {assignedMember && (
-                <div className="flex items-center gap-3 p-3 rounded-lg border border-border/30 bg-muted/20">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <UserCheck className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{assignedMember.full_name || "Sin nombre"}</p>
-                    <p className="text-xs text-muted-foreground">Agente responsable</p>
-                  </div>
-                </div>
-              )}
+            <CardContent className="space-y-3">
+              <Badge className={ariaInfo.color}>{ariaInfo.label}</Badge>
+              <p className="text-xs text-muted-foreground">{ariaInfo.desc}</p>
+              <div className="flex items-center gap-2 border-t border-border/20 pt-3">
+                <span className="text-sm text-muted-foreground">Estado del cliente:</span>
+                <Badge variant={client.status === "active" ? "default" : "secondary"} className="capitalize">
+                  {client.status ?? "—"}
+                </Badge>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

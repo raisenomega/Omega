@@ -8,13 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { apiGet, apiDelete } from "@/lib/api-client";
 import { PillGroup } from "@/components/onboarding/PillGroup";
-
-const LEVEL_INFO: Record<number, { label: string; color: string; desc: string }> = {
-  1: { label: "ARIA 1.0 · Adopción", color: "bg-muted text-muted-foreground", desc: "Conversacional básico · onboarding y respuestas FAQ." },
-  2: { label: "ARIA 2.0 · Básico", color: "bg-blue-500 text-white", desc: "Conversacional estándar · sugerencias + análisis simple." },
-  3: { label: "ARIA 3.0 · Pro", color: "bg-emerald-500 text-white", desc: "Avanzado · NBA engine + auto-publicación con aprobación." },
-  4: { label: "ARIA 4.0 · Pro+addons", color: "bg-amber-500 text-white", desc: "Near-NOVA · contexto extendido + autónomas con guardrails." },
-};
+import { ariaLevelInfo } from "@/lib/aria-levels";
 
 // DEBT-CL-021 cerrada: api-client wrappers (fuente única auth + apiBase).
 const callDeleteHistory = () => apiDelete(`/aria/history`);
@@ -26,7 +20,7 @@ export function ARIASection() {
   useEffect(() => { localStorage.setItem("aria_language", lang); }, [lang]);
   const q = useQuery<{ aria_level: number | null }>({ queryKey: ["client_profile_aria"], queryFn: fetchAriaLevel });
   const level = q.data?.aria_level ?? 1;
-  const info = LEVEL_INFO[level] ?? LEVEL_INFO[1];
+  const info = ariaLevelInfo(level);
   const onDelete = () => callDeleteHistory().then(() => toast({ title: "Historial eliminado" })).catch((e) => toast({ title: "Error", description: String(e), variant: "destructive" }));
 
   return (
