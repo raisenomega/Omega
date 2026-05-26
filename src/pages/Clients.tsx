@@ -11,11 +11,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Plus, Search, Mail, Globe, Building, MoreHorizontal, Pencil, Trash2, Loader2 } from "lucide-react";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Users, Plus, Search, Mail, Globe, Building, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { ClientRowActions } from "@/components/clients/ClientRowActions";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -202,39 +200,11 @@ export default function Clients() {
                       )}
                     </div>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit(client.id);
-                        }}
-                      >
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteMutation.mutate(client.id);
-                        }}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Eliminar
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <ClientRowActions
+                    clientId={client.id}
+                    onEdit={() => handleEdit(client.id)}
+                    onDelete={() => deleteMutation.mutate(client.id)}
+                  />
                 </CardContent>
               </Card>
             </div>
