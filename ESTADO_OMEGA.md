@@ -38,7 +38,7 @@
 
 ---
 
-## 3 · DEBTs ABIERTAS · ~177.5h (~5 semanas full-time)
+## 3 · DEBTs ABIERTAS · ~181.5h (~5 semanas full-time)
 
 > **Audit cliente E2E (25 may):** +10 DEBTs nuevas (057-066) · **DEBT-057/058/059/061 ya CERRADAS** (Tab AI Anthropic-only · logo wizard · crisis P4 · ver §2). % real cliente: core ~83% · superficie completa ~68%.
 > **Audit rendimiento imagen (26 may):** +4 DEBTs (068-071) · **TODAS CERRADAS** (uploads async · timeout Nano Banana · rate-limit cableado · retry+backoff · ver §2). La generación de imagen ya no bloquea el event loop, no cuelga, está rate-limitada y reintenta transitorios.
@@ -51,10 +51,11 @@
 | DEBT-040 | OAuth Meta + Google (Centro Inteligencia · publicación real) | 80h | — | 5-6 |
 | DEBT-046 | ARIA Premium reseller variant ($25/mes · `resellers.addons`) | 4h | — | 4B |
 
-### 🟠 ALTAS (~51h)
+### 🟠 ALTAS (~55h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
 |---|---|---|---|---|
 | DEBT-050 | Capa multi-agente stubeada (monitor/orchestrator/execute fabrican éxito · P1 cuando dispara) | 16h | — | — |
+| DEBT-074 | `safe_insert` sync bloquea event loop (INSERTs inline · transversal · 5 repos · ~20 call sites) | 4h | — | — |
 | DEBT-048 | ARIA attention memory + embeddings (Voyage · nueva excepción I1) | 16h | — | — |
 | DEBT-049 | `agent_executions` inexistente + NOVA `infrastructure/calendar` schema fantasma | 6h | — | 4B |
 | DEBT-047 | APScheduler persistent jobstore (Python 3.13 + SQLAlchemy 2.0.25 incompat) | 4h | — | — |
