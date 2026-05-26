@@ -90,7 +90,7 @@ async def startup_event():
     # SENTINEL cron jobs
     scheduler.add_job(sentinel_service.run_vault_scan, 'cron', hour=2, minute=0, id='vault_scan')
     scheduler.add_job(sentinel_service.run_db_guardian, 'cron', hour=5, minute=0, id='db_guardian')
-    scheduler.add_job(sentinel_service.run_full_scan, 'cron', hour=20, minute=5, id='sentinel_brief')  # TEST 20:05 · REVERTIR a hour=7,minute=0
+    scheduler.add_job(sentinel_service.run_full_scan, 'cron', hour=20, minute=15, id='sentinel_brief')  # TEST 20:15 · REVERTIR a hour=7,minute=0
     scheduler.add_job(sentinel_service.run_pulse_monitor, 'interval', minutes=5, id='pulse_monitor')
     # ORACLE cron jobs
     scheduler.add_job(oracle_service.generate_intelligence_brief, 'cron', day_of_week='mon', hour=7, minute=0, id='oracle_weekly_brief')
