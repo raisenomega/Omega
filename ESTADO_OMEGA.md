@@ -38,7 +38,7 @@
 
 ---
 
-## 3 · DEBTs ABIERTAS · ~183.5h (~5 semanas full-time)
+## 3 · DEBTs ABIERTAS · ~189.5h (~5 semanas full-time)
 
 > **Audit cliente E2E (25 may):** +10 DEBTs nuevas (057-066) · **DEBT-057/058/059/061 ya CERRADAS** (Tab AI Anthropic-only · logo wizard · crisis P4 · ver §2). % real cliente: core ~83% · superficie completa ~68%.
 > **Audit rendimiento imagen (26 may):** +4 DEBTs (068-071) · **TODAS CERRADAS** (uploads async · timeout Nano Banana · rate-limit cableado · retry+backoff · ver §2). La generación de imagen ya no bloquea el event loop, no cuelga, está rate-limitada y reintenta transitorios.
@@ -63,13 +63,14 @@
 | ~~DEBT-064~~ | ✅ **CERRADA** (`d23c632`) router legacy `/content-lab` desmontado (paquete preservado para prompt_builder · frontend usa solo v3) | — | — | — |
 | DEBT-060 | Bucket `media` no existe en migraciones (galería rota) | 2h | — | 4B |
 
-### 🟡 MEDIAS (~33h)
+### 🟡 MEDIAS (~39h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
 |---|---|---|---|---|
 | DEBT-052 | AI Tab · créditos prepagados por agente (3 packs verticales · revenue) | 20h | DEBT-049 | 5 |
 | DEBT-075 | SSRF host guard en fetchers de URL (web_scraper + fetch_url_tool · seguridad acotada) | 2h | — | — |
 | DEBT-053 | Posts Tab · actividad por agente (cliente ve ROI) | 8h | **DEBT-049** | 5 |
 | DEBT-067 | `claude_service` ignora model del agente → agents/ corre en Sonnet (I2 runtime · legacy) | 3h | — | — |
+| DEBT-076 | Backend cambios de plan: downgrade programado a fin de ciclo + checkout Enterprise + computeLostItems cruce add-ons (no marcar Crisis Room si add-on $25) | 6h | — | 5 |
 | ~~DEBT-054~~ | ✅ **CERRADA** (`0946be5`) Info Tab muestra client_context dinámico | — | — | — |
 
 ### 🟢 BAJAS (~11h)
