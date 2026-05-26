@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { Package, Video } from "lucide-react";
+import { Package, Video, Send } from "lucide-react";
 import { VideoPackCard } from "@/components/addons/VideoPackCard";
 import { VIDEO_PACKS } from "@/components/addons/_video_packs_data";
+import { PUBLISHER_PACKS } from "@/components/addons/_publisher_packs_data";
 import { useVideoPackCheckout } from "@/hooks/useVideoPackCheckout";
+import { useToast } from "@/hooks/use-toast";
 
 interface NavState {
   scrollTo?: string;
@@ -13,6 +15,7 @@ export default function AddOnsPage() {
   const location = useLocation();
   const videoRef = useRef<HTMLElement>(null);
   const checkout = useVideoPackCheckout();  // DEBT-VID-001
+  const { toast } = useToast();
 
   useEffect(() => {
     const state = location.state as NavState | null;
@@ -52,7 +55,33 @@ export default function AddOnsPage() {
         </div>
       </section>
 
-      {/* Sprint 4+: section Agentes Especializados · section ARIA Premium · etc */}
+      <section id="agente-publicador" className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Send className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">Agente Publicador</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">Tu agente que gestiona y recuerda tu calendario de publicación</p>
+        <div className="grid gap-4 md:grid-cols-2">
+          {PUBLISHER_PACKS.map((p) => (
+            <VideoPackCard
+              key={p.code}
+              name={p.name}
+              price={p.price}
+              bullets={p.bullets}
+              idealFor={p.idealFor}
+              ctaLabel="Activar"
+              onActivate={() =>
+                toast({
+                  title: "Próximamente",
+                  description: "El Agente Publicador estará disponible pronto · contáctanos para early access.",
+                })
+              }
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* Sprint 4+: section ARIA Premium · etc */}
     </div>
   );
 }

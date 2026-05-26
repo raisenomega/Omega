@@ -9,9 +9,10 @@ interface VideoPackCardProps {
   idealFor: string;
   onActivate: () => void;
   isPending?: boolean;
+  ctaLabel?: string;  // default "Activar Pack" (Video Packs) · "Activar" para otras secciones
 }
 
-export function VideoPackCard({ name, price, bullets, idealFor, onActivate, isPending }: VideoPackCardProps) {
+export function VideoPackCard({ name, price, bullets, idealFor, onActivate, isPending, ctaLabel = "Activar Pack" }: VideoPackCardProps) {
   return (
     <Card className="flex flex-col h-full">
       <CardContent className="flex flex-col gap-3 p-4 flex-1">
@@ -35,7 +36,7 @@ export function VideoPackCard({ name, price, bullets, idealFor, onActivate, isPe
           disabled={isPending}
           className="w-full bg-amber-500 hover:bg-amber-600 text-white"
         >
-          {isPending ? "Redirigiendo a Stripe…" : "Activar Pack"}
+          {isPending ? "Redirigiendo a Stripe…" : ctaLabel}
         </Button>
       </CardContent>
     </Card>
