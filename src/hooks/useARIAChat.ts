@@ -5,8 +5,9 @@ import { useToast } from "@/hooks/use-toast";
 import { ariaGet, ariaPost } from "@/lib/aria-fetch";
 import type { PlanCode } from "@/lib/plan-limits";
 
-// Mapping plan → ARIA level (Q2=A · spec §6 ARIA_NOVA_INTELLIGENCE)
-// adopcion→1 · basic→2 · pro→3 · enterprise→3 (4 requiere add-ons activos · pending)
+// Mapping plan → ARIA level BASE (Q2=A · spec §6 ARIA_NOVA_INTELLIGENCE)
+// adopcion→1 · basic→2 · pro→3 · enterprise→3 · nivel 4 = add-on ARIA Premium
+// (DEBT-063: se lee del aria_level real del backend, no se deriva del plan).
 const PLAN_TO_LEVEL: Record<PlanCode, number> = {
   adopcion: 1, basic: 2, pro: 3, enterprise: 3,
 };
@@ -27,7 +28,7 @@ export function useARIAChat() {
   const { toast } = useToast();
   const myPlan = useMyPlanStatus();
   const planStatus = useClientPlanStatus(myPlan.clientId ?? "");
-  const ariaLevel = PLAN_TO_LEVEL[planStatus.planCode] ?? 1;
+  const planLevel = PLAN_TO_LEVEL[planStatus.planCode] ?? 1;
 
   const historyQuery = useQuery({
     queryKey: ["aria_history"],
@@ -53,8 +54,15 @@ export function useARIAChat() {
     },
   });
 
+  // DEBT-063: el nivel REAL puede superar al del plan si el cliente pagó ARIA Premium
+  // (add-on · aria_level=4 en DB · el backend lo reporta en cada ARIAMessage.aria_level).
+  // Máximo plan↔backend → no mostrar "Actualizar" a quien ya pagó (evita doble cobro percibido).
+  const messages = historyQuery.data ?? [];
+  const backendLevel = messages.reduce((mx, m) => Math.max(mx, m.aria_level ?? 0), 0);
+  const ariaLevel = Math.max(planLevel, backendLevel);
+
   return {
-    messages: historyQuery.data ?? [],
+    messages,
     isLoadingHistory: historyQuery.isLoading,
     isSending: sendMutation.isPending,
     sendMessage: (content: string) => sendMutation.mutate(content),
