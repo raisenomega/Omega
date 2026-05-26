@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Plus, Search, Mail, Phone, Building, MoreHorizontal, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Users, Plus, Search, Mail, Globe, Building, MoreHorizontal, Pencil, Trash2, Loader2 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -180,23 +180,24 @@ export default function Clients() {
                         <div className="h-2 w-2 rounded-full bg-success" />
                       )}
                     </div>
+                    {/* DEBT-072: columnas reales de clients V3 · antes leía company/email/phone inexistentes */}
                     <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                      {client.company && (
-                        <span className="flex items-center gap-1">
-                          <Building className="h-3 w-3" />
-                          {client.company}
-                        </span>
-                      )}
-                      {client.email && (
+                      {client.business_email && (
                         <span className="flex items-center gap-1">
                           <Mail className="h-3 w-3" />
-                          {client.email}
+                          {client.business_email}
                         </span>
                       )}
-                      {client.phone && (
+                      {client.website && (
                         <span className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {client.phone}
+                          <Globe className="h-3 w-3" />
+                          {client.website}
+                        </span>
+                      )}
+                      {client.industry && (
+                        <span className="flex items-center gap-1">
+                          <Building className="h-3 w-3" />
+                          {client.industry}
                         </span>
                       )}
                     </div>
