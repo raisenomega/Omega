@@ -338,6 +338,7 @@ git log --oneline -10            # últimos 10 commits
       "INDICE_PROYECTO.md",
       "IDENTIDAD_GIT_CRITICA.md",
       "CLAUDE.md",
+      "ESTADO_OMEGA.md",
       "SOURCE_OF_TRUTH.md"
     ],
     "planModeThreshold": 3

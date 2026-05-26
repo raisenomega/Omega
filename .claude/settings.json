@@ -104,9 +104,10 @@
       "INDICE_PROYECTO.md",
       "IDENTIDAD_GIT_CRITICA.md",
       "CLAUDE.md",
+      "ESTADO_OMEGA.md",
       "SOURCE_OF_TRUTH.md"
     ],
     "planModeThreshold": 3,
-    "_comment": "INDICE_PROYECTO.md es el mapa maestro · siempre PRIMERO. Luego identidad git (bloqueante), constitución, y estado verificado del proyecto. Tier 2 (DDD_REGLAS, BC_COGNITION, MCP_ARSENAL, etc.) se lee según scope · ver INDICE §2."
+    "_comment": "INDICE_PROYECTO.md es el mapa maestro · siempre PRIMERO. Luego identidad git (bloqueante), constitución, estado OPERACIONAL vivo (ESTADO_OMEGA · qué está hecho/falta/orden), y estado verificado TÉCNICO (SOURCE_OF_TRUTH). Tier 2 (DDD_REGLAS, BC_COGNITION, MCP_ARSENAL, etc.) se lee según scope · ver INDICE §2."
   }
 }
