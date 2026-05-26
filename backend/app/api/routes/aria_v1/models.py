@@ -28,3 +28,21 @@ class ARIATrackRequest(BaseModel):
     event_type: str = Field(..., max_length=64)
     event_data: Optional[dict] = None
     session_id: Optional[str] = None
+
+
+class ARIASuggestionsCreateRequest(BaseModel):
+    client_id: Optional[str] = None
+
+
+class ARIASuggestion(BaseModel):
+    id: str
+    message: str
+    suggestion_type: str
+    is_read: bool
+    read_at: Optional[str] = None
+    created_at: str
+
+
+class ARIASuggestionsResponse(BaseModel):
+    suggestions: list[ARIASuggestion]
+    generated: int = 0
