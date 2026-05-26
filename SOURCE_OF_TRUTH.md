@@ -279,7 +279,7 @@ Cleanup estimado: ~6-8h en próximas sesiones.
 - ~~DEBT-CL-015 · account_id resolución sin elección del user~~ ✅ **CERRADA 23 may 2026** (Sprint 3 · NEW `GET /api/v1/clients/{id}/social-accounts` + `useMyAccounts` hook · dropdown "— Cuenta —" en form bar cuando N>1 cuentas/platform · backend `social_account_id: Optional` con `resolve_account_by_id_or_403` · **BONUS fix latente**: removido `ORDER BY is_primary` (col inexistente en schema V3) de `calendar/_access.py` + `calendar_v3/_access.py` · ahora filtra `status='active'` + `ORDER BY created_at`)
 - ~~DEBT-CL-017 · backend ScheduledPostCreate sin video_url field~~ ✅ **CERRADA 23 may 2026** (Sprint 3 · path X · NEW `POST /api/v1/calendar-v3/schedule/` con schema V3 real + `media_url` único col nueva migración 00020 · handler legacy `calendar/schedule_post.py` deprecated · frontend `useScheduleBlock` apunta al V3 · DEBT-031 partial close)
 
-Detalle completo: `PENDIENTES_Y_PROGRESOS_20260523.md`.
+Detalle: git history (consolidado en `ESTADO_OMEGA.md`).
 
 ---
 
@@ -290,7 +290,7 @@ Detalle completo: `PENDIENTES_Y_PROGRESOS_20260523.md`.
 **19 DEBTs cerradas · ~40 commits · 0 downtime · pre-push 10/10 verde en cada uno.**
 
 Cerradas todas las DEBT-CL-003..022 vivas + DEBT-VID-001 + DEBT-039 V2 partial.
-Detalle full: `PENDIENTES_Y_PROGRESOS_20260524.md`.
+Detalle: git history (consolidado en `ESTADO_OMEGA.md`).
 
 ### Features nuevas Sprint 3
 
@@ -385,7 +385,7 @@ Decisiones firmadas §7: risk 0-100 · heurística-only v1 (Haiku→Sprint 5) ·
 
 ## SECCIÓN 14 — SESIÓN 25 MAY 2026 (prod fixes + seguridad + features) · ~22 commits
 
-Continuación del 24 may (§10-13). Cliente piloto: Jorge / La Milagrosa Software. Detalle completo + handoff: `PENDIENTES_Y_PROGRESOS_20260525.md`.
+Continuación del 24 may (§10-13). Cliente piloto: Jorge / La Milagrosa Software. Detalle operativo consolidado: `ESTADO_OMEGA.md` (granular en git history).
 
 **DEBT-031 CERRADA** (`f9fa866`): módulo legacy `api/routes/calendar` + repo + `domain/calendar` eliminados (schema fantasma · 100% superseded por calendar_v3); `analytics/get_dashboard.py` reescrito a schema V3. **DEBT-049 NUEVA** (`fc512b9`): schema fantasma residual — NOVA `infrastructure/calendar` (cols viejas) + tabla `agent_executions` inexistente en system/omega. Latente, ~6h.
 
@@ -409,12 +409,12 @@ Continuación del 24 may (§10-13). Cliente piloto: Jorge / La Milagrosa Softwar
 
 **a11y consola** (`68e14b5`): `DialogTitle`/`SheetTitle` sr-only en overlays sin título (Clients wizard + sidebar móvil) → limpia warnings Radix. **`git_sha` en `/health`** (`d04f05a`) para verificar deploy de Railway.
 
-**Continuación post-cierre (HEAD `f807f2c`)** — detalle en `PENDIENTES_Y_PROGRESOS_20260525.md` §4:
+**Continuación post-cierre (HEAD `f807f2c`)** — detalle operativo en `ESTADO_OMEGA.md` §2 (granular en git history):
 - **ARIA**: deadlock del input por fetch sin timeout (`cece228` · wrapper `aria-fetch` AbortController 35s que cubre body) · history invertido `desc=False`→`desc=True`+`reversed` (`3a85fe1`) · `limit` single-source (`493fff7`). **DEBT-050** (multi-agente stubeado · P1 cuando dispara · 16h) y **DEBT-051** (`aria_repository.py` 99/100L · 2h) registradas.
 - **Calendario**: KPI Posts Programados contaba desde "ahora" → desde inicio del día + `status IN [pending,scheduled]` (`44ca9d5`). **3 botones en popup** (Publicar Manual/Auto/Cancelar) + migración **00025** `published_manual` + transición backend (`9bd30d7`+`0f1bd75`+`3b6b1fb`). **ISSUE 1 FK al agendar**: localStorage stale → validación **409 honesto** + limpieza de items stale (`59d182a`+`c9bfdb0`).
 - **Reportes/sistema**: P1 `update_status` 200-honesto-desde-fila-persistida (`84a05fe`) · P5 conteos `published`+`published_manual` (`b2ab2fe`) · `get_stats` columnas/tablas inexistentes (`is_active`, `agents.status`, `agent_executions`) → `_safe_count` por query → **`/system/stats` verde** (`01ef77c`+`aa0c5f8`+`f807f2c`). DEBT-049 sigue abierta (tabla `agent_executions` real para telemetría futura).
 
-**Sesión noche (HEAD `062353b`)** — detalle en `PENDIENTES_Y_PROGRESOS_20260525.md` §5:
+**Sesión noche (HEAD `062353b`)** — detalle operativo en `ESTADO_OMEGA.md` §2 (granular en git history):
 - **outcome_evaluator (4A-2 · P5)** — cierra el ciclo de auto-aprendizaje: drafts abandonados >72h → `agent_memory.was_correct=False` (proxy is_saved=status). Migración **00026** (`outcome_evaluated_at`) + cron 4 AM + **X3 10→11** (`5a834ed`+`3490ce0`+`8016531`). Endpoint diagnóstico `run-now` superadmin (`9da5f74` · DEBT-055). `agent_executions` NO era bloqueante.
 - **🔒 SENTINEL 100% cerrado** (`14b5d37`): los 8 endpoints `/api/v1/sentinel/*` → superadmin-only vía helper DRY `require_superadmin` (auth_utils · role=='owner'). DEBT-056 (sentinel_check.sh stale + X1).
 - **Alert dispatcher** (`062353b`): score<80 → Email Resend (activa con `RESEND_API_KEY`) + Telegram preparado (activa con `TELEGRAM_BOT_TOKEN`+`CHAT_ID`). `alert_dispatcher.py` best-effort.
