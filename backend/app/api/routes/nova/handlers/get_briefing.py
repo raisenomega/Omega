@@ -38,7 +38,7 @@ async def handle_get_briefing() -> Dict[str, Any]:
 
     # 1. NOVA Memory (last 20 entries by priority)
     try:
-        mem = supabase.client.table("omega_agent_memory")\
+        mem = supabase.client.table("agent_working_memory")\
             .select("memory_type,content,priority,related_agents,expires_at,created_at")\
             .eq("agent_code", "NOVA")\
             .order("priority", desc=True)\

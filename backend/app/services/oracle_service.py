@@ -79,7 +79,7 @@ class OracleService:
                 "updated_at": datetime.utcnow().isoformat()
             }, on_conflict="user_id,data_type").execute()
             # 7. Guardar en omega_agent_memory para ORACLE
-            supabase.client.table("omega_agent_memory").insert({
+            supabase.client.table("agent_working_memory").insert({
                 "agent_code": "ORACLE",
                 "memory_type": "brief_generated",
                 "content": {

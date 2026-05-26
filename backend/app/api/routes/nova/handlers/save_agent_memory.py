@@ -50,7 +50,7 @@ async def handle_save_agent_memory(request: SaveAgentMemoryRequest) -> Dict[str,
         }
 
         # Insert new memory
-        resp = supabase.client.table("omega_agent_memory")\
+        resp = supabase.client.table("agent_working_memory")\
             .insert(insert_data)\
             .execute()
 

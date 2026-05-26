@@ -72,7 +72,7 @@ async def handle_execute_action(request: ExecuteActionRequest) -> Dict[str, Any]
                     "priority": (request.payload.get("priority") or "NORMAL").lower(),
                     "created_at": datetime.utcnow().isoformat()
                 }
-                supabase.client.table("omega_agent_memory").insert(memory_entry).execute()
+                supabase.client.table("agent_working_memory").insert(memory_entry).execute()
                 memory_saved = True
             except Exception as e:
                 logger.warning(f"Failed to save handoff memory: {e}")

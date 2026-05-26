@@ -85,7 +85,7 @@ class AgentMemoryService:
                 }
 
                 try:
-                    supabase.client.table("omega_agent_memory").insert({
+                    supabase.client.table("agent_working_memory").insert({
                         "agent_code": agent_code,
                         "memory_type": "conversation",
                         "content": memory_content
@@ -113,7 +113,7 @@ class AgentMemoryService:
         try:
             supabase = get_supabase_service()
 
-            result = supabase.client.table("omega_agent_memory")\
+            result = supabase.client.table("agent_working_memory")\
                 .select("*")\
                 .eq("agent_code", agent_code.upper())\
                 .order("updated_at", desc=True)\

@@ -143,7 +143,7 @@ class HandoffService:
 
     def get_pending_handoffs(self, agent_code: str) -> list[Handoff]:
         """Get all pending handoffs for an agent"""
-        response = self.supabase.client.table("omega_agent_memory").select(
+        response = self.supabase.client.table("agent_working_memory").select(
             "content"
         ).eq("agent_code", agent_code).eq(
             "memory_type", "handoff"
@@ -160,7 +160,7 @@ class HandoffService:
     # Private methods for storage (infrastructure layer)
     def _store_handoff(self, handoff: Handoff) -> None:
         """Store handoff in omega_agent_memory"""
-        self.supabase.client.table("omega_agent_memory").insert({
+        self.supabase.client.table("agent_working_memory").insert({
             "agent_code": handoff.to_agent,
             "memory_type": "handoff",
             "content": handoff.__dict__,
@@ -170,7 +170,7 @@ class HandoffService:
 
     def _update_handoff(self, handoff: Handoff) -> None:
         """Update handoff status"""
-        self.supabase.client.table("omega_agent_memory").update({
+        self.supabase.client.table("agent_working_memory").update({
             "content": handoff.__dict__
         }).eq("agent_code", handoff.to_agent).eq(
             "memory_type", "handoff"
@@ -178,7 +178,7 @@ class HandoffService:
 
     def _get_handoff(self, task_id: str) -> Handoff:
         """Retrieve handoff by task_id"""
-        response = self.supabase.client.table("omega_agent_memory").select(
+        response = self.supabase.client.table("agent_working_memory").select(
             "content"
         ).eq("memory_type", "handoff").match(
             {"content->>task_id": task_id}
@@ -191,7 +191,7 @@ class HandoffService:
 
     def _store_completion(self, completion: HandoffCompletion) -> None:
         """Store completion result"""
-        self.supabase.client.table("omega_agent_memory").insert({
+        self.supabase.client.table("agent_working_memory").insert({
             "agent_code": completion.completed_by,
             "memory_type": "handoff_completion",
             "content": completion.__dict__

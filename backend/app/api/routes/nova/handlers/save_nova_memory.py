@@ -50,7 +50,7 @@ async def handle_save_nova_memory(request: SaveNovaMemoryRequest) -> Dict[str, A
             memory_entry["client_id"] = request.client_id
 
         # Save to omega_agent_memory
-        resp = supabase.client.table("omega_agent_memory")\
+        resp = supabase.client.table("agent_working_memory")\
             .insert(memory_entry)\
             .execute()
 

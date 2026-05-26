@@ -29,7 +29,7 @@ async def handle_get_agent_memory(agent_code: Optional[str] = None) -> Dict[str,
         supabase = get_supabase_service()
 
         # Build query
-        query = supabase.client.table("omega_agent_memory")\
+        query = supabase.client.table("agent_working_memory")\
             .select("*")\
             .order("updated_at", desc=True)\
             .limit(10)
