@@ -21,6 +21,7 @@ export interface PlanStatusData {
   accountsByNetwork: Record<Network, { exists: boolean; active: boolean }>;
   features: { unlocked: PlanFeature[]; locked: PlanFeature[] };
   renewsInDays: number | null;
+  renewsOn: string | null;
   hasPlan: boolean;
 }
 
@@ -105,6 +106,7 @@ export function useClientPlanStatus(clientId: string): PlanStatusData {
     accountsByNetwork,
     features,
     renewsInDays,
+    renewsOn: planQuery.data?.current_period_end ?? null,
     hasPlan,
   };
 }

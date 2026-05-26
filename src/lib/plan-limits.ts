@@ -35,7 +35,7 @@ export const PLAN_CONFIGS: Record<PlanCode, PlanConfig> = {
   adopcion: { code: "adopcion", label: "Adopción", priceLabel: "7 días gratis", postsPerCycle: 7, accountsPerNetwork: 1 },
   basic: { code: "basic", label: "Plan BÁSICO", priceLabel: "$29/mes", postsPerCycle: 32, accountsPerNetwork: 1 },
   pro: { code: "pro", label: "Plan PRO", priceLabel: "$65/mes", postsPerCycle: 64, accountsPerNetwork: 2 },
-  enterprise: { code: "enterprise", label: "Plan ENTERPRISE", priceLabel: "personalizado", postsPerCycle: Infinity, accountsPerNetwork: Infinity },
+  enterprise: { code: "enterprise", label: "Plan ENTERPRISE", priceLabel: "$199/mes", postsPerCycle: 192, accountsPerNetwork: 3 },
 };
 
 export function getPlanConfig(plan: string): PlanConfig {

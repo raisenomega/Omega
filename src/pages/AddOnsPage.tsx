@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { Package, Video, Bot } from "lucide-react";
 import { VideoPackCard } from "@/components/addons/VideoPackCard";
 import { SectionDivider } from "@/components/addons/SectionDivider";
+import { PlansSection } from "@/components/addons/PlansSection";
 import { AgentCard } from "@/components/addons/AgentCard";
 import { AgentDetailModal } from "@/components/addons/AgentDetailModal";
 import { VIDEO_PACKS } from "@/components/addons/_video_packs_data";
@@ -41,6 +42,10 @@ export default function AddOnsPage() {
           <p className="text-sm text-muted-foreground">Potenciá tu plan con paquetes especializados.</p>
         </div>
       </header>
+
+      <PlansSection />
+
+      <SectionDivider />
 
       <section ref={videoRef} id="video-packs" className="space-y-3">
         <div className="flex items-center gap-2">
