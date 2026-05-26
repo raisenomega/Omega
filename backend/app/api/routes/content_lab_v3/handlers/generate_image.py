@@ -5,6 +5,7 @@ Sin Brand DNA en esta versión · scope quirúrgico Paso 4 (puede agregarse en
 futuro augmentando el prompt con visual_style del DNA).
 Error semantics: 502 si falla upload a Storage · 503 si falla Nano Banana.
 """
+import asyncio
 import logging
 from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
@@ -79,11 +80,14 @@ async def generate_image(
         raise HTTPException(status_code=503, detail="image_gen_empty")
     image_url = urls[0]
     # Fase 1: overlay opt-in del logo del cliente · best-effort (nunca rompe la generación).
+    # DEBT-068 follow-up: find_client_logo_url (DB sync) + overlay_logo (2× httpx + Pillow sync)
+    # corren en to_thread → la ruta apply_logo tampoco bloquea el event loop.
     if request.apply_logo:
-        logo_url = repo.find_client_logo_url(client_id)
+        logo_url = await asyncio.to_thread(repo.find_client_logo_url, client_id)
         if logo_url:
             try:
-                image_url = await upload_image_bytes(overlay_logo(image_url, logo_url), "image/png", client_id)  # DEBT-068
+                overlaid = await asyncio.to_thread(overlay_logo, image_url, logo_url)
+                image_url = await upload_image_bytes(overlaid, "image/png", client_id)
             except Exception as e:
                 logger.warning(f"logo overlay falló · imagen sin marca · client={client_id}: {e}")
 
