@@ -57,10 +57,10 @@ async def handle_get_omega_dashboard() -> Dict[str, Any]:
             return (supabase.client.table("agent_executions").select("id, status, started_at").execute()).data or []
 
         def q_accounts():
-            return (supabase.client.table("social_accounts").select("id, platform, is_active").eq("is_active", True).execute()).data or []
+            return (supabase.client.table("social_accounts").select("id, platform, status").eq("status", "active").execute()).data or []
 
         def q_posts():
-            return (supabase.client.table("scheduled_posts").select("id, status, scheduled_date").eq("is_active", True).execute()).data or []
+            return (supabase.client.table("scheduled_posts").select("id, status, scheduled_for").execute()).data or []
 
         def q_agents():
             return (supabase.client.table("agents").select("id, code, name, category, model_tier, is_active").eq("is_active", True).order("name").execute()).data or []
@@ -98,10 +98,10 @@ async def handle_get_omega_dashboard() -> Dict[str, Any]:
         for acc in accounts_data:
             platform = acc.get("platform", "unknown")
             by_platform[platform] = by_platform.get(platform, 0) + 1
-        scheduled = [p for p in posts_data if p.get("status") == "scheduled"]
-        published_month = [p for p in posts_data if p.get("status") in ("published", "published_manual") and p.get("scheduled_date", "")[:10] >= first_of_month]
+        scheduled = [p for p in posts_data if p.get("status") == "pending"]
+        published_month = [p for p in posts_data if p.get("status") in ("published", "published_manual") and p.get("scheduled_for", "")[:10] >= first_of_month]
         next_7days = (today + timedelta(days=7)).isoformat()
-        upcoming = [p for p in scheduled if today.isoformat() <= p.get("scheduled_date", "")[:10] <= next_7days]
+        upcoming = [p for p in scheduled if today.isoformat() <= p.get("scheduled_for", "")[:10] <= next_7days]
         by_category = {}
         for agent in agents_detail_data:
             cat = agent.get("category", "unknown")
