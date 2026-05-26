@@ -18,6 +18,8 @@ import { ArrowLeft, Users, Globe, UserCheck, FileText, Loader2, Bot } from "luci
 import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts";
 import { ClientAIConfig } from "@/components/clients/ClientAIConfig";
 import { PlanStatusBar } from "@/components/clients/PlanStatusBar";
+import { fetchOnboardingData } from "@/lib/onboarding-api";
+import { buildContextRows } from "@/lib/client-info-fields";
 
 export default function ClientDetail() {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +38,13 @@ export default function ClientDetail() {
       if (error) throw error;
       return data;
     },
+    enabled: !!id,
+  });
+
+  // DEBT-054: client_context (wizard) para el Info Tab · reusa el GET del onboarding · read-only.
+  const { data: onboarding } = useQuery({
+    queryKey: ["onboarding", id],
+    queryFn: () => fetchOnboardingData(id!),
     enabled: !!id,
   });
 
@@ -235,20 +244,22 @@ export default function ClientDetail() {
             <CardContent className="space-y-3">
               {[
                 { label: "Nombre", value: client.name },
-                { label: "Email", value: client.email },
-                { label: "Teléfono", value: client.phone },
-                { label: "Empresa", value: client.company },
                 { label: "Plan", value: client.plan },
-                { label: "Notas", value: client.notes },
                 { label: "Creado", value: new Date(client.created_at).toLocaleDateString() },
+                ...buildContextRows(onboarding),  // DEBT-054 · campos del wizard poblados (dinámico)
               ].map((item) => (
                 <div key={item.label} className="flex justify-between items-start py-2 border-b border-border/20 last:border-0">
                   <span className="text-sm text-muted-foreground">{item.label}</span>
-                  <span className="text-sm font-medium text-right max-w-[60%]">
+                  <span className="text-sm font-medium text-right max-w-[60%] whitespace-pre-wrap">
                     {item.value || "—"}
                   </span>
                 </div>
               ))}
+              {buildContextRows(onboarding).length === 0 && (
+                <p className="text-xs text-muted-foreground text-center pt-2">
+                  Perfil sin completar — usá "Editar" para llenar el wizard del cliente.
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
