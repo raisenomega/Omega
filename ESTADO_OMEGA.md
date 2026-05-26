@@ -38,19 +38,22 @@
 
 ---
 
-## 3 · DEBTs ABIERTAS · ~186h (~5 semanas full-time)
+## 3 · DEBTs ABIERTAS · ~203h (~5 semanas full-time)
 
-> **Audit cliente E2E (25 may):** +10 DEBTs nuevas (057-066) · de las cuales **DEBT-057 + DEBT-058 + DEBT-059 + DEBT-061 ya CERRADAS** (Tab AI → panel honesto Anthropic-only · logo wizard persiste → cierra overlay/Logo Fase 2 · crisis_manager guardrail P4 · ver §2). % real cliente: core ~83% · superficie completa ~68%. Las 🔴 restantes son solo OAuth (DEBT-040 · el grueso, 80h) + ARIA Premium reseller (4h). **Las 3 🔴 que rompían promesa/marca/regla-inviolable están cerradas.**
+> **Audit cliente E2E (25 may):** +10 DEBTs nuevas (057-066) · **DEBT-057/058/059/061 ya CERRADAS** (Tab AI Anthropic-only · logo wizard · crisis P4 · ver §2). % real cliente: core ~83% · superficie completa ~68%.
+> **Audit rendimiento imagen (26 may):** +4 DEBTs (068-071) · 🔴 DEBT-068 (upload síncrono bloquea event loop · el de mayor impacto a escala) + DEBT-069 (sin timeout Nano Banana) · 🟠 DEBT-070 (rate-limit config muerta · P1) + DEBT-071 (cero retry/fallback). NO arreglados aún (solo diagnóstico).
 
 > Detalle/contexto de cada una: `SOURCE_OF_TRUTH.md §6`. Aquí: ID · 1-línea · horas · dependencia · sprint.
 
-### 🔴 CRÍTICAS (~84h)
+### 🔴 CRÍTICAS (~95h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
 |---|---|---|---|---|
 | DEBT-040 | OAuth Meta + Google (Centro Inteligencia · publicación real) | 80h | — | 5-6 |
+| DEBT-068 | `upload_image_bytes` síncrono bloquea event loop bajo carga (throughput colapsa) | 8h | — | — |
 | DEBT-046 | ARIA Premium reseller variant ($25/mes · `resellers.addons`) | 4h | — | 4B |
+| DEBT-069 | Sin timeout app-level en Nano Banana (request puede colgar indefinidamente) | 3h | — | — |
 
-### 🟠 ALTAS (~56h)
+### 🟠 ALTAS (~62h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
 |---|---|---|---|---|
 | DEBT-050 | Capa multi-agente stubeada (monitor/orchestrator/execute fabrican éxito · P1 cuando dispara) | 16h | — | — |
@@ -63,6 +66,8 @@
 | DEBT-064 | Routers legacy `/content-lab` colisionan (desmontar legacy) | 1h | — | — |
 | DEBT-065 | `clients.assigned_to` inexistente · Tab Agente sin nivel ARIA | 2h | DEBT-033 | 4B |
 | DEBT-060 | Bucket `media` no existe en migraciones (galería rota) | 2h | — | 4B |
+| DEBT-071 | Cero retry/backoff/fallback en generación de imagen (503 inmediato en transitorios) | 4h | — | — |
+| DEBT-070 | Rate-limit configurado pero nunca cableado (config muerta · P1) | 2h | — | — |
 
 ### 🟡 MEDIAS (~34h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
