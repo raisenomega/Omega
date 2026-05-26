@@ -187,9 +187,9 @@ export default function ClientDetail() {
           </Card>
         </TabsContent>
 
-        {/* AI Config Tab */}
+        {/* AI Config Tab · DEBT-057/058 · panel honesto Anthropic-only (read-only) */}
         <TabsContent value="ai">
-          <ClientAIConfig clientId={client.id} organizationId={client.organization_id} />
+          <ClientAIConfig />
         </TabsContent>
 
         {/* Posts Tab */}
