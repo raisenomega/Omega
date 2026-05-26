@@ -141,10 +141,7 @@ export default function ClientDetail() {
 
         {/* Social Accounts Tab */}
         <TabsContent value="social">
-          <ClientSocialAccounts
-            clientId={client.id}
-            organizationId={client.organization_id}
-          />
+          <ClientSocialAccounts clientId={client.id} />
         </TabsContent>
 
         {/* Agent Assignment Tab */}

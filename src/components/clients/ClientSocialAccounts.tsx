@@ -35,16 +35,14 @@ const PLATFORMS = [
 
 interface ClientSocialAccountsProps {
   clientId: string;
-  organizationId: string;
 }
 
-export function ClientSocialAccounts({ clientId, organizationId }: ClientSocialAccountsProps) {
+export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [platform, setPlatform] = useState("instagram");
   const [accountName, setAccountName] = useState("");
-  const [accountUrl, setAccountUrl] = useState("");
   const [followersCount, setFollowersCount] = useState("");
 
   const { data: accounts, isLoading } = useQuery({
@@ -62,14 +60,14 @@ export function ClientSocialAccounts({ clientId, organizationId }: ClientSocialA
 
   const createMutation = useMutation({
     mutationFn: async () => {
+      // DEBT-062: columnas reales de social_accounts V3 · approx_followers (00011) ·
+      // status/oauth_status quedan en su default. Antes escribía organization_id/account_url/
+      // followers_count/connected (inexistentes → "Agregar cuenta" daba error).
       const { error } = await supabase.from("social_accounts").insert({
         client_id: clientId,
-        organization_id: organizationId,
         platform,
         account_name: accountName,
-        account_url: accountUrl || null,
-        followers_count: followersCount ? parseInt(followersCount) : 0,
-        connected: true,
+        approx_followers: followersCount ? parseInt(followersCount) : null,
       });
       if (error) throw error;
     },
@@ -78,7 +76,6 @@ export function ClientSocialAccounts({ clientId, organizationId }: ClientSocialA
       queryClient.invalidateQueries({ queryKey: ["social_accounts"] });
       setDialogOpen(false);
       setAccountName("");
-      setAccountUrl("");
       setFollowersCount("");
       toast({ title: "Cuenta social agregada" });
     },
@@ -153,14 +150,6 @@ export function ClientSocialAccounts({ clientId, organizationId }: ClientSocialA
                 />
               </div>
               <div className="space-y-2">
-                <Label>URL del perfil</Label>
-                <Input
-                  value={accountUrl}
-                  onChange={(e) => setAccountUrl(e.target.value)}
-                  placeholder="https://instagram.com/usuario"
-                />
-              </div>
-              <div className="space-y-2">
                 <Label>Seguidores</Label>
                 <Input
                   type="number"
@@ -199,10 +188,10 @@ export function ClientSocialAccounts({ clientId, organizationId }: ClientSocialA
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{acc.account_name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {(acc.followers_count ?? 0).toLocaleString()} seguidores
+                      {(acc.approx_followers ?? 0).toLocaleString()} seguidores
                     </p>
                   </div>
-                  {acc.connected && <div className="h-2 w-2 rounded-full bg-success" />}
+                  {acc.status === "active" && <div className="h-2 w-2 rounded-full bg-success" />}
                   <Button
                     variant="ghost"
                     size="icon"

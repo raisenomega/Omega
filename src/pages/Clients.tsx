@@ -16,7 +16,6 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
