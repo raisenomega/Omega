@@ -38,7 +38,7 @@
 
 ---
 
-## 3 · DEBTs ABIERTAS · ~191.5h (~5 semanas full-time)
+## 3 · DEBTs ABIERTAS · ~190.5h (~5 semanas full-time)
 
 > **Audit cliente E2E (25 may):** +10 DEBTs nuevas (057-066) · **DEBT-057/058/059/061 ya CERRADAS** (Tab AI Anthropic-only · logo wizard · crisis P4 · ver §2). % real cliente: core ~83% · superficie completa ~68%.
 > **Audit rendimiento imagen (26 may):** +4 DEBTs (068-071) · **TODAS CERRADAS** (uploads async · timeout Nano Banana · rate-limit cableado · retry+backoff · ver §2). La generación de imagen ya no bloquea el event loop, no cuelga, está rate-limitada y reintenta transitorios.
@@ -51,13 +51,14 @@
 | DEBT-040 | OAuth Meta + Google (Centro Inteligencia · publicación real) | 80h | — | 5-6 |
 | DEBT-046 | ARIA Premium reseller variant ($25/mes · `resellers.addons`) | 4h | — | 4B |
 
-### 🟠 ALTAS (~56h)
+### 🟠 ALTAS (~55h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
 |---|---|---|---|---|
 | DEBT-050 | Capa multi-agente stubeada (monitor/orchestrator/execute fabrican éxito · P1 cuando dispara) | 16h | — | — |
 | DEBT-074 | `safe_insert` sync bloquea event loop (INSERTs inline · transversal · 5 repos · ~20 call sites) | 4h | — | — |
 | DEBT-048 | ARIA attention memory + embeddings (Voyage · nueva excepción I1) | 16h | — | — |
-| DEBT-049 | `agent_executions` inexistente + NOVA calendar schema fantasma + **agent_repository alignment** (find_by_agent_id agent_id→code · `/agents/{id}/execute` 500 · subsume DEBT-077 caso B) | 8h | — | 4B |
+| DEBT-049 | **PARCIAL** (b agent_executions 00032 + c agent_repository · `093ffe2` · pendiente db push) · queda (a) `calendar_repository` NOVA cols viejas | 3h | — | 4B |
+| DEBT-080 | Drift Agent entity↔tabla agents (`find_all` .eq department/status + `omega/get_dashboard` select agent_id/department/status → 500 · la tabla solo tiene `code`) | 4h | — | — |
 | DEBT-047 | APScheduler persistent jobstore (Python 3.13 + SQLAlchemy 2.0.25 incompat) | 4h | — | — |
 | DEBT-038 | Stripe Customer Portal embed (PaymentSection) | 6h | — | — |
 | ~~DEBT-077~~ | ✅ **RESUELTA** (A `25ab75a`+migración 00031 agent_working_memory · pendiente db push · B→DEBT-049 · C `91adfff` dead-code eliminado) | — | — | — |
