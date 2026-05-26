@@ -102,7 +102,7 @@ export default function ClientDetail() {
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold tracking-tight">{client.name}</h1>
             <Badge variant="secondary" className="capitalize">{client.plan}</Badge>
-            {client.active && <div className="h-2.5 w-2.5 rounded-full bg-success" />}
+            {client.status === "active" && <div className="h-2.5 w-2.5 rounded-full bg-success" />}
           </div>
           <p className="text-sm text-muted-foreground mt-1">
             {/* DEBT-066: columnas reales de clients V3 (00024) · antes leía company/email/phone inexistentes */}

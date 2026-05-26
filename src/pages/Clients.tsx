@@ -88,10 +88,11 @@ export default function Clients() {
   };
 
   const filtered = (clients ?? []).filter((c) => {
+    // DEBT-073: buscar por columnas reales de clients V3 (antes c.company/c.email inexistentes).
     const matchSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
-      (c.company?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
-      (c.email?.toLowerCase().includes(search.toLowerCase()) ?? false);
+      (c.business_email?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
+      (c.industry?.toLowerCase().includes(search.toLowerCase()) ?? false);
     const matchPlan = filterPlan === "all" || c.plan === filterPlan;
     return matchSearch && matchPlan;
   });
@@ -176,7 +177,7 @@ export default function Clients() {
                       <Badge variant="secondary" className="text-xs capitalize">
                         {client.plan}
                       </Badge>
-                      {client.active && (
+                      {client.status === "active" && (
                         <div className="h-2 w-2 rounded-full bg-success" />
                       )}
                     </div>
