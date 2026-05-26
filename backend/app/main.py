@@ -37,7 +37,7 @@ from app.api.routes import (
     content, strategy, analytics, engagement, monitor, brand_voice, competitive, trends, crisis,
     reports, growth, video_production, scheduling, ab_testing, orchestrator, resellers, auth,
     context, clients, social_accounts, brand_files, agents,
-    system, omega, nova, sentinel, oracle, prompt_vault, handoff, reseller, upsell, admin, sub_brands
+    system, omega, nova, sentinel, oracle, prompt_vault, handoff, reseller, sub_brands
 )
 # DEBT-036: legacy Lovable billing module desregistrado · reemplazado por billing_v3 bc_billing
 from app.api.routes import billing_v3
@@ -179,8 +179,6 @@ app.include_router(oracle.router, prefix=settings.api_v1_prefix + "/oracle", tag
 app.include_router(prompt_vault.router, prefix=settings.api_v1_prefix, tags=["Prompt Vault 📚"])
 app.include_router(handoff.router, prefix=settings.api_v1_prefix, tags=["Handoff Protocol 🤝"])
 app.include_router(reseller.router, prefix=settings.api_v1_prefix, tags=["Reseller Dashboard 🏢"])
-app.include_router(upsell.router, prefix=settings.api_v1_prefix, tags=["Upsell 💰"])
-app.include_router(admin.router, prefix=settings.api_v1_prefix, tags=["Admin Panel ⚙️"])
 app.include_router(feature_usage_router, prefix=settings.api_v1_prefix, tags=["Feature Usage 📊"])
 app.include_router(sub_brands.router, prefix=settings.api_v1_prefix, tags=["Sub-Brands 🏷️"])
 
