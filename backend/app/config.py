@@ -78,9 +78,10 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO", env="LOG_LEVEL")
     log_file: str = Field(default="logs/app.log", env="LOG_FILE")
 
-    # Rate Limiting
-    rate_limit_per_minute: int = Field(default=60, env="RATE_LIMIT_PER_MINUTE")
-    rate_limit_per_hour: int = Field(default=1000, env="RATE_LIMIT_PER_HOUR")
+    # Rate Limiting · DEBT-070: per_minute lo consume RateLimitMiddleware (por IP) · 300 tolera
+    # ráfagas SPA + NAT compartido y corta abuso · ajustable vía RATE_LIMIT_PER_MINUTE en prod.
+    rate_limit_per_minute: int = Field(default=300, env="RATE_LIMIT_PER_MINUTE")
+    rate_limit_per_hour: int = Field(default=1000, env="RATE_LIMIT_PER_HOUR")  # reservado · no consumido aún
 
     # Alertas SENTINEL (dispatcher · score<80) · Optional → faltan = skip best-effort · Email si RESEND_API_KEY · Telegram si BOT_TOKEN+CHAT_ID
     resend_api_key: Optional[str] = Field(default=None, env="RESEND_API_KEY")

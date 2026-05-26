@@ -12,6 +12,7 @@ load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / ".env")
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from app.api.rate_limit_middleware import RateLimitMiddleware
 from app.config import settings
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.services.sentinel_service import SentinelService
@@ -65,6 +66,11 @@ app = FastAPI(
     description="Social Media Automation — 37 AI Agents | Enterprise Platform",
     docs_url="/docs", redoc_url="/redoc",
 )
+
+# DEBT-070: rate limiting por IP · cablea settings.rate_limit_per_minute (antes config
+# muerta). Se monta ANTES de CORS → CORS queda outermost (Starlette: último add = outer) →
+# el 429 pasa por CORS y lleva los headers al browser.
+app.add_middleware(RateLimitMiddleware, limit_per_minute=settings.rate_limit_per_minute)
 
 # Configure CORS · lee BACKEND_CORS_ORIGINS (CSV) via settings.cors_origins_list.
 # Fallback ["*"] solo si la env var está vacía (dev local). El browser rechaza
