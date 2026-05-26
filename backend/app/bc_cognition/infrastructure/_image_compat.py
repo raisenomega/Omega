@@ -71,6 +71,6 @@ async def generate_image_compat(
                 f"Nano Banana generation failed: {code} · {message}"
             )
         image_bytes = base64.b64decode(response.image_b64)
-        url = upload_image_bytes(image_bytes, response.mime_type, client_id=client_id)
+        url = await upload_image_bytes(image_bytes, response.mime_type, client_id=client_id)  # DEBT-068
         data_uris.append(url)
     return data_uris

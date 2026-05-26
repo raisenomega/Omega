@@ -83,7 +83,7 @@ async def generate_image(
         logo_url = repo.find_client_logo_url(client_id)
         if logo_url:
             try:
-                image_url = upload_image_bytes(overlay_logo(image_url, logo_url), "image/png", client_id)
+                image_url = await upload_image_bytes(overlay_logo(image_url, logo_url), "image/png", client_id)  # DEBT-068
             except Exception as e:
                 logger.warning(f"logo overlay falló · imagen sin marca · client={client_id}: {e}")
 

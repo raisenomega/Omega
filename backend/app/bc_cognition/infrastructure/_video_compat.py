@@ -60,7 +60,7 @@ async def generate_video_compat(
 
     try:
         video_bytes = await _download_veo_uri(result.video_uri)
-        public_url = upload_video_bytes(video_bytes, _VIDEO_MIME, client_id=client_id)
+        public_url = await upload_video_bytes(video_bytes, _VIDEO_MIME, client_id=client_id)  # DEBT-068
     except (httpx.HTTPError, StorageUploadError) as e:
         return {"status": "failed", "error": f"persist_failed: {e}"}
 
