@@ -12,6 +12,7 @@ import { ClientAIConfig } from "@/components/clients/ClientAIConfig";
 import { ClientAgentsActive } from "@/components/clients/ClientAgentsActive";
 import { ClientAgentExecutions } from "@/components/clients/ClientAgentExecutions";
 import { ClientCreditsWidget } from "@/components/clients/ClientCreditsWidget";
+import { AriaUpgradeModal } from "@/components/clients/AriaUpgradeModal";
 import { fetchOnboardingData } from "@/lib/onboarding-api";
 import { buildContextRows, type InfoRow } from "@/lib/client-info-fields";
 
@@ -113,38 +114,40 @@ export default function ClientDetail() {
           <ClientSocialAccounts clientId={client.id} />
         </TabsContent>
 
-        {/* Agent Tab · DEBT-065 · nivel ARIA del cliente + estado (sin team-member/assigned_to legacy) */}
-        <TabsContent value="agent">
-          <Card className="border-border/50 bg-card/60">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <UserCheck className="h-4 w-4" /> Nivel ARIA del cliente
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Badge className={ariaInfo.color}>{ariaInfo.label}</Badge>
-              <p className="text-xs text-muted-foreground">{ariaInfo.desc}</p>
-              <div className="flex items-center gap-2 border-t border-border/20 pt-3">
-                <span className="text-sm text-muted-foreground">Estado del cliente:</span>
-                <Badge variant={client.status === "active" ? "default" : "secondary"} className="capitalize">
-                  {client.status ?? "—"}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-          {/* TAREA 2: agentes activos (add-ons agent_*) · honesto vacío hoy → CTA /add-ons */}
-          <div className="mt-4">
-            <ClientAgentsActive clientId={client.id} />
-          </div>
-        </TabsContent>
-
-        {/* AI Config Tab · DEBT-057/058 · panel honesto Anthropic-only (read-only) */}
-        {/* DEBT-052 FASE 5 · widget de créditos prepagados (budget+saldo+consumo por agente) */}
-        <TabsContent value="ai">
-          <ClientAIConfig />
-          <div className="mt-4">
+        {/* Agent Tab · rediseño 2-col · Nivel ARIA + Créditos · fila inferior Agentes activos */}
+        <TabsContent value="agent" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Columna izquierda · Nivel ARIA */}
+            <Card className="border-border/50 bg-card/60">
+              <CardHeader>
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <UserCheck className="h-4 w-4" /> Nivel ARIA
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Badge className={ariaInfo.color}>{ariaInfo.label}</Badge>
+                <p className="text-xs text-muted-foreground">{ariaInfo.desc}</p>
+                <div className="flex items-center gap-2 border-t border-border/20 pt-3">
+                  <span className="text-sm text-muted-foreground">Estado:</span>
+                  <Badge variant={client.status === "active" ? "default" : "secondary"} className="capitalize">
+                    {client.status ?? "—"}
+                  </Badge>
+                </div>
+                <div className="pt-1">
+                  <AriaUpgradeModal currentLevel={client.aria_level ?? 1} />
+                </div>
+              </CardContent>
+            </Card>
+            {/* Columna derecha · Créditos prepagados */}
             <ClientCreditsWidget clientId={client.id} />
           </div>
+          {/* Fila inferior · Agentes activos (add-ons agent_*) */}
+          <ClientAgentsActive clientId={client.id} />
+        </TabsContent>
+
+        {/* AI Config Tab · solo Motor de IA (Anthropic/Nano Banana/Veo) · créditos movidos al Tab Agente */}
+        <TabsContent value="ai">
+          <ClientAIConfig />
         </TabsContent>
 
         {/* Posts Tab · DEBT-053 · historial real de ejecuciones por agente */}
