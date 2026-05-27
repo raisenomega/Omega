@@ -9,7 +9,7 @@ import { AgentDetailModal } from "@/components/addons/AgentDetailModal";
 import { VIDEO_PACKS } from "@/components/addons/_video_packs_data";
 import { AGENTS, type Agent } from "@/components/addons/_agents_data";
 import { useVideoPackCheckout } from "@/hooks/useVideoPackCheckout";
-import { useToast } from "@/hooks/use-toast";
+import { useAgentAddonCheckout } from "@/hooks/useAgentAddonCheckout";
 
 interface NavState {
   scrollTo?: string;
@@ -19,12 +19,8 @@ export default function AddOnsPage() {
   const location = useLocation();
   const videoRef = useRef<HTMLElement>(null);
   const checkout = useVideoPackCheckout();  // DEBT-VID-001
-  const { toast } = useToast();
+  const agentCheckout = useAgentAddonCheckout();  // DEBT-091 · Stripe real (503 honesto si price no configurado)
   const [openAgent, setOpenAgent] = useState<Agent | null>(null);
-
-  // Add-ons sin Stripe product aún → toast honesto (P1 · no cobra por lo no construido).
-  const comingSoon = () =>
-    toast({ title: "Próximamente", description: "Disponible pronto · contáctanos para early access." });
 
   useEffect(() => {
     const state = location.state as NavState | null;
@@ -86,9 +82,9 @@ export default function AddOnsPage() {
       <AgentDetailModal
         agent={openAgent}
         onClose={() => setOpenAgent(null)}
-        onActivate={() => {
+        onActivate={(code) => {
           setOpenAgent(null);
-          comingSoon();
+          agentCheckout.mutate({ agent_addon_code: code });
         }}
       />
 

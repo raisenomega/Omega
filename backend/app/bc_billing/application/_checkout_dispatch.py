@@ -12,6 +12,7 @@ from app.bc_billing.application._addon_handlers import (
 )
 from app.bc_billing.application.reseller_aria import handle_reseller_addon_activation
 from app.bc_billing.application._credit_pack_handlers import handle_credit_pack_enrollment
+from app.bc_billing.application._agent_addon_handlers import handle_agent_addon_activation
 from app.infrastructure.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
@@ -49,5 +50,12 @@ async def dispatch_addon_or_pack(
             logger.warning("credit_pack checkout.completed con data faltante")
             return True
         await handle_credit_pack_enrollment(client_id, credit_pack_code, sub_id, supabase)
+        return True
+    agent_addon_code = metadata.get("agent_addon_code")
+    if agent_addon_code:
+        if not all([client_id, sub_id]):
+            logger.warning("agent_addon checkout.completed con data faltante")
+            return True
+        await handle_agent_addon_activation(client_id, agent_addon_code, sub_id, supabase)
         return True
     return False

@@ -10,7 +10,7 @@ import type { Agent } from "./_agents_data";
 interface AgentDetailModalProps {
   agent: Agent | null;
   onClose: () => void;
-  onActivate: () => void;
+  onActivate: (agentAddonCode: string) => void;  // DEBT-091 · code del tier seleccionado
 }
 
 // Modal de detalle del agente · foto grande + header + toggle de tier (Esencial/Pro) ·
@@ -73,7 +73,7 @@ export function AgentDetailModal({ agent, onClose, onActivate }: AgentDetailModa
 
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="outline" onClick={onClose}>Cerrar</Button>
-          <Button onClick={onActivate} className="bg-emerald-600 text-white hover:bg-emerald-700">
+          <Button onClick={() => onActivate(tier.code)} className="bg-emerald-600 text-white hover:bg-emerald-700">
             Activar Agente · {tier.price}
           </Button>
         </DialogFooter>

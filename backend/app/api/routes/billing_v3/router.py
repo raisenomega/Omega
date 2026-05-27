@@ -7,6 +7,7 @@ from app.api.routes.billing_v3.handlers.checkout_video_pack import router as vid
 from app.api.routes.billing_v3.handlers.checkout_credit_pack import router as credit_pack_router
 from app.api.routes.billing_v3.handlers.admin_credits import router as admin_credits_router
 from app.api.routes.billing_v3.handlers.auto_recharge import router as auto_recharge_router
+from app.api.routes.billing_v3.handlers.checkout_agent_addon import router as agent_addon_router
 from app.api.routes.billing_v3.handlers.schedule_downgrade import router as schedule_downgrade_router
 
 router = APIRouter(prefix="/billing", tags=["Billing V3"])
@@ -17,4 +18,5 @@ router.include_router(video_pack_router)
 router.include_router(credit_pack_router)
 router.include_router(admin_credits_router)
 router.include_router(auto_recharge_router)
+router.include_router(agent_addon_router)
 router.include_router(schedule_downgrade_router)

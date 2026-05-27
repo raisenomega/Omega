@@ -101,3 +101,20 @@ class AutoRechargeResponse(BaseModel):
     """Respuesta POST /billing/credits/auto-recharge."""
     success: bool
     auto_recharge: bool
+
+
+# DEBT-091 · 5 agent add-ons (/add-ons "Agentes IA")
+AgentAddonCodeStr = Literal[
+    "publisher_esencial", "publisher_pro", "creative_esencial", "creative_pro", "trends_unico",
+]
+
+
+class AgentAddonCheckoutRequest(BaseModel):
+    """DEBT-091 · payload POST /billing/checkout-agent-addon."""
+    agent_addon_code: AgentAddonCodeStr = Field(..., description="publisher_esencial | publisher_pro | creative_esencial | creative_pro | trends_unico")
+
+
+class AgentAddonCheckoutResponse(BaseModel):
+    """Respuesta POST /billing/checkout-agent-addon."""
+    checkout_url: str
+    session_id: str

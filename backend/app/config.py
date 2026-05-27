@@ -19,9 +19,7 @@ class Settings(BaseSettings):
 
     # API
     api_v1_prefix: str = Field(default="/api/v1", env="API_V1_PREFIX")
-    # DEBT-026: pydantic_settings 2.6.1 JSON-parsea List[str] antes de @validator
-    # (NoDecode no existe en esta versión). Solución: campo str (no-complex) +
-    # property `cors_origins_list` que expone el CSV parseado.
+    # DEBT-026: campo str (no-complex) + property cors_origins_list (CSV · NoDecode no existe en 2.6.1)
     backend_cors_origins: str = Field(default="http://localhost:5173", env="BACKEND_CORS_ORIGINS")
 
     @property
@@ -35,9 +33,7 @@ class Settings(BaseSettings):
     supabase_url: str = Field(..., env="SUPABASE_URL")
     supabase_anon_key: str = Field(..., env="SUPABASE_ANON_KEY")
     supabase_service_role_key: str = Field(..., env="SUPABASE_SERVICE_ROLE_KEY")
-    # Supabase JWT Secret · firma de los tokens emitidos por Supabase Auth.
-    # Default vacío para no romper dev local · si vacío, get_current_user
-    # cae al JWT_SECRET_KEY local (legacy /auth/login).
+    # Supabase JWT Secret · firma tokens Supabase Auth · vacío → get_current_user cae a JWT_SECRET_KEY local
     supabase_jwt_secret: str = Field(default="", env="SUPABASE_JWT_SECRET")
 
     # Anthropic Claude
@@ -59,10 +55,8 @@ class Settings(BaseSettings):
     # bc_billing/ checkout URLs · default dev local · override en Railway prod
     stripe_success_url: str = Field(default="http://localhost:5174/dashboard?upgraded=true", env="STRIPE_SUCCESS_URL")
     stripe_cancel_url: str = Field(default="http://localhost:5174/dashboard?upgrade_canceled=true", env="STRIPE_CANCEL_URL")
-    # ARIA Premium addon prices · DEBT-037 V1 (client) + DEBT-046 (reseller futuro)
     stripe_price_aria_premium_client: str = Field(default="", env="STRIPE_PRICE_ARIA_PREMIUM_CLIENT")
     stripe_price_aria_premium_reseller: str = Field(default="", env="STRIPE_PRICE_ARIA_PREMIUM_RESELLER")
-    # Video Pack addon prices · DEBT-VID-001 (basic/pro only · spec §4.4)
     stripe_price_video_pack_starter: str = Field(default="", env="STRIPE_PRICE_VIDEO_PACK_STARTER")
     stripe_price_video_pack_creator: str = Field(default="", env="STRIPE_PRICE_VIDEO_PACK_CREATOR")
     stripe_price_video_pack_cinematic_pro: str = Field(default="", env="STRIPE_PRICE_VIDEO_PACK_CINEMATIC_PRO")
@@ -70,6 +64,11 @@ class Settings(BaseSettings):
     stripe_price_credit_pack_starter: str = Field(default="", env="STRIPE_PRICE_CREDIT_PACK_STARTER")
     stripe_price_credit_pack_plus: str = Field(default="", env="STRIPE_PRICE_CREDIT_PACK_PLUS")
     stripe_price_credit_pack_ultra: str = Field(default="", env="STRIPE_PRICE_CREDIT_PACK_ULTRA")
+    stripe_price_agent_publisher_esencial: str = Field(default="", env="STRIPE_PRICE_AGENT_PUBLISHER_ESENCIAL")  # DEBT-091
+    stripe_price_agent_publisher_pro: str = Field(default="", env="STRIPE_PRICE_AGENT_PUBLISHER_PRO")
+    stripe_price_agent_creative_esencial: str = Field(default="", env="STRIPE_PRICE_AGENT_CREATIVE_ESENCIAL")
+    stripe_price_agent_creative_pro: str = Field(default="", env="STRIPE_PRICE_AGENT_CREATIVE_PRO")
+    stripe_price_agent_trends_unico: str = Field(default="", env="STRIPE_PRICE_AGENT_TRENDS_UNICO")
 
     # Qdrant Vector Store
     QDRANT_HOST: str = Field(default="localhost", env="QDRANT_HOST")

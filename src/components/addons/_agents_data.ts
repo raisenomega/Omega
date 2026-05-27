@@ -8,6 +8,7 @@ import { TRENDS_PACK } from "./_trends_pack_data";
 
 export interface AgentTier {
   label: string;
+  code: string;          // DEBT-091 · agent_addon_code para el checkout (publisher_esencial, etc.)
   price: string;
   bullets: readonly string[];
   idealFor: string;
@@ -25,11 +26,12 @@ export interface Agent {
 
 const TIER_LABELS = ["Esencial", "Pro"] as const;
 
-type PackLike = { readonly price: string; readonly bullets: readonly string[]; readonly idealFor: string };
+type PackLike = { readonly code: string; readonly price: string; readonly bullets: readonly string[]; readonly idealFor: string };
 
 const toTiers = (packs: readonly PackLike[]): AgentTier[] =>
   packs.map((p, i) => ({
     label: TIER_LABELS[i] ?? `Tier ${i + 1}`,
+    code: p.code,
     price: p.price,
     bullets: p.bullets,
     idealFor: p.idealFor,
@@ -65,7 +67,7 @@ export const AGENTS: readonly Agent[] = [
     description:
       "Maya mantiene a tu marca un paso adelante. Detecta tendencias de tu industria en tiempo real, monitorea a tu competencia y alimenta a ARIA con el contexto antes de cada generación.",
     tiers: [
-      { label: "Plan único", price: TRENDS_PACK.price, bullets: TRENDS_PACK.bullets, idealFor: TRENDS_PACK.idealFor },
+      { label: "Plan único", code: TRENDS_PACK.code, price: TRENDS_PACK.price, bullets: TRENDS_PACK.bullets, idealFor: TRENDS_PACK.idealFor },
     ],
   },
 ] as const;
