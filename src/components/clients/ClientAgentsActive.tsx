@@ -66,7 +66,11 @@ export function ClientAgentsActive({ clientId }: ClientAgentsActiveProps) {
             <p className="text-xs text-muted-foreground">
               Este cliente no tiene agentes activos todavía.
             </p>
-            <Button variant="outline" size="sm" onClick={() => navigate("/add-ons")}>
+            <Button
+              size="sm"
+              onClick={() => navigate("/add-ons")}
+              className="border border-amber-500 bg-transparent text-white transition-colors duration-200 hover:bg-emerald-600 hover:border-emerald-600 hover:text-white"
+            >
               Explorar Agentes <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </Button>
           </div>
