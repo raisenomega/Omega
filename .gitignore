@@ -135,6 +135,9 @@ INFO_PRESIDENCIAL*.md
 APROBACIONES_VIVAS*.md
 
 # Docs estratégicos internos (NO COMMITEAR · NO PUSHEAR)
+# REGLA PERMANENTE (owner · 27 may 2026): TODO doc estratégico que revele secretos,
+# modelos, lógica de ejecución o "cómo funciona OMEGA por dentro" se ignora SIEMPRE ·
+# queda en raíz local · nunca al repo. Ante duda sobre un doc → preguntar al owner.
 CONTENT_LAB_OMEGA_MASTER.md
 OMEGA_AGENT_SYSTEM.md
 OMEGA_MULTI_AGENT_SYSTEM.md
@@ -147,6 +150,10 @@ GUARDIAN_SECURITY_AGENT.md
 WHATSAPP_BUSINESS_OMEGA.md
 TIKTOK_OMEGA.md
 OMEGA_AUTONOMO_SUPERVISADO.md
+ARIA_LEARNING_LOOP_OMEGA.md
+GEMINI_FFMPEG_OMEGA.md
+CENTRO_DE_INTELIGENCIA.md
+SENTINEL_GUARDIAN_ENTERPRISE_COMPLETE.md
 
 # Lovable artifacts (deprecado)
 .lovable/
