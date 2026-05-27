@@ -71,3 +71,22 @@ class CreditPackCheckoutResponse(BaseModel):
     """Respuesta POST /billing/checkout-credit-pack."""
     checkout_url: str
     session_id: str
+
+
+class TransferCreditsRequest(BaseModel):
+    """DEBT-052 F4 · superadmin mueve budget mensual entre clientes."""
+    from_client_id: str = Field(..., description="cliente origen")
+    to_client_id: str = Field(..., description="cliente destino")
+    amount_usd: float = Field(..., gt=0, description="monto a mover (USD)")
+
+
+class ReleaseCreditsRequest(BaseModel):
+    """DEBT-052 F4 · superadmin libera consumo de un cliente (grace · floor 0)."""
+    client_id: str = Field(..., description="cliente")
+    amount_usd: float = Field(..., gt=0, description="monto a liberar (USD)")
+
+
+class AdminCreditsResponse(BaseModel):
+    """Respuesta de las ops superadmin de créditos (transfer/release)."""
+    success: bool
+    data: Optional[dict] = None
