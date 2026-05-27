@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ArrowUpRight, Check, Sparkles } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -9,12 +10,14 @@ import { useToast } from "@/hooks/use-toast";
 import { apiPost } from "@/lib/api-client";
 import { ARIA_LEVELS } from "@/lib/aria-levels";
 
-const ARIA_STEP_PRICE = "$12/mes";
+// Precio mensual por nivel (display-only · el backend cobra +1 nivel a un precio Stripe fijo).
+const ARIA_LEVEL_PRICE: Record<number, number> = { 2: 12, 3: 25, 4: 49 };
 
-// Modal con los 4 niveles de ARIA + beneficios · "Actualizar" → Stripe checkout
+// Modal selector de niveles de ARIA · cada card es seleccionable · "Comprar" → Stripe checkout
 // (POST /billing/upgrade-aria · mismo patrón que ARIAUpgradeBanner · +1 nivel por addon).
 export function AriaUpgradeModal({ currentLevel }: { currentLevel: number }) {
   const { toast } = useToast();
+  const [selected, setSelected] = useState<number | null>(null);
   const m = useMutation({
     mutationFn: () => apiPost<{ checkout_url: string }>(`/billing/upgrade-aria`, {}),
     onSuccess: (r) => { window.location.href = r.checkout_url; },
@@ -29,8 +32,23 @@ export function AriaUpgradeModal({ currentLevel }: { currentLevel: number }) {
     },
   });
 
-  const nextLevel = Math.min(currentLevel + 1, 4);
-  const canUpgrade = currentLevel < 4;
+  // Nivel 1 (Adopción) es base · no comprable. Sólo 2/3/4 tienen precio.
+  const isPurchasable = (lvl: number): boolean => lvl >= 2;
+  const price = selected !== null ? ARIA_LEVEL_PRICE[selected] : undefined;
+
+  const buttonLabel = (() => {
+    if (m.isPending) return "Redirigiendo a Stripe…";
+    if (selected === null) return "Seleccioná un nivel";
+    if (selected === currentLevel) return "Ya tenés este nivel";
+    if (!isPurchasable(selected)) return "Nivel base";
+    return `Comprar ARIA ${selected}.0 · $${price}/mes`;
+  })();
+
+  const buttonDisabled =
+    m.isPending ||
+    selected === null ||
+    selected === currentLevel ||
+    !isPurchasable(selected);
 
   return (
     <Dialog>
@@ -49,8 +67,16 @@ export function AriaUpgradeModal({ currentLevel }: { currentLevel: number }) {
           {[1, 2, 3, 4].map((lvl) => {
             const info = ARIA_LEVELS[lvl];
             const isCurrent = lvl === currentLevel;
+            const isSelected = lvl === selected;
             return (
-              <div key={lvl} className={`rounded-lg border p-3 ${isCurrent ? "border-primary bg-primary/5" : "border-border/40"}`}>
+              <button
+                key={lvl}
+                type="button"
+                onClick={() => setSelected(lvl)}
+                className={`w-full rounded-lg border p-3 text-left transition-colors duration-200 ${
+                  isSelected ? "border-amber-500 bg-amber-500/5" : "border-border/40 hover:border-border"
+                }`}
+              >
                 <div className="flex items-center justify-between gap-2">
                   <Badge className={info.color}>{info.label}</Badge>
                   {isCurrent && <span className="text-[10px] font-medium text-primary">Nivel actual</span>}
@@ -63,21 +89,17 @@ export function AriaUpgradeModal({ currentLevel }: { currentLevel: number }) {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </button>
             );
           })}
         </div>
-        {canUpgrade ? (
-          <Button
-            onClick={() => m.mutate()}
-            disabled={m.isPending}
-            className="w-full border border-amber-500 bg-transparent text-white transition-colors duration-200 hover:bg-emerald-600 hover:border-emerald-600 hover:text-white"
-          >
-            {m.isPending ? "Redirigiendo a Stripe…" : `Actualizar a ARIA ${nextLevel}.0 · +${ARIA_STEP_PRICE}`}
-          </Button>
-        ) : (
-          <p className="text-center text-xs text-muted-foreground">Estás en el nivel máximo de ARIA.</p>
-        )}
+        <Button
+          onClick={() => m.mutate()}
+          disabled={buttonDisabled}
+          className="w-full border border-amber-500 bg-transparent text-white transition-colors duration-200 hover:bg-emerald-600 hover:border-emerald-600 hover:text-white"
+        >
+          {buttonLabel}
+        </Button>
       </DialogContent>
     </Dialog>
   );
