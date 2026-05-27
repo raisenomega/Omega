@@ -1,6 +1,6 @@
-import { useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { UseFormReturn } from "react-hook-form";
-import { X } from "lucide-react";
+import { Check, FileText, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,12 @@ export function SectionBrandAssets({ form }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const v = form.watch("brand_assets") ?? null;
   const files = v?.logo_files ?? [];
+  // DEBT-086: preview thumbnails para imágenes (object URLs revocados en cleanup · sin leaks).
+  const previews = useMemo(
+    () => files.map((f) => (f.type.startsWith("image/") ? URL.createObjectURL(f) : null)),
+    [files],
+  );
+  useEffect(() => () => { previews.forEach((u) => u && URL.revokeObjectURL(u)); }, [previews]);
   const set = <K extends keyof Assets>(k: K, x: Assets[K]) =>
     form.setValue("brand_assets", { ...(v ?? {}), [k]: x } as OnboardingForm["brand_assets"]);
 
@@ -50,16 +56,26 @@ export function SectionBrandAssets({ form }: Props) {
         <p className="text-[10px] text-muted-foreground">Sube hasta 3 archivos · cualquier formato (PNG, JPG, PDF, SVG, AI...)</p>
         <Input ref={fileRef} type="file" multiple accept="*/*" className="h-8" onChange={(e) => handleFiles(e.target.files)} />
         {files.length > 0 && (
-          <ul className="space-y-1 mt-1">
-            {files.map((f, i) => (
-              <li key={i} className="flex items-center gap-2 text-xs bg-muted/40 rounded px-2 py-1">
-                <span className="truncate flex-1">{f.name}</span>
-                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => set("logo_files", files.filter((_, j) => j !== i))}>
-                  <X className="h-3 w-3" />
-                </Button>
-              </li>
-            ))}
-          </ul>
+          <>
+            <p className="flex items-center gap-1 text-xs text-green-600 mt-1">
+              <Check className="h-3.5 w-3.5" />
+              {files.length === 1 ? "Logo cargado" : `${files.length} archivos cargados`}
+            </p>
+            <ul className="space-y-1 mt-1">
+              {files.map((f, i) => (
+                <li key={i} className="flex items-center gap-2 text-xs bg-muted/40 rounded px-2 py-1">
+                  {previews[i]
+                    ? <img src={previews[i] as string} alt={f.name} className="h-8 w-8 rounded object-cover border" />
+                    : <FileText className="h-5 w-5 text-muted-foreground shrink-0" />}
+                  <span className="truncate flex-1">{f.name}</span>
+                  <Check className="h-4 w-4 text-green-600 shrink-0" />
+                  <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => set("logo_files", files.filter((_, j) => j !== i))}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </div>
     </div>

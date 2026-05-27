@@ -43,7 +43,7 @@ def fetch_aria_context(supabase: SupabaseService, client_id: str) -> Optional[di
         ctx["social_accounts"] = sa.data or []
         cl = supabase.client.table("clients").select("name, industry, region, website, business_email").eq("id", client_id).limit(1).execute()
         ctx["_client"] = cl.data[0] if cl.data else {}
-        ba = supabase.client.table("client_brand_assets").select("primary_color, secondary_color, logo_file_id").eq("client_id", client_id).limit(1).execute()
+        ba = supabase.client.table("client_brand_assets").select("primary_color, secondary_color, accent_color, font_primary, font_secondary, logo_file_id").eq("client_id", client_id).limit(1).execute()
         ctx["_brand_assets"] = ba.data[0] if ba.data else {}
         logo_id = ctx["_brand_assets"].get("logo_file_id")  # logo_file_id → brand_files.storage_url (ARIA sabe que existe + URL)
         ctx["_logo_url"] = None

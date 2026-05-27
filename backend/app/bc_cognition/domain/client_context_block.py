@@ -85,7 +85,8 @@ def build_client_context_block(ctx: dict[str, Any]) -> str:
     add(ctx.get("what_failed"), "Qué falló", 200)                    # TASK 1
     logo_url = ctx.get("_logo_url")
     lines.append(f"Logo: disponible (URL: {logo_url})" if logo_url else "Logo: no cargado")
-    add(joined([ba.get("primary_color"), ba.get("secondary_color")]), "Colores de marca")
+    add(joined([ba.get("primary_color"), ba.get("secondary_color"), ba.get("accent_color")]), "Colores de marca")
+    add(joined([ba.get("font_primary"), ba.get("font_secondary")]), "Tipografías de marca")  # DEBT-085
     lines.append(_accounts_line(ctx.get("social_accounts") or []))
     if ctx.get("uploaded_context_text"):
         lines.append("Documento de referencia del cliente:\n" + str(ctx["uploaded_context_text"])[:_UPLOADED_CAP])

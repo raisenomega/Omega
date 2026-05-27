@@ -63,20 +63,23 @@ def test_rich_context_fields():
     ctx = {
         "competitors": [{"name": "Comp A"}, {"name": "Comp B"}],
         "_logo_url": "https://cdn/logo.png",
-        "_brand_assets": {"primary_color": "#FF0000", "secondary_color": "#00FF00"},
+        "_brand_assets": {"primary_color": "#FF0000", "secondary_color": "#00FF00",
+                          "accent_color": "#0000FF", "font_primary": "Inter", "font_secondary": "Lora"},
         "avoided_topics": "política", "avoided_words": ["barato", "gratis"],
         "custom_instructions": "siempre en tú", "what_worked": "reels", "what_failed": "posts largos",
         "_client": {"name": "X", "industry": "i", "website": "milagrosa.online", "business_email": "hola@m.online"},
     }
     out = build_client_context_block(ctx)
     for exp in ("Competidores: Comp A, Comp B", "Logo: disponible (URL: https://cdn/logo.png)",
-                "Colores de marca: #FF0000, #00FF00", "Evitar (temas): política",
+                "Colores de marca: #FF0000, #00FF00, #0000FF",
+                "Tipografías de marca: Inter, Lora", "Evitar (temas): política",
                 "Evitar (palabras): barato, gratis", "Instrucciones del cliente: siempre en tú",
                 "Qué funcionó: reels", "Qué falló: posts largos", "Sitio web: milagrosa.online",
                 "Email de contacto: hola@m.online"):
         assert exp in out, exp
-    empty = build_client_context_block({})
-    assert "Logo: no cargado" in empty and "Evitar" not in empty and "Sitio web" not in empty  # P1
+    empty = build_client_context_block({})  # DEBT-085: assets vacíos → sin colores/tipografías (P1)
+    assert "Logo: no cargado" in empty and "Evitar" not in empty and "Sitio web" not in empty
+    assert "Colores de marca" not in empty and "Tipografías de marca" not in empty
 
 
 def test_profile_mirror_backend_frontend():
