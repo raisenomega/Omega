@@ -1,62 +1,74 @@
-"""Logo fetcher for ARIA multimodal (DEBT-084).
+"""Logo fetcher for ARIA multimodal (DEBT-084 · base64 fix).
 
-Fetches a brand logo from a public URL and returns an Anthropic-compatible
-image block dict for inclusion in Claude messages. All I/O lives here
-(DDD A2 — infra layer; domain stays pure).
+El bucket brand-files es PRIVADO → pasar la storage_url pública directa a
+Claude daba 400 (Anthropic no puede descargarla). Fix: descargamos el objeto
+con el service-role key (supabase storage) y lo mandamos como bloque image
+base64. Todo el I/O vive acá (DDD A2 — infra; domain queda puro).
 
-Design constraints:
-- Best-effort: any failure returns None so ARIA degrades to text-only.
-- HEAD check: skip images > _MAX_LOGO_BYTES to avoid token blowup.
-- Timeout: _FETCH_TIMEOUT_S hard cap on the HEAD request.
-- URL-based image block: no base64 conversion needed (Anthropic SDK 0.84+
-  supports {"type":"url","url":"<https>"} natively).
-- Only HTTPS URLs are accepted (SSRF guard).
+Best-effort: cualquier fallo/ausencia → None (ARIA degrada a texto-only · no
+rompe la conversación). La descarga sync corre en asyncio.to_thread (DEBT-074:
+no bloquea el event loop).
 """
 from __future__ import annotations
 
+import asyncio
+import base64
 import logging
 from typing import Optional
 
-import httpx
+from app.infrastructure.supabase_service import get_supabase_service
 
+_BUCKET = "brand-files"
 _MAX_LOGO_BYTES: int = 5 * 1024 * 1024   # 5 MB guard
-_FETCH_TIMEOUT_S: float = 5.0
-_ACCEPTED_SCHEMES = ("https://",)
+_MIME_BY_EXT = {
+    "png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
+    "webp": "image/webp", "gif": "image/gif",
+}
 
 logger = logging.getLogger(__name__)
 
 
-def _is_safe_url(url: str) -> bool:
-    """Only HTTPS public URLs are forwarded to Claude (SSRF guard)."""
-    return any(url.startswith(s) for s in _ACCEPTED_SCHEMES)
+def _storage_path_from_url(logo_url: str) -> Optional[str]:
+    """Extrae el object path dentro del bucket desde la storage_url pública."""
+    marker = f"/{_BUCKET}/"
+    idx = logo_url.find(marker)
+    if idx == -1:
+        return None
+    path = logo_url[idx + len(marker):].split("?")[0]
+    return path or None
 
 
-async def _check_size(url: str, client: httpx.AsyncClient) -> bool:
-    """HEAD request to check Content-Length. Returns True if within limit."""
-    try:
-        r = await client.head(url, timeout=_FETCH_TIMEOUT_S,
-                              follow_redirects=False)
-        length = int(r.headers.get("content-length", "0"))
-        return length == 0 or length <= _MAX_LOGO_BYTES
-    except Exception:
-        return True  # unknown size → optimistically allow
+def _mime_for(path: str) -> str:
+    ext = path.rsplit(".", 1)[-1].lower() if "." in path else ""
+    return _MIME_BY_EXT.get(ext, "image/jpeg")
+
+
+def _download_b64(path: str) -> Optional[tuple[str, str]]:
+    """Descarga (service role) + base64. Retorna (b64, mime) o None. Sync · va en to_thread."""
+    data = get_supabase_service().client.storage.from_(_BUCKET).download(path)
+    if not data or len(data) > _MAX_LOGO_BYTES:
+        return None
+    return base64.b64encode(data).decode("ascii"), _mime_for(path)
 
 
 async def fetch_logo_for_aria(logo_url: Optional[str]) -> Optional[dict]:
-    """Return an Anthropic image block for logo_url, or None (best-effort).
+    """Bloque image base64 del logo del cliente (best-effort · None si falla/ausente).
 
-    Returned dict shape (URL-based, Anthropic SDK 0.84+):
-        {"type": "image", "source": {"type": "url", "url": "<https url>"}}
+    Returned dict shape (Anthropic base64 source):
+        {"type": "image", "source": {"type": "base64",
+         "media_type": "image/...", "data": "<b64>"}}
     """
-    if not logo_url or not _is_safe_url(logo_url):
+    if not logo_url:
+        return None
+    path = _storage_path_from_url(logo_url)
+    if not path:
         return None
     try:
-        async with httpx.AsyncClient() as client:
-            if not await _check_size(logo_url, client):
-                logger.info("fetch_logo_for_aria: skipped %s (> %d B)",
-                            logo_url, _MAX_LOGO_BYTES)
-                return None
-        return {"type": "image", "source": {"type": "url", "url": logo_url}}
+        result = await asyncio.to_thread(_download_b64, path)
     except Exception as exc:
-        logger.warning("fetch_logo_for_aria failed for %s: %s", logo_url, exc)
+        logger.warning("fetch_logo_for_aria failed for %s: %s", path, exc)
         return None
+    if not result:
+        return None
+    b64, mime = result
+    return {"type": "image", "source": {"type": "base64", "media_type": mime, "data": b64}}
