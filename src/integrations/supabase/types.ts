@@ -170,6 +170,68 @@ export type Database = {
           },
         ]
       }
+      agent_executions: {
+        Row: {
+          id: string
+          agent_id: string
+          client_id: string | null
+          user_id: string | null
+          triggered_by: string
+          input_data: Json
+          output_data: Json
+          error_message: string | null
+          status: string
+          started_at: string | null
+          completed_at: string | null
+          execution_time_ms: number | null
+          metadata: Json
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          agent_id: string
+          client_id?: string | null
+          user_id?: string | null
+          triggered_by?: string
+          input_data?: Json
+          output_data?: Json
+          error_message?: string | null
+          status?: string
+          started_at?: string | null
+          completed_at?: string | null
+          execution_time_ms?: number | null
+          metadata?: Json
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          agent_id?: string
+          client_id?: string | null
+          user_id?: string | null
+          triggered_by?: string
+          input_data?: Json
+          output_data?: Json
+          error_message?: string | null
+          status?: string
+          started_at?: string | null
+          completed_at?: string | null
+          execution_time_ms?: number | null
+          metadata?: Json
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_executions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agents: {
         Row: {
           category: string

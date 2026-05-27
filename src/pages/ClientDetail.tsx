@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +10,7 @@ import { ariaLevelInfo } from "@/lib/aria-levels";
 import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts";
 import { ClientAIConfig } from "@/components/clients/ClientAIConfig";
 import { ClientAgentsActive } from "@/components/clients/ClientAgentsActive";
+import { ClientAgentExecutions } from "@/components/clients/ClientAgentExecutions";
 import { fetchOnboardingData } from "@/lib/onboarding-api";
 import { buildContextRows, type InfoRow } from "@/lib/client-info-fields";
 
@@ -39,9 +39,7 @@ export default function ClientDetail() {
     enabled: !!id,
   });
 
-  // DEBT-033: tabla `posts` no existe en V3 · posts retorna [] (Posts tab muestra vacío).
   // DEBT-065: Tab Agente rediseñado a nivel ARIA del cliente (sin team-member/assigned_to legacy).
-  const posts: { id: string; title?: string; status?: string; created_at?: string }[] = [];
 
   if (isLoading) {
     return (
@@ -144,47 +142,9 @@ export default function ClientDetail() {
           <ClientAIConfig />
         </TabsContent>
 
-        {/* Posts Tab */}
+        {/* Posts Tab · DEBT-053 · historial real de ejecuciones por agente */}
         <TabsContent value="posts">
-          <Card className="border-border/50 bg-card/60">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Historial de Posts</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!posts || posts.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-8">
-                  No hay posts asociados a esta organización aún.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {posts.map((post) => (
-                    <div
-                      key={post.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-border/30 bg-muted/20"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{post.title}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs capitalize">
-                            {post.platform}
-                          </Badge>
-                          <Badge
-                            variant={post.status === "published" ? "default" : "secondary"}
-                            className="text-xs capitalize"
-                          >
-                            {post.status}
-                          </Badge>
-                        </div>
-                      </div>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {new Date(post.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <ClientAgentExecutions clientId={client.id} />
         </TabsContent>
 
         {/* Info Tab */}
