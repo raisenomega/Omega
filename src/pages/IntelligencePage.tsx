@@ -7,8 +7,8 @@ import { ResumenChip } from "@/components/intelligence/ResumenChip";
 import { SeoChip } from "@/components/intelligence/SeoChip";
 import { GeoChip } from "@/components/intelligence/GeoChip";
 import { AeoChip } from "@/components/intelligence/AeoChip";
-import { MetaChip } from "@/components/intelligence/MetaChip";
-import { GoogleChip } from "@/components/intelligence/GoogleChip";
+import { MetaIntelChip } from "@/components/intelligence/MetaIntelChip";
+import { GoogleIntelChip } from "@/components/intelligence/GoogleIntelChip";
 import { IntelligenceLoading, IntelligencePlanGate } from "@/components/intelligence/IntelligenceGate";
 import { type ChipId } from "@/components/intelligence/_chips";
 
@@ -42,8 +42,8 @@ export default function IntelligencePage() {
       {active === "seo" && <SeoChip clientId={clientId ?? ""} />}
       {active === "geo" && <GeoChip clientId={clientId ?? ""} />}
       {active === "aeo" && <AeoChip clientId={clientId ?? ""} />}
-      {active === "meta" && <MetaChip />}
-      {active === "google" && <GoogleChip />}
+      {active === "meta" && <MetaIntelChip />}
+      {active === "google" && <GoogleIntelChip />}
     </div>
   );
 }

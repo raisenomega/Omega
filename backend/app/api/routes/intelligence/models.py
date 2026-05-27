@@ -43,3 +43,16 @@ class AeoCheckResponse(BaseModel):
     cached: bool = False
     generated_at: Optional[str] = None
     message: Optional[str] = None
+
+
+class ChipResponse(BaseModel):
+    """Chip Meta/Google (Fase 2) · honesto (regla cero-mocks).
+
+    connected=False + message → cliente sin token (CTA "Conectá ..."). NUNCA métricas falsas:
+    metrics solo trae enteros REALES de la API del proveedor (followers/engagement/reach o
+    sessions/clicks/impressions). Si la API falla o no devuelve datos → connected=True/False
+    según el token, metrics=None y message explica el porqué (nunca un número inventado).
+    """
+    connected: bool = False
+    metrics: Optional[dict[str, int]] = None
+    message: Optional[str] = None

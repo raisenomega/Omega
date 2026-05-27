@@ -44,6 +44,7 @@ from app.api.routes import (
 # DEBT-036: módulo billing legacy desregistrado · reemplazado por billing_v3 bc_billing
 from app.api.routes import billing_v3
 from app.api.routes.oauth.router import router as oauth_router
+from app.api.routes import publishing
 from app.api.routes import aria_v1
 from app.api.routes import clients_v3
 from app.api.routes import content_v3
@@ -184,6 +185,7 @@ app.include_router(resellers.router, prefix=settings.api_v1_prefix, tags=["Resel
 app.include_router(auth.router, prefix=settings.api_v1_prefix, tags=["Auth 🔐"])
 app.include_router(billing_v3.router, prefix=settings.api_v1_prefix, tags=["Billing 💳"])
 app.include_router(oauth_router, prefix=settings.api_v1_prefix)
+app.include_router(publishing.router, prefix=settings.api_v1_prefix, tags=["Publishing"])
 app.include_router(aria_v1.router, prefix=settings.api_v1_prefix, tags=["ARIA"])
 app.include_router(clients_v3.router, prefix=settings.api_v1_prefix, tags=["Clients V3"])
 app.include_router(content_v3.router, prefix=settings.api_v1_prefix, tags=["Content V3"])

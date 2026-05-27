@@ -1,8 +1,8 @@
-import { X, Check, Zap } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AutoPublishButton } from "./AutoPublishButton";
 import { PLATFORM_COLORS, PLATFORM_LABELS, type Platform } from "@/lib/onboarding-constants";
 import type { CalendarPost, DbStatus } from "@/hooks/useCalendarData";
 import { useUpdatePostStatus } from "@/hooks/useCalendarData";
@@ -56,16 +56,9 @@ export function PostsList({ day, posts }: PostsListProps) {
                     onClick={() => update.mutate({ id: p.id, status: "published_manual" })}>
                     <Check className="h-3.5 w-3.5" />Publicar Manual
                   </Button>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span tabIndex={0} className="flex-1">
-                        <Button size="sm" variant="secondary" className="h-7 w-full gap-1 text-[11px]" disabled>
-                          <Zap className="h-3.5 w-3.5" />Publicar Auto
-                        </Button>
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>Requiere cuenta social conectada · disponible con MCP</TooltipContent>
-                  </Tooltip>
+                  <span className="flex-1">
+                    <AutoPublishButton postId={p.id} />
+                  </span>
                   <Button size="sm" variant="ghost" className="h-7 gap-1" disabled={update.isPending}
                     onClick={() => update.mutate({ id: p.id, status: "cancelled" })} aria-label="Cancelar">
                     <X className="h-3.5 w-3.5" />
