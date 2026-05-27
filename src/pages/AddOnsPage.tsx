@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Package, Video, Bot, Sparkles, Coins } from "lucide-react";
+import { Package, Video, Bot } from "lucide-react";
 import { VideoPackCard } from "@/components/addons/VideoPackCard";
 import { SectionDivider } from "@/components/addons/SectionDivider";
 import { PlansSection } from "@/components/addons/PlansSection";
@@ -50,11 +50,23 @@ export default function AddOnsPage() {
 
   return (
     <div className="space-y-8">
-      <header className="flex items-center gap-2">
-        <Package className="h-5 w-5 text-amber-500" />
-        <div>
-          <h1 className="text-2xl font-semibold">Add-Ons</h1>
-          <p className="text-sm text-muted-foreground">Potenciá tu plan con paquetes especializados.</p>
+      {/* Barra de estado top · mismo patrón horizontal que el plan-bar del Dashboard:
+          título Add-Ons + chips ARIA + Mejorar ARIA + Añadir Créditos en una sola línea. */}
+      <header className="flex flex-col gap-3 rounded-lg border border-border/50 bg-card/60 p-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center gap-2">
+          <Package className="h-5 w-5 text-amber-500" />
+          <div>
+            <h1 className="text-2xl font-semibold">Add-Ons</h1>
+            <p className="text-sm text-muted-foreground">Potenciá tu plan con paquetes especializados.</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <AriaLevelChips currentLevel={ariaLevel} />
+          <AriaUpgradeModal currentLevel={ariaLevel} />
+          {/* CreditPackModal usa trigger w-full (para ClientCreditsWidget) → en la barra lo forzamos auto. */}
+          <div className="[&_button]:w-auto">
+            <CreditPackModal />
+          </div>
         </div>
       </header>
 
@@ -95,33 +107,6 @@ export default function AddOnsPage() {
           {AGENTS.map((agent) => (
             <AgentCard key={agent.id} agent={agent} onOpen={() => setOpenAgent(agent)} />
           ))}
-        </div>
-      </section>
-
-      <SectionDivider />
-
-      <section id="aria" className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">Mejora tu ARIA</h2>
-        </div>
-        <p className="text-xs text-muted-foreground">Tu asistente de marca · subí de nivel cuando lo necesites</p>
-        <div className="flex flex-wrap items-center gap-3">
-          <AriaLevelChips currentLevel={ariaLevel} />
-          <AriaUpgradeModal currentLevel={ariaLevel} />
-        </div>
-      </section>
-
-      <SectionDivider />
-
-      <section id="creditos" className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Coins className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">Añadir Créditos</h2>
-        </div>
-        <p className="text-xs text-muted-foreground">Amplía tu capacidad de generación · sin cambiar tu plan</p>
-        <div className="max-w-xs">
-          <CreditPackModal />
         </div>
       </section>
 
