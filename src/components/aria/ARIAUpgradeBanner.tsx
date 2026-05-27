@@ -2,7 +2,6 @@ import { ArrowUpRight, Loader2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useDemoMode } from "@/hooks/useDemoMode";
 import { apiPost } from "@/lib/api-client";
 
 // Banner upgrade ARIA Premium · DEBT-037 V1 cerrada (cliente · $12/mes)
@@ -18,7 +17,6 @@ const startAriaUpgrade = (): Promise<{ checkout_url: string; session_id: string 
 
 export function ARIAUpgradeBanner({ currentLevel }: ARIAUpgradeBannerProps) {
   const { toast } = useToast();
-  const { isDemoAccount } = useDemoMode();
   const targetLevel = currentLevel + 1;
   const m = useMutation({
     mutationFn: startAriaUpgrade,
@@ -44,11 +42,7 @@ export function ARIAUpgradeBanner({ currentLevel }: ARIAUpgradeBannerProps) {
       <Button
         size="sm"
         variant="outline"
-        onClick={() => {
-          // Demo Mode: la cuenta demo NUNCA dispara Stripe real.
-          if (isDemoAccount) { toast({ title: "Modo demo", description: "ARIA Premium no se cobra en la cuenta de demo." }); return; }
-          m.mutate();
-        }}
+        onClick={() => m.mutate()}
         disabled={m.isPending}
         className="h-7 gap-1 text-xs"
       >

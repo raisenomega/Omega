@@ -1,6 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "./use-toast";
-import { useDemoMode } from "./useDemoMode";
 import { apiPost } from "@/lib/api-client";
 
 interface PortalResponse {
@@ -12,14 +11,8 @@ interface PortalResponse {
 // Patrón espejo de useVideoPackCheckout. Backend valida JWT + stripe_customer_id.
 export function useCustomerPortal() {
   const { toast } = useToast();
-  const { isDemoAccount } = useDemoMode();
   return useMutation({
     mutationFn: async () => {
-      // Demo Mode: la cuenta demo NUNCA dispara Stripe real.
-      if (isDemoAccount) {
-        toast({ title: "Modo demo", description: "La gestión de suscripción no está disponible en la cuenta de demo." });
-        return;
-      }
       const data = await apiPost<PortalResponse>(`/billing/customer-portal`, {});
       if (!data.portal_url) throw new Error("Sin portal_url en respuesta backend");
       window.location.href = data.portal_url;  // External Stripe redirect

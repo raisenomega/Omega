@@ -1,6 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "./use-toast";
-import { useDemoMode } from "./useDemoMode";
 import { apiPost } from "@/lib/api-client";
 
 interface CheckoutResponse {
@@ -16,14 +15,8 @@ interface CheckoutInput {
 // Patrón espejo de useVideoPackCheckout. Backend valida JWT + plan pago + no-duplicado.
 export function useAgentAddonCheckout() {
   const { toast } = useToast();
-  const { isDemoAccount } = useDemoMode();
   return useMutation({
     mutationFn: async ({ agent_addon_code }: CheckoutInput) => {
-      // Demo Mode: la cuenta demo NUNCA dispara Stripe real.
-      if (isDemoAccount) {
-        toast({ title: "Modo demo", description: "Los agentes no se cobran en la cuenta de demo." });
-        return;
-      }
       const data = await apiPost<CheckoutResponse>(
         `/billing/checkout-agent-addon`, { agent_addon_code },
       );

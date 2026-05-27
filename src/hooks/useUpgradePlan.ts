@@ -1,6 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "./use-toast";
-import { useDemoMode } from "./useDemoMode";
 import { apiPost } from "@/lib/api-client";
 
 /**
@@ -33,15 +32,9 @@ interface CheckoutResponse {
 
 export function useUpgradePlan() {
   const { toast } = useToast();
-  const { isDemoAccount } = useDemoMode();
 
   return useMutation({
     mutationFn: async ({ clientId, targetPlan }: UpgradePlanInput) => {
-      // Demo Mode: la cuenta de demo NUNCA dispara Stripe real · usa el toggle "Vista".
-      if (isDemoAccount) {
-        toast({ title: "Modo demo", description: 'Cambiá el plan con el toggle "Vista" (PRO/Básico) del menú de usuario · sin cobro.' });
-        return;
-      }
       const data = await apiPost<CheckoutResponse>(`/billing/create-checkout-session`, {
         client_id: clientId,
         target_plan: targetPlan,
