@@ -22,7 +22,7 @@ from app.infrastructure.supabase_service import get_supabase_service
 
 logger = logging.getLogger(__name__)
 
-_PAID_PLANS = ("basic", "pro")
+_PAID_PLANS = ("basic", "pro", "enterprise")  # enterprise también compra video packs aparte (§4.4)
 
 
 def has_active_video_pack(addons: list[dict]) -> bool:
@@ -47,23 +47,22 @@ async def create_video_pack_checkout(
 
     supabase = get_supabase_service()
     client_row = supabase.client.table("clients").select(
-        "id, name, stripe_customer_id"
+        "id, name, plan, stripe_customer_id"
     ).eq("id", client_id).execute()
     if not client_row.data:
         return fail(f"Cliente {client_id} no encontrado", "client_not_found")
     client = client_row.data[0]
 
-    plan_row = supabase.client.table("client_plans").select("plan, addons").eq("client_id", client_id).execute()
-    if not plan_row.data:
-        return fail(f"client_plans row no existe para {client_id}", "client_plans_missing")
-    plan_data = plan_row.data[0]
-    current_plan = plan_data.get("plan") or "adopcion"
+    # Plan desde clients.plan (siempre presente · consistente con agent/upgrade · no client_plans.plan).
+    current_plan = client.get("plan") or "adopcion"
     if current_plan not in _PAID_PLANS:
         return fail(
-            f"Video Packs requieren plan basic/pro · actual: {current_plan}",
+            f"Video Packs requieren plan pago · actual: {current_plan}",
             "requires_paid_plan",
         )
-    addons = plan_data.get("addons") or []
+    # client_plans puede no existir aún (ej. demo) → addons vacío, no bloquea.
+    plan_row = supabase.client.table("client_plans").select("addons").eq("client_id", client_id).execute()
+    addons = (plan_row.data[0].get("addons") if plan_row.data else None) or []
     if has_active_video_pack(addons):
         return fail("Ya tenés un Video Pack activo · cancelá el actual primero", "already_active")
 

@@ -50,10 +50,10 @@ async def create_agent_addon_checkout(
     if (client.get("plan") or "adopcion") not in _PAID_PLANS:
         return fail("Los Agentes requieren un plan pago (basic/pro/enterprise)", "requires_paid_plan")
 
+    # client_plans puede no existir aún (ej. cuenta demo · plan en clients.plan pero sin fila) →
+    # addons vacío, no bloquea el checkout (clientes reales tienen la fila · comportamiento idéntico).
     plan_row = supabase.client.table("client_plans").select("addons").eq("client_id", client_id).execute()
-    if not plan_row.data:
-        return fail(f"client_plans row no existe para {client_id}", "client_plans_missing")
-    addons = plan_row.data[0].get("addons") or []
+    addons = (plan_row.data[0].get("addons") if plan_row.data else None) or []
     if has_active_agent_addon(addons, agent_addon_code):
         return fail("Ya tenés este agente activo", "already_active")
 
