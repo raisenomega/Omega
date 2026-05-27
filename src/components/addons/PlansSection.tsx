@@ -50,6 +50,7 @@ function PlansSectionInner({ clientId, downgradeTarget, setDowngradeTarget }: In
         targetPlan={downgradeTarget ?? "basic"}
         currentPlan={status.planCode}
         renewsOn={status.renewsOn}
+        clientId={clientId}
       />
     </section>
   );

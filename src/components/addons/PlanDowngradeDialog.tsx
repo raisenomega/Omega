@@ -9,13 +9,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getPlanConfig, type PlanCode } from "@/lib/plan-limits";
 import { computeLostItems } from "./_compute_lost_items";
-
-// Exec diferido: el backend aún no soporta cambios de plan honestos (P1).
-const EXEC_DEFERRED = true;
-const DEFERRED_MSG = "Procesamiento de cambios de plan próximamente. Escríbenos a raisenagencypr@gmail.com";
+import { useScheduleDowngrade } from "@/hooks/useScheduleDowngrade";
+import { useClientAddonFeatureKeys } from "@/hooks/useClientAddonFeatureKeys";
 
 interface PlanDowngradeDialogProps {
   open: boolean;
@@ -23,17 +20,20 @@ interface PlanDowngradeDialogProps {
   targetPlan: PlanCode;
   currentPlan: PlanCode;
   renewsOn: string | null;
+  clientId: string;
 }
 
-export function PlanDowngradeDialog({ open, onOpenChange, targetPlan, currentPlan, renewsOn }: PlanDowngradeDialogProps) {
+export function PlanDowngradeDialog({ open, onOpenChange, targetPlan, currentPlan, renewsOn, clientId }: PlanDowngradeDialogProps) {
   const [accepted, setAccepted] = useState(false);
+  const schedule = useScheduleDowngrade(() => { setAccepted(false); onOpenChange(false); });
+  const ownedFeatureKeys = useClientAddonFeatureKeys(clientId);
   const targetLabel = getPlanConfig(targetPlan).label;
   const parsed = renewsOn ? new Date(renewsOn) : null;
   const effectiveDate = parsed && !isNaN(parsed.getTime())
     ? parsed.toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" })
     : null;
   const effectivePhrase = effectiveDate ? `el ${effectiveDate}` : "al final de tu ciclo actual";
-  const lostItems = computeLostItems(currentPlan, targetPlan);
+  const lostItems = computeLostItems(currentPlan, targetPlan, ownedFeatureKeys);
   const lostSummary = lostItems.length > 0 ? lostItems.join(", ") : "las funciones listadas";
   const consentLabel = `Entiendo que mi plan cambiará a ${targetLabel} ${effectivePhrase} y perderé acceso a ${lostSummary}`;
 
@@ -79,18 +79,13 @@ export function PlanDowngradeDialog({ open, onOpenChange, targetPlan, currentPla
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span tabIndex={0}>
-                  <Button disabled={!accepted || EXEC_DEFERRED} className="w-full">
-                    Confirmar cambio
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>{DEFERRED_MSG}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button
+            className="w-full"
+            disabled={!accepted || schedule.isPending}
+            onClick={() => schedule.mutate({ clientId, targetPlan: targetPlan as "basic" | "pro" })}
+          >
+            {schedule.isPending ? "Programando…" : "Confirmar cambio"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

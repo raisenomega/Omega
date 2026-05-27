@@ -24,7 +24,7 @@ import { apiPost } from "@/lib/api-client";
  */
 interface UpgradePlanInput {
   clientId: string;
-  targetPlan: "basic" | "pro";
+  targetPlan: "basic" | "pro" | "enterprise";
 }
 
 interface CheckoutResponse {

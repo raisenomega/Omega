@@ -2,12 +2,9 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PLAN_CONFIGS, type PlanCode } from "@/lib/plan-limits";
 import { useUpgradePlan } from "@/hooks/useUpgradePlan";
 import { PLAN_HIGHLIGHTS, PLAN_RANK } from "./_plans_data";
-
-const DEFERRED_MSG = "Procesamiento de cambios de plan próximamente. Escríbenos a raisenagencypr@gmail.com";
 
 interface PlanCardProps {
   planCode: "basic" | "pro" | "enterprise";
@@ -22,7 +19,6 @@ export function PlanCard({ planCode, currentPlan, clientId, onRequestDowngrade }
   const isCurrent = planCode === currentPlan;
   const isUpgrade = PLAN_RANK[planCode] > PLAN_RANK[currentPlan];
   const isDowngrade = PLAN_RANK[planCode] < PLAN_RANK[currentPlan];
-  const stripeUpgrade = isUpgrade && (planCode === "basic" || planCode === "pro");
 
   return (
     <Card className={isCurrent ? "flex flex-col h-full border-primary" : "flex flex-col h-full"}>
@@ -43,7 +39,7 @@ export function PlanCard({ planCode, currentPlan, clientId, onRequestDowngrade }
 
         {isCurrent ? (
           <Button disabled className="w-full">Plan actual</Button>
-        ) : stripeUpgrade ? (
+        ) : isUpgrade ? (
           <Button
             className="w-full"
             disabled={upgrade.isPending}
@@ -51,8 +47,6 @@ export function PlanCard({ planCode, currentPlan, clientId, onRequestDowngrade }
           >
             {upgrade.isPending ? "Redirigiendo a Stripe…" : `Subir a ${config.label}`}
           </Button>
-        ) : isUpgrade ? (
-          <DeferredButton label={`Subir a ${config.label}`} />
         ) : isDowngrade ? (
           <Button variant="secondary" className="w-full" onClick={() => onRequestDowngrade(planCode)}>
             Bajar a {config.label}
@@ -60,21 +54,5 @@ export function PlanCard({ planCode, currentPlan, clientId, onRequestDowngrade }
         ) : null}
       </CardContent>
     </Card>
-  );
-}
-
-// Botón disabled (enterprise upgrade · exec diferido) envuelto en span para que el tooltip dispare.
-function DeferredButton({ label }: { label: string }) {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span tabIndex={0} className="w-full">
-            <Button disabled className="w-full">{label}</Button>
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>{DEFERRED_MSG}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
   );
 }

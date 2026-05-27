@@ -2,14 +2,21 @@ import { getPlanConfig, getUnlockedFeatures, type PlanCode } from "@/lib/plan-li
 
 /**
  * Features/volumen que el cliente PIERDE al bajar de `currentPlan` a `targetPlan`.
- * - Features: labels desbloqueadas en current que NO están en target.
+ * - Features: desbloqueadas en current que NO están en target NI las retiene vía add-on.
  * - Posts: si el target tiene menos posts/ciclo → línea explícita.
  * - Cuentas: si el target tiene menos cuentas/red → línea explícita.
+ *
+ * DEBT-076: `ownedFeatureKeys` = features que el cliente conserva por add-on activo
+ * (no se listan como pérdida · ej. Crisis Room si lo compró como add-on $25).
  */
-export function computeLostItems(currentPlan: PlanCode, targetPlan: PlanCode): string[] {
-  const targetLabels = new Set(getUnlockedFeatures(targetPlan).map((f) => f.label));
+export function computeLostItems(
+  currentPlan: PlanCode,
+  targetPlan: PlanCode,
+  ownedFeatureKeys: Set<string> = new Set(),
+): string[] {
+  const targetKeys = new Set(getUnlockedFeatures(targetPlan).map((f) => f.key));
   const lostFeatures = getUnlockedFeatures(currentPlan)
-    .filter((f) => !targetLabels.has(f.label))
+    .filter((f) => !targetKeys.has(f.key) && !ownedFeatureKeys.has(f.key))
     .map((f) => f.label);
 
   const current = getPlanConfig(currentPlan);
