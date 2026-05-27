@@ -41,45 +41,61 @@ export default function Media() {
   const [search, setSearch] = useState("");
   const [uploading, setUploading] = useState(false);
 
+  // DEBT-060: media folder-scoped por usuario · aislamiento cross-tenant (RLS {uid}/).
+  const { data: userId } = useQuery({
+    queryKey: ["auth-user-id"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user?.id ?? null;
+    },
+  });
+
   const { data: files, isLoading } = useQuery({
-    queryKey: ["media-files"],
+    queryKey: ["media-files", userId],
     queryFn: async () => {
       const { data, error } = await supabase.storage
         .from("media")
-        .list("", { limit: 200, sortBy: { column: "created_at", order: "desc" } });
+        .list(userId!, { limit: 200, sortBy: { column: "created_at", order: "desc" } });
       if (error) throw error;
       return data ?? [];
     },
+    enabled: !!userId,
   });
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadFiles = e.target.files;
     if (!uploadFiles || uploadFiles.length === 0) return;
 
+    if (!userId) {
+      toast({ title: "Sesión no disponible", description: "Recargá la página.", variant: "destructive" });
+      return;
+    }
     setUploading(true);
     try {
       for (const file of Array.from(uploadFiles)) {
-        const fileName = `${Date.now()}-${file.name}`;
+        const fileName = `${userId}/${Date.now()}-${file.name}`;
         const { error } = await supabase.storage
           .from("media")
           .upload(fileName, file);
         if (error) throw error;
       }
-      queryClient.invalidateQueries({ queryKey: ["media-files"] });
+      queryClient.invalidateQueries({ queryKey: ["media-files", userId] });
       toast({ title: `${uploadFiles.length} archivo(s) subido(s)` });
-    } catch (err: any) {
-      toast({ title: "Error al subir", description: err.message, variant: "destructive" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error desconocido";
+      toast({ title: "Error al subir", description: msg, variant: "destructive" });
     }
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleDelete = async (name: string) => {
-    const { error } = await supabase.storage.from("media").remove([name]);
+    if (!userId) return;
+    const { error } = await supabase.storage.from("media").remove([`${userId}/${name}`]);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      queryClient.invalidateQueries({ queryKey: ["media-files"] });
+      queryClient.invalidateQueries({ queryKey: ["media-files", userId] });
       toast({ title: "Archivo eliminado" });
     }
   };
@@ -89,7 +105,7 @@ export default function Media() {
   );
 
   const getPublicUrl = (name: string) =>
-    supabase.storage.from("media").getPublicUrl(name).data.publicUrl;
+    supabase.storage.from("media").getPublicUrl(`${userId}/${name}`).data.publicUrl;
 
   return (
     <div className="space-y-6">
