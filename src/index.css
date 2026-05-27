@@ -4,6 +4,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Scrollbar global oculta · el scroll sigue funcionando (Firefox + WebKit) */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
 @layer base {
   :root {
     --background: 225 15% 5%;
