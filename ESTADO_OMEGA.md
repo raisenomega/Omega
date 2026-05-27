@@ -1,4 +1,4 @@
-# ESTADO OMEGA · Documento Vivo · Última actualización: 27 may 2026 (marathon)
+# ESTADO OMEGA · Documento Vivo · Última actualización: 27 may 2026 (sesión 2 · learning loop + roadmap Sprint 7-9)
 
 > **Fuente de verdad OPERACIONAL** (qué está hecho, qué falta, en qué orden).
 > Fuente de verdad TÉCNICA (contratos DDD, arquitectura, detalle de DEBTs): `SOURCE_OF_TRUTH.md`.
@@ -41,11 +41,12 @@
 
 ---
 
-## 3 · DEBTs ABIERTAS · ~127h (~3 semanas full-time · –51.5h cerradas el 27 may)
+## 3 · DEBTs ABIERTAS · ~1,127h (consolidado owner · 27 may sesión 2 · ver SOT §6 Total + §17 roadmap)
 
 > **Audit cliente E2E (25 may):** +10 DEBTs nuevas (057-066) · **DEBT-057/058/059/061 ya CERRADAS** (Tab AI Anthropic-only · logo wizard · crisis P4 · ver §2). % real cliente: core ~83% · superficie completa ~68%.
 > **Audit rendimiento imagen (26 may):** +4 DEBTs (068-071) · **TODAS CERRADAS** (uploads async · timeout Nano Banana · rate-limit cableado · retry+backoff · ver §2). La generación de imagen ya no bloquea el event loop, no cuelga, está rate-limitada y reintenta transitorios.
 > **Sesión 27 may (marathon):** cerradas DEBT-052/091/048/047/038/060/075/085/086/095 (–51.5h) · DEBT-040 OAuth con SKELETON + RONDA E en progreso · DEBT-088/092/093/094 + 089/090 registradas (Sprint 7-8). Ver §2.
+> **Sesión 27 may (sesión 2 · learning loop + estrategias/modos + FFmpeg + editor):** **DEBT-100 CERRADA** (`866a9d3` · Loop 1 was_correct · hallazgo P1 source_event_id documentado en SOT §6). Registradas DEBT-099/101/102/103/104/105 + FFMPEG-001..004 + EDITOR-001 + OMNI-001 (+ DEBT-096/097/098 ya en SOT §6). Total consolidado ~1,127h. Docs: `ARIA_LEARNING_LOOP_OMEGA.md` + `GEMINI_FFMPEG_OMEGA.md`. Ver tabla 🆕 abajo + SOT §17.
 
 > Detalle/contexto de cada una: `SOURCE_OF_TRUTH.md §6`. Aquí: ID · 1-línea · horas · dependencia · sprint.
 
@@ -105,6 +106,26 @@
 | ~~DEBT-079~~ | ✅ **CERRADA** (`91b14d2`) writes muertos eliminados · cero readers · no se creó tabla | — | — |
 | ~~Logo Fase 2~~ | ✅ **CERRADA** (vía DEBT-059) Persistir logo → `brand_files` + `client_brand_assets.logo_file_id` | — | — |
 
+### 🆕 NUEVAS registradas 27 may (sesión 2 · detalle en SOT §6/§17 + docs estratégicos)
+| DEBT | Descripción | Horas | Sprint |
+|---|---|---|---|
+| ~~DEBT-100~~ | ✅ **CERRADA** (`866a9d3`) evaluate_decisions · Loop 1 was_correct · cron horario · sin migración · **hallazgo P1**: source_event_id hoy→behavioral_events (forward-compatible · honesto) | — | 7 |
+| DEBT-099 | 🔴 Self-service onboarding (signup→wizard→checkout→workspace solo · **sin esto no escala**) | 20h | 7 |
+| DEBT-096 | 🟠 Página Estrategias ARIA (Básico 1/sem · PRO 3/sem · Enterprise 1/día · tabla strategies + cron + UI cards Usar/Archivar/Ajustar) | 30h | 7 |
+| DEBT-097 | 🟠 Modo Supervisado (PRO · ARIA prepara todo · cliente aprueba · panel + notificación) | 20h | 7 |
+| DEBT-098 | 🟠 Modo Autónomo (Enterprise opt-in · gates limits_omega · `autonomo_consent_at` · log) · dep OAuth | 30h | 8 |
+| DEBT-101 | 🟠 generate_aria_learning_report (reporte ARIA→NOVA semanal · NOVA Nivel 1 auto) | 6h | 7 |
+| DEBT-102 | 🟡 learning_events + panel `/superadmin/learning` · migr 00040/00041/00042 | 10h | 7 |
+| DEBT-103 | 🟠 collect_post_metrics Loop 2 (métricas reales Meta/Google) · dep DEBT-040 | 8h | 8 |
+| DEBT-104 | 🟡 correction_detector conversacional (ARIA detecta correcciones en chat → memoria) | 6h | 8 |
+| DEBT-105 | 🟡 Email owner (sentinel_brief + oracle_weekly_brief → Resend/SendGrid) | 4h | 7 |
+| DEBT-FFMPEG-001 | 🟠 FFmpeg en Railway (`nixpacks.toml`) | 0.5h | 7 |
+| DEBT-FFMPEG-002 | 🟠 `ffmpeg_adapter.py` (10 ops: resize/overlay/subs/música/trim/encode) | 3h | 7 |
+| DEBT-FFMPEG-003 | 🟠 integración post-Veo (brandeo automático logo/colores) | 2h | 7 |
+| DEBT-FFMPEG-004 | 🟠 migración video_processing tables | 1h | 7 |
+| DEBT-EDITOR-001 | 🟡 Editor video nativo (FFmpeg.wasm · timeline 4 capas · presets · brand auto) · por fases | 70h | 8-9 |
+| DEBT-OMNI-001 | acción owner · early access Gemini Omni (aistudio · misma `GEMINI_API_KEY`) | 0h | — |
+
 ### Business backlog (sin estimar)
 - DEBT-BIZ-001 pricing LATAM (Mercado Pago, Pix) · DEBT-BIZ-002 WhatsApp Business API · DEBT-BIZ-003 annual pricing · DEBT-BIZ-004 tier intermedio $39-45.
 - "Nueva conversación" ARIA (botón archive del historial).
@@ -113,13 +134,13 @@
 
 ## 4 · ROADMAP SPRINTS
 
-| Sprint | Foco | Incluye |
+> Sprints 4B-6 cerrados/superados (DEBT-046/049/052/053 cerradas · OAuth pasó a SKELETON DEBT-040). Roadmap vigente 27 may sesión 2:
+
+| Sprint | Foco | Incluye (~horas) |
 |---|---|---|
-| **Sprint 4B** | Revenue rápido + desbloqueos | DEBT-046 ARIA Premium reseller · DEBT-049 agent_executions (desbloquea DEBT-053) |
-| **Sprint 5** | Centro de Inteligencia + tabs cliente | DEBT-040 (Google OAuth) · DEBT-052 AI Tab · DEBT-053 Posts Tab |
-| **Sprint 6** | Meta Business | DEBT-040 (Meta OAuth · Instagram/Facebook publicación real) |
-| **Sprint 7** | Google Ads | (post-Centro Inteligencia) |
-| **Sprint 8** | Canales nuevos (revenue) | DEBT-092 WhatsApp Business Add-On ($19/$35) · DEBT-093 TikTok Full Integration (Ads $25) |
+| **Sprint 7** (~120h) | Learning loop + estrategias + onboarding + FFmpeg | DEBT-096 Estrategias (30) · DEBT-097 Supervisado (20) · DEBT-099 Self-service onboarding (20) · DEBT-033 Panel Superadmin UI (40 · scope nuevo · el DEBT-033 original ya cerrado) · DEBT-101 Learning Report (6) · DEBT-102 Learning Events UI (10) · DEBT-105 Email notifs (4) · DEBT-FFMPEG-001/002/003/004 (6.5) |
+| **Sprint 8** (~190h) | Canales + autónomo + escala + Loop 2 | DEBT-092 WhatsApp ($19/$35 · 50) · DEBT-093 TikTok (Ads $25 · 30) · DEBT-098 Autónomo (30) · DEBT-088 Escalabilidad job queue (36) · DEBT-103 Loop 2 métricas reales (8) · DEBT-104 Correction detector (6) · DEBT-EDITOR-001 fase 1 (45) |
+| **Sprint 9** (~70h) | Editor + pricing + reseller | DEBT-EDITOR-001 fases 2+3 (50) · DEBT-094 ARIA per-level pricing (6) · Reseller dashboard completo (40) |
 
 ### Orden recomendado próxima sesión
 1. **Owner (no-código):** cargar creds OAuth (Meta/Google) + `OAUTH_ENCRYPTION_KEY` + `OAUTH_REDIRECT_BASE` → desbloquea DEBT-040 publicación real
@@ -140,6 +161,11 @@
 | `CENTRO_DE_INTELIGENCIA.md` | **no existe aún** | crear en Sprint 5 (DEBT-040) |
 | `OMEGA_AGENT_SYSTEM.md` / `OMEGA_MULTI_AGENT_SYSTEM.md` | spec | arquitectura de agentes (referencia · P5 outcome_evaluator) |
 | `DDD_REGLAS_OMEGA.md` | contrato vivo | gated · reglas C1-C4/A2/I1/G2/P1-P5/X3 |
+| `ARIA_LEARNING_LOOP_OMEGA.md` | ✅ creado | loop de aprendizaje P5 · DEBT-100 (cerrada) / 101/102/103/104 |
+| `WHATSAPP_BUSINESS_OMEGA.md` | ✅ creado (interno) | DEBT-092 WhatsApp Business Add-On |
+| `TIKTOK_OMEGA.md` | ✅ creado (interno) | DEBT-093 TikTok Full Integration |
+| `OMEGA_AUTONOMO_SUPERVISADO.md` | ✅ creado (interno) | DEBT-096/097/098 modos + Estrategias |
+| `GEMINI_FFMPEG_OMEGA.md` | ✅ subido por owner | DEBT-FFMPEG-001..004 · DEBT-EDITOR-001 · DEBT-OMNI-001 |
 
 ---
 
