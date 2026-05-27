@@ -1,24 +1,16 @@
 // DEBT-052 · widget de créditos prepagados (Tab Agente · columna derecha).
 // Con pack: saldo (barra) + consumido + periodo + toggle auto-recarga + consumo por agente.
-// Sin pack: "Sin pack activo" + 4 botones de compra → Stripe (useCreditPackCheckout).
+// Sin pack: "Sin pack activo" + botón "Añadir Créditos" → CreditPackModal → Stripe.
 // Cero mocks — datos reales de client_agent_credits / client_credit_ledger (RLS client-scoped).
 // Caveat: compra + toggle son self-service (cliente por JWT) · sirven para self-view/demo.
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Wallet, Bot, RefreshCw, Coins } from "lucide-react";
 import { useClientCredits } from "@/hooks/useClientCredits";
-import { useCreditPackCheckout, type CreditPackCode } from "@/hooks/useCreditPackCheckout";
 import { useAutoRechargeToggle } from "@/hooks/useAutoRechargeToggle";
-
-const CREDIT_PACKS: readonly { code: CreditPackCode; label: string; price: string }[] = [
-  { code: "micro", label: "Micro", price: "$9" },
-  { code: "starter", label: "Starter", price: "$25" },
-  { code: "plus", label: "Plus", price: "$59" },
-  { code: "ultra", label: "Ultra", price: "$119" },
-];
+import { CreditPackModal } from "@/components/clients/CreditPackModal";
 
 function usd(n: number): string {
   return `$${n.toFixed(2)}`;
@@ -35,7 +27,6 @@ interface Props {
 
 export function ClientCreditsWidget({ clientId }: Props) {
   const c = useClientCredits(clientId);
-  const checkout = useCreditPackCheckout();
   const toggle = useAutoRechargeToggle(clientId);
 
   return (
@@ -43,7 +34,7 @@ export function ClientCreditsWidget({ clientId }: Props) {
       <CardHeader>
         <CardTitle className="flex items-center justify-between text-sm font-medium">
           <span className="flex items-center gap-2">
-            <Coins className="h-4 w-4" /> Créditos prepagados
+            <Coins className="h-4 w-4" /> Añade Créditos por tu consumo
           </span>
           {c.enrolled && c.tier && (
             <Badge variant="secondary" className="capitalize text-xs">{c.tier}</Badge>
@@ -62,19 +53,7 @@ export function ClientCreditsWidget({ clientId }: Props) {
         ) : !c.enrolled ? (
           <div className="space-y-3 py-2">
             <p className="text-xs text-muted-foreground text-center">Sin pack activo.</p>
-            <div className="grid grid-cols-2 gap-2">
-              {CREDIT_PACKS.map((p) => (
-                <Button
-                  key={p.code}
-                  size="sm"
-                  disabled={checkout.isPending}
-                  onClick={() => checkout.mutate({ credit_pack_code: p.code })}
-                  className="border border-amber-500 bg-transparent text-white transition-colors duration-200 hover:bg-emerald-600 hover:border-emerald-600 hover:text-white"
-                >
-                  {p.label} {p.price}
-                </Button>
-              ))}
-            </div>
+            <CreditPackModal />
           </div>
         ) : (
           <div className="space-y-4">
