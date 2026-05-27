@@ -45,7 +45,7 @@ async def handle_predict_virality(
             f"Da un score total y explica los factores clave."
         )
 
-        # Generar análisis con OpenAI
+        # Generar análisis con Claude
         virality_analysis = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=250,

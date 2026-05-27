@@ -1,6 +1,6 @@
 """
 Image generation function for Content Creator Agent
-Handles Nano Banana image generation (Fase 2 §2.4 swap from DALL-E 3)
+Handles Nano Banana image generation (Fase 2 §2.4)
 """
 from typing import Dict, Any
 import logging

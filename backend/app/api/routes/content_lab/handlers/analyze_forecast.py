@@ -49,7 +49,7 @@ async def handle_analyze_forecast(
             f"- Nivel de confianza (bajo/medio/alto)"
         )
 
-        # Generar predicción con OpenAI
+        # Generar predicción con Claude
         prediction_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=250,

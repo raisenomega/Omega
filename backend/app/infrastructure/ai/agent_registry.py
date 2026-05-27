@@ -43,7 +43,7 @@ AGENT_REGISTRY: Dict[str, AgentConfig] = {
         "department": Department.EXECUTIVE
     },
 
-    # MARKETING (6 agents) - GPT-4o-mini
+    # MARKETING (6 agents) · Haiku 4.5
     "ATLAS": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
     "RAFA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
     "DUDA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
@@ -51,49 +51,49 @@ AGENT_REGISTRY: Dict[str, AgentConfig] = {
     "LUAN": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
     "PIXEL": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
 
-    # PRODUCT & TECHNOLOGY (5 agents) - Deepseek Chat
+    # PRODUCT & TECHNOLOGY (5 agents) · Haiku 4.5
     "LUNA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PRODUCT},
     "SHIELD": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PRODUCT},
     "FORGE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PRODUCT},
     "DEBUG": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PRODUCT},
     "SCOPE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PRODUCT},
 
-    # OPERATIONS (5 agents) - GPT-4o-mini (cost-efficient)
+    # OPERATIONS (5 agents) · Haiku 4.5
     "REX": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.OPERATIONS},
     "ANCHOR": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.OPERATIONS},
     "BRIDGE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.OPERATIONS},
     "FLOW": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.OPERATIONS},
     "SCOUT": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.OPERATIONS},
 
-    # FINANCE (5 agents) - Gemini 2.0 Flash
+    # FINANCE (5 agents) · Haiku 4.5
     "VERA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.FINANCE},
     "LEDGER": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.FINANCE},
     "PULSE_FIN": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.FINANCE},
     "QUOTA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.FINANCE},
     "MARGIN": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.FINANCE},
 
-    # COMMUNITY (5 agents) - Groq Llama 3.3 (ultra-fast)
+    # COMMUNITY (5 agents) · Haiku 4.5
     "KIRA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.COMMUNITY},
     "REVIEW": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.COMMUNITY},
     "NURTURE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.COMMUNITY},
     "TRIBE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.COMMUNITY},
     "VOICE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.COMMUNITY},
 
-    # INTELLIGENCE (5 agents) - Deepseek R1 Reasoner
+    # INTELLIGENCE (5 agents) · Opus 4.7
     "ORACLE": {"provider": "anthropic", "model": "claude-opus-4-7", "department": Department.INTELLIGENCE},
     "TREND": {"provider": "anthropic", "model": "claude-opus-4-7", "department": Department.INTELLIGENCE},
     "SIGNAL": {"provider": "anthropic", "model": "claude-opus-4-7", "department": Department.INTELLIGENCE},
     "MAP": {"provider": "anthropic", "model": "claude-opus-4-7", "department": Department.INTELLIGENCE},
     "LENS": {"provider": "anthropic", "model": "claude-opus-4-7", "department": Department.INTELLIGENCE},
 
-    # PEOPLE (5 agents) - GPT-4o-mini
+    # PEOPLE (5 agents) · Haiku 4.5
     "SOPHIA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PEOPLE},
     "HIRE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PEOPLE},
     "TRAIN": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PEOPLE},
     "CULTURE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PEOPLE},
     "COMPASS": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PEOPLE},
 
-    # SECURITY (13 agents) - GPT-4o
+    # SECURITY (13 agents) · Sonnet 4.6
     "SENTINEL": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
     "VAULT": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
     "PULSE_MON": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},

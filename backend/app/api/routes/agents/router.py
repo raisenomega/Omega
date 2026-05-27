@@ -41,7 +41,7 @@ async def execute_agent_agentic(
     Same contract as /execute/ but with agentic loop and tool calling.
 
     **New Features**:
-    - Real-time web search via Tavily API
+    - Real-time web search via Brave Search API
     - URL content extraction with domain blocking
     - Database operations with tenant isolation
     - Input injection detection + output filtering

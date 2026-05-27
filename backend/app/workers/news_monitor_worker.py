@@ -25,7 +25,7 @@ class NewsMonitorWorker(BaseWorker):
     async def execute(self, client_id: str) -> dict:
         """
         1. Obtiene contexto del cliente (industria, nombre de marca)
-        2. Busca noticias relevantes via Tavily
+        2. Busca noticias relevantes via búsqueda web (Brave)
         3. Guarda resultados en omega_activity
         4. Crea approval_request si hay noticia crítica
         """

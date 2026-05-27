@@ -39,7 +39,7 @@ class TrendSpotterWorker(BaseWorker):
             return {}
 
     async def _scan_trends(self, supabase, client_id: str, niche: str, region: str) -> list:
-        """Ejecuta 2 queries Tavily y retorna tendencias relevantes"""
+        """Ejecuta 2 queries de búsqueda web (Brave) y retorna tendencias relevantes"""
         from app.infrastructure.tools.web_search_tool import web_search
 
         all_trends = []
@@ -60,7 +60,7 @@ class TrendSpotterWorker(BaseWorker):
                     relevant = self._filter_trends(result["results"])
                     all_trends.extend(relevant)
             except Exception as e:
-                logger.warning(f"[{self.name}] Tavily error '{query}': {e}")
+                logger.warning(f"[{self.name}] web_search error '{query}': {e}")
             await asyncio.sleep(1)
 
         if not all_trends:

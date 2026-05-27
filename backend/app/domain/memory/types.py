@@ -58,13 +58,13 @@ MEM0_CONFIG = {
     "version": "v1.1",
     "vector_store_provider": "qdrant",
     "llm_provider": "litellm",
-    "llm_model": "deepseek/deepseek-chat",  # $0.10/M para extracción
+    "llm_model": "anthropic/claude-haiku-4-5-20251001",  # extracción de memoria (I1 · Anthropic-only)
     "collection_name": "omega_client_memories"
 }
 
 # Configuración de Qdrant
 QDRANT_CONFIG = {
     "collection_name": "omega_client_memories",
-    "vector_size": 1536,  # OpenAI embeddings
+    "vector_size": 1536,  # embeddings 1536 dims
     "distance": "Cosine"
 }

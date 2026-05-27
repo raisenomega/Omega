@@ -20,7 +20,7 @@ from app.infrastructure.tool_executor import ToolExecutor
 from app.infrastructure.security.output_filter import OutputFilter
 from app.infrastructure.security.injection_detector import InjectionDetector
 
-CLAUDE_MODEL  = "claude-sonnet-4-20250514"
+CLAUDE_MODEL  = "claude-sonnet-4-6"
 MAX_TOKENS    = 4096
 MAX_ITERATIONS = 10
 

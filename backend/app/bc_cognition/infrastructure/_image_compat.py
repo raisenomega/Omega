@@ -1,12 +1,12 @@
 """OmegaRaisen — Image Generation Compat Layer (Fase 2 §2.4 + §2.6 + Sprint 2 P1).
 
-Mediates between Lovable callers expecting `List[str]` of URLs (DALL-E 3
-shape) and the Nano Banana V3 adapter which returns base64 inline. Decodes
+Mediates between callers legacy expecting `List[str]` of URLs (shape de
+imagen V1) and the Nano Banana V3 adapter which returns base64 inline. Decodes
 base64 → bytes → uploads to Supabase Storage via _storage_uploader →
 returns public URLs persistentes (cierra DEBT-018 · 22 may 2026).
 
-Supports `reference_images_b64` for edit mode (post §2.6 swap of FAL Flux
-Kontext to Nano Banana refs · cierra DEBT-022).
+Supports `reference_images_b64` for edit mode (post §2.6 swap a Nano Banana
+refs · cierra DEBT-022).
 """
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ async def generate_image_compat(
     reference_images_b64: Optional[List[str]] = None,
     client_id: Optional[str] = None,
 ) -> List[str]:
-    """Lovable-compatible image generation backed by Nano Banana + Supabase Storage.
+    """Image generation (compat V1) backed by Nano Banana + Supabase Storage.
 
     Returns una lista de URLs públicas persistidas (post DEBT-018 · ya no data URIs).
     Imágenes van a bucket 'generated-images/{client_id|shared}/{uuid}.{ext}'.

@@ -98,7 +98,7 @@ async def generate_image(
     brief: Optional[str] = Depends(get_client_brief)
 ) -> ContentResponse:
     """
-    Generate image with DALL-E 3
+    Generate image with Nano Banana
 
     - **prompt**: Description of the image to generate
     - **size**: Image dimensions (1024x1024, 1024x1792, 1792x1024)

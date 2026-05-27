@@ -26,7 +26,7 @@ class VideoProductionAgent(VideoProductionScriptMixin, VideoProductionContentMix
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.CONTENT_CREATOR,
-            model="gpt-4",
+            model="claude-sonnet-4-6",
             tools=["script_writer", "hook_optimizer", "shot_planner", "platform_adapter"],
         )
 

@@ -30,7 +30,7 @@ async def handle_generate_text(
     try:
         # Map organizational agents to AI Directors
         AGENT_TO_DIRECTOR = {
-            "RAFA": "REX",  # RAFA (Content Creator) → REX (GPT-4o-mini, fast)
+            "RAFA": "REX",  # RAFA (Content Creator) → REX (fast tier)
             "ATLAS": "ATLAS",  # Pass-through
             "NOVA": "NOVA"  # Pass-through
         }
@@ -102,7 +102,7 @@ async def handle_generate_text(
                 exc_info=True
             )
             if director_normalized != "REX":
-                logger.warning(f"Falling back from {director_normalized} to REX (GPT-4o-mini)")
+                logger.warning(f"Falling back from {director_normalized} to REX (fast tier)")
                 fallback_used = True
                 director_normalized = "REX"
                 llm_response = await ai_providers.generate(

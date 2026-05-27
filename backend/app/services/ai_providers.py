@@ -13,10 +13,9 @@ logger = logging.getLogger(__name__)
 class AIProviders:
     """Anthropic-only provider system post Fase 2 §2.6.
 
-    Pre-§2.6 mapeaba 7 directors a 5 proveedores (Anthropic + OpenAI +
-    Deepseek + Gemini + Groq). Tras §2.6 todos los directors usan Anthropic.
-    Ver `agent_registry.py` para el mapping completo de 45 agents a modelos
-    Anthropic V3 (Haiku/Sonnet/Opus). Eventualmente unificar con
+    §2.6: todos los directors usan Anthropic (DDD I1 · proveedores legacy
+    eliminados). Ver `agent_registry.py` para el mapping de 45 agents a
+    modelos Anthropic V3 (Haiku/Sonnet/Opus). Unificar eventualmente con
     `bc_cognition.infrastructure.anthropic_adapter` V3 (DEBT-025).
     """
 

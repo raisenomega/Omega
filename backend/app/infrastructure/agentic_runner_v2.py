@@ -41,7 +41,7 @@ _MEM0_CONFIG = {
     "llm": {
         "provider": "anthropic",
         "config": {
-            "model": "claude-sonnet-4-20250514",
+            "model": "claude-sonnet-4-6",
             "api_key": os.getenv("ANTHROPIC_API_KEY", ""),
             "temperature": 0,
             "max_tokens": 2000,

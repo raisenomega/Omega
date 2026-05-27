@@ -31,7 +31,7 @@ class MonitorAgent(BaseAgent):
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.MONITOR,
-            model="gpt-4o-mini",  # Lightweight for monitoring
+            model="claude-haiku-4-5-20251001",  # I2: lightweight tier para monitoreo
             tools=[
                 "health_checker",
                 "performance_tracker",

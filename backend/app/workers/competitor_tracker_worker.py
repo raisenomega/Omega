@@ -62,7 +62,7 @@ class CompetitorTrackerWorker(BaseWorker):
             return "Puerto Rico"
 
     async def _scan_competitor(self, supabase, client_id: str, competitor: str, region: str) -> int:
-        """Ejecuta 2 queries Tavily para un competidor y guarda resultados"""
+        """Ejecuta 2 queries de búsqueda web (Brave) para un competidor y guarda resultados"""
         from app.infrastructure.tools.web_search_tool import web_search
 
         findings = []
@@ -83,7 +83,7 @@ class CompetitorTrackerWorker(BaseWorker):
                     relevant = self._filter_relevant(result["results"], competitor)
                     findings.extend(relevant)
             except Exception as e:
-                logger.warning(f"[{self.name}] Tavily error '{query}': {e}")
+                logger.warning(f"[{self.name}] web_search error '{query}': {e}")
 
         if not findings:
             return 0

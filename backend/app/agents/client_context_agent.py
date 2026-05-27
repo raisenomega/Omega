@@ -46,7 +46,7 @@ class ClientContextAgent:
                     "client_id": client_id
                 }
 
-            # 2. Analyze with GPT-4o
+            # 2. Analyze with Claude
             analysis = await self._analyze_with_llm(client_data)
 
             # 3. Save to client_context
@@ -115,7 +115,7 @@ class ClientContextAgent:
         }
 
     async def _analyze_with_llm(self, data: dict) -> dict:
-        """Analyze client data with GPT-4o"""
+        """Analyze client data with Claude"""
         prompt = self._build_analysis_prompt(data)
 
         response = await self.llm_router.route(

@@ -28,7 +28,7 @@ class ContentCreatorAgent(BaseAgent):
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.CONTENT_CREATOR,
-            model="gpt-4o",
+            model="claude-sonnet-4-6",
             tools=["text_generation", "image_generation", "hashtag_research"]
         )
 

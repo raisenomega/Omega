@@ -45,7 +45,7 @@ class Settings(BaseSettings):
 
     # Anthropic Claude
     anthropic_api_key: str = Field(..., env="ANTHROPIC_API_KEY")
-    anthropic_model: str = Field(default="claude-sonnet-4-20250514", env="ANTHROPIC_MODEL")
+    anthropic_model: str = Field(default="claude-sonnet-4-6", env="ANTHROPIC_MODEL")
 
     # JWT
     jwt_secret_key: str = Field(..., env="JWT_SECRET_KEY")

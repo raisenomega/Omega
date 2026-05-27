@@ -44,7 +44,7 @@ async def handle_analyze_insight(
             f"4. Llamado a la acción: ¿es efectivo?"
         )
 
-        # Generar análisis con OpenAI
+        # Generar análisis con Claude
         analysis_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=300,

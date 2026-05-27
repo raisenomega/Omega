@@ -21,7 +21,7 @@ class ContentLabGenerated:
     social_account_id: str
     content_type: str  # 'caption', 'image', 'script', etc.
     content: str  # Texto generado o URL de imagen
-    provider: str  # 'openai', 'anthropic', 'fal'
+    provider: str  # 'anthropic' (texto · §2.6 I1) · 'nano-banana' (imagen) · 'veo' (video)
     model: str
     tokens_used: int
     is_saved: bool

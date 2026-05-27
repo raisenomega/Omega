@@ -4,8 +4,8 @@ Handler de generación/edición de imágenes para Content Lab.
 
 Filosofía: No velocity, only precision 🐢💎
 
-Fase 2 §2.4: swap DALL-E 3 → Nano Banana (generación).
-Fase 2 §2.6: swap FAL Flux Kontext (edit mode) → Nano Banana refs (DEBT-022 cerrada).
+Fase 2 §2.4: Nano Banana (generación).
+Fase 2 §2.6: edit mode → Nano Banana refs (DEBT-022 cerrada).
 """
 from typing import Dict, Any, List, Optional
 from fastapi import HTTPException

@@ -18,15 +18,12 @@ UserTier = Literal["basico_97", "pro_197", "enterprise_497"]
 # Acciones de validación de uso
 UsageAction = Literal["allow", "warn", "upsell", "block"]
 
-# Providers de LLM
-LLMProvider = Literal[
-    "anthropic", "openai", "deepseek",
-    "groq", "gemini", "fal"
-]
+# Providers de LLM · §2.6: Anthropic-only para texto (DDD I1)
+LLMProvider = Literal["anthropic"]
 
 class LLMConfig(BaseModel):
     """Configuración de un modelo LLM."""
-    primary: str = Field(..., description="Modelo primario (ej: anthropic/claude-sonnet-4)")
+    primary: str = Field(..., description="Modelo primario (ej: anthropic/claude-sonnet-4-6)")
     fallback: List[str] = Field(default_factory=list, description="Modelos de respaldo")
     cache: bool = Field(default=False, description="Activar context caching")
 

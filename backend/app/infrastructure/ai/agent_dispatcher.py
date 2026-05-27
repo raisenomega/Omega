@@ -17,7 +17,7 @@ from .providers import (
     AIProviderResponse,
     AnthropicProvider,
 )
-# Fase 2 §2.6: OpenAIProvider/DeepseekProvider/GeminiProvider/GroqProvider eliminados (DDD I1)
+# Fase 2 §2.6: providers legacy no-Anthropic eliminados (DDD I1)
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class AgentDispatcher:
         Create provider instance based on name.
 
         Args:
-            provider_name: Provider name (openai, deepseek, etc.)
+            provider_name: Provider name (anthropic)
             model_name: Model identifier
 
         Returns:

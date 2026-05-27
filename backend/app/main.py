@@ -39,7 +39,7 @@ from app.api.routes import (
     context, clients, social_accounts, brand_files, agents,
     system, omega, nova, sentinel, oracle, prompt_vault, handoff, reseller, sub_brands
 )
-# DEBT-036: legacy Lovable billing module desregistrado · reemplazado por billing_v3 bc_billing
+# DEBT-036: módulo billing legacy desregistrado · reemplazado por billing_v3 bc_billing
 from app.api.routes import billing_v3
 from app.api.routes import aria_v1
 from app.api.routes import clients_v3

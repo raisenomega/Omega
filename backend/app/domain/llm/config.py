@@ -8,52 +8,52 @@ from .types import TierConfig, LLMConfig
 LLM_TIERS: dict[str, TierConfig] = {
     "basico_97": TierConfig(
         post=LLMConfig(
-            primary="anthropic/claude-3.5-haiku",
-            fallback=["deepseek/deepseek-chat", "openai/gpt-4o-mini"],
+            primary="anthropic/claude-haiku-4-5-20251001",
+            fallback=["anthropic/claude-haiku-4-5-20251001", "anthropic/claude-haiku-4-5-20251001"],
             cache=True
         ),
         caption=LLMConfig(
-            primary="anthropic/claude-3.5-haiku",
-            fallback=["deepseek/deepseek-chat", "openai/gpt-4o-mini"],
+            primary="anthropic/claude-haiku-4-5-20251001",
+            fallback=["anthropic/claude-haiku-4-5-20251001", "anthropic/claude-haiku-4-5-20251001"],
             cache=True
         ),
         story=LLMConfig(
-            primary="deepseek/deepseek-chat",
-            fallback=["anthropic/claude-3.5-haiku"],
+            primary="anthropic/claude-haiku-4-5-20251001",
+            fallback=["anthropic/claude-haiku-4-5-20251001"],
             cache=False
         ),
         reel=LLMConfig(
-            primary="deepseek/deepseek-chat",
-            fallback=["anthropic/claude-3.5-haiku"],
+            primary="anthropic/claude-haiku-4-5-20251001",
+            fallback=["anthropic/claude-haiku-4-5-20251001"],
             cache=False
         ),
         hashtags=LLMConfig(
-            primary="deepseek/deepseek-chat",
-            fallback=["groq/llama-3.3-70b"],
+            primary="anthropic/claude-haiku-4-5-20251001",
+            fallback=["anthropic/claude-haiku-4-5-20251001"],
             cache=False
         ),
         email=LLMConfig(
-            primary="anthropic/claude-3.5-haiku",
-            fallback=["deepseek/deepseek-chat"],
+            primary="anthropic/claude-haiku-4-5-20251001",
+            fallback=["anthropic/claude-haiku-4-5-20251001"],
             cache=True
         ),
         anuncio=LLMConfig(
-            primary="anthropic/claude-3.5-haiku",
-            fallback=["deepseek/deepseek-chat"],
+            primary="anthropic/claude-haiku-4-5-20251001",
+            fallback=["anthropic/claude-haiku-4-5-20251001"],
             cache=True
         ),
         bio=LLMConfig(
-            primary="deepseek/deepseek-chat",
-            fallback=["anthropic/claude-3.5-haiku"],
+            primary="anthropic/claude-haiku-4-5-20251001",
+            fallback=["anthropic/claude-haiku-4-5-20251001"],
             cache=False
         ),
         script=LLMConfig(
-            primary="deepseek/deepseek-chat",
-            fallback=["anthropic/claude-3.5-haiku"],
+            primary="anthropic/claude-haiku-4-5-20251001",
+            fallback=["anthropic/claude-haiku-4-5-20251001"],
             cache=False
         ),
         imagen=LLMConfig(
-            primary="fal-ai/flux-schnell",
+            primary="nano-banana",
             fallback=[],
             cache=False
         )
@@ -61,126 +61,126 @@ LLM_TIERS: dict[str, TierConfig] = {
 
     "pro_197": TierConfig(
         post=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["deepseek/deepseek-chat", "openai/gpt-4o"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-haiku-4-5-20251001", "anthropic/claude-sonnet-4-6"],
             cache=True
         ),
         caption=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["deepseek/deepseek-chat", "openai/gpt-4o"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-haiku-4-5-20251001", "anthropic/claude-sonnet-4-6"],
             cache=True
         ),
         story=LLMConfig(
-            primary="deepseek/deepseek-chat",
-            fallback=["anthropic/claude-3.5-haiku", "openai/gpt-4o-mini"],
+            primary="anthropic/claude-haiku-4-5-20251001",
+            fallback=["anthropic/claude-haiku-4-5-20251001", "anthropic/claude-haiku-4-5-20251001"],
             cache=False
         ),
         reel=LLMConfig(
-            primary="deepseek/deepseek-chat",
-            fallback=["anthropic/claude-3.5-haiku"],
+            primary="anthropic/claude-haiku-4-5-20251001",
+            fallback=["anthropic/claude-haiku-4-5-20251001"],
             cache=False
         ),
         hashtags=LLMConfig(
-            primary="deepseek/deepseek-chat",
-            fallback=["groq/llama-3.3-70b"],
+            primary="anthropic/claude-haiku-4-5-20251001",
+            fallback=["anthropic/claude-haiku-4-5-20251001"],
             cache=False
         ),
         email=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["deepseek/deepseek-chat"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-haiku-4-5-20251001"],
             cache=True
         ),
         anuncio=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["deepseek/deepseek-chat"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-haiku-4-5-20251001"],
             cache=True
         ),
         ad=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["deepseek/deepseek-chat"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-haiku-4-5-20251001"],
             cache=True
         ),
         bio=LLMConfig(
-            primary="deepseek/deepseek-chat",
-            fallback=["anthropic/claude-3.5-haiku"],
+            primary="anthropic/claude-haiku-4-5-20251001",
+            fallback=["anthropic/claude-haiku-4-5-20251001"],
             cache=False
         ),
         script=LLMConfig(
-            primary="deepseek/deepseek-chat",
-            fallback=["anthropic/claude-3.5-haiku", "openai/gpt-4o-mini"],
+            primary="anthropic/claude-haiku-4-5-20251001",
+            fallback=["anthropic/claude-haiku-4-5-20251001", "anthropic/claude-haiku-4-5-20251001"],
             cache=False
         ),
         carrusel=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["deepseek/deepseek-chat", "openai/gpt-4o"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-haiku-4-5-20251001", "anthropic/claude-sonnet-4-6"],
             cache=True
         ),
         imagen=LLMConfig(
-            primary="fal-ai/flux-dev",
-            fallback=["openai/dall-e-3"],
+            primary="nano-banana",
+            fallback=["nano-banana"],
             cache=False
         )
     ),
 
     "enterprise_497": TierConfig(
         post=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["openai/o1-mini", "deepseek/deepseek-chat", "openai/gpt-4o"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-opus-4-7", "anthropic/claude-haiku-4-5-20251001", "anthropic/claude-sonnet-4-6"],
             cache=True
         ),
         caption=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["openai/o1-mini", "deepseek/deepseek-chat", "openai/gpt-4o"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-opus-4-7", "anthropic/claude-haiku-4-5-20251001", "anthropic/claude-sonnet-4-6"],
             cache=True
         ),
         story=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["deepseek/deepseek-chat", "openai/gpt-4o"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-haiku-4-5-20251001", "anthropic/claude-sonnet-4-6"],
             cache=True
         ),
         reel=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["deepseek/deepseek-chat", "openai/gpt-4o"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-haiku-4-5-20251001", "anthropic/claude-sonnet-4-6"],
             cache=True
         ),
         hashtags=LLMConfig(
-            primary="anthropic/claude-3.5-haiku",
-            fallback=["deepseek/deepseek-chat"],
+            primary="anthropic/claude-haiku-4-5-20251001",
+            fallback=["anthropic/claude-haiku-4-5-20251001"],
             cache=False
         ),
         email=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["openai/o1-mini", "deepseek/deepseek-chat"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-opus-4-7", "anthropic/claude-haiku-4-5-20251001"],
             cache=True
         ),
         anuncio=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["openai/o1-mini", "deepseek/deepseek-chat"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-opus-4-7", "anthropic/claude-haiku-4-5-20251001"],
             cache=True
         ),
         bio=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["deepseek/deepseek-chat", "openai/gpt-4o"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-haiku-4-5-20251001", "anthropic/claude-sonnet-4-6"],
             cache=True
         ),
         script=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["deepseek/deepseek-chat", "openai/gpt-4o"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-haiku-4-5-20251001", "anthropic/claude-sonnet-4-6"],
             cache=True
         ),
         analytics=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["openai/o1-mini", "deepseek/deepseek-chat"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-opus-4-7", "anthropic/claude-haiku-4-5-20251001"],
             cache=False
         ),
         carrusel=LLMConfig(
-            primary="anthropic/claude-sonnet-4",
-            fallback=["openai/gpt-4o"],
+            primary="anthropic/claude-sonnet-4-6",
+            fallback=["anthropic/claude-sonnet-4-6"],
             cache=True
         ),
         imagen=LLMConfig(
-            primary="fal-ai/flux-pro-1.1",
-            fallback=["openai/dall-e-3-hd"],
+            primary="nano-banana",
+            fallback=["nano-banana"],
             cache=False
         )
     )

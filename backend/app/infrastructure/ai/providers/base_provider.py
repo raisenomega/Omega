@@ -121,7 +121,7 @@ class BaseAIProvider(ABC):
         Get the provider name.
 
         Returns:
-            Provider name string (e.g., "openai", "anthropic")
+            Provider name string (e.g., "anthropic")
         """
         pass
 
@@ -131,7 +131,7 @@ class BaseAIProvider(ABC):
         Get the model name.
 
         Returns:
-            Model identifier string (e.g., "gpt-4o", "claude-sonnet-4.5")
+            Model identifier string (e.g., "claude-sonnet-4-6", "claude-opus-4-7")
         """
         pass
 

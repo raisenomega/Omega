@@ -23,7 +23,7 @@ async def handle_generate_video_runway(
     Generate video using Veo 3.1 (Fase 2 §2.5 swap from Runway Gen-3 Alpha Turbo)
 
     NOTE: function name retains `_runway` suffix for API compatibility
-    (frontend Lovable calls `/generate-video-runway/`) — see DEBT-021.
+    (ruta legacy `/generate-video-runway/`) — see DEBT-021.
 
     Workflow:
     1. Get client_id from account_id

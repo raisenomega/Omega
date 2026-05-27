@@ -1,6 +1,6 @@
 """OmegaRaisen — Video Generation Compat Layer (Fase 2 §2.5 + Sprint 2 DEBT-019).
 
-Mediates entre Lovable callers (Dict[str, Any] Runway shape) y Veo 3.1 V3 adapter
+Mediates entre callers legacy (Dict[str, Any] · shape de video V1) y Veo 3.1 V3 adapter
 LRO. Descarga bytes del temp Google URI antes de TTL + upload a Supabase Storage
 → retorna URL persistente (cierra DEBT-019 · 22 may 2026).
 
@@ -38,7 +38,7 @@ async def generate_video_compat(
     ratio: str = "1280:768",
     client_id: Optional[str] = None,
 ) -> Dict[str, object]:
-    """Lovable-compatible video generation backed by Veo 3.1 + Supabase Storage.
+    """Video generation (compat V1) backed by Veo 3.1 + Supabase Storage.
 
     `duration` aceptado por compat (Veo 3.1 siempre 8s). `ratio` mapeado a aspect.
     `client_id` opcional · None → folder 'shared/' (legacy · LV1 handler).
