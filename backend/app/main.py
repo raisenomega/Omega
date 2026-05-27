@@ -117,8 +117,11 @@ async def startup_event():
     # OUTCOME EVALUATOR (4A-2 · PASO 3 ciclo auto-aprendizaje · 11vo cron job)
     from app.bc_cognition.application.outcome_evaluator import run_outcome_evaluation
     scheduler.add_job(run_outcome_evaluation, 'cron', hour=4, minute=0, id='outcome_evaluator')
+    # CREDIT PERIOD RESET (DEBT-052 FASE 4 · fin-de-mes · 12vo cron job)
+    from app.bc_billing.application.reset_credit_periods import run_credit_period_reset
+    scheduler.add_job(run_credit_period_reset, 'cron', hour=0, minute=5, id='credit_period_reset', max_instances=1)
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL workers activos — 11 jobs registrados")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET workers activos — 12 jobs registrados")
 
 @app.on_event("shutdown")
 async def shutdown_event():

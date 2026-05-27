@@ -21,6 +21,17 @@ async def outcome_evaluator_run_now(authorization: Optional[str] = Header(None))
     return await run_outcome_evaluation()
 
 
+@router.get("/credits/reset-now")
+async def credit_period_reset_run_now(authorization: Optional[str] = Header(None)):
+    """DIAGNÓSTICO TEMPORAL (solo superadmin · DEBT-052 F4) · triggea run_credit_period_reset()
+    sin esperar el cron diario de 00:05. Retorna {reset, failed}. Remover tras validar en prod."""
+    user = await get_current_user(authorization)
+    if user.get("role") != "owner":  # owner = superadmin real (00022)
+        raise HTTPException(status_code=403, detail="superadmin_only")
+    from app.bc_billing.application.reset_credit_periods import run_credit_period_reset
+    return await run_credit_period_reset()
+
+
 @router.get("/stats")
 async def get_system_stats(request: Request):
     """
