@@ -7,6 +7,7 @@ from datetime import datetime
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
 from app.infrastructure.ai.claude_service import claude_service
+from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.brand_analyzer import (
     brand_analyzer,
     BrandProfile,
@@ -31,7 +32,7 @@ class BrandVoiceAgent(BaseAgent):
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.BRAND_VOICE,
-            model="claude-opus-4",
+            model=resolve_model("brand_voice"),  # I2: sonnet
             tools=[
                 "tone_analyzer",
                 "content_validator",
@@ -137,7 +138,8 @@ class BrandVoiceAgent(BaseAgent):
             ai_suggestions = await claude_service.generate_text(
                 prompt=prompt,
                 max_tokens=200,
-                temperature=0.6
+                temperature=0.6,
+                model=self.model,
             )
             
             suggestions = [
@@ -173,7 +175,8 @@ class BrandVoiceAgent(BaseAgent):
         improved = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=300,
-            temperature=0.7
+            temperature=0.7,
+            model=self.model,
         )
         
         # Identify changes
@@ -222,7 +225,8 @@ class BrandVoiceAgent(BaseAgent):
         analysis = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=250,
-            temperature=0.5
+            temperature=0.5,
+            model=self.model,
         )
         
         # Parse AI response (simplified)
@@ -266,7 +270,8 @@ class BrandVoiceAgent(BaseAgent):
         adapted = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=200,
-            temperature=0.7
+            temperature=0.7,
+            model=self.model,
         )
         
         adapted = adapted.strip()[:char_limit]

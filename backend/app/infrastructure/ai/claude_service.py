@@ -22,20 +22,24 @@ class ClaudeService:
         prompt: str,
         system_message: Optional[str] = None,
         temperature: float = 0.7,
-        max_tokens: int = 4096
+        max_tokens: int = 4096,
+        model: Optional[str] = None,
     ) -> str:
         """
-        Generate text using Claude
-        
+        Generate text using Claude.
+
         Args:
             prompt: User prompt
             system_message: System instructions
             temperature: Creativity (0-1)
             max_tokens: Maximum response length
-            
+            model: Override model id (e.g. from routing_table.resolve_model).
+                   If None, falls back to self.model (claude-sonnet-4-6).
+
         Returns:
             Generated text
         """
+        effective_model = model or self.model
         try:
             messages = [
                 {
@@ -43,9 +47,9 @@ class ClaudeService:
                     "content": prompt
                 }
             ]
-            
+
             response = await self.client.messages.create(
-                model=self.model,
+                model=effective_model,
                 max_tokens=max_tokens,
                 temperature=temperature,
                 system=system_message if system_message else "",
@@ -53,7 +57,9 @@ class ClaudeService:
             )
             
             text = response.content[0].text
-            logger.info(f"Generated text with Claude: {len(text)} characters")
+            logger.info(
+                f"Generated text with Claude ({effective_model}): {len(text)} characters"
+            )
             
             return text
             

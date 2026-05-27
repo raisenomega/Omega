@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
 from app.infrastructure.ai.claude_service import claude_service
+from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.analytics_processor import analytics_processor
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ class AnalyticsAgent(BaseAgent):
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.ANALYTICS,
-            model="gpt-4",
+            model=resolve_model("analytics"),  # I2: sonnet
             tools=[
                 "data_processor",
                 "stats_analyzer",
@@ -113,7 +114,8 @@ class AnalyticsAgent(BaseAgent):
         ai_insights = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=300,
-            temperature=0.7
+            temperature=0.7,
+            model=self.model,
         )
         
         return {
@@ -173,7 +175,8 @@ class AnalyticsAgent(BaseAgent):
         ai_analysis = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=250,
-            temperature=0.6
+            temperature=0.6,
+            model=self.model,
         )
         
         return {
@@ -197,11 +200,11 @@ class AnalyticsAgent(BaseAgent):
         # Build comprehensive prompt
         prompt = self._build_insights_prompt(metrics)
         
-        # Generate insights with GPT-4
         insights_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=400,
-            temperature=0.7
+            temperature=0.7,
+            model=self.model,
         )
         
         return {

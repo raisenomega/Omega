@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
 from app.infrastructure.ai.claude_service import claude_service
+from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.queue_manager import (
     ScheduledPost,
     PublicationQueue,
@@ -35,7 +36,7 @@ class SchedulingAgent(BaseAgent):
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.CONTENT_CREATOR,
-            model="gpt-4",
+            model=resolve_model("scheduling"),  # I2: sonnet
             tools=[
                 "scheduler",
                 "queue_manager",
@@ -230,7 +231,8 @@ class SchedulingAgent(BaseAgent):
         analysis = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=200,
-            temperature=0.6
+            temperature=0.6,
+            model=self.model,
         )
 
         # Parse time slots (simplified - in production use regex/structured output)

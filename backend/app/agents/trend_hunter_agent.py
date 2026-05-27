@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
 from app.infrastructure.ai.claude_service import claude_service
+from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.trend_processor import (
     trend_processor,
     TrendingTopic,
@@ -30,7 +31,7 @@ class TrendHunterAgent(BaseAgent):
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.TREND_HUNTER,
-            model="gpt-4",
+            model=resolve_model("trend_hunter"),  # I2: sonnet
             tools=[
                 "trend_analyzer",
                 "virality_predictor",
@@ -107,7 +108,8 @@ class TrendHunterAgent(BaseAgent):
                 analysis = await claude_service.generate_text(
                     prompt=prompt,
                     max_tokens=150,
-                    temperature=0.6
+                    temperature=0.6,
+                    model=self.model,
                 )
                 
                 # Calculate trend score
@@ -160,7 +162,8 @@ class TrendHunterAgent(BaseAgent):
         prediction_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=200,
-            temperature=0.6
+            temperature=0.6,
+            model=self.model,
         )
         
         # Calculate virality score
@@ -225,7 +228,8 @@ class TrendHunterAgent(BaseAgent):
             ideas_text = await claude_service.generate_text(
                 prompt=prompt,
                 max_tokens=150,
-                temperature=0.8
+                temperature=0.8,
+                model=self.model,
             )
             
             content_ideas = [
@@ -300,7 +304,8 @@ class TrendHunterAgent(BaseAgent):
         content = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=250,
-            temperature=0.8
+            temperature=0.8,
+            model=self.model,
         )
         
         return {

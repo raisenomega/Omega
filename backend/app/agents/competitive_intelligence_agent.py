@@ -7,6 +7,7 @@ from datetime import datetime
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
 from app.infrastructure.ai.claude_service import claude_service
+from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.competitor_analyzer import (
     competitor_analyzer,
     CompetitorProfile,
@@ -30,7 +31,7 @@ class CompetitiveIntelligenceAgent(BaseAgent):
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.COMPETITIVE,
-            model="gpt-4",
+            model=resolve_model("competitive_intelligence"),  # I2: sonnet
             tools=[
                 "competitor_profiler",
                 "benchmark_analyzer",
@@ -102,7 +103,8 @@ class CompetitiveIntelligenceAgent(BaseAgent):
         analysis = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=200,
-            temperature=0.6
+            temperature=0.6,
+            model=self.model,
         )
         
         return CompetitorProfile(
@@ -153,7 +155,8 @@ class CompetitiveIntelligenceAgent(BaseAgent):
         insights = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=250,
-            temperature=0.7
+            temperature=0.7,
+            model=self.model,
         )
         
         return BenchmarkReport(
@@ -195,7 +198,8 @@ class CompetitiveIntelligenceAgent(BaseAgent):
         recommendations = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=200,
-            temperature=0.7
+            temperature=0.7,
+            model=self.model,
         )
         
         opportunity_size = competitor_analyzer.estimate_opportunity_size(
@@ -228,7 +232,8 @@ class CompetitiveIntelligenceAgent(BaseAgent):
         recommendations_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=300,
-            temperature=0.7
+            temperature=0.7,
+            model=self.model,
         )
         
         recommendations = [

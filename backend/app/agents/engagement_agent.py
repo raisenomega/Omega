@@ -8,6 +8,7 @@ import logging
 from pydantic import BaseModel
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
 from app.infrastructure.ai.claude_service import claude_service
+from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.sentiment_processor import (
     sentiment_processor,
     CommentAnalysis
@@ -48,7 +49,7 @@ class EngagementAgent(BaseAgent):
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.ENGAGEMENT,
-            model="gpt-4o",
+            model=resolve_model("engagement"),  # I2: sonnet
             tools=[
                 "sentiment_analyzer",
                 "toxicity_detector",
@@ -108,19 +109,20 @@ class EngagementAgent(BaseAgent):
             comment, analysis, platform, brand_voice, context
         )
         
-        # Generate response with GPT-4
         response_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=150,
-            temperature=0.7
+            temperature=0.7,
+            model=self.model,
         )
-        
+
         # Generate alternatives
         alt_prompt = f"{prompt}\n\nProvide 2 alternative responses (one line each):"
         alternatives_text = await claude_service.generate_text(
             prompt=alt_prompt,
             max_tokens=100,
-            temperature=0.8
+            temperature=0.8,
+            model=self.model,
         )
         
         alternatives = [
@@ -165,9 +167,10 @@ class EngagementAgent(BaseAgent):
         response_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=200,
-            temperature=0.6
+            temperature=0.6,
+            model=self.model,
         )
-        
+
         response = EngagementResponse(
             response_text=response_text.strip(),
             tone_used="professional",
@@ -229,7 +232,8 @@ class EngagementAgent(BaseAgent):
             suggested_response = await claude_service.generate_text(
                 prompt=prompt,
                 max_tokens=150,
-                temperature=0.5
+                temperature=0.5,
+                model=self.model,
             )
         else:
             suggested_response = ""

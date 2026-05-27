@@ -6,6 +6,7 @@ from typing import Dict, Any, List
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
 from app.infrastructure.ai.claude_service import claude_service
+from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.growth_analyzer import (
     growth_analyzer,
     GrowthOpportunity,
@@ -29,7 +30,7 @@ class GrowthHackerAgent(BaseAgent):
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.GROWTH_HACKER,
-            model="gpt-4",
+            model=resolve_model("growth_hacker"),  # I2: opus
             tools=[
                 "opportunity_finder",
                 "experiment_designer",
@@ -100,7 +101,8 @@ class GrowthHackerAgent(BaseAgent):
         analysis = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=500,
-            temperature=0.7
+            temperature=0.7,
+            model=self.model,
         )
 
         # Generate sample opportunities
@@ -209,7 +211,8 @@ class GrowthHackerAgent(BaseAgent):
         wins_text = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=200,
-            temperature=0.7
+            temperature=0.7,
+            model=self.model,
         )
 
         wins = [

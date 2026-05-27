@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
 from app.infrastructure.ai.claude_service import claude_service
+from app.bc_cognition.domain.routing_table import resolve_model
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ class StrategyAgent(BaseAgent):
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.STRATEGY,
-            model="claude-opus-4",
+            model=resolve_model("strategy"),  # I2: sonnet
             tools=[
                 "calendar_optimizer",
                 "timing_analyzer",
@@ -128,9 +129,10 @@ class StrategyAgent(BaseAgent):
         
         analysis = await claude_service.generate_text(
             prompt=prompt,
-            temperature=0.3
+            temperature=0.3,
+            model=self.model,
         )
-        
+
         return {
             "platform": platform,
             "timezone": timezone,
@@ -168,7 +170,8 @@ class StrategyAgent(BaseAgent):
         
         recommendations = await claude_service.generate_text(
             prompt=prompt,
-            temperature=0.4
+            temperature=0.4,
+            model=self.model,
         )
         
         return {

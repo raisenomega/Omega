@@ -51,7 +51,7 @@ class ABTestingAnalysisMixin:
         )
 
         insights_text = await claude_service.generate_text(
-            prompt=prompt, max_tokens=250, temperature=0.6
+            prompt=prompt, max_tokens=250, temperature=0.6, model=self.model
         )
 
         insights = [
@@ -104,7 +104,7 @@ class ABTestingAnalysisMixin:
         )
 
         insights_text = await claude_service.generate_text(
-            prompt=prompt, max_tokens=400, temperature=0.6
+            prompt=prompt, max_tokens=400, temperature=0.6, model=self.model
         )
 
         return [
@@ -131,7 +131,7 @@ class ABTestingAnalysisMixin:
         )
 
         recommendation_text = await claude_service.generate_text(
-            prompt=prompt, max_tokens=300, temperature=0.7
+            prompt=prompt, max_tokens=300, temperature=0.7, model=self.model
         )
 
         untested_variables = ["cta", "hook", "image", "posting_time", "hashtags", "caption"]

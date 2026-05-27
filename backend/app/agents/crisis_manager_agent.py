@@ -146,7 +146,8 @@ class CrisisManagerAgent(BaseAgent):
         analysis = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=200,
-            temperature=0.5
+            temperature=0.5,
+            model=self.model,
         )
         
         # Determine damage level
@@ -195,7 +196,8 @@ class CrisisManagerAgent(BaseAgent):
         strategy = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=300,
-            temperature=0.6
+            temperature=0.6,
+            model=self.model,
         )
         
         return {
@@ -228,7 +230,8 @@ class CrisisManagerAgent(BaseAgent):
         statement = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=250,
-            temperature=0.7
+            temperature=0.7,
+            model=self.model,
         )
 
         # AS-R2/P4: se devuelve como DRAFT marcado · jamás se publica sin firma humana.

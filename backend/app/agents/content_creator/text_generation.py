@@ -5,6 +5,9 @@ Handles captions, hashtags, and video scripts
 from typing import Dict, Any
 import logging
 from app.infrastructure.ai.claude_service import claude_service
+from app.bc_cognition.domain.routing_table import resolve_model
+
+_MODEL = resolve_model("content_creator")  # I2: sonnet
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +51,8 @@ async def generate_caption(task: Dict[str, Any]) -> Dict[str, Any]:
     caption = await claude_service.generate_text(
         prompt=prompt,
         system_message=system_message,
-        temperature=0.8
+        temperature=0.8,
+        model=_MODEL,
     )
 
     return {
@@ -92,7 +96,8 @@ async def generate_hashtags(task: Dict[str, Any]) -> Dict[str, Any]:
 
     response = await claude_service.generate_text(
         prompt=prompt,
-        temperature=0.6
+        temperature=0.6,
+        model=_MODEL,
     )
 
     # Parse hashtags
@@ -144,7 +149,8 @@ async def generate_video_script(task: Dict[str, Any]) -> Dict[str, Any]:
     script = await claude_service.generate_text(
         prompt=prompt,
         temperature=0.7,
-        max_tokens=500
+        max_tokens=500,
+        model=_MODEL,
     )
 
     return {

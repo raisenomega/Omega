@@ -7,6 +7,7 @@ from datetime import datetime
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
 from app.infrastructure.ai.claude_service import claude_service
+from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.experiment_engine import (
     Experiment,
     ABVariant,
@@ -34,7 +35,7 @@ class ABTestingAgent(ABTestingAnalysisMixin, BaseAgent):
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.ANALYTICS,
-            model="gpt-4",
+            model=resolve_model("ab_testing_analysis"),  # I2: opus
             tools=["experiment_designer", "variant_generator", "statistical_analyzer", "insight_engine"],
         )
         self.experiments_db: Dict[str, Experiment] = {}
@@ -91,7 +92,9 @@ class ABTestingAgent(ABTestingAnalysisMixin, BaseAgent):
             f"3. Expected effect size"
         )
 
-        await claude_service.generate_text(prompt=prompt, max_tokens=300, temperature=0.6)
+        await claude_service.generate_text(
+            prompt=prompt, max_tokens=300, temperature=0.6, model=self.model
+        )
 
         effect_size = 0.1
         confidence = 0.95
@@ -130,7 +133,7 @@ class ABTestingAgent(ABTestingAnalysisMixin, BaseAgent):
         )
 
         variants_text = await claude_service.generate_text(
-            prompt=prompt, max_tokens=400, temperature=0.7
+            prompt=prompt, max_tokens=400, temperature=0.7, model=self.model
         )
 
         variant_a = ABVariant(

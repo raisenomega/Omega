@@ -7,6 +7,7 @@ from datetime import datetime
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
 from app.infrastructure.ai.claude_service import claude_service
+from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.report_builder import (
     report_builder,
     ExecutiveReport,
@@ -30,7 +31,7 @@ class ReportGeneratorAgent(BaseAgent):
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.REPORT_GENERATOR,
-            model="gpt-4",
+            model=resolve_model("report_generator"),  # I2: opus
             tools=[
                 "report_builder",
                 "metric_analyzer",
@@ -211,7 +212,8 @@ class ReportGeneratorAgent(BaseAgent):
         summary = await claude_service.generate_text(
             prompt=prompt,
             max_tokens=250,
-            temperature=0.7
+            temperature=0.7,
+            model=self.model,
         )
 
         return summary.strip()
