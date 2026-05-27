@@ -22,10 +22,7 @@ class Settings(BaseSettings):
     # DEBT-026: pydantic_settings 2.6.1 JSON-parsea List[str] antes de @validator
     # (NoDecode no existe en esta versión). Solución: campo str (no-complex) +
     # property `cors_origins_list` que expone el CSV parseado.
-    backend_cors_origins: str = Field(
-        default="http://localhost:5173",
-        env="BACKEND_CORS_ORIGINS"
-    )
+    backend_cors_origins: str = Field(default="http://localhost:5173", env="BACKEND_CORS_ORIGINS")
 
     @property
     def cors_origins_list(self) -> List[str]:
@@ -69,6 +66,10 @@ class Settings(BaseSettings):
     stripe_price_video_pack_starter: str = Field(default="", env="STRIPE_PRICE_VIDEO_PACK_STARTER")
     stripe_price_video_pack_creator: str = Field(default="", env="STRIPE_PRICE_VIDEO_PACK_CREATOR")
     stripe_price_video_pack_cinematic_pro: str = Field(default="", env="STRIPE_PRICE_VIDEO_PACK_CINEMATIC_PRO")
+    stripe_price_credit_pack_micro: str = Field(default="", env="STRIPE_PRICE_CREDIT_PACK_MICRO")  # DEBT-052 F4 credit packs
+    stripe_price_credit_pack_starter: str = Field(default="", env="STRIPE_PRICE_CREDIT_PACK_STARTER")
+    stripe_price_credit_pack_plus: str = Field(default="", env="STRIPE_PRICE_CREDIT_PACK_PLUS")
+    stripe_price_credit_pack_ultra: str = Field(default="", env="STRIPE_PRICE_CREDIT_PACK_ULTRA")
 
     # Qdrant Vector Store
     QDRANT_HOST: str = Field(default="localhost", env="QDRANT_HOST")
@@ -78,8 +79,7 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO", env="LOG_LEVEL")
     log_file: str = Field(default="logs/app.log", env="LOG_FILE")
 
-    # Rate Limiting · DEBT-070: per_minute lo consume RateLimitMiddleware (por IP) · 300 tolera
-    # ráfagas SPA + NAT compartido y corta abuso · ajustable vía RATE_LIMIT_PER_MINUTE en prod.
+    # Rate Limiting · DEBT-070: per_minute lo consume RateLimitMiddleware (por IP · 300) · ajustable RATE_LIMIT_PER_MINUTE
     rate_limit_per_minute: int = Field(default=300, env="RATE_LIMIT_PER_MINUTE")
     rate_limit_per_hour: int = Field(default=1000, env="RATE_LIMIT_PER_HOUR")  # reservado · no consumido aún
 

@@ -56,3 +56,18 @@ class VideoPackCheckoutResponse(BaseModel):
     """Respuesta POST /billing/checkout-video-pack."""
     checkout_url: str
     session_id: str
+
+
+# DEBT-052 FASE 4 · 4 credit packs (budget API prepagado · texto/imagen)
+CreditPackCodeStr = Literal["micro", "starter", "plus", "ultra"]
+
+
+class CreditPackCheckoutRequest(BaseModel):
+    """DEBT-052 FASE 4 · payload POST /billing/checkout-credit-pack."""
+    credit_pack_code: CreditPackCodeStr = Field(..., description="micro | starter | plus | ultra")
+
+
+class CreditPackCheckoutResponse(BaseModel):
+    """Respuesta POST /billing/checkout-credit-pack."""
+    checkout_url: str
+    session_id: str
