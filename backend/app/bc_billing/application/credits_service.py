@@ -26,8 +26,14 @@ def _get_row(client_id: str) -> Optional[dict]:
 
 async def check_budget(client_id: str) -> bool:
     """True si el cliente puede generar. Sin fila (no enrolado) → True (no se
-    gatea). Enrolado → consumido_usd < budget_usd_mensual (Hard block al agotar)."""
-    row = await asyncio.to_thread(_get_row, client_id)
+    gatea). Enrolado → consumido_usd < budget_usd_mensual (Hard block al agotar).
+    FAIL-OPEN: error de infra (tabla ausente pre-db-push · DB caída) → True ·
+    NUNCA rompe la generación por un fallo del sistema de créditos (es additive)."""
+    try:
+        row = await asyncio.to_thread(_get_row, client_id)
+    except Exception as e:
+        logger.warning(f"check_budget fail-open · client={client_id}: {e}")
+        return True
     if row is None:
         return True
     return float(row.get("consumido_usd") or 0) < float(row.get("budget_usd_mensual") or 0)
@@ -61,7 +67,11 @@ async def debit(client_id: str, agent_code: str, cost_usd: float,
 
 
 async def needs_recharge(client_id: str) -> bool:
-    """True si saldo ≤ 20% (consumido ≥ 80% budget) · trigger auto-recarga (FASE 4)."""
-    row = await asyncio.to_thread(_get_row, client_id)
+    """True si saldo ≤ 20% (consumido ≥ 80% budget) · trigger auto-recarga (FASE 4).
+    Fail-safe: error de infra → False (no dispara recarga por un fallo)."""
+    try:
+        row = await asyncio.to_thread(_get_row, client_id)
+    except Exception:
+        return False
     budget = float(row.get("budget_usd_mensual") or 0) if row else 0
     return budget > 0 and float(row.get("consumido_usd") or 0) >= RECHARGE_THRESHOLD * budget
