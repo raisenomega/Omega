@@ -1,9 +1,8 @@
 """Handlers internos del webhook dispatcher. Privado · usado solo por process_webhook."""
 import logging
 from datetime import datetime, timedelta, timezone
-from app.bc_billing.application._addon_handlers import (
-    handle_addon_activation, handle_addon_deactivation, handle_video_pack_activation,
-)
+from app.bc_billing.application._addon_handlers import handle_addon_activation, handle_addon_deactivation, handle_video_pack_activation
+from app.bc_billing.application.reseller_aria import handle_reseller_addon_activation
 from app.bc_billing.application._webhook_helpers import (
     _lookup_client_by_customer, _iso_from_ts, _now_iso,
 )
@@ -22,11 +21,18 @@ async def on_checkout_completed(event: dict, supabase: SupabaseService) -> None:
     customer_id = session.get("customer")
     addon_code = metadata.get("addon_code")
     video_pack_code = metadata.get("video_pack_code")
-    if addon_code:
-        if not all([client_id, sub_id, addon_code]):
-            logger.warning(f"addon checkout.completed con data faltante: {session.get('id')}")
-            return
-        await handle_addon_activation(client_id, addon_code, sub_id, supabase)
+    reseller_id = metadata.get("reseller_id")
+    if addon_code:  # DEBT-046: reseller addon → handler dedicado; client → handler original
+        if addon_code == "aria_premium_reseller":
+            if not all([reseller_id, sub_id]):
+                logger.warning(f"reseller addon checkout.completed con data faltante: {session.get('id')}")
+                return
+            await handle_reseller_addon_activation(reseller_id, addon_code, sub_id, supabase)
+        else:
+            if not all([client_id, sub_id]):
+                logger.warning(f"addon checkout.completed con data faltante: {session.get('id')}")
+                return
+            await handle_addon_activation(client_id, addon_code, sub_id, supabase)
         return
     if video_pack_code:
         if not all([client_id, sub_id, video_pack_code]):

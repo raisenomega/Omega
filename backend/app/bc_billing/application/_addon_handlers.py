@@ -5,6 +5,8 @@ metadata.addon_code presente. Push entry a client_plans.addons jsonb +
 bump clients.aria_level (LEAST + 1, 4). Deactivation: mark deactivated_at +
 reset aria_level a base_level_for_plan.
 
+DEBT-046 · path reseller extraído a reseller_aria.py (C4 ≤100L).
+
 Lookup deactivation: scan O(N) de client_plans.addons[*].stripe_subscription_id.
 V1 OK para <1000 clients · futuro: index gin sobre addons o tabla separada.
 """
@@ -12,6 +14,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional
 from app.infrastructure.supabase_service import SupabaseService
+from app.bc_billing.application.reseller_aria import deactivate_reseller_addon
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +66,8 @@ async def handle_addon_deactivation(
 ) -> Optional[str]:
     """Match addon por subscription_id · marca deactivated_at. Reset aria_level
     SOLO si el addon era aria_premium* (video_pack no afecta aria_level · DEBT-VID-001).
-    Retorna client_id si match."""
+    DEBT-046: también escanea resellers.addons. Retorna entity id si match."""
+    # --- client path (original DEBT-037) ---
     rows = supabase.client.table("client_plans").select("client_id, plan, addons").execute()
     for r in (rows.data or []):
         for a in (r.get("addons") or []):
@@ -82,4 +86,5 @@ async def handle_addon_deactivation(
                 else:
                     logger.info(f"Addon {addon_code} deactivated · client={r['client_id']} · aria_level intacto")
                 return r["client_id"]
-    return None
+    # reseller path (DEBT-046 · extraído a reseller_aria)
+    return await deactivate_reseller_addon(subscription_id, supabase)

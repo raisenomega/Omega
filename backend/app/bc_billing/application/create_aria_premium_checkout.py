@@ -1,10 +1,10 @@
 """Use case: Stripe Checkout session para activar ARIA Premium addon.
 
 DEBT-037 V1 · client_aria_premium ($12/mes · sube aria_level +1 max 4).
-Reseller variant: DEBT-046 (futuro · ~4h · necesita resellers.addons col).
+(DEBT-046 · reseller path → reseller_aria.py.)
 
-Storage: entry se persiste en client_plans.addons jsonb tras webhook
-checkout.session.completed → _addon_handlers.handle_addon_activation.
+Storage: entry se persiste en client_plans.addons (client) o resellers.addons
+(reseller) jsonb tras webhook checkout.session.completed → _addon_handlers.
 Frontend redirect a checkout_url devuelto.
 """
 import logging
@@ -15,11 +15,11 @@ from app.infrastructure.supabase_service import get_supabase_service
 
 logger = logging.getLogger(__name__)
 
-_VALID_ADDONS_V1 = ("aria_premium_client",)  # reseller → DEBT-046 futuro
+_VALID_ADDONS_CLIENT = ("aria_premium_client",)
 
 
 def has_active_aria_premium(addons: list[dict]) -> bool:
-    """True si client_plans.addons tiene aria_premium activo (deactivated_at NULL)."""
+    """True si addons jsonb tiene aria_premium activo (deactivated_at NULL)."""
     return any(
         a.get("addon_code", "").startswith("aria_premium")
         and a.get("deactivated_at") is None
@@ -30,9 +30,9 @@ def has_active_aria_premium(addons: list[dict]) -> bool:
 async def create_aria_premium_checkout(
     client_id: str, addon_code: str, success_url: str, cancel_url: str,
 ) -> BillingResult:
-    """Crea Stripe Checkout para activar ARIA Premium addon."""
-    if addon_code not in _VALID_ADDONS_V1:
-        return fail(f"addon_code inválido V1: {addon_code}", "invalid_addon_code")
+    """Crea Stripe Checkout para activar ARIA Premium addon (client path)."""
+    if addon_code not in _VALID_ADDONS_CLIENT:
+        return fail(f"addon_code inválido para client: {addon_code}", "invalid_addon_code")
 
     price_id = get_price_id_for_addon(addon_code)
     if price_id is None:

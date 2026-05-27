@@ -12,6 +12,11 @@ const PLAN_TO_LEVEL: Record<PlanCode, number> = {
   adopcion: 1, basic: 2, pro: 3, enterprise: 3,
 };
 
+// DEBT-046: resellers default to ARIA level 3 (pro equivalent).
+// Their clientId is null so useClientPlanStatus returns "adopcion" → level 1,
+// which would incorrectly floor the resolved level below what they paid for.
+const RESELLER_BASE_ARIA_LEVEL = 3;
+
 export interface ARIAMessage {
   role: "user" | "assistant";
   content: string;
@@ -28,7 +33,11 @@ export function useARIAChat() {
   const { toast } = useToast();
   const myPlan = useMyPlanStatus();
   const planStatus = useClientPlanStatus(myPlan.clientId ?? "");
-  const planLevel = PLAN_TO_LEVEL[planStatus.planCode] ?? 1;
+  // DEBT-046: for reseller owners (isOwner=true, clientId=null) use the reseller base level
+  // rather than falling through to "adopcion" (level 1) from the empty clientId path.
+  const planLevel = myPlan.isOwner
+    ? RESELLER_BASE_ARIA_LEVEL
+    : (PLAN_TO_LEVEL[planStatus.planCode] ?? 1);
 
   const historyQuery = useQuery({
     queryKey: ["aria_history"],

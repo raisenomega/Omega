@@ -26,7 +26,8 @@ def find_client_by_user(supabase: SupabaseService, user_id: str) -> Optional[dic
 
 
 def find_reseller_by_owner(supabase: SupabaseService, user_id: str) -> Optional[dict[str, Any]]:
-    r = supabase.client.table("resellers").select("id").eq("owner_user_id", user_id).limit(1).execute()
+    # DEBT-046: include aria_level so _resolve_role can return the real purchased level.
+    r = supabase.client.table("resellers").select("id, aria_level").eq("owner_user_id", user_id).limit(1).execute()
     return r.data[0] if r.data else None
 
 
