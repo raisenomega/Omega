@@ -55,13 +55,13 @@ async def _get_system_prompt(agent_code: str, supabase) -> str:
     if code in AGENT_SYSTEM_PROMPTS:
         return AGENT_SYSTEM_PROMPTS[code]
 
-    # 2. Intentar obtener de omega_agents en Supabase
+    # 2. Intentar obtener de agents.system_prompt en Supabase
     try:
         result = (
             supabase.client
-            .table("omega_agents")
+            .table("agents")
             .select("system_prompt, name")
-            .eq("agent_code", code)
+            .eq("code", code)
             .limit(1)
             .execute()
         )
@@ -84,21 +84,21 @@ async def handle_execute_agent_agentic(
     """
     supabase = get_supabase_service()
 
-    # omega_agents usa agent_code — buscar directo en Supabase
+    # agents usa code — buscar en tabla real
     try:
         agent_result = (
             supabase.client
-            .table("omega_agents")
-            .select("id, agent_code, name, status")
-            .eq("agent_code", agent_id.upper())
+            .table("agents")
+            .select("code, name, is_active")
+            .eq("code", agent_id.upper())
             .limit(1)
             .execute()
         )
         if not agent_result.data:
             raise HTTPException(404, f"Agent '{agent_id}' not found")
         agent_data = agent_result.data[0]
-        if agent_data.get("status") not in ("active", "idle", "running"):
-            raise HTTPException(400, f"Agent '{agent_id}' not active (status: {agent_data.get('status')})")
+        if not agent_data.get("is_active"):
+            raise HTTPException(400, f"Agent '{agent_id}' not active")
     except HTTPException:
         raise
     except Exception as e:
@@ -118,15 +118,19 @@ async def handle_execute_agent_agentic(
     # Generar execution_id propio
     execution_id = str(int(_time.time() * 1000))
 
-    # Log inicio en omega_activity
+    # Log inicio en agent_executions (best-effort)
+    now_start = datetime.now(timezone.utc).isoformat()
     try:
-        supabase.client.table("omega_activity").insert({
-            "id": execution_id,
+        supabase.client.table("agent_executions").insert({
+            "agent_id": agent_id.upper(),
             "client_id": request.client_id,
-            "agent_code": agent_id.upper(),
-            "type": "agentic_execution",
-            "content": task[:500],
-            "metadata": {"triggered_by": request.triggered_by, "v2": True},
+            "user_id": request.user_id,
+            "triggered_by": request.triggered_by or "manual",
+            "input_data": {"task": task[:500]},
+            "output_data": {},
+            "status": "running",
+            "started_at": now_start,
+            "metadata": {"v2": True},
         }).execute()
     except Exception:
         pass
@@ -146,21 +150,22 @@ async def handle_execute_agent_agentic(
         )
         result = await runner.run(task=task)
 
-        # Log resultado
+        # Log resultado en agent_executions (best-effort update)
+        now_done = datetime.now(timezone.utc).isoformat()
         try:
-            supabase.client.table("omega_activity").insert({
-                "id": execution_id + "_done",
-                "client_id": request.client_id,
-                "agent_code": agent_id.upper(),
-                "type": "agentic_result",
-                "content": result.content[:500],
+            supabase.client.table("agent_executions").update({
+                "output_data": {"content": result.content[:500]},
+                "status": "completed" if result.success else "failed",
+                "completed_at": now_done,
+                "execution_time_ms": result.duration_ms,
+                "error_message": result.error,
                 "metadata": {
                     "success": result.success,
                     "iterations": result.iterations,
                     "tool_calls": result.tool_calls,
                     "duration_ms": result.duration_ms,
                 },
-            }).execute()
+            }).eq("agent_id", agent_id.upper()).eq("started_at", now_start).execute()
         except Exception:
             pass
 
