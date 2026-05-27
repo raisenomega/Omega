@@ -13,6 +13,7 @@ import {
   Brain,
   ChevronDown,
   Lock,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import { RaisenLogo } from "@/components/brand/RaisenLogo";
@@ -21,6 +22,7 @@ import { NavLink } from "@/components/NavLink";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { useProAccess } from "@/hooks/useProAccess";
+import { useSuperOwner } from "@/hooks/useSuperOwner";
 import {
   Sidebar,
   SidebarContent,
@@ -103,6 +105,7 @@ function LockedItem({ item, onLocked }: { item: NavItemDef; onLocked: () => void
 
 export function AppSidebar() {
   const { hasBasic, hasPro } = useProAccess();
+  const { isSuperOwner } = useSuperOwner();
   const { toast } = useToast();
   const lockedToast = () =>
     toast({ title: "Disponible en plan PRO", description: "Actualizá tu plan para desbloquear esta sección." });
@@ -197,6 +200,29 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* SECURITY DEV · solo is_super_owner (Ibrain · operador OMEGA) */}
+        {isSuperOwner && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Security Dev">
+                    <NavLink
+                      to="/security-dev"
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      <span>Security Dev</span>
+                      <span className="ml-auto h-2 w-2 rounded-full bg-violet-500 group-data-[collapsible=icon]:hidden" />
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {/* SISTEMA */}
         <SidebarGroup>

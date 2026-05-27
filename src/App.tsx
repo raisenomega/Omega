@@ -22,6 +22,7 @@ import IntelligencePage from "./pages/IntelligencePage";
 import BrandVoicePage from "./pages/BrandVoicePage";
 import CrisisPage from "./pages/CrisisPage";
 import AddOnsPage from "./pages/AddOnsPage";
+import SecurityDevPage from "./pages/SecurityDevPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
@@ -133,6 +134,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <AppLayout><AddOnsPage /></AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/security-dev"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout><SecurityDevPage /></AppLayout>
                   </ProtectedRoute>
                 }
               />

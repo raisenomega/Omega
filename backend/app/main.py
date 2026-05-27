@@ -39,7 +39,8 @@ from app.api.routes import (
     content, strategy, analytics, engagement, monitor, brand_voice, competitive, trends, crisis,
     reports, growth, video_production, scheduling, ab_testing, orchestrator, resellers, auth,
     context, clients, social_accounts, brand_files, agents,
-    system, omega, nova, sentinel, oracle, prompt_vault, handoff, reseller, sub_brands
+    system, omega, nova, sentinel, oracle, prompt_vault, handoff, reseller, sub_brands,
+    security_dev
 )
 # DEBT-036: módulo billing legacy desregistrado · reemplazado por billing_v3 bc_billing
 from app.api.routes import billing_v3
@@ -217,6 +218,7 @@ app.include_router(handoff.router, prefix=settings.api_v1_prefix, tags=["Handoff
 app.include_router(reseller.router, prefix=settings.api_v1_prefix, tags=["Reseller Dashboard 🏢"])
 app.include_router(feature_usage_router, prefix=settings.api_v1_prefix, tags=["Feature Usage 📊"])
 app.include_router(sub_brands.router, prefix=settings.api_v1_prefix, tags=["Sub-Brands 🏷️"])
+app.include_router(security_dev.router, prefix=settings.api_v1_prefix, tags=["Security Dev 🔐"])
 
 @app.get("/")
 async def root() -> dict[str, str | int]:

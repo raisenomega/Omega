@@ -115,7 +115,7 @@
 | DEBT-097 | 🟠 Modo Supervisado (PRO · ARIA prepara todo · cliente aprueba · panel + notificación) | 20h | 7 |
 | DEBT-098 | 🟠 Modo Autónomo (Enterprise opt-in · gates limits_omega · `autonomo_consent_at` · log) · dep OAuth | 30h | 8 |
 | DEBT-101 | 🟠 generate_aria_learning_report (reporte ARIA→NOVA semanal · NOVA Nivel 1 auto) | 6h | 7 |
-| DEBT-102 | 🟡 learning_events + panel `/superadmin/learning` · migr 00040/00041/00042 | 10h | 7 |
+| DEBT-102 | 🟡 learning_events + panel `/superadmin/learning` · migr 00041/00042/00043 (00040 reasignada a Security Dev · el número refleja orden real de aplicación, no reserva de sprint · ver DEBT-106) | 10h | 7 |
 | DEBT-103 | 🟠 collect_post_metrics Loop 2 (métricas reales Meta/Google) · dep DEBT-040 | 8h | 8 |
 | DEBT-104 | 🟡 correction_detector conversacional (ARIA detecta correcciones en chat → memoria) | 6h | 8 |
 | DEBT-105 | 🟡 Email owner (sentinel_brief + oracle_weekly_brief → Resend/SendGrid) | 4h | 7 |
@@ -125,6 +125,7 @@
 | DEBT-FFMPEG-004 | 🟠 migración video_processing tables | 1h | 7 |
 | DEBT-EDITOR-001 | 🟡 Editor video nativo (FFmpeg.wasm · timeline 4 capas · presets · brand auto) · por fases | 70h | 8-9 |
 | DEBT-OMNI-001 | acción owner · early access Gemini Omni (aistudio · misma `GEMINI_API_KEY`) | 0h | — |
+| DEBT-106 | 🟢 **Security Dev panel construido** (27 may) · `is_super_owner` (migr **00040** · pendiente db push) + gate `require_super_owner` (defense-in-depth · no toca auth_utils) + endpoints `/security-dev/{health,sentinel,guardian}` + tabs SENTINEL/GUARDIAN **reales** (empty-states honestos) + sidebar solo Ibrain. Subpartes **A/B/C/D** (Claude DEV Chat + Code Terminal E2B funcionales) → placeholders honestos con checklist real de 4 keys · **Sprint 8** | ~40h restantes (A-D) | 8 |
 
 ### Business backlog (sin estimar)
 - DEBT-BIZ-001 pricing LATAM (Mercado Pago, Pix) · DEBT-BIZ-002 WhatsApp Business API · DEBT-BIZ-003 annual pricing · DEBT-BIZ-004 tier intermedio $39-45.
