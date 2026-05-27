@@ -15,6 +15,8 @@ from fastapi.responses import JSONResponse
 from app.api.rate_limit_middleware import RateLimitMiddleware
 from app.config import settings
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from sqlalchemy import create_engine
 from app.services.sentinel_service import SentinelService
 from app.services.oracle_service import OracleService
 from app.workers.news_monitor_worker import NewsMonitorWorker
@@ -56,10 +58,27 @@ from app.api.routes.clients.feature_usage_router import router as feature_usage_
 sentinel_service = SentinelService()
 oracle_service = OracleService()
 scheduler = AsyncIOScheduler(timezone="America/Puerto_Rico")
-# DEBT-045: persistent jobstore REVERTED 22 may 2026 · SQLAlchemy 2.0.25 incompat
-# con Python 3.13.13 de Railway (AssertionError SQLCoreOperations TypingOnly).
-# Cron cleanup orphan_video_jobs sigue funcional vía memory store.
-# Persistent jobstore real: DEBT-047 (requiere bump sqlalchemy >=2.0.32 O pin Python 3.11).
+
+
+def _persistent_jobstore_or_none() -> "SQLAlchemyJobStore | None":
+    """DEBT-047 · jobstore persistente (los jobs sobreviven restarts) DEPLOY-SAFE.
+    Railway corre Python 3.11 (nixpacks · python311) → SQLAlchemy 2.0.25 instancia OK
+    (el 'incompat con 3.13' de DEBT-045 no aplica al runtime desplegado · verificado).
+    Verifica conectividad ANTES de comprometer el jobstore · ante CUALQUIER fallo
+    (URL no parseable, DB caída, sin permiso) → None → el scheduler cae al MemoryJobStore
+    default · NUNCA rompe el arranque."""
+    raw = (settings.database_url or "").strip()
+    if not raw:
+        return None
+    url = raw.replace("postgres://", "postgresql+psycopg2://", 1) if raw.startswith("postgres://") else raw
+    try:
+        engine = create_engine(url, pool_pre_ping=True)
+        with engine.connect():
+            pass
+        return SQLAlchemyJobStore(engine=engine)
+    except Exception as e:
+        logger.warning(f"DEBT-047 · jobstore persistente no disponible → in-memory: {e}")
+        return None
 
 # Create FastAPI application
 app = FastAPI(
@@ -94,34 +113,41 @@ async def startup_event():
         await initialize_qdrant()
     else:
         logging.warning("Skipping Qdrant initialization")
-    # SENTINEL cron jobs
-    scheduler.add_job(sentinel_service.run_vault_scan, 'cron', hour=2, minute=0, id='vault_scan')
-    scheduler.add_job(sentinel_service.run_db_guardian, 'cron', hour=5, minute=0, id='db_guardian')
-    scheduler.add_job(sentinel_service.run_full_scan, 'cron', hour=7, minute=0, id='sentinel_brief')
-    scheduler.add_job(sentinel_service.run_pulse_monitor, 'interval', minutes=5, id='pulse_monitor')
+    # DEBT-047 · jobstore persistente deploy-safe (cae a in-memory si la DB no responde)
+    _jobstore = _persistent_jobstore_or_none()
+    if _jobstore is not None:
+        scheduler.add_jobstore(_jobstore, "default")
+        logger.info("DEBT-047 · jobstore persistente (SQLAlchemy) activo")
+    else:
+        logger.info("DEBT-047 · jobstore in-memory (fallback)")
+    # SENTINEL cron jobs · replace_existing=True → idempotente con jobstore persistente
+    scheduler.add_job(sentinel_service.run_vault_scan, 'cron', hour=2, minute=0, id='vault_scan', replace_existing=True)
+    scheduler.add_job(sentinel_service.run_db_guardian, 'cron', hour=5, minute=0, id='db_guardian', replace_existing=True)
+    scheduler.add_job(sentinel_service.run_full_scan, 'cron', hour=7, minute=0, id='sentinel_brief', replace_existing=True)
+    scheduler.add_job(sentinel_service.run_pulse_monitor, 'interval', minutes=5, id='pulse_monitor', replace_existing=True)
     # ORACLE cron jobs
-    scheduler.add_job(oracle_service.generate_intelligence_brief, 'cron', day_of_week='mon', hour=7, minute=0, id='oracle_weekly_brief')
+    scheduler.add_job(oracle_service.generate_intelligence_brief, 'cron', day_of_week='mon', hour=7, minute=0, id='oracle_weekly_brief', replace_existing=True)
     # OMEGA Workers v2
     news_worker = NewsMonitorWorker()
-    scheduler.add_job(news_worker.run_all_clients, 'interval', hours=2, id='news_monitor', max_instances=1)
+    scheduler.add_job(news_worker.run_all_clients, 'interval', hours=2, id='news_monitor', max_instances=1, replace_existing=True)
     competitor_worker = CompetitorTrackerWorker()
-    scheduler.add_job(competitor_worker.run_all_clients, 'interval', hours=6, id='competitor_tracker', max_instances=1)
+    scheduler.add_job(competitor_worker.run_all_clients, 'interval', hours=6, id='competitor_tracker', max_instances=1, replace_existing=True)
     trend_worker = TrendSpotterWorker()
-    scheduler.add_job(trend_worker.run_all_clients, 'interval', hours=12, id='trend_spotter', max_instances=1)
+    scheduler.add_job(trend_worker.run_all_clients, 'interval', hours=12, id='trend_spotter', max_instances=1, replace_existing=True)
     # BRAND DNA refresh (DEBT-044 Sprint 2 · 9no cron job)
     from app.bc_cognition.application.use_brand_dna import refresh_all_brand_dna
-    scheduler.add_job(refresh_all_brand_dna, 'cron', hour=3, minute=0, id='brand_dna_refresh')
+    scheduler.add_job(refresh_all_brand_dna, 'cron', hour=3, minute=0, id='brand_dna_refresh', replace_existing=True)
     # VIDEO ORPHAN cleanup (DEBT-045 Sprint 3 · 10mo cron job)
     from app.bc_cognition.application.cleanup_orphan_video_jobs import cleanup_orphan_video_jobs
-    scheduler.add_job(cleanup_orphan_video_jobs, 'interval', hours=1, id='video_jobs_orphan_cleanup', max_instances=1)
+    scheduler.add_job(cleanup_orphan_video_jobs, 'interval', hours=1, id='video_jobs_orphan_cleanup', max_instances=1, replace_existing=True)
     # OUTCOME EVALUATOR (4A-2 · PASO 3 ciclo auto-aprendizaje · 11vo cron job)
     from app.bc_cognition.application.outcome_evaluator import run_outcome_evaluation
-    scheduler.add_job(run_outcome_evaluation, 'cron', hour=4, minute=0, id='outcome_evaluator')
+    scheduler.add_job(run_outcome_evaluation, 'cron', hour=4, minute=0, id='outcome_evaluator', replace_existing=True)
     # CREDIT PERIOD RESET (DEBT-052 FASE 4 · fin-de-mes · 12vo cron job)
     from app.bc_billing.application.reset_credit_periods import run_credit_period_reset
-    scheduler.add_job(run_credit_period_reset, 'cron', hour=0, minute=5, id='credit_period_reset', max_instances=1)
+    scheduler.add_job(run_credit_period_reset, 'cron', hour=0, minute=5, id='credit_period_reset', max_instances=1, replace_existing=True)
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET workers activos — 12 jobs registrados")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET workers activos — 12 jobs (jobstore persistente DEBT-047)")
 
 @app.on_event("shutdown")
 async def shutdown_event():
