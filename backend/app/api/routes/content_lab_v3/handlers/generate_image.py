@@ -94,7 +94,7 @@ async def generate_image(
             except Exception as e:
                 logger.warning(f"logo overlay falló · imagen sin marca · client={client_id}: {e}")
 
-    content_id = repo.safe_insert(
+    content_id = await repo.safe_insert(
         "insert_image", repo.insert_generated_content, client_id, {
             "agent_code": "content_creator", "content_type": "image",
             "prompt": request.prompt, "generated_text": image_url,

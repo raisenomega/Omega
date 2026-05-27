@@ -1,4 +1,5 @@
 """Repository content_lab_v3 · única capa de WRITE/READ a content_lab_generated."""
+import asyncio
 import logging
 from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import get_supabase_service
@@ -7,9 +8,9 @@ logger = logging.getLogger(__name__)
 P = ParamSpec("P"); T = TypeVar("T")
 
 
-def safe_insert(label: str, fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> Optional[T]:
+async def safe_insert(label: str, fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> Optional[T]:
     try:
-        return fn(*args, **kwargs)
+        return await asyncio.to_thread(fn, *args, **kwargs)
     except Exception as e:
         logger.error(f"content_lab_repository.{label} failed: {e}", exc_info=True)
         return None

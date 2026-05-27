@@ -51,16 +51,16 @@ async def use_aria_message(
     sanitized, serr = sanitize_input(user_message, InputContext.ARIA_CHAT)
     if serr is not None or sanitized is None or sanitized.action in _UNSAFE:
         flags = "" if sanitized is None else ",".join(f.value for f in sanitized.flags)
-        repo.safe_insert("aria_blocked", repo.insert_behavioral_event,
+        await repo.safe_insert("aria_blocked", repo.insert_behavioral_event,
                          supabase, user_id, client_id, reseller_id,
                          "aria_message_blocked", {"flags": flags})
         return ARIAResult(content=_SAFE_REFUSAL, aria_level=level), None
     user_message = sanitized.clean_text  # clean_text en TODOS los stores (decisión A · cero PII cruda)
 
     # Pre-Claude · user message + behavioral signal (safe · log si falla)
-    repo.safe_insert("user_message", repo.insert_user_message,
+    await repo.safe_insert("user_message", repo.insert_user_message,
                      supabase, user_id, client_id, user_message, level)
-    event_id = repo.safe_insert("behavioral_sent", repo.insert_behavioral_event,
+    event_id = await repo.safe_insert("behavioral_sent", repo.insert_behavioral_event,
                                  supabase, user_id, client_id, reseller_id, "aria_message_sent")
 
     # Call Claude · system = persona + contexto cliente (BUG 2) + web actual (auto-search) + memoria (P5)
@@ -81,19 +81,19 @@ async def use_aria_message(
     # Failure path · failure signal + agent_memory was_correct=False
     if err or not response:
         code = err.code if err else "unknown"
-        repo.safe_insert("behavioral_failed", repo.insert_behavioral_event,
+        await repo.safe_insert("behavioral_failed", repo.insert_behavioral_event,
                          supabase, user_id, client_id, reseller_id,
                          "aria_message_failed", {"error_code": code})
-        repo.safe_insert("agent_memory_failed", mem.insert_agent_memory,
+        await repo.safe_insert("agent_memory_failed", mem.insert_agent_memory,
                          supabase, user_id, client_id, reseller_id,
                          user_message=user_message, assistant_response=f"[failed:{code}]",
                          level=level, source_event_id=event_id, was_correct=False)
         return None, err or ClaudeError("unknown", "ARIA generate returned None")
 
     # Happy path · assistant message + agent_memory was_correct=None (cron 72h)
-    repo.safe_insert("assistant_message", repo.insert_assistant_message,
+    await repo.safe_insert("assistant_message", repo.insert_assistant_message,
                      supabase, user_id, client_id, response.text, level)
-    repo.safe_insert("agent_memory_ok", mem.insert_agent_memory,
+    await repo.safe_insert("agent_memory_ok", mem.insert_agent_memory,
                      supabase, user_id, client_id, reseller_id,
                      user_message=user_message, assistant_response=response.text,
                      level=level, source_event_id=event_id, was_correct=None)

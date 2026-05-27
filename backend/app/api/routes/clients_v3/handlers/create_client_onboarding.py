@@ -80,9 +80,9 @@ async def create_client_onboarding(
         raise HTTPException(status_code=500, detail=f"persist_partial_failed:{type(e).__name__}:{str(e)[:200]}")
 
     # BEST-EFFORT: telemetría
-    repo.safe_insert("behavioral", repo.insert_behavioral_event, user_id, client_id, "client_onboarded",
+    await repo.safe_insert("behavioral", repo.insert_behavioral_event, user_id, client_id, "client_onboarded",
                      {"completion_percent": completion, "social_accounts": len(payload.social_accounts)})
-    repo.safe_insert("memory", repo.insert_agent_memory, user_id, client_id,
+    await repo.safe_insert("memory", repo.insert_agent_memory, user_id, client_id,
                      f"Client onboarded · {payload.identity.industry}/{','.join(payload.identity.regions)}",
                      f"completion={completion}%", 10)
 

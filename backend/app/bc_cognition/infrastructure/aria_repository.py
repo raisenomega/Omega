@@ -3,7 +3,7 @@
 safe_insert: best-effort wrapper · log + return None (FIX 4 audit).
 Memory + delete history: ver aria_memory_repository (C4 split).
 """
-import logging
+import asyncio, logging
 from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import SupabaseService
 from app.bc_cognition.domain.aria_history import clean_history
@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 P = ParamSpec("P"); T = TypeVar("T")
 
 
-def safe_insert(label: str, fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> Optional[T]:
+async def safe_insert(label: str, fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> Optional[T]:
     try:
-        return fn(*args, **kwargs)
+        return await asyncio.to_thread(fn, *args, **kwargs)
     except Exception as e:
         logger.error(f"aria_repository.{label} failed: {e}", exc_info=True)
         return None

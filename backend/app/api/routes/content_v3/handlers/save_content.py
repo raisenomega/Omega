@@ -31,12 +31,12 @@ async def save_content(
 
     was_approved = item.get("status") == "approved"
     new_status = "approved" if request.is_saved else "draft"
-    repo.safe_insert("update_status", repo.update_status, content_id, new_status)
+    await repo.safe_insert("update_status", repo.update_status, content_id, new_status)
 
     if request.is_saved and not was_approved:
         text = item.get("generated_text") or ""  # col real
         client_id = str(item["client_id"])
-        repo.safe_insert("corpus", repo.insert_brand_voice_corpus_approved, client_id, text, None)
-        repo.safe_insert("memory", repo.insert_agent_memory_approved, user["id"], client_id, text)
+        await repo.safe_insert("corpus", repo.insert_brand_voice_corpus_approved, client_id, text, None)
+        await repo.safe_insert("memory", repo.insert_agent_memory_approved, user["id"], client_id, text)
 
     return {"id": content_id, "is_saved": request.is_saved}

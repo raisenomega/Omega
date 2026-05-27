@@ -18,14 +18,14 @@ async def delete_aria_history(
 ) -> dict:
     user = await get_current_user(authorization)
     sb = get_supabase_service()
-    repo.safe_insert("delete_history", mem.delete_aria_history, sb, user["id"])
+    await repo.safe_insert("delete_history", mem.delete_aria_history, sb, user["id"])
 
-    client = repo.safe_insert("find_client", repo.find_client_by_user, sb, user["id"])
-    reseller = repo.safe_insert("find_reseller", repo.find_reseller_by_owner, sb, user["id"])
+    client = await repo.safe_insert("find_client", repo.find_client_by_user, sb, user["id"])
+    reseller = await repo.safe_insert("find_reseller", repo.find_reseller_by_owner, sb, user["id"])
     client_id = client.get("id") if isinstance(client, dict) else None
     reseller_id = reseller.get("id") if isinstance(reseller, dict) else None
     if client_id or reseller_id:
-        repo.safe_insert("behavioral", repo.insert_behavioral_event,
+        await repo.safe_insert("behavioral", repo.insert_behavioral_event,
                          sb, user["id"], client_id, reseller_id,
                          "aria_history_cleared", {})
     return {"deleted": True}

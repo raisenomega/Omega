@@ -45,6 +45,6 @@ async def update_post_status(
     except Exception as e:
         logger.error(f"update_status failed · post_id={post_id} · {current}->{new} · {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="status_update_failed")
-    repo.safe_insert("behavioral", repo.insert_behavioral_status_change,  # telemetría · best-effort OK
+    await repo.safe_insert("behavioral", repo.insert_behavioral_status_change,  # telemetría · best-effort OK
                      user["id"], str(post["client_id"]), post_id, current, new)
     return {"id": post_id, "status": str(updated.get("status") or new)}

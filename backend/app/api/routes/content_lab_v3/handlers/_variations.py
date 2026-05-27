@@ -42,20 +42,20 @@ async def generate_variations(
     for (resp, err), (temp, label) in zip(results, pairs):
         if err or not resp:
             continue
-        item = _persist_variation(resp, temp, label, request, dna, client_id)
+        item = await _persist_variation(resp, temp, label, request, dna, client_id)
         if item:
             out.append(item)
     return out
 
 
-def _persist_variation(
+async def _persist_variation(
     resp: ClaudeResponse, temp: float, label: str,
     request: GenerateTextRequest, dna: BrandDNA, client_id: str,
 ) -> VariationItem | None:
     clean_text = extract_draft(resp.text)
     virality = compute_virality_score(clean_text, dna, request.platform)
     db_type = _UI_TO_DB_TYPE.get(request.content_type, "text")
-    content_id = repo.safe_insert(
+    content_id = await repo.safe_insert(
         f"insert_variation_{label}", repo.insert_generated_content, client_id, {
             "agent_code": "content_creator", "content_type": db_type,
             "prompt": request.topic, "generated_text": clean_text,

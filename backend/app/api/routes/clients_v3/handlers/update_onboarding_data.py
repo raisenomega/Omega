@@ -60,7 +60,7 @@ async def update_onboarding_data(
         raise HTTPException(status_code=500, detail=f"persist_partial_failed:{type(e).__name__}:{str(e)[:200]}")
 
     # BEST-EFFORT: telemetría · no rompe la operación si falla
-    repo.safe_insert("memory", repo.insert_agent_memory, user["id"], client_id,
+    await repo.safe_insert("memory", repo.insert_agent_memory, user["id"], client_id,
                      f"Cliente {client.get('name')} actualizó su perfil",
                      "Datos del cliente actualizados · context disponible para todos los agentes", 10)
     return OnboardingResponse(client_id=client_id, completion_percent=completion, onboarding_complete=completion >= 80)

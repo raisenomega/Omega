@@ -1,4 +1,5 @@
 """Repository clients_v3 · única capa de WRITES Supabase (DDD A1/A9)."""
+import asyncio
 import logging
 from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import get_supabase_service
@@ -8,13 +9,13 @@ logger = logging.getLogger(__name__)
 P = ParamSpec("P"); T = TypeVar("T")
 
 
-def safe_insert(label: str, fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> Optional[T]:
+async def safe_insert(label: str, fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> Optional[T]:
     """Best-effort wrapper (audit FIX 4 pattern) · errores loguean stack y NO propagan.
     Usar SOLO para writes de telemetría/log (behavioral_events, agent_memory) donde
     el fallo no debe romper la operación principal. Para writes críticos (identidad
-    del cliente, context, social_accounts, brand_assets) usar required_insert."""
+    del cliente, context, social_accounts, brand_assets) usar required_insert. DEBT-074: async to_thread."""
     try:
-        return fn(*args, **kwargs)
+        return await asyncio.to_thread(fn, *args, **kwargs)
     except Exception as e:
         logger.error(f"clients_repository.{label} failed: {e}", exc_info=True)
         return None

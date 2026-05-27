@@ -1,4 +1,5 @@
 """Repository writes · calendar_v3 · DDD A1/A9."""
+import asyncio
 import logging
 from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import get_supabase_service
@@ -7,10 +8,10 @@ logger = logging.getLogger(__name__)
 P = ParamSpec("P"); T = TypeVar("T")
 
 
-def safe_insert(label: str, fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> Optional[T]:
-    """Best-effort wrapper · errores loguean y NO propagan."""
+async def safe_insert(label: str, fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> Optional[T]:
+    """Best-effort wrapper · errores loguean y NO propagan. DEBT-074: async to_thread."""
     try:
-        return fn(*args, **kwargs)
+        return await asyncio.to_thread(fn, *args, **kwargs)
     except Exception as e:
         logger.error(f"calendar_repository.{label} failed: {e}", exc_info=True)
         return None
