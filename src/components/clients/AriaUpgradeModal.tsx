@@ -5,9 +5,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { apiPost } from "@/lib/api-client";
 import { ARIA_LEVELS, ariaLevelInfo } from "@/lib/aria-levels";
@@ -15,16 +12,9 @@ import { ARIA_LEVELS, ariaLevelInfo } from "@/lib/aria-levels";
 // P1 (cero precio falso): el backend /billing/upgrade-aria cobra UN addon plano (+1 nivel)
 // al price Stripe configurado (representado como $12, igual que ARIAUpgradeBanner). Por eso el
 // modal muestra SOLO el próximo nivel con ESE precio real · nunca un precio que Stripe no cobra.
-// Precios por-nivel distintos ($25/$49) + salto directo = DEBT-094 (3 productos Stripe + target_level).
+// Precios por-nivel distintos ($25/$49) + salto directo = DEBT-094. Los chips de niveles viven
+// ahora en el Tab Agente (AriaLevelChips) · este modal queda limpio.
 const ARIA_NEXT_PRICE = "$12/mes";
-
-// Copy de tooltip por nivel (hover sobre el chip). El label viene de ARIA_LEVELS (fuente única).
-const ARIA_CHIP_TOOLTIP: Record<number, string> = {
-  1: "Conversacional básico · onboarding y respuestas FAQ. Incluido en tu plan.",
-  2: "Sugerencias de contenido + análisis simple de tu marca. +$12/mes",
-  3: "NBA engine · predice tu mejor próxima acción + auto-publicación con aprobación. Disponible desde ARIA 2.0",
-  4: "Contexto extendido · acciones autónomas con guardrails · análisis profundo de audiencia. Disponible desde ARIA 3.0",
-};
 
 export function AriaUpgradeModal({ currentLevel }: { currentLevel: number }) {
   const { toast } = useToast();
@@ -65,30 +55,6 @@ export function AriaUpgradeModal({ currentLevel }: { currentLevel: number }) {
         <p className="text-xs text-muted-foreground">
           Tu nivel actual: <span className="font-medium text-foreground">{ariaLevelInfo(currentLevel).label}</span>
         </p>
-        <TooltipProvider>
-          <div className="flex flex-wrap gap-1.5">
-            {[1, 2, 3, 4].map((lvl) => {
-              const isCurrent = lvl === currentLevel;
-              return (
-                <Tooltip key={lvl}>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      className={`rounded-full px-2 py-1 text-[10px] font-medium transition-colors ${
-                        isCurrent ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {ARIA_LEVELS[lvl].label}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-[16rem] text-xs">
-                    {ARIA_CHIP_TOOLTIP[lvl]}
-                  </TooltipContent>
-                </Tooltip>
-              );
-            })}
-          </div>
-        </TooltipProvider>
         {atMax || !next ? (
           <p className="py-4 text-center text-sm text-muted-foreground">Estás en el nivel máximo · ARIA 4.0</p>
         ) : (

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Check, Coins } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useCreditPackCheckout, type CreditPackCode } from "@/hooks/useCreditPackCheckout";
@@ -89,9 +89,6 @@ export function CreditPackModal() {
           <DialogTitle className="flex items-center gap-2">
             <Coins className="h-4 w-4 text-amber-500" /> Añade Créditos por tu consumo
           </DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">
-            Amplía tu capacidad cuando lo necesites · sin cambiar tu plan.
-          </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
           {CREDIT_PACKS.map((p) => {

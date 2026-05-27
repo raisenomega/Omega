@@ -13,6 +13,7 @@ import { ClientAgentsActive } from "@/components/clients/ClientAgentsActive";
 import { ClientAgentExecutions } from "@/components/clients/ClientAgentExecutions";
 import { ClientCreditsWidget } from "@/components/clients/ClientCreditsWidget";
 import { AriaUpgradeModal } from "@/components/clients/AriaUpgradeModal";
+import { AriaLevelChips } from "@/components/clients/AriaLevelChips";
 import { fetchOnboardingData } from "@/lib/onboarding-api";
 import { buildContextRows, type InfoRow } from "@/lib/client-info-fields";
 
@@ -125,7 +126,7 @@ export default function ClientDetail() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Badge className={ariaInfo.color}>{ariaInfo.label}</Badge>
+                <AriaLevelChips currentLevel={client.aria_level ?? 1} />
                 <p className="text-xs text-muted-foreground">{ariaInfo.desc}</p>
                 <div className="flex items-center gap-2 border-t border-border/20 pt-3">
                   <span className="text-sm text-muted-foreground">Estado:</span>

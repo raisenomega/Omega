@@ -40,6 +40,9 @@ export function ClientCreditsWidget({ clientId }: Props) {
             <Badge variant="secondary" className="capitalize text-xs">{c.tier}</Badge>
           )}
         </CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Amplía tu capacidad de generación cuando lo necesites · sin cambiar tu plan · Usalos como quieras y cancela cuando quieras.
+        </p>
       </CardHeader>
       <CardContent>
         {c.isLoading ? (

@@ -68,7 +68,7 @@ export function ClientAgentsActive({ clientId }: ClientAgentsActiveProps) {
             </p>
             <Button
               size="sm"
-              onClick={() => navigate("/add-ons")}
+              onClick={() => navigate("/add-ons#agentes")}
               className="border border-amber-500 bg-transparent text-white transition-colors duration-200 hover:bg-emerald-600 hover:border-emerald-600 hover:text-white"
             >
               Explorar Agentes <ArrowRight className="ml-1 h-3.5 w-3.5" />

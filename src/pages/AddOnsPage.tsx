@@ -18,6 +18,7 @@ interface NavState {
 export default function AddOnsPage() {
   const location = useLocation();
   const videoRef = useRef<HTMLElement>(null);
+  const agentesRef = useRef<HTMLElement>(null);
   const checkout = useVideoPackCheckout();  // DEBT-VID-001
   const agentCheckout = useAgentAddonCheckout();  // DEBT-091 · Stripe real (503 honesto si price no configurado)
   const [openAgent, setOpenAgent] = useState<Agent | null>(null);
@@ -27,7 +28,10 @@ export default function AddOnsPage() {
     if (state?.scrollTo === "video-packs") {
       videoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, [location.state]);
+    if (location.hash === "#agentes") {
+      agentesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [location.state, location.hash]);
 
   return (
     <div className="space-y-8">
@@ -66,7 +70,7 @@ export default function AddOnsPage() {
 
       <SectionDivider />
 
-      <section id="agentes" className="space-y-3">
+      <section ref={agentesRef} id="agentes" className="space-y-3">
         <div className="flex items-center gap-2">
           <Bot className="h-4 w-4 text-muted-foreground" />
           <h2 className="text-lg font-semibold">Agentes IA</h2>
