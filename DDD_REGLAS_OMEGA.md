@@ -224,11 +224,24 @@ EXCEPCIÓN 2 — Google Veo 3.1 para GENERACIÓN DE VIDEO
   · Aislado en:  backend/app/bc_cognition/infrastructure/veo3_adapter.py
   · Re-evaluación: Q4 2026 si Anthropic lanza generación de video
 
+EXCEPCIÓN 3 — Voyage AI para EMBEDDINGS (memoria semántica ARIA · DEBT-048)
+  · Proveedor:   Voyage AI (voyageai SDK)
+  · Justificación: Anthropic no ofrece API de embeddings · la memoria
+                   attention-based de ARIA (pgvector + similitud) necesita
+                   un encoder. Solo vectores · NUNCA texto/razonamiento.
+  · Modelos permitidos:
+      · voyage-3-large  (output_dimension=1024, default)
+  · Aislado en:  backend/app/bc_cognition/infrastructure/voyage_adapter.py
+  · Aprobado por owner: 27 may 2026
+  · Re-evaluación: Q4 2026 si Anthropic lanza embeddings propios
+
 ENFORCE       Pre-push hook bloquea cualquier import de:
                 openai, groq, deepseek, mistral, runwayml, fal_client, fal-client
               Permite google-genai SOLO si está bajo paths:
                 backend/app/bc_cognition/infrastructure/nano_banana_adapter.py
                 backend/app/bc_cognition/infrastructure/veo3_adapter.py
+              Permite voyageai SOLO bajo:
+                backend/app/bc_cognition/infrastructure/voyage_adapter.py
 SCRIPT
    #!/bin/bash
    if grep -rE "from (openai|groq|deepseek|mistralai|runwayml|fal_client)" \

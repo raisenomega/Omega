@@ -136,6 +136,18 @@ else
   print_pass "google-genai solo en bc_cognition/infrastructure/{nano_banana,veo3}_adapter.py"
 fi
 
+# Voyage AI (embeddings) solo permitido en el adapter autorizado (DEBT-048 · EXCEPCIÓN 3)
+ILLEGAL_VOYAGE=$(grep -rnE 'from\s+voyageai|import\s+voyageai' \
+  backend/app/ --include="*.py" 2>/dev/null \
+  | grep -vE 'bc_cognition/infrastructure/voyage_adapter\.py' || true)
+
+if [ -n "$ILLEGAL_VOYAGE" ]; then
+  print_fail "I1 violado — voyageai fuera del adapter autorizado:"
+  echo "$ILLEGAL_VOYAGE" | head -10
+else
+  print_pass "voyageai solo en bc_cognition/infrastructure/voyage_adapter.py"
+fi
+
 # ─────────────────────────────────────────────────────────────────
 # CHECK 3/10 — A2: Domain puro (cero imports externos)
 # ─────────────────────────────────────────────────────────────────

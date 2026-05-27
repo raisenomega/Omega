@@ -7,7 +7,7 @@ Llamado desde use_aria_message ANTES de generate() para cerrar el loop P5.
 from datetime import datetime, timezone
 
 from app.bc_cognition.infrastructure.aria_memory_repository import (
-    fetch_recent_for_owner,
+    fetch_recent_for_owner, fetch_similar_for_owner,
 )
 
 _HEADER = "# MEMORIA RECIENTE (últimas interacciones con este cliente)"
@@ -17,17 +17,27 @@ _USER_WORDS, _RESP_WORDS = 12, 18
 
 def load_and_format_memory(
     supabase, client_id, reseller_id,
-    limit: int = 10, max_tokens: int = 500,
+    query: str = "", limit: int = 10, max_tokens: int = 500,
 ) -> str:
+    """DEBT-048 attention-based: si `query` y Voyage → top-k semántica;
+    fallback seamless a cronológico (sin embedding / RPC vacío / error)."""
     if not (client_id or reseller_id):
         return ""
+    rows = _fetch_rows(supabase, client_id, reseller_id, query, limit)
+    return _format(rows, max_tokens) if rows else ""
+
+
+def _fetch_rows(supabase, client_id, reseller_id, query: str, limit: int) -> list[dict]:
     try:
-        rows = fetch_recent_for_owner(
+        if query and client_id:
+            similar = fetch_similar_for_owner(supabase, query, client_id=client_id, limit=limit)
+            if similar:
+                return similar
+        return fetch_recent_for_owner(
             supabase, client_id=client_id, reseller_id=reseller_id, limit=limit,
         )
     except Exception:
-        return ""
-    return _format(rows, max_tokens) if rows else ""
+        return []
 
 
 def _format(rows: list[dict], max_tokens: int) -> str:

@@ -15,8 +15,9 @@ sqlalchemy==2.0.25
 psycopg2-binary==2.9.10
 supabase==2.18.1             # bump 23 may 2026 · acepta httpx<0.29,>=0.26 (compat con google-genai 2.6.0 que requiere httpx>=0.28.1)
 
-# ─── AI providers (SOLO 2 — Anthropic + Google) ───────────────────
+# ─── AI providers (SOLO 3 — Anthropic texto · Google imagen/video · Voyage embeddings) ───
 anthropic>=0.34.0,<1.0.0
+voyageai>=0.3.0              # DEBT-048 · embeddings memoria ARIA · ÚNICA excepción I1 #3 · solo voyage_adapter.py
 google-genai==2.6.0          # Nano Banana + Veo 3.1 — ÚNICA excepción I1 · pin exacto verificado en sanity test 23 may 2026 (rango abierto >=2.0.0 colisionaba con supabase==2.7.4 · resolution-too-deep en pip)
 
 # ─── Auth ─────────────────────────────────────────────────────────

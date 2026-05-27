@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     # Anthropic Claude
     anthropic_api_key: str = Field(..., env="ANTHROPIC_API_KEY")
     anthropic_model: str = Field(default="claude-sonnet-4-6", env="ANTHROPIC_MODEL")
+    voyage_api_key: str = Field(default="", env="VOYAGE_API_KEY")  # DEBT-048 · embeddings ARIA (I1 exc 3)
 
     # JWT
     jwt_secret_key: str = Field(..., env="JWT_SECRET_KEY")

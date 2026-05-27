@@ -11,6 +11,7 @@ from app.bc_cognition.application import _aria_memory_context as ctx
 
 _NOW = datetime.now(timezone.utc)
 _TARGET = "app.bc_cognition.application._aria_memory_context.fetch_recent_for_owner"
+_SIMILAR = "app.bc_cognition.application._aria_memory_context.fetch_similar_for_owner"
 
 
 def _row(hours_ago=1, was_correct=True,
@@ -61,3 +62,33 @@ def test_fetch_exception_returns_empty(monkeypatch) -> None:
         raise RuntimeError("supabase down")
     monkeypatch.setattr(_TARGET, _boom)
     assert ctx.load_and_format_memory(None, client_id="c1", reseller_id=None) == ""
+
+
+# ── DEBT-048 attention-based retrieval ──────────────────────────────────────
+
+def test_query_uses_semantic_when_available(monkeypatch) -> None:
+    """Con query + similar no-vacío → usa la memoria semántica, no la cronológica."""
+    similar = [_row(1, True, "presupuesto ads", "empezá con $5/día en IG")]
+    monkeypatch.setattr(_SIMILAR, lambda *a, **k: similar)
+    monkeypatch.setattr(_TARGET, lambda *a, **k: [_row(99, None, "otra cosa", "otra resp")])
+    out = ctx.load_and_format_memory(None, client_id="c1", reseller_id=None, query="cuánto invierto en ads")
+    assert "presupuesto ads" in out
+    assert "otra cosa" not in out
+
+
+def test_query_falls_back_to_chronological_when_semantic_empty(monkeypatch) -> None:
+    """Voyage down / RPC vacío (similar=[]) → fallback seamless a cronológico."""
+    monkeypatch.setattr(_SIMILAR, lambda *a, **k: [])
+    monkeypatch.setattr(_TARGET, lambda *a, **k: [_row(1, True, "cronológico", "fallback resp")])
+    out = ctx.load_and_format_memory(None, client_id="c1", reseller_id=None, query="algo")
+    assert "cronológico" in out
+
+
+def test_no_query_skips_semantic_path(monkeypatch) -> None:
+    """Sin query → ni siquiera toca fetch_similar_for_owner (path cronológico puro)."""
+    def _should_not_run(*a, **k):
+        raise AssertionError("fetch_similar_for_owner no debe llamarse sin query")
+    monkeypatch.setattr(_SIMILAR, _should_not_run)
+    monkeypatch.setattr(_TARGET, lambda *a, **k: [_row(1, True, "solo cronológico", "resp")])
+    out = ctx.load_and_format_memory(None, client_id="c1", reseller_id=None)
+    assert "solo cronológico" in out

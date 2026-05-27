@@ -69,7 +69,7 @@ async def use_aria_message(
     ctx_block = build_client_context_block(ctx) if ctx else ""
     vertical = (ctx.get("vertical") or ctx.get("niche") or "") if ctx else ""
     web_block = await fetch_web_context(user_message, vertical, "aria", client_id)
-    memory_block = load_and_format_memory(supabase, client_id, reseller_id)
+    memory_block = load_and_format_memory(supabase, client_id, reseller_id, query=user_message)
     system = "\n\n".join(p for p in (base, ctx_block, web_block, memory_block) if p)
     history = repo.load_recent_history(supabase, user_id, get_history_window(level))
     user_content = await build_user_content(user_message, ctx.get("_logo_url") if ctx else None)
