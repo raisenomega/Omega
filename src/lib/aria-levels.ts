@@ -30,8 +30,8 @@ export const ARIA_LEVELS: Record<number, AriaLevelInfo> = {
   4: {
     label: "ARIA 4.0 · Pro+addons",
     color: "bg-amber-500 text-white",
-    desc: "Near-NOVA · contexto extendido + autónomas con guardrails.",
-    benefits: ["Todo lo de 3.0", "Contexto extendido near-NOVA", "Acciones autónomas con guardrails"],
+    desc: "Asistente avanzado · contexto extendido + autónomas con guardrails.",
+    benefits: ["Todo lo de 3.0", "Contexto extendido (asistente avanzado)", "Acciones autónomas con guardrails"],
   },
 };
 
