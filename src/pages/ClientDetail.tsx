@@ -11,6 +11,7 @@ import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts"
 import { ClientAIConfig } from "@/components/clients/ClientAIConfig";
 import { ClientAgentsActive } from "@/components/clients/ClientAgentsActive";
 import { ClientAgentExecutions } from "@/components/clients/ClientAgentExecutions";
+import { ClientCreditsWidget } from "@/components/clients/ClientCreditsWidget";
 import { fetchOnboardingData } from "@/lib/onboarding-api";
 import { buildContextRows, type InfoRow } from "@/lib/client-info-fields";
 
@@ -138,8 +139,12 @@ export default function ClientDetail() {
         </TabsContent>
 
         {/* AI Config Tab · DEBT-057/058 · panel honesto Anthropic-only (read-only) */}
+        {/* DEBT-052 FASE 5 · widget de créditos prepagados (budget+saldo+consumo por agente) */}
         <TabsContent value="ai">
           <ClientAIConfig />
+          <div className="mt-4">
+            <ClientCreditsWidget clientId={client.id} />
+          </div>
         </TabsContent>
 
         {/* Posts Tab · DEBT-053 · historial real de ejecuciones por agente */}

@@ -170,6 +170,72 @@ export type Database = {
           },
         ]
       }
+      client_agent_credits: {
+        Row: {
+          id: string
+          client_id: string
+          budget_usd_mensual: number
+          consumido_usd: number
+          periodo_start: string
+          periodo_end: string
+          packs: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          budget_usd_mensual?: number
+          consumido_usd?: number
+          periodo_start?: string
+          periodo_end: string
+          packs?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          budget_usd_mensual?: number
+          consumido_usd?: number
+          periodo_start?: string
+          periodo_end?: string
+          packs?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      client_credit_ledger: {
+        Row: {
+          id: string
+          client_id: string
+          agent_code: string
+          cost_usd: number
+          model: string | null
+          execution_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          agent_code: string
+          cost_usd: number
+          model?: string | null
+          execution_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          agent_code?: string
+          cost_usd?: number
+          model?: string | null
+          execution_id?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       agent_executions: {
         Row: {
           id: string
