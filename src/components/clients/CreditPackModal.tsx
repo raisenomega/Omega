@@ -98,8 +98,10 @@ export function CreditPackModal() {
                 key={p.code}
                 type="button"
                 onClick={() => setSelected(p.code)}
-                className={`w-full rounded-lg border p-3 text-left transition-colors ${
-                  isSelected ? "border-amber-500 bg-amber-500/5" : "border border-border hover:border-amber-500/60"
+                className={`w-full rounded-lg border p-3 text-left transition-all duration-300 ${
+                  isSelected
+                    ? "border-amber-500 bg-amber-500/5"
+                    : "border border-border hover:border-amber-500/60 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:bg-gradient-to-b hover:from-amber-500/5 hover:to-transparent"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">

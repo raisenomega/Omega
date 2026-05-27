@@ -21,7 +21,9 @@ export function PlanCard({ planCode, currentPlan, clientId, onRequestDowngrade }
   const isDowngrade = PLAN_RANK[planCode] < PLAN_RANK[currentPlan];
 
   return (
-    <Card className={isCurrent ? "flex flex-col h-full border-primary" : "flex flex-col h-full"}>
+    <Card
+      className={`flex flex-col h-full transition-all duration-300 hover:border-amber-500/60 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:bg-gradient-to-b hover:from-amber-500/5 hover:to-transparent${isCurrent ? " border-primary" : ""}`}
+    >
       <CardContent className="flex flex-col gap-3 p-4 flex-1">
         <div className="flex items-baseline justify-between gap-2">
           <h3 className="text-base font-semibold">{config.label}</h3>

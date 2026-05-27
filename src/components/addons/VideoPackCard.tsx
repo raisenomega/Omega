@@ -14,7 +14,7 @@ interface VideoPackCardProps {
 
 export function VideoPackCard({ name, price, bullets, idealFor, onActivate, isPending, ctaLabel = "Activar Pack" }: VideoPackCardProps) {
   return (
-    <Card className="flex flex-col h-full">
+    <Card className="flex flex-col h-full transition-all duration-300 hover:border-amber-500/60 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:bg-gradient-to-b hover:from-amber-500/5 hover:to-transparent">
       <CardContent className="flex flex-col gap-3 p-4 flex-1">
         <div className="flex items-baseline justify-between">
           <h3 className="text-base font-semibold">{name}</h3>
