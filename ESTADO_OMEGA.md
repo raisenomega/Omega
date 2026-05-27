@@ -58,6 +58,8 @@
 | ~~DEBT-074~~ | ✅ **CERRADA** (`f06ecaa` · RONDA 2) safe_insert async (`await asyncio.to_thread`) · 20 call sites · best-effort intacto · gate 10/10 + guardian · required_insert queda como follow-up | — | — | — |
 | DEBT-048 | ARIA attention memory + embeddings (Voyage · nueva excepción I1) | 16h | — | — |
 | DEBT-088 | Escalabilidad infra: job queue Redis/Celery (imágenes/videos) + multi-instancia Railway + ARIA rate-limit queue · 300→10K+ usuarios · ver §15 Capacidad | 36h | DEBT-040 | 7 |
+| DEBT-092 | WhatsApp Business Add-On end-to-end (campo wizard + verificación Meta Cloud API + "Enviar por WhatsApp" + broadcast desde número del cliente + ARIA responde entrantes con voz de marca · reseller N clientes) · Básico $19/Pro $35 | 50h | RONDA D (OAuth Meta) | 8 |
+| DEBT-093 | TikTok Full Integration (OAuth Login Kit + publicar video directo + chip Centro Inteligencia views/likes/shares/followers + Ads Manager básico + Publicador + analytics dashboard) · incluido PRO/Ent · Ads $25/mes | 30h | TikTok dev account | 8 |
 | ~~DEBT-049~~ | ✅ **CERRADA** (b+c `093ffe2` · pendiente db push 00032 · a retirada en DEBT-083 `344e99f`: calendar_repository + NOVA path muerto eliminados) | — | — | — |
 | ~~DEBT-080~~ | ✅ **CERRADA** (`37275ea`) código alineado a tabla agents real (status←is_active · cols reales · 500-traps resueltos) | — | — | — |
 | ~~DEBT-081~~ | ✅ **CERRADA** (`8fd5d15`) omega/get_activity alineado · bloque agent_tasks eliminado | — | — | — |
@@ -110,6 +112,7 @@
 | **Sprint 5** | Centro de Inteligencia + tabs cliente | DEBT-040 (Google OAuth) · DEBT-052 AI Tab · DEBT-053 Posts Tab |
 | **Sprint 6** | Meta Business | DEBT-040 (Meta OAuth · Instagram/Facebook publicación real) |
 | **Sprint 7** | Google Ads | (post-Centro Inteligencia) |
+| **Sprint 8** | Canales nuevos (revenue) | DEBT-092 WhatsApp Business Add-On ($19/$35) · DEBT-093 TikTok Full Integration (Ads $25) |
 
 ### Orden recomendado próxima sesión (~18h)
 1. DEBT-046 ARIA Premium reseller (4h) — revenue directo · única 🔴 abordable sin OAuth
