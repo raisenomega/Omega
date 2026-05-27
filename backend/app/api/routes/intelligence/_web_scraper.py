@@ -1,8 +1,9 @@
 """Núcleo de scraping · async httpx + bs4 (lxml) · sin DB · sin Claude.
 
-Anti-SSRF parcial: follow_redirects=False (más estricto que fetch_url_tool, que SÍ
-los sigue) → un redirect a recurso interno no se sigue. Guardia de host interno
-(localhost/IP privada/metadata) pendiente · DEBT-075 (transversal con fetch_url_tool).
+Anti-SSRF: follow_redirects=False (más estricto que fetch_url_tool, que SÍ los
+sigue) → un redirect a recurso interno no se sigue. Guardia de host interno
+(localhost/IP privada/metadata) vía is_public_host · DEBT-075 (compartida con
+fetch_url_tool).
 Honesto: nunca lanza · retorna {"ok": False, "error": ...} ante fallo. Parse puro en
 _parse_html (CPU breve · 1 página · smoke-testeable directo · sin red).
 """
@@ -13,6 +14,8 @@ from typing import Any
 
 import httpx
 from bs4 import BeautifulSoup
+
+from app.infrastructure.tools._url_safety import is_public_host
 
 _TIMEOUT = 15.0
 _HEADERS = {
@@ -30,6 +33,9 @@ _STOPWORDS = set(
 
 async def analyze_website(url: str) -> dict[str, Any]:
     """Fetch + parse de una URL pública · retorna dict honesto (nunca lanza)."""
+    # Anti-SSRF — DEBT-075: rechaza loopback / IP privada / metadata cloud.
+    if not is_public_host(url):
+        return {"ok": False, "error": "Host no público (SSRF bloqueado)"}
     try:
         async with httpx.AsyncClient(
             timeout=_TIMEOUT, follow_redirects=False, headers=_HEADERS

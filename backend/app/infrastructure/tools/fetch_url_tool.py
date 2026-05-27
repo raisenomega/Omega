@@ -8,6 +8,8 @@ import time
 import httpx
 from typing import Any
 
+from app.infrastructure.tools._url_safety import is_public_host
+
 # URLs bloqueadas por ToS — R-LEGAL-001
 BLOCKED_DOMAINS = {
     "linkedin.com", "www.linkedin.com",
@@ -68,6 +70,14 @@ async def fetch_url(
             ),
             "content": "",
             "blocked": True
+        }
+
+    # Anti-SSRF — DEBT-075: rechaza loopback / IP privada / metadata cloud
+    if not is_public_host(url):
+        return {
+            "success": False,
+            "error": "URL no permitida — el host no es público (SSRF)",
+            "content": ""
         }
 
     start = time.time()
