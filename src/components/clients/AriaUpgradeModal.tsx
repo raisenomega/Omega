@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ArrowUpRight, Check, Sparkles } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -8,16 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiPost } from "@/lib/api-client";
-import { ARIA_LEVELS } from "@/lib/aria-levels";
+import { ARIA_LEVELS, ariaLevelInfo } from "@/lib/aria-levels";
 
-// Precio mensual por nivel (display-only · el backend cobra +1 nivel a un precio Stripe fijo).
-const ARIA_LEVEL_PRICE: Record<number, number> = { 2: 12, 3: 25, 4: 49 };
+// P1 (cero precio falso): el backend /billing/upgrade-aria cobra UN addon plano (+1 nivel)
+// al price Stripe configurado (representado como $12, igual que ARIAUpgradeBanner). Por eso el
+// modal muestra SOLO el próximo nivel con ESE precio real · nunca un precio que Stripe no cobra.
+// Precios por-nivel distintos ($25/$49) + salto directo = DEBT-094 (3 productos Stripe + target_level).
+const ARIA_NEXT_PRICE = "$12/mes";
 
-// Modal selector de niveles de ARIA · cada card es seleccionable · "Comprar" → Stripe checkout
-// (POST /billing/upgrade-aria · mismo patrón que ARIAUpgradeBanner · +1 nivel por addon).
 export function AriaUpgradeModal({ currentLevel }: { currentLevel: number }) {
   const { toast } = useToast();
-  const [selected, setSelected] = useState<number | null>(null);
   const m = useMutation({
     mutationFn: () => apiPost<{ checkout_url: string }>(`/billing/upgrade-aria`, {}),
     onSuccess: (r) => { window.location.href = r.checkout_url; },
@@ -32,23 +31,9 @@ export function AriaUpgradeModal({ currentLevel }: { currentLevel: number }) {
     },
   });
 
-  // Nivel 1 (Adopción) es base · no comprable. Sólo 2/3/4 tienen precio.
-  const isPurchasable = (lvl: number): boolean => lvl >= 2;
-  const price = selected !== null ? ARIA_LEVEL_PRICE[selected] : undefined;
-
-  const buttonLabel = (() => {
-    if (m.isPending) return "Redirigiendo a Stripe…";
-    if (selected === null) return "Seleccioná un nivel";
-    if (selected === currentLevel) return "Ya tenés este nivel";
-    if (!isPurchasable(selected)) return "Nivel base";
-    return `Comprar ARIA ${selected}.0 · $${price}/mes`;
-  })();
-
-  const buttonDisabled =
-    m.isPending ||
-    selected === null ||
-    selected === currentLevel ||
-    !isPurchasable(selected);
+  const nextLevel = currentLevel + 1;
+  const atMax = currentLevel >= 4;
+  const next = atMax ? null : ARIA_LEVELS[nextLevel];
 
   return (
     <Dialog>
@@ -57,49 +42,42 @@ export function AriaUpgradeModal({ currentLevel }: { currentLevel: number }) {
           Mejorar modelo ARIA <ArrowUpRight className="h-3.5 w-3.5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-amber-500" /> Niveles de ARIA
+            <Sparkles className="h-4 w-4 text-amber-500" /> Mejorar ARIA
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-2">
-          {[1, 2, 3, 4].map((lvl) => {
-            const info = ARIA_LEVELS[lvl];
-            const isCurrent = lvl === currentLevel;
-            const isSelected = lvl === selected;
-            return (
-              <button
-                key={lvl}
-                type="button"
-                onClick={() => setSelected(lvl)}
-                className={`w-full rounded-lg border p-3 text-left transition-colors duration-200 ${
-                  isSelected ? "border-amber-500 bg-amber-500/5" : "border-border/40 hover:border-border"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <Badge className={info.color}>{info.label}</Badge>
-                  {isCurrent && <span className="text-[10px] font-medium text-primary">Nivel actual</span>}
-                </div>
-                <p className="mt-1.5 text-xs text-muted-foreground">{info.desc}</p>
-                <ul className="mt-2 space-y-1">
-                  {info.benefits.map((b) => (
-                    <li key={b} className="flex gap-1.5 text-[11px] text-muted-foreground">
-                      <Check className="mt-0.5 h-3 w-3 shrink-0 text-emerald-600" />{b}
-                    </li>
-                  ))}
-                </ul>
-              </button>
-            );
-          })}
-        </div>
-        <Button
-          onClick={() => m.mutate()}
-          disabled={buttonDisabled}
-          className="w-full border border-amber-500 bg-transparent text-white transition-colors duration-200 hover:bg-emerald-600 hover:border-emerald-600 hover:text-white"
-        >
-          {buttonLabel}
-        </Button>
+        <p className="text-xs text-muted-foreground">
+          Tu nivel actual: <span className="font-medium text-foreground">{ariaLevelInfo(currentLevel).label}</span>
+        </p>
+        {atMax || !next ? (
+          <p className="py-4 text-center text-sm text-muted-foreground">Estás en el nivel máximo de ARIA.</p>
+        ) : (
+          <>
+            <div className="rounded-lg border border-amber-500 bg-amber-500/5 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <Badge className={next.color}>{next.label}</Badge>
+                <span className="text-sm font-semibold">{ARIA_NEXT_PRICE}</span>
+              </div>
+              <p className="mt-1.5 text-xs text-muted-foreground">{next.desc}</p>
+              <ul className="mt-2 space-y-1">
+                {next.benefits.map((b) => (
+                  <li key={b} className="flex gap-1.5 text-[11px] text-muted-foreground">
+                    <Check className="mt-0.5 h-3 w-3 shrink-0 text-emerald-600" />{b}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <Button
+              onClick={() => m.mutate()}
+              disabled={m.isPending}
+              className="w-full border border-amber-500 bg-transparent text-white transition-colors duration-200 hover:bg-emerald-600 hover:border-emerald-600 hover:text-white"
+            >
+              {m.isPending ? "Redirigiendo a Stripe…" : `Actualizar a ARIA ${nextLevel}.0 · ${ARIA_NEXT_PRICE}`}
+            </Button>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
