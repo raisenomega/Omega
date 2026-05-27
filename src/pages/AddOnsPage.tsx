@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Package, Video, Bot } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Package, Video, Bot, Sparkles, Coins } from "lucide-react";
 import { VideoPackCard } from "@/components/addons/VideoPackCard";
 import { SectionDivider } from "@/components/addons/SectionDivider";
 import { PlansSection } from "@/components/addons/PlansSection";
@@ -10,6 +12,10 @@ import { VIDEO_PACKS } from "@/components/addons/_video_packs_data";
 import { AGENTS, type Agent } from "@/components/addons/_agents_data";
 import { useVideoPackCheckout } from "@/hooks/useVideoPackCheckout";
 import { useAgentAddonCheckout } from "@/hooks/useAgentAddonCheckout";
+import { useMyPlanStatus } from "@/hooks/useMyPlanStatus";
+import { AriaLevelChips } from "@/components/clients/AriaLevelChips";
+import { AriaUpgradeModal } from "@/components/clients/AriaUpgradeModal";
+import { CreditPackModal } from "@/components/clients/CreditPackModal";
 
 interface NavState {
   scrollTo?: string;
@@ -22,6 +28,15 @@ export default function AddOnsPage() {
   const checkout = useVideoPackCheckout();  // DEBT-VID-001
   const agentCheckout = useAgentAddonCheckout();  // DEBT-091 · Stripe real (503 honesto si price no configurado)
   const [openAgent, setOpenAgent] = useState<Agent | null>(null);
+  const { clientId } = useMyPlanStatus();
+  const { data: ariaLevel = 1 } = useQuery({
+    queryKey: ["client_aria_level", clientId],
+    queryFn: async () => {
+      const { data } = await supabase.from("clients").select("aria_level").eq("id", clientId!).maybeSingle();
+      return data?.aria_level ?? 1;
+    },
+    enabled: !!clientId,
+  });
 
   useEffect(() => {
     const state = location.state as NavState | null;
@@ -80,6 +95,33 @@ export default function AddOnsPage() {
           {AGENTS.map((agent) => (
             <AgentCard key={agent.id} agent={agent} onOpen={() => setOpenAgent(agent)} />
           ))}
+        </div>
+      </section>
+
+      <SectionDivider />
+
+      <section id="aria" className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">Mejora tu ARIA</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">Tu asistente de marca · subí de nivel cuando lo necesites</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <AriaLevelChips currentLevel={ariaLevel} />
+          <AriaUpgradeModal currentLevel={ariaLevel} />
+        </div>
+      </section>
+
+      <SectionDivider />
+
+      <section id="creditos" className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Coins className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">Añadir Créditos</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">Amplía tu capacidad de generación · sin cambiar tu plan</p>
+        <div className="max-w-xs">
+          <CreditPackModal />
         </div>
       </section>
 
