@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from app.bc_billing.application._addon_handlers import handle_addon_activation, handle_addon_deactivation, handle_video_pack_activation
 from app.bc_billing.application.reseller_aria import handle_reseller_addon_activation
 from app.bc_billing.application._webhook_helpers import (
-    _lookup_client_by_customer, _iso_from_ts, _now_iso,
+    _lookup_client_by_customer, _iso_from_ts, _now_iso, sync_subscription,
 )
 from app.bc_billing.infrastructure.stripe_adapter import get_stripe_adapter
 from app.infrastructure.supabase_service import SupabaseService
@@ -62,15 +62,13 @@ async def on_checkout_completed(event: dict, supabase: SupabaseService) -> None:
 
 
 async def on_subscription_updated(event: dict, supabase: SupabaseService) -> None:
-    """Sync current_period_end + stripe_subscription_id ante renewal/cambio."""
+    """DEBT-076 · sync period_end + sub_id + plan (aplica downgrades programados
+    cuando Stripe SubscriptionSchedule cambia de fase al fin de ciclo)."""
     sub = event["data"]["object"]
     client = _lookup_client_by_customer(supabase, sub.get("customer"))
     if not client:
         return
-    supabase.client.table("client_plans").update({
-        "current_period_end": _iso_from_ts(sub["current_period_end"]),
-        "stripe_subscription_id": sub["id"],
-    }).eq("client_id", client["id"]).execute()
+    sync_subscription(supabase, client["id"], sub)
 
 
 async def on_subscription_deleted(event: dict, supabase: SupabaseService) -> None:

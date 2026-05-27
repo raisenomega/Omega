@@ -61,6 +61,30 @@ class StripeAdapter:
         """Recupera subscription para extraer current_period_end real."""
         return stripe.Subscription.retrieve(subscription_id)
 
+    def schedule_downgrade_at_period_end(
+        self, subscription_id: str, new_price_id: str
+    ) -> stripe.SubscriptionSchedule:
+        """DEBT-076 · programa cambio de precio al fin del ciclo (SubscriptionSchedule).
+
+        Fase 1 = precio vigente hasta current_period_end · Fase 2 = new_price_id.
+        Stripe aplica el cambio SOLO en la fecha · end_behavior='release' devuelve
+        el control a la subscription normal tras aplicar. El downgrade efectivo lo
+        sincroniza el webhook customer.subscription.updated (plan_for_price_id)."""
+        schedule = stripe.SubscriptionSchedule.create(from_subscription=subscription_id)
+        phase0 = schedule.phases[0]
+        return stripe.SubscriptionSchedule.modify(
+            schedule.id,
+            end_behavior="release",
+            phases=[
+                {
+                    "items": [{"price": phase0["items"][0]["price"], "quantity": 1}],
+                    "start_date": phase0["start_date"],
+                    "end_date": phase0["end_date"],
+                },
+                {"items": [{"price": new_price_id, "quantity": 1}]},
+            ],
+        )
+
 
 _adapter: Optional[StripeAdapter] = None
 

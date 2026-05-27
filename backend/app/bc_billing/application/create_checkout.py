@@ -30,9 +30,9 @@ async def create_checkout_for_upgrade(
     Returns:
         BillingResult con data={'checkout_url', 'session_id'} o error_code apropiado.
     """
-    if target_plan not in ("basic", "pro"):
+    if target_plan not in ("basic", "pro", "enterprise"):
         return fail(
-            f"target_plan debe ser 'basic' o 'pro', got '{target_plan}'",
+            f"target_plan debe ser 'basic', 'pro' o 'enterprise', got '{target_plan}'",
             "invalid_target_plan",
         )
 

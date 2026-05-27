@@ -10,9 +10,28 @@ class CreateCheckoutRequest(BaseModel):
     trigger auto-provision lo cubre · ver migración 00006).
     """
     client_id: str = Field(..., description="UUID del cliente que hace upgrade")
-    target_plan: Literal["basic", "pro"] = Field(
-        ..., description="Plan al que se quiere migrar"
+    target_plan: Literal["basic", "pro", "enterprise"] = Field(
+        ..., description="Plan al que se quiere migrar (enterprise self-serve · DEBT-076)"
     )
+
+
+class ScheduleDowngradeRequest(BaseModel):
+    """DEBT-076 · payload POST /billing/schedule-downgrade.
+
+    target_plan: 'basic' o 'pro' · el downgrade se PROGRAMA a fin de ciclo
+    (Stripe SubscriptionSchedule) · no es inmediato.
+    """
+    client_id: str = Field(..., description="UUID del cliente que baja de plan")
+    target_plan: Literal["basic", "pro"] = Field(..., description="Plan menor destino")
+
+
+class ScheduleDowngradeResponse(BaseModel):
+    """Respuesta POST /billing/schedule-downgrade."""
+    success: bool
+    scheduled: Optional[bool] = None
+    target_plan: Optional[str] = None
+    error: Optional[str] = None
+    error_code: Optional[str] = None
 
 
 class CreateCheckoutResponse(BaseModel):
