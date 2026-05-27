@@ -19,6 +19,7 @@ from app.bc_cognition.domain.brand_dna import BrandDNA
 from app.bc_cognition.domain.virality_score import compute_virality_score
 from app.bc_cognition.infrastructure._anthropic_types import ClaudeResponse
 from app.bc_cognition.infrastructure.anthropic_adapter import generate
+from app.bc_billing.application.credits_service import debit
 
 _TEMP_TRIPLE = [(0.3, "A"), (0.7, "B"), (1.0, "C")]
 _TEMP_SINGLE = [(0.7, "A")]
@@ -73,6 +74,8 @@ async def _persist_variation(
     )
     if not content_id:
         return None
+    # DEBT-052: debita el costo real de Claude al cliente enrolado (best-effort)
+    await debit(client_id, "content_creator", resp.cost_usd, resp.model_used, content_id)
     return VariationItem(
         id=content_id, label=label, temperature=temp,
         generated_text=clean_text, virality_score=virality["score"],

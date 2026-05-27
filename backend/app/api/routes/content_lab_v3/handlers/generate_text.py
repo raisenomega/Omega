@@ -18,6 +18,7 @@ from app.api.routes.content_lab_v3._prompt_vault_selector import (
 )
 from app.api.routes.content_lab_v3.handlers._system_builder import build_rafa_system
 from app.api.routes.content_lab_v3.handlers._variations import generate_variations
+from app.bc_billing.application.credits_service import check_budget
 from app.api.routes.content_lab_v3.models.content_lab_models import (
     GenerateTextRequest, GenerateTextResponse,
 )
@@ -46,6 +47,10 @@ async def generate_text(
     user = await get_current_user(authorization)
     client = resolve_client_or_403(user["id"], request.client_id)  # DEBT-CL-005
     client_id = str(client["id"])
+
+    # DEBT-052: hard block si el budget prepagado está agotado (cliente enrolado · 402)
+    if not await check_budget(client_id):
+        raise HTTPException(status_code=402, detail="credits_exhausted")
 
     # SPRINT 4A-3 #3: sanear topic del usuario (T1/T3 · CONTENT_PROMPT) antes del prompt
     st, serr = sanitize_input(request.topic, InputContext.CONTENT_PROMPT)

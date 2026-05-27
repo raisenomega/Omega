@@ -21,6 +21,8 @@ from app.api.routes.content_lab_v3.models.content_lab_models import (
 from app.bc_cognition.infrastructure._image_compat import generate_image_compat
 from app.bc_cognition.infrastructure._storage_uploader import StorageUploadError, upload_image_bytes
 from app.bc_cognition.infrastructure._logo_overlay import overlay_logo
+from app.bc_billing.application.credits_service import check_budget, debit
+from app.bc_billing.domain.credit_costs import cost_for_image
 
 _IMAGE_PROMPT_MAX = 6000  # truncate attachment context · Nano Banana cap 8000 total
 
@@ -53,6 +55,10 @@ async def generate_image(
     user = await get_current_user(authorization)
     client = resolve_client_or_403(user["id"], request.client_id)  # DEBT-CL-005
     client_id = str(client["id"])
+
+    # DEBT-052: hard block si el budget prepagado está agotado (402)
+    if not await check_budget(client_id):
+        raise HTTPException(status_code=402, detail="credits_exhausted")
 
     enhanced = _enhance_prompt(request.prompt, request.style)
     # DEBT-CL-020: si attachment text → append al prompt como contexto adicional
@@ -105,6 +111,9 @@ async def generate_image(
             "confidence": 8, "status": "draft", "compliance_passed": True,
         },
     )
+    if content_id:
+        # DEBT-052: debita el costo de imagen (Nano Banana · §4.4) al cliente enrolado
+        await debit(client_id, "content_creator", cost_for_image("default"), "nano-banana", content_id)
     return GenerateImageResponse(
         id=content_id or "", content_type="image", generated_text=image_url,
     )
