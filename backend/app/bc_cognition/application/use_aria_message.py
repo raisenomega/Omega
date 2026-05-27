@@ -13,6 +13,7 @@ from app.bc_cognition.domain.client_context_block import build_client_context_bl
 from app.bc_cognition.infrastructure.anthropic_adapter import generate
 from app.bc_cognition.infrastructure import aria_repository as repo, aria_memory_repository as mem
 from app.bc_cognition.infrastructure._anthropic_types import ClaudeError
+from app.bc_cognition.application._aria_multimodal import build_user_content
 from app.bc_cognition.application.input_sanitizer import sanitize_input
 from app.bc_cognition.domain.input_threats import InputContext, SanitizerAction
 from app.infrastructure.supabase_service import get_supabase_service
@@ -33,8 +34,8 @@ def _resolve_role(supabase, user_id: str) -> Tuple[Optional[str], Optional[str],
     if c:
         return "client", c["id"], None, c.get("aria_level") or 1
     r = repo.find_reseller_by_owner(supabase, user_id)
-    if r:
-        return "reseller", None, r["id"], 3
+    if r:  # DEBT-046: aria_level real (3 base · 4 si aria_premium_reseller)
+        return "reseller", None, r["id"], r.get("aria_level") or 3
     return None, None, None, 0
 
 
@@ -71,9 +72,10 @@ async def use_aria_message(
     memory_block = load_and_format_memory(supabase, client_id, reseller_id)
     system = "\n\n".join(p for p in (base, ctx_block, web_block, memory_block) if p)
     history = repo.load_recent_history(supabase, user_id, get_history_window(level))
+    user_content = await build_user_content(user_message, ctx.get("_logo_url") if ctx else None)
     response, err = await generate(
         agent_code=get_agent_code_for_level(level), system=system,
-        messages=history + [{"role": "user", "content": user_message}], max_tokens=1024,
+        messages=history + [{"role": "user", "content": user_content}], max_tokens=1024,
     )
 
     # Failure path · failure signal + agent_memory was_correct=False
