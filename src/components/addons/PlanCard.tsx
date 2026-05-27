@@ -38,10 +38,14 @@ export function PlanCard({ planCode, currentPlan, clientId, onRequestDowngrade }
         </ul>
 
         {isCurrent ? (
-          <Button disabled className="w-full">Plan actual</Button>
+          // Plan actual · no clickeable · borde gris · texto blanco (mismo patrón Add-Ons)
+          <Button disabled className="w-full border border-muted-foreground/30 bg-transparent text-white disabled:opacity-100">
+            Plan actual
+          </Button>
         ) : isUpgrade ? (
+          // Subir a X · idéntico a VideoPackCard/AgentCard (amber-border ghost → emerald hover) · ya cableado a Stripe
           <Button
-            className="w-full"
+            className="w-full border border-amber-500 bg-transparent text-white transition-colors duration-200 hover:bg-emerald-600 hover:border-emerald-600 hover:text-white"
             disabled={upgrade.isPending}
             onClick={() => upgrade.mutate({ clientId, targetPlan: planCode })}
           >
