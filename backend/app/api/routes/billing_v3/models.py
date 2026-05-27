@@ -90,3 +90,14 @@ class AdminCreditsResponse(BaseModel):
     """Respuesta de las ops superadmin de créditos (transfer/release)."""
     success: bool
     data: Optional[dict] = None
+
+
+class AutoRechargeRequest(BaseModel):
+    """DEBT-052 F4 · toggle de auto-recarga del credit pack."""
+    enabled: bool = Field(..., description="activar/desactivar auto-recarga")
+
+
+class AutoRechargeResponse(BaseModel):
+    """Respuesta POST /billing/credits/auto-recharge."""
+    success: bool
+    auto_recharge: bool

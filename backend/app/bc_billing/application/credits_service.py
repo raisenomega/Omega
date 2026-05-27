@@ -64,6 +64,12 @@ async def debit(client_id: str, agent_code: str, cost_usd: float,
         await asyncio.to_thread(_debit_sync, client_id, agent_code, cost_usd, model, execution_id)
     except Exception as e:
         logger.error(f"credits.debit failed · client={client_id} agent={agent_code}: {e}")
+        return
+    try:  # DEBT-052 F4 · auto-recarga best-effort tras débito (no rompe la generación)
+        from app.bc_billing.application.auto_recharge_service import maybe_auto_recharge
+        await maybe_auto_recharge(client_id)
+    except Exception as e:
+        logger.error(f"auto_recharge post-debit · client={client_id}: {e}")
 
 
 async def needs_recharge(client_id: str) -> bool:

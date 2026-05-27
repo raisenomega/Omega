@@ -1,12 +1,5 @@
-"""Único entry point a Stripe SDK. Análogo a `bc_cognition.anthropic_adapter`.
-
-ÚNICA clase/módulo en bc_billing que hace `import stripe`. Cualquier otra
-parte del bc_billing accede a Stripe a través de este adapter.
-
-Inicialización lazy via `get_stripe_adapter()` singleton · evita import-time
-side effects (no fail-fast bloqueante si .env incompleto · errors se
-levantan al primer uso real).
-"""
+"""Único entry point a Stripe SDK · ÚNICA clase en bc_billing que hace `import stripe`
+(A4/I1). Init lazy via get_stripe_adapter() singleton · errors al primer uso real."""
 import logging
 from typing import Optional
 import stripe
@@ -64,12 +57,8 @@ class StripeAdapter:
     def schedule_downgrade_at_period_end(
         self, subscription_id: str, new_price_id: str
     ) -> stripe.SubscriptionSchedule:
-        """DEBT-076 · programa cambio de precio al fin del ciclo (SubscriptionSchedule).
-
-        Fase 1 = precio vigente hasta current_period_end · Fase 2 = new_price_id.
-        Stripe aplica el cambio SOLO en la fecha · end_behavior='release' devuelve
-        el control a la subscription normal tras aplicar. El downgrade efectivo lo
-        sincroniza el webhook customer.subscription.updated (plan_for_price_id)."""
+        """DEBT-076 · programa cambio de precio a fin de ciclo (SubscriptionSchedule ·
+        end_behavior=release · downgrade efectivo lo sincroniza webhook subscription.updated)."""
         schedule = stripe.SubscriptionSchedule.create(from_subscription=subscription_id)
         phase0 = schedule.phases[0]
         return stripe.SubscriptionSchedule.modify(
@@ -83,6 +72,16 @@ class StripeAdapter:
                 },
                 {"items": [{"price": new_price_id, "quantity": 1}]},
             ],
+        )
+
+    def charge_off_session(self, customer_id: str, price_id: str) -> stripe.PaymentIntent:
+        """DEBT-052 F4 · cobro inmediato off-session por el monto del price (auto-recarga).
+        Lanza si el customer no tiene payment method guardado → el caller lo trata como 503 honesto."""
+        price = stripe.Price.retrieve(price_id)
+        return stripe.PaymentIntent.create(
+            amount=price["unit_amount"], currency=price["currency"], customer=customer_id,
+            off_session=True, confirm=True,
+            metadata={"reason": "credit_pack_auto_recharge", "price_id": price_id},
         )
 
 
