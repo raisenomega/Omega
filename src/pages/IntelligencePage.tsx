@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Brain } from "lucide-react";
-import { useMyPlanStatus } from "@/hooks/useMyPlanStatus";
-import { useClientPlanStatus } from "@/hooks/useClientPlanStatus";
+import { useProAccess } from "@/hooks/useProAccess";
 import { IntelligenceChips } from "@/components/intelligence/IntelligenceChips";
 import { ResumenChip } from "@/components/intelligence/ResumenChip";
 import { SeoChip } from "@/components/intelligence/SeoChip";
@@ -13,14 +12,11 @@ import { IntelligenceLoading, IntelligencePlanGate } from "@/components/intellig
 import { type ChipId } from "@/components/intelligence/_chips";
 
 export default function IntelligencePage() {
-  const { clientId, loading } = useMyPlanStatus();
-  const plan = useClientPlanStatus(clientId ?? "");
+  const { clientId, loading, hasPro } = useProAccess();
   const [active, setActive] = useState<ChipId>("resumen");
 
-  if (loading || plan.loading) return <IntelligenceLoading />;
-
-  const isPro = plan.planCode === "pro" || plan.planCode === "enterprise";
-  if (!isPro) return <IntelligencePlanGate clientId={clientId} />;
+  if (loading) return <IntelligenceLoading />;
+  if (!hasPro) return <IntelligencePlanGate clientId={clientId} />;
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-6 space-y-6">

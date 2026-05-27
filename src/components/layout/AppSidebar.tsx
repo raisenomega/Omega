@@ -20,7 +20,7 @@ import { RaisenCircleLogo } from "@/components/brand/RaisenCircleLogo";
 import { NavLink } from "@/components/NavLink";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { useSidebarPlanAccess } from "@/hooks/useSidebarPlanAccess";
+import { useProAccess } from "@/hooks/useProAccess";
 import {
   Sidebar,
   SidebarContent,
@@ -102,7 +102,7 @@ function LockedItem({ item, onLocked }: { item: NavItemDef; onLocked: () => void
 }
 
 export function AppSidebar() {
-  const { hasBasic, hasPro } = useSidebarPlanAccess();
+  const { hasBasic, hasPro } = useProAccess();
   const { toast } = useToast();
   const lockedToast = () =>
     toast({ title: "Disponible en plan PRO", description: "Actualizá tu plan para desbloquear esta sección." });
@@ -121,15 +121,19 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
-        {/* PRINCIPAL · colapsable · badge BÁSICO (amber lit si plan básico+) */}
+      <SidebarContent className="[scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {/* PRINCIPAL · colapsable · badge PRO (azul) si hasPro · si no, BÁSICO (amber) */}
         <Collapsible defaultOpen className="group/principal">
           <SidebarGroup>
             <SidebarGroupLabel asChild>
               <CollapsibleTrigger className="flex w-full items-center">
                 <ChevronDown className="mr-1 h-3.5 w-3.5 transition-transform group-data-[state=closed]/principal:-rotate-90" />
                 Principal
-                <PlanBadge label="BÁSICO" lit={hasBasic} color="amber" />
+                {hasPro ? (
+                  <PlanBadge label="PRO" lit color="blue" />
+                ) : (
+                  <PlanBadge label="BÁSICO" lit={hasBasic} color="amber" />
+                )}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             <CollapsibleContent>
@@ -154,7 +158,7 @@ export function AppSidebar() {
               <CollapsibleTrigger className="flex w-full items-center">
                 <ChevronDown className="mr-1 h-3.5 w-3.5 transition-transform group-data-[state=closed]/avanzado:-rotate-90" />
                 Avanzado
-                <PlanBadge label="PRO" lit={hasPro} color="blue" />
+                {!hasPro && <PlanBadge label="PRO" lit={false} color="blue" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             <CollapsibleContent>

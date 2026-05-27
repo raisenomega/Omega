@@ -9,6 +9,8 @@ import { EngagementChart } from "@/components/analytics/EngagementChart";
 import { BestTimesHeatmap } from "@/components/analytics/BestTimesHeatmap";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useProAccess } from "@/hooks/useProAccess";
+import { ProFeatureGate, ProGateLoading } from "@/components/ProFeatureGate";
 
 type Period = "7d" | "30d" | "90d";
 
@@ -17,7 +19,12 @@ export default function Analytics() {
   const [period, setPeriod] = useState<Period>("30d");
   useTrackOnMount("feature_open", { feature: "analytics" });
 
+  const access = useProAccess();
   const { loading, growthData, engagementData, heatmapData, avgEngagement, totalFollowers } = useAnalyticsData();
+
+  if (access.loading) return <ProGateLoading />;
+  if (!access.hasPro)
+    return <ProFeatureGate feature="Analytics" description="Métricas y reportes de rendimiento de tus cuentas." clientId={access.clientId} />;
 
   if (loading) {
     return (

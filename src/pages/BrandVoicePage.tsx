@@ -5,10 +5,17 @@ import { useBrandVoiceSummary } from "@/hooks/useBrandVoiceSummary";
 import { BrandVoiceStats } from "@/components/brand-voice/BrandVoiceStats";
 import { LatestApprovals } from "@/components/brand-voice/LatestApprovals";
 import { TopKeywords } from "@/components/brand-voice/TopKeywords";
+import { useProAccess } from "@/hooks/useProAccess";
+import { ProFeatureGate, ProGateLoading } from "@/components/ProFeatureGate";
 
 export default function BrandVoicePage() {
   useTrackOnMount("feature_open", { feature: "brand_voice" });
+  const access = useProAccess();
   const q = useBrandVoiceSummary();
+
+  if (access.loading) return <ProGateLoading />;
+  if (!access.hasPro)
+    return <ProFeatureGate feature="Brand Voice" description="Lo que ARIA aprendió sobre tu marca." clientId={access.clientId} />;
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-6 space-y-6">
