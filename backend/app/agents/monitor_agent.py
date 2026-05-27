@@ -80,43 +80,55 @@ class MonitorAgent(BaseAgent):
             raise
     
     async def check_system_health(self) -> SystemHealthReport:
-        """Check health of all system components"""
-        from datetime import datetime
-        import os
+        """DEBT-050: estado REAL desde agent_executions (no hardcoded). Agentes sin
+        corridas recientes (24h) → 'unknown' · NUNCA se inventa 'operational'/'healthy'."""
+        import asyncio
+        from datetime import datetime, timezone, timedelta
+        from app.infrastructure.supabase_service import get_supabase_service
 
-        # In production (Railway), skip HTTP calls and return mock data
-        is_production = os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RENDER")
+        now_iso = datetime.now(timezone.utc).isoformat()
+        since = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+        try:
+            sb = get_supabase_service()
+            rows = (await asyncio.to_thread(
+                lambda: sb.client.table("agent_executions")
+                .select("agent_id, status, execution_time_ms")
+                .gte("created_at", since).execute()
+            )).data or []
+        except Exception as e:
+            logger.warning(f"check_system_health: agent_executions read failed: {e}")
+            rows = []
 
-        services = []
-        agents_status = {}
+        by_agent: Dict[str, Dict[str, Any]] = {}
+        total = failed = 0
+        for r in rows:
+            aid = r.get("agent_id") or "unknown"
+            a = by_agent.setdefault(aid, {"total": 0, "failed": 0, "ms": []})
+            a["total"] += 1
+            total += 1
+            if r.get("status") == "failed":
+                a["failed"] += 1
+                failed += 1
+            if r.get("execution_time_ms"):
+                a["ms"].append(r["execution_time_ms"])
 
-        # Return operational status for all agents (no HTTP calls needed)
-        agent_names = ["content", "strategy", "analytics", "engagement",
-                      "monitor", "brand_voice", "competitive", "trends",
-                      "crisis", "reports", "growth", "video",
-                      "scheduling", "ab_testing", "orchestrator"]
+        services: List[ServiceHealth] = []
+        agents_status: Dict[str, str] = {}
+        for aid, a in by_agent.items():
+            rate = health_checker.calculate_error_rate(a["failed"], a["total"])
+            status = "down" if rate >= 50 else "degraded" if rate >= 15 else "healthy"
+            avg_ms = round(sum(a["ms"]) / len(a["ms"]), 2) if a["ms"] else 0.0
+            services.append(ServiceHealth(service_name=aid, status=status,
+                            response_time_ms=avg_ms, last_checked=now_iso, error=None))
+            agents_status[aid] = status
 
-        for agent_name in agent_names:
-            service_health = ServiceHealth(
-                service_name=agent_name,
-                status="operational",
-                response_time_ms=50.0,
-                last_checked=datetime.now().isoformat(),
-                error=None
-            )
-            services.append(service_health)
-            agents_status[agent_name] = "operational"
-
-        # Calculate overall status
-        overall_status = "healthy"
-        error_rate = 0.0
-
+        error_rate = health_checker.calculate_error_rate(failed, total)
+        overall = ("unknown" if total == 0
+                   else "critical" if error_rate >= 15.0
+                   else "degraded" if error_rate >= 5.0 else "healthy")
         return SystemHealthReport(
-            overall_status=overall_status,
-            services=services,
-            agents_status=agents_status,
-            error_rate_percent=error_rate,
-            timestamp=datetime.now().isoformat()
+            overall_status=overall, services=services, agents_status=agents_status,
+            error_rate_percent=error_rate, timestamp=now_iso,
         )
     
     async def monitor_agent_performance(

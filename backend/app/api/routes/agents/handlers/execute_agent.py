@@ -100,14 +100,11 @@ async def handle_execute_agent(
                         output = {"message": "Agent executed", "result": "success"}
 
                 except (ImportError, AttributeError) as import_error:
-                    logger.warning(f"Could not import agent {agent_id}: {import_error}")
-                    # Fallback: return mock execution
-                    output = {
-                        "agent_id": agent_id,
-                    "status": "executed",
-                    "message": f"Agent '{agent.name}' executed successfully (mock)",
-                    "input_received": request.input_data,
-                }
+                    # DEBT-050: NO fabricar éxito · falla honesto (no persiste dato falso a client_context · P1)
+                    logger.warning(f"Agent {agent_id} not executable: {import_error}")
+                    execution.mark_as_failed(f"agent_not_executable: {import_error}")
+                    repo.update_execution(execution)
+                    raise HTTPException(501, f"Agent '{agent_id}' not implemented/executable")
 
                 execution.mark_as_completed(output)
                 repo.update_execution(execution)
@@ -123,6 +120,8 @@ async def handle_execute_agent(
 
                 logger.info(f"Agent '{agent_id}' executed successfully (execution_id={execution.id})")
 
+            except HTTPException:
+                raise
             except Exception as exec_error:
                 error_msg = str(exec_error)
                 execution.mark_as_failed(error_msg)

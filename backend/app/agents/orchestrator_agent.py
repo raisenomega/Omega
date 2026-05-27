@@ -98,7 +98,7 @@ class OrchestratorAgent:
             # Record execution
             execution = await self._create_execution(agent_id, client_id, enriched_input)
 
-            # Execute agent (placeholder - real agents would be imported)
+            # Execute agent (DEBT-050: dispatch real vía AgentDispatcher)
             output = await self._execute_agent(agent_id, enriched_input)
 
             # Update execution record
@@ -138,16 +138,24 @@ class OrchestratorAgent:
         return self.agent_repo.create_execution(execution)
 
     async def _execute_agent(self, agent_id: str, input_data: dict) -> dict:
-        """
-        Execute specific agent (mock for now)
-        In production, this would dynamically import and call the agent
-        """
-        # Mock execution - return enriched input to show context passing works
+        """DEBT-050: dispatch REAL vía AgentDispatcher (Anthropic · registry · fallback
+        NOVA honesto). Sin fabricar éxito · si el dispatch falla, propaga (route lo
+        captura y devuelve error honesto)."""
+        from app.infrastructure.ai.agent_dispatcher import AgentDispatcher
+        from app.infrastructure.ai.providers import ChatMessage, MessageRole
+
+        content = input_data.get("message") or input_data.get("task") or str(input_data)
+        messages = [ChatMessage(role=MessageRole.USER, content=content)]
+        result = await AgentDispatcher().dispatch(
+            agent_code=agent_id.upper(), messages=messages, max_tokens=2048,
+        )
         return {
             "agent_id": agent_id,
             "status": "executed",
-            "input_received": input_data,
-            "message": f"Agent {agent_id} executed with context"
+            "response": result["response"],
+            "model": result["model"],
+            "tokens_used": result["tokens_used"],
+            "fallback_used": result.get("fallback_used", False),
         }
 
     async def _complete_execution(self, execution: AgentExecution, output: dict) -> None:
