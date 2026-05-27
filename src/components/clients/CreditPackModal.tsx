@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Check, Coins } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useCreditPackCheckout, type CreditPackCode } from "@/hooks/useCreditPackCheckout";
@@ -10,6 +10,7 @@ interface CreditPackInfo {
   code: CreditPackCode;
   name: string;
   price: string;
+  usage: string;
   tagline: string;
   bullets: readonly string[];
 }
@@ -21,29 +22,49 @@ const CREDIT_PACKS: readonly CreditPackInfo[] = [
     code: "micro",
     name: "Micro",
     price: "$9",
-    tagline: "Para uso ocasional",
-    bullets: ["~180 generaciones de texto", "~180 imágenes extra", "Auto-recarga: opcional"],
+    usage: "~180 usos",
+    tagline: "Para el mes que necesitás más",
+    bullets: [
+      "Contenido extra cuando surge una campaña",
+      "Imágenes adicionales para una ocasión especial",
+      "Sin compromisos · cancela cuando quieras",
+    ],
   },
   {
     code: "starter",
     name: "Starter",
     price: "$25",
-    tagline: "Para uso activo",
-    bullets: ["~500 generaciones de texto", "~500 imágenes extra", "Auto-recarga: opcional"],
+    usage: "~500 usos",
+    tagline: "Para creadores activos",
+    bullets: [
+      "Generaciones para campañas mensuales",
+      "Ideal si publicás más de 3 veces por semana",
+      "Auto-recarga opcional",
+    ],
   },
   {
     code: "plus",
     name: "Plus",
     price: "$59",
-    tagline: "Para uso intensivo",
-    bullets: ["~1,200 generaciones de texto", "~1,200 imágenes extra", "Auto-recarga: recomendada"],
+    usage: "~1,200 usos",
+    tagline: "Para negocios en crecimiento",
+    bullets: [
+      "Campañas intensivas sin preocuparte por el saldo",
+      "Suficiente para múltiples redes simultáneas",
+      "Auto-recarga recomendada",
+    ],
   },
   {
     code: "ultra",
     name: "Ultra",
     price: "$119",
+    usage: "~2,400 usos",
     tagline: "Para agencias y power users",
-    bullets: ["~2,400 generaciones de texto", "~2,400 imágenes extra", "Auto-recarga: activada por defecto"],
+    bullets: [
+      "Operación sin límites todo el mes",
+      "Múltiples clientes · múltiples campañas",
+      "Auto-recarga activada por defecto",
+    ],
   },
 ];
 
@@ -68,6 +89,9 @@ export function CreditPackModal() {
           <DialogTitle className="flex items-center gap-2">
             <Coins className="h-4 w-4 text-amber-500" /> Añade Créditos por tu consumo
           </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            Amplía tu capacidad cuando lo necesites · sin cambiar tu plan.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
           {CREDIT_PACKS.map((p) => {
@@ -78,16 +102,19 @@ export function CreditPackModal() {
                 type="button"
                 onClick={() => setSelected(p.code)}
                 className={`w-full rounded-lg border p-3 text-left transition-colors ${
-                  isSelected ? "border-amber-500 bg-amber-500/5" : "border-border/40 hover:border-border"
+                  isSelected ? "border-amber-500 bg-amber-500/5" : "border border-border hover:border-amber-500/60"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-medium">
-                    {p.name} <span className="text-muted-foreground font-normal">{p.price}/mes</span>
+                    {p.name}{" "}
+                    <span className="text-muted-foreground font-normal">
+                      {p.price}/mes · {p.usage}
+                    </span>
                   </span>
                   {isSelected && <span className="text-[10px] font-medium text-amber-500">Seleccionado</span>}
                 </div>
-                <p className="mt-1.5 text-xs text-muted-foreground">{p.tagline}</p>
+                <p className="mt-1.5 text-xs italic text-muted-foreground">{p.tagline}</p>
                 <ul className="mt-2 space-y-1">
                   {p.bullets.map((b) => (
                     <li key={b} className="flex gap-1.5 text-[11px] text-muted-foreground">
