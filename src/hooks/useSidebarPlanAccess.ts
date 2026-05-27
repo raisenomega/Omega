@@ -39,7 +39,7 @@ export function useSidebarPlanAccess(): SidebarPlanAccess {
     : false;
 
   const code = plan.planCode;
-  const hasBasic = code === "basic" || code === "pro" || code === "enterprise";
+  const hasBasic = code === "basic" || code === "pro" || code === "enterprise" || inTrial;
   const hasPro = code === "pro" || code === "enterprise" || inTrial;
 
   return {
