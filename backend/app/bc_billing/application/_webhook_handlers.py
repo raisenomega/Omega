@@ -1,8 +1,8 @@
 """Handlers internos del webhook dispatcher. Privado · usado solo por process_webhook."""
 import logging
 from datetime import datetime, timedelta, timezone
-from app.bc_billing.application._addon_handlers import handle_addon_activation, handle_addon_deactivation, handle_video_pack_activation
-from app.bc_billing.application.reseller_aria import handle_reseller_addon_activation
+from app.bc_billing.application._addon_handlers import handle_addon_deactivation
+from app.bc_billing.application._checkout_dispatch import dispatch_addon_or_pack
 from app.bc_billing.application._webhook_helpers import (
     _lookup_client_by_customer, _iso_from_ts, _now_iso, sync_subscription,
 )
@@ -13,33 +13,14 @@ logger = logging.getLogger(__name__)
 
 
 async def on_checkout_completed(event: dict, supabase: SupabaseService) -> None:
-    """Persistir plan upgrade (target_plan) o addon activation (addon_code) según metadata."""
+    """Plan upgrade (target_plan) o delega addon/video/credit-pack a dispatch_addon_or_pack."""
     session = event["data"]["object"]
     metadata = session.get("metadata", {})
-    client_id = metadata.get("client_id")
     sub_id = session.get("subscription")
+    if await dispatch_addon_or_pack(metadata, sub_id, supabase):
+        return
+    client_id = metadata.get("client_id")
     customer_id = session.get("customer")
-    addon_code = metadata.get("addon_code")
-    video_pack_code = metadata.get("video_pack_code")
-    reseller_id = metadata.get("reseller_id")
-    if addon_code:  # DEBT-046: reseller addon → handler dedicado; client → handler original
-        if addon_code == "aria_premium_reseller":
-            if not all([reseller_id, sub_id]):
-                logger.warning(f"reseller addon checkout.completed con data faltante: {session.get('id')}")
-                return
-            await handle_reseller_addon_activation(reseller_id, addon_code, sub_id, supabase)
-        else:
-            if not all([client_id, sub_id]):
-                logger.warning(f"addon checkout.completed con data faltante: {session.get('id')}")
-                return
-            await handle_addon_activation(client_id, addon_code, sub_id, supabase)
-        return
-    if video_pack_code:
-        if not all([client_id, sub_id, video_pack_code]):
-            logger.warning(f"video_pack checkout.completed con data faltante: {session.get('id')}")
-            return
-        await handle_video_pack_activation(client_id, video_pack_code, sub_id, supabase)
-        return
     target_plan = metadata.get("target_plan")
     if not all([client_id, target_plan, sub_id, customer_id]):
         logger.warning(f"checkout.session.completed con data faltante: {session.get('id')}")
