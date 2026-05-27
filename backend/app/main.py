@@ -148,8 +148,11 @@ async def startup_event():
     # CREDIT PERIOD RESET (DEBT-052 FASE 4 · fin-de-mes · 12vo cron job)
     from app.bc_billing.application.reset_credit_periods import run_credit_period_reset
     scheduler.add_job(run_credit_period_reset, 'cron', hour=0, minute=5, id='credit_period_reset', max_instances=1, replace_existing=True)
+    # DECISION EVALUATOR (DEBT-100 · ARIA_LEARNING_LOOP Loop 1 · cierra was_correct · cada hora :30 · 13vo cron job)
+    from app.workers.decision_evaluator_worker import run_decision_evaluator_job
+    scheduler.add_job(run_decision_evaluator_job, 'cron', minute=30, id='decision_evaluator', max_instances=1, replace_existing=True, misfire_grace_time=300)
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET workers activos — 12 jobs (jobstore persistente DEBT-047)")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL workers activos — 13 jobs (jobstore persistente DEBT-047)")
 
 @app.on_event("shutdown")
 async def shutdown_event():
