@@ -118,3 +118,9 @@ class AgentAddonCheckoutResponse(BaseModel):
     """Respuesta POST /billing/checkout-agent-addon."""
     checkout_url: str
     session_id: str
+
+
+# DEBT-038 · Stripe Customer Portal (gestionar suscripción · sin request body · client del JWT)
+class CustomerPortalResponse(BaseModel):
+    """Respuesta POST /billing/customer-portal · URL del portal hosteado de Stripe."""
+    portal_url: str

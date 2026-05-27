@@ -9,6 +9,7 @@ from app.api.routes.billing_v3.handlers.admin_credits import router as admin_cre
 from app.api.routes.billing_v3.handlers.auto_recharge import router as auto_recharge_router
 from app.api.routes.billing_v3.handlers.checkout_agent_addon import router as agent_addon_router
 from app.api.routes.billing_v3.handlers.schedule_downgrade import router as schedule_downgrade_router
+from app.api.routes.billing_v3.handlers.customer_portal import router as customer_portal_router
 
 router = APIRouter(prefix="/billing", tags=["Billing V3"])
 router.include_router(checkout_router)
@@ -20,3 +21,4 @@ router.include_router(admin_credits_router)
 router.include_router(auto_recharge_router)
 router.include_router(agent_addon_router)
 router.include_router(schedule_downgrade_router)
+router.include_router(customer_portal_router)

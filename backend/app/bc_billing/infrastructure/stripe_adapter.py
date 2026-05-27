@@ -1,5 +1,4 @@
-"""Único entry point a Stripe SDK · ÚNICA clase en bc_billing que hace `import stripe`
-(A4/I1). Init lazy via get_stripe_adapter() singleton · errors al primer uso real."""
+"""Único entry point a Stripe SDK · ÚNICA clase en bc_billing que importa stripe (A4/I1) · init lazy via get_stripe_adapter() · errors al primer uso real."""
 import logging
 from typing import Optional
 import stripe
@@ -46,6 +45,12 @@ class StripeAdapter:
             metadata=metadata or {},
         )
 
+    def create_billing_portal_session(
+        self, customer_id: str, return_url: str
+    ) -> stripe.billing_portal.Session:
+        """DEBT-038 · portal hosteado para gestionar suscripción (pago/cancelar/facturas)."""
+        return stripe.billing_portal.Session.create(customer=customer_id, return_url=return_url)
+
     def verify_and_construct_event(self, payload: bytes, signature: str) -> stripe.Event:
         """Verifica signature webhook + construye event. Lanza si inválido."""
         return stripe.Webhook.construct_event(payload, signature, self._webhook_secret)
@@ -57,8 +62,7 @@ class StripeAdapter:
     def schedule_downgrade_at_period_end(
         self, subscription_id: str, new_price_id: str
     ) -> stripe.SubscriptionSchedule:
-        """DEBT-076 · programa cambio de precio a fin de ciclo (SubscriptionSchedule ·
-        end_behavior=release · downgrade efectivo lo sincroniza webhook subscription.updated)."""
+        """DEBT-076 · cambio de precio a fin de ciclo (SubscriptionSchedule · release · webhook sincroniza)."""
         schedule = stripe.SubscriptionSchedule.create(from_subscription=subscription_id)
         phase0 = schedule.phases[0]
         return stripe.SubscriptionSchedule.modify(
