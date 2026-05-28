@@ -27,8 +27,8 @@ _VALID_ASPECT_RATIOS: frozenset[str] = frozenset({
     "1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "21:9",
 })
 
-# DEBT-069 · asyncio.wait_for cap sobre SDK google-genai (28 may: 90→120s + 1 retry timeout).
-_GENERATION_TIMEOUT_S: float = 120.0
+# DEBT-069 · asyncio.wait_for cap sobre SDK google-genai (28 may: 90→120→180s · parche DEBT-IMAGE-ASYNC).
+_GENERATION_TIMEOUT_S: float = 180.0
 
 _client: genai.Client | None = None
 
