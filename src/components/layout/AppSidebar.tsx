@@ -161,14 +161,14 @@ export function AppSidebar() {
               <CollapsibleTrigger className="flex w-full items-center">
                 <ChevronDown className="mr-1 h-3.5 w-3.5 transition-transform group-data-[state=closed]/avanzado:-rotate-90" />
                 Avanzado
-                {!hasPro && <PlanBadge label="PRO" lit={false} color="blue" />}
+                {!hasPro && !isSuperOwner && <PlanBadge label="PRO" lit={false} color="blue" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {AVANZADO_ITEMS.map((item) =>
-                    hasPro ? (
+                    (hasPro || isSuperOwner) ? (
                       <NavItem key={item.title} item={item} />
                     ) : (
                       <LockedItem key={item.title} item={item} onLocked={lockedToast} />
