@@ -336,14 +336,21 @@ if [ -f package.json ] && grep -q '"test"' package.json; then
   fi
 fi
 
-if [ -d backend ] && command -v pytest &>/dev/null; then
-  if (cd backend && pytest -q 2>&1 | tail -3 | grep -qE 'failed|FAIL'); then
+# CHECK 9 backend · invoca pytest vía el venv directo (cross-platform · sin dep de PATH)
+# PY_VENV es relativo a backend/ (POSIX: venv/bin/python · Windows: venv/Scripts/python.exe)
+PY_VENV=""
+if [ -x backend/venv/bin/python ]; then PY_VENV="venv/bin/python"
+elif [ -x backend/venv/Scripts/python.exe ]; then PY_VENV="venv/Scripts/python.exe"
+fi
+
+if [ -d backend ] && [ -n "$PY_VENV" ]; then
+  if (cd backend && "$PY_VENV" -m pytest -q 2>&1 | tail -3 | grep -qE 'failed|FAIL'); then
     print_fail "Tests backend (Pytest) fallando"
   else
     print_pass "Tests backend OK"
   fi
 else
-  print_warn "Pytest no disponible o backend/ no encontrado"
+  print_warn "venv no encontrado en backend/venv/ — corré bootstrap.sh"
 fi
 
 # ─────────────────────────────────────────────────────────────────
