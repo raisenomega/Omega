@@ -27,13 +27,15 @@ logger = logging.getLogger(__name__)
 _active_tasks: set[asyncio.Task] = set()
 
 
-async def create_video_job(client_id: str, prompt: str, ratio: str) -> str:
+async def create_video_job(client_id: str, prompt: str, ratio: str,
+                            logo_url: Optional[str] = None) -> str:
     """Crea row pending + lanza worker async directo en el event loop.
 
     asyncio.create_task corre en mismo worker uvicorn que recibió POST · cero
     dependencia APScheduler MemoryStore (multi-worker no comparten state).
-    Reemplazó scheduler.add_job (23 may 2026 · diagnóstico job stuck pending)."""
-    job_id = repo.insert_pending_job(client_id, prompt, ratio)
+    Reemplazó scheduler.add_job (23 may 2026 · diagnóstico job stuck pending).
+    DEBT-FFMPEG: logo_url se persiste en metadata jsonb · worker lo aplica."""
+    job_id = repo.insert_pending_job(client_id, prompt, ratio, logo_url)
     task = asyncio.create_task(_run_video_job(job_id), name=f"vjob_{job_id}")
     _active_tasks.add(task)
     task.add_done_callback(_active_tasks.discard)
@@ -48,9 +50,10 @@ async def _run_video_job(job_id: str) -> None:
             logger.error(f"_run_video_job: job_id={job_id} not found in DB")
             return
         repo.update_job_running(job_id)
+        logo_url = (job.get("metadata") or {}).get("logo_url")  # DEBT-FFMPEG · seteado al insert
         result = await generate_video_compat(
             prompt=job["prompt"], ratio=job["ratio"],
-            client_id=str(job["client_id"]),
+            client_id=str(job["client_id"]), logo_url=logo_url,
         )
         # DEBT-CL-010: re-check status antes de update final · si user canceló
         # mid-flight, NO sobreescribir 'cancelled' con completed/failed

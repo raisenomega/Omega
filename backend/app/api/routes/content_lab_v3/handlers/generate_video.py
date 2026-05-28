@@ -6,6 +6,7 @@ GET retorna status actual · frontend debe poll cada 5s hasta completed|failed.
 
 404 si job no existe O no es del cliente actual (no leak existence sobre jobs ajenos).
 """
+import asyncio
 import logging
 from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
@@ -52,8 +53,12 @@ async def start_video_generation(
             raise HTTPException(status_code=400, detail=f"attachment_extract_failed:{e}")
         if extracted:
             prompt = f"{prompt}\n\nCONTEXT: {extracted[:_VIDEO_PROMPT_MAX]}"
+    # DEBT-FFMPEG · fetch logo_url si user pidió overlay · sync DB → to_thread
+    logo_url: Optional[str] = None
+    if request.apply_logo:
+        logo_url = await asyncio.to_thread(repo.find_client_logo_url, client_id)
     try:
-        job_id = await create_video_job(client_id, prompt, ratio)
+        job_id = await create_video_job(client_id, prompt, ratio, logo_url)
     except Exception as e:
         logger.error(f"create_video_job failed · client={client_id}: {e}", exc_info=True)
         raise HTTPException(

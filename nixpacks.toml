@@ -1,0 +1,6 @@
+# OmegaRaisen — nixpacks build config (Railway)
+# DEBT-FFMPEG-001: FFmpeg para overlay de logo en videos generados por Veo 3.1.
+# Sin esto, _logo_overlay_video falla con shutil.which("ffmpeg")=None y cae a
+# fail-graceful (retorna video sin logo · log warning).
+[phases.setup]
+nixPkgs = ["ffmpeg"]

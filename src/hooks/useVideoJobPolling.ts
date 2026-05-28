@@ -33,6 +33,7 @@ export function useVideoJobPolling() {
         client_id: form.clientId || undefined,
         reference_attachment_b64: form.reference_attachment_b64,  // DEBT-CL-020
         reference_mime_type: form.reference_mime_type,
+        apply_logo: form.applyLogo,  // DEBT-FFMPEG · opt-in overlay del logo del cliente
       });
       activeJobIdRef.current = job_id;
 

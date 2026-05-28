@@ -37,6 +37,7 @@ async def generate_video_compat(
     duration: int = 5,
     ratio: str = "1280:768",
     client_id: Optional[str] = None,
+    logo_url: Optional[str] = None,
 ) -> Dict[str, object]:
     """Video generation (compat V1) backed by Veo 3.1 + Supabase Storage.
 
@@ -60,6 +61,11 @@ async def generate_video_compat(
 
     try:
         video_bytes = await _download_veo_uri(result.video_uri)
+        if logo_url:  # DEBT-FFMPEG · overlay best-effort (FFmpeg ausente → bytes intactos)
+            from app.bc_cognition.infrastructure._logo_overlay_video import (
+                apply_logo_to_video_bytes,
+            )
+            video_bytes = await apply_logo_to_video_bytes(video_bytes, logo_url)
         public_url = await upload_video_bytes(video_bytes, _VIDEO_MIME, client_id=client_id)  # DEBT-068
     except (httpx.HTTPError, StorageUploadError) as e:
         return {"status": "failed", "error": f"persist_failed: {e}"}

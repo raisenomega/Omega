@@ -1,14 +1,14 @@
 """Overlay del logo del cliente en imágenes generadas (Fase 1 · opt-in apply_logo).
 
 Descarga la imagen generada + el logo, superpone el logo en la esquina inferior derecha
-(10% del ancho · padding 20px · opacidad 80%) con Pillow y devuelve bytes PNG. El caller
+(15% del ancho · padding 20px · opacidad 80%) con Pillow y devuelve bytes PNG. El caller
 (handler) lo usa best-effort: si lanza, cae a la imagen original sin marca.
 """
 import io
 import httpx
 from PIL import Image
 
-_LOGO_WIDTH_RATIO = 0.10
+_LOGO_WIDTH_RATIO = 0.15
 _PADDING = 20
 _OPACITY = 0.80
 _TIMEOUT = 20.0
@@ -23,7 +23,7 @@ def _fetch(url: str) -> bytes:
 
 
 def overlay_logo(image_url: str, logo_url: str) -> bytes:
-    """PNG bytes de la imagen con el logo superpuesto (esquina inf-derecha · 10% · 80% opac)."""
+    """PNG bytes de la imagen con el logo superpuesto (esquina inf-derecha · 15% · 80% opac)."""
     base = Image.open(io.BytesIO(_fetch(image_url))).convert("RGBA")
     logo = Image.open(io.BytesIO(_fetch(logo_url))).convert("RGBA")
     if logo.width == 0 or logo.height == 0:
