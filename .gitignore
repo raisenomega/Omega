@@ -130,9 +130,9 @@ docs/personal/
 notas/
 PENDIENTES_*.md
 PROGRESOS_*.md
-!PENDIENTES_Y_PROGRESOS_*.md
 INFO_PRESIDENCIAL*.md
 APROBACIONES_VIVAS*.md
+HANDOFF_*.md
 
 # Docs estratégicos internos (NO COMMITEAR · NO PUSHEAR)
 # REGLA PERMANENTE (owner · 27 may 2026): TODO doc estratégico que revele secretos,
@@ -154,6 +154,14 @@ ARIA_LEARNING_LOOP_OMEGA.md
 GEMINI_FFMPEG_OMEGA.md
 CENTRO_DE_INTELIGENCIA.md
 SENTINEL_GUARDIAN_ENTERPRISE_COMPLETE.md
+# 28 may · ampliación protección owner-flagged
+Modelo_*.md
+ANALISIS_*.md
+SECURITY_SHIELD_*.md
+MODELO_NEGOCIO_OMEGA_CLIENTE.md
+OMEGA_REGENERATIVE_SYSTEM_AGENTS.md
+META_GOOGLE_TOKENS.md
+OMEGA_CLAUDE_DEV_PAGE.md
 
 # Lovable artifacts (deprecado)
 .lovable/
