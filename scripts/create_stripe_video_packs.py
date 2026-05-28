@@ -8,8 +8,8 @@ Idempotente vía metadata `omega_video_pack_code` · si el product ya existe,
 reusa el price activo en vez de crear duplicados.
 
 Requisitos:
-    - STRIPE_SECRET_KEY en .env (root del repo)
-    - pip install stripe python-dotenv (ya en backend/requirements.txt)
+    - STRIPE_SECRET_KEY como variable de entorno (export o set previo a ejecutar)
+    - pip install stripe (ya en backend/requirements.txt)
 
 Output:
     Imprime los 3 price_ids para copiar a Railway env vars:
@@ -24,18 +24,12 @@ from __future__ import annotations
 
 import os
 import sys
-from pathlib import Path
 
-from dotenv import load_dotenv
+import stripe
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-load_dotenv(REPO_ROOT / ".env")
-
-import stripe  # noqa: E402
-
-STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "").strip()
 if not STRIPE_SECRET_KEY:
-    print("ERROR: STRIPE_SECRET_KEY no configurada en .env (root del repo).", file=sys.stderr)
+    print("ERROR: STRIPE_SECRET_KEY no está en el entorno. Setealá antes de ejecutar.", file=sys.stderr)
     sys.exit(1)
 stripe.api_key = STRIPE_SECRET_KEY
 
@@ -65,10 +59,15 @@ PACKS = [
 
 
 def find_existing_product(code: str) -> dict | None:
-    """Lookup product por metadata.omega_video_pack_code · retorna dict o None."""
+    """Lookup product por metadata.omega_video_pack_code · retorna dict o None.
+    StripeObject SDK no es dict puro · acceso defensivo con try/except."""
     products = stripe.Product.list(limit=100, active=True)
     for p in products.auto_paging_iter():
-        if (p.metadata or {}).get("omega_video_pack_code") == code:
+        try:
+            md_val = p["metadata"]["omega_video_pack_code"]
+        except (KeyError, TypeError):
+            md_val = None
+        if md_val == code:
             return p
     return None
 
