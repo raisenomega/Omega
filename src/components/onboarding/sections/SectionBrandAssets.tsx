@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useExistingBrandLogoUrl } from "@/hooks/useExistingBrandLogoUrl";
 import type { OnboardingForm } from "@/lib/onboarding-schema";
 
 interface Props { form: UseFormReturn<OnboardingForm> }
@@ -22,6 +23,7 @@ export function SectionBrandAssets({ form }: Props) {
     [files],
   );
   useEffect(() => () => { previews.forEach((u) => u && URL.revokeObjectURL(u)); }, [previews]);
+  const existingLogo = useExistingBrandLogoUrl(v?.logo_file_id, files.length === 0);
   const set = <K extends keyof Assets>(k: K, x: Assets[K]) =>
     form.setValue("brand_assets", { ...(v ?? {}), [k]: x } as OnboardingForm["brand_assets"]);
 
@@ -55,6 +57,12 @@ export function SectionBrandAssets({ form }: Props) {
         <Label className="text-xs">Logo e imágenes de marca</Label>
         <p className="text-[10px] text-muted-foreground">Sube hasta 3 archivos · cualquier formato (PNG, JPG, PDF, SVG, AI...)</p>
         <Input ref={fileRef} type="file" multiple accept="*/*" className="h-8" onChange={(e) => handleFiles(e.target.files)} />
+        {files.length === 0 && existingLogo.data && (
+          <div className="flex items-center gap-2 text-xs text-green-600 mt-1">
+            <img src={existingLogo.data} alt="logo actual" className="h-8 w-8 rounded object-cover border" />
+            <span><Check className="inline h-3.5 w-3.5 mr-1" />Logo actual · haz clic en Choose Files para reemplazar</span>
+          </div>
+        )}
         {files.length > 0 && (
           <>
             <p className="flex items-center gap-1 text-xs text-green-600 mt-1">
