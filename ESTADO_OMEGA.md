@@ -58,6 +58,8 @@
 
 > **Sesión 27 may (sesión 4 · gate hardening + DEBT-FFMPEG):** **gate self-contained** vía 3 fixes (`bfa60c9` ROOT_DIR · `a6143f0` backend/conftest.py · `6c8a21a` CHECK 9 venv directo) → 10/10 desde shell limpio sin env/PATH. **DEBT-FFMPEG-001/002/003/004 CERRADAS** (`c9baba4`) logo overlay end-to-end imagen+video · `nixpacks.toml` con ffmpeg (001) · `_logo_overlay_video.py` FFmpeg subprocess 15%/80%/inf-derecha/20px best-effort (002, scope acotado a overlay) · `_video_compat` aplica tras download (003) · `logo_url` en metadata jsonb sin tabla nueva (004) · ratio imagen Pillow 10%→15% (alineado) · `apply_logo` cableado e2e: ContentLabFormV2 checkbox imagen+video · `useVideoJobPolling` payload · `GenerateVideoRequest` · handler + worker · 11 archivos · test 5/5 · gate 10/10.
 
+> **Sesión 28 may (sesión 5 · DEBT-101 + parches):** **DEBT-101 CERRADA** (`ef00fd0`) ARIA Learning Report semanal · cron lunes 07:05 UTC · 4 archivos nuevos + extensión mínima `brief_dispatcher` (`dispatch_aria_learning_brief` 6L · mismo patrón que sentinel/oracle) · suite 144/144 (+5 nuevos). Bucket `brand-files` privado fix (`967f1a7`): `download_logo_bytes` via service-role en `_logo_overlay` resolvió "logo no persiste" (en realidad: 404 silencioso). Test-accounts enterprise perpetuo (`967f1a7` · cliente@omega + reseller@omega) + `useDemoMode` default `'enterprise'`. Wizard sección 9 (`68b7193`): thumbnail del logo previo con signed URL. **DEBT-IMAGE-ASYNC NUEVA** (`f5d44a1` · 🟠 10h Sprint 8) + timeout Nano Banana 120→180s parche temporal. **Sprint 7 cerradas acumulado**: DEBT-105 + DEBT-FFMPEG-001/002/003/004 + DEBT-101 (≈16.5h netas). **Sprint 7 abierto**: DEBT-099 (🔴 self-service 20h · próxima recomendada) · DEBT-097 (20h) · DEBT-096 (30h) · DEBT-102 (10h) · DEBT-033 (40h scope nuevo).
+
 > Detalle/contexto de cada una: `SOURCE_OF_TRUTH.md §6`. Aquí: ID · 1-línea · horas · dependencia · sprint.
 
 ### 🔴 CRÍTICAS (~80h)
@@ -124,7 +126,7 @@
 | DEBT-096 | 🟠 Página Estrategias ARIA (Básico 1/sem · PRO 3/sem · Enterprise 1/día · tabla strategies + cron + UI cards Usar/Archivar/Ajustar) | 30h | 7 |
 | DEBT-097 | 🟠 Modo Supervisado (PRO · ARIA prepara todo · cliente aprueba · panel + notificación) | 20h | 7 |
 | DEBT-098 | 🟠 Modo Autónomo (Enterprise opt-in · gates limits_omega · `autonomo_consent_at` · log) · dep OAuth | 30h | 8 |
-| DEBT-101 | 🟠 generate_aria_learning_report (reporte ARIA→NOVA semanal · NOVA Nivel 1 auto) | 6h | 7 |
+| ~~DEBT-101~~ | ✅ **CERRADA** (`ef00fd0`) ARIA Learning Report semanal · cron lunes 07:05 UTC (5 min después oracle_weekly_brief) · 4 archivos nuevos (`aria_learning_report` 60L · `_aria_learning_formatter` 34L · `aria_learning_report_worker` 27L · test 59L 5/5) + extensión mínima `brief_dispatcher` (+6L · `dispatch_aria_learning_brief`) · agrupa `agent_memory` 7d por cliente: correct/incorrect/pending + top 3 agentes + training_pairs · skip silencioso si 0 actividad · cero migración · gate 10/10. NOVA Nivel 1 auto (mejoras brand_voice_corpus) queda follow-up separado | — | 7 |
 | DEBT-102 | 🟡 learning_events + panel `/superadmin/learning` · migr 00041/00042/00043 (00040 reasignada a Security Dev · el número refleja orden real de aplicación, no reserva de sprint · ver DEBT-106) | 10h | 7 |
 | DEBT-103 | 🟠 collect_post_metrics Loop 2 (métricas reales Meta/Google) · dep DEBT-040 | 8h | 8 |
 | DEBT-104 | 🟡 correction_detector conversacional (ARIA detecta correcciones en chat → memoria) | 6h | 8 |
