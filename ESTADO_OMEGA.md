@@ -16,7 +16,7 @@
 | Supabase | ✅ | proyecto `rwlnihoqhxwpbehibgxu` (PostgreSQL + RLS) |
 | Migraciones | ✅ | `00001` → `00039` aplicadas (27 may · créditos/SSRF/Voyage/oauth/client_plans · ver `SOURCE_OF_TRUTH.md §16`) |
 | Crons APScheduler | ✅ | **12/12** (incluye `reset_credit_periods` 00:05 fin-de-mes · DEBT-052 · ver `DDD_REGLAS_OMEGA.md` X3) |
-| Alertas Email (SENTINEL) | ✅ | Resend live · probado E2E 25 may 20:38 · `RESEND_API_KEY` puesta |
+| Alertas Email (SENTINEL) | ✅ | Resend live · **alarma** (`alert_dispatcher` · score<80 · siempre · E2E 25 may) + **brief al owner** (`brief_dispatcher` · DEBT-105 `bae2b3d`): SENTINEL diario condicional (issues>0/score<85) · ORACLE semanal siempre · best-effort · `RESEND_API_KEY` puesta |
 | Alertas Telegram | ⏸️ | Preparado · activa al pegar `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` (falta crear el bot) |
 
 ### Acciones owner pendientes (Railway env vars)
@@ -47,6 +47,8 @@
 > **Audit rendimiento imagen (26 may):** +4 DEBTs (068-071) · **TODAS CERRADAS** (uploads async · timeout Nano Banana · rate-limit cableado · retry+backoff · ver §2). La generación de imagen ya no bloquea el event loop, no cuelga, está rate-limitada y reintenta transitorios.
 > **Sesión 27 may (marathon):** cerradas DEBT-052/091/048/047/038/060/075/085/086/095 (–51.5h) · DEBT-040 OAuth con SKELETON + RONDA E en progreso · DEBT-088/092/093/094 + 089/090 registradas (Sprint 7-8). Ver §2.
 > **Sesión 27 may (sesión 2 · learning loop + estrategias/modos + FFmpeg + editor):** **DEBT-100 CERRADA** (`866a9d3` · Loop 1 was_correct · hallazgo P1 source_event_id documentado en SOT §6). Registradas DEBT-099/101/102/103/104/105 + FFMPEG-001..004 + EDITOR-001 + OMNI-001 (+ DEBT-096/097/098 ya en SOT §6). Total consolidado ~1,127h. Docs: `ARIA_LEARNING_LOOP_OMEGA.md` + `GEMINI_FFMPEG_OMEGA.md`. Ver tabla 🆕 abajo + SOT §17.
+
+> **Sesión 27 may (sesión 3 · DEBT-105 email brief):** **DEBT-105 CERRADA** (`bae2b3d`) · brief al owner por email: `brief_dispatcher`+`_brief_formatters` (bc_cognition/application · aislados de `alert_dispatcher` por decisión del owner) · SENTINEL diario condicional (issues>0/score<85) + ORACLE semanal siempre · best-effort · test 4/4 · gate 10/10. **Security Dev panel ✅ desplegado** (migr 00040 + tabs SENTINEL/GUARDIAN reales + sidebar · `f0bc79c`/`d666bb4`) · subpartes A-D (Claude DEV chat/terminal) siguen abiertas (DEBT-106 · Sprint 8). **Sprint 7 restante:** DEBT-FFMPEG-001/002/003/004 (6.5h) · DEBT-096/097/099/101/102.
 
 > Detalle/contexto de cada una: `SOURCE_OF_TRUTH.md §6`. Aquí: ID · 1-línea · horas · dependencia · sprint.
 
@@ -118,7 +120,7 @@
 | DEBT-102 | 🟡 learning_events + panel `/superadmin/learning` · migr 00041/00042/00043 (00040 reasignada a Security Dev · el número refleja orden real de aplicación, no reserva de sprint · ver DEBT-106) | 10h | 7 |
 | DEBT-103 | 🟠 collect_post_metrics Loop 2 (métricas reales Meta/Google) · dep DEBT-040 | 8h | 8 |
 | DEBT-104 | 🟡 correction_detector conversacional (ARIA detecta correcciones en chat → memoria) | 6h | 8 |
-| DEBT-105 | 🟡 Email owner (sentinel_brief + oracle_weekly_brief → Resend/SendGrid) | 4h | 7 |
+| ~~DEBT-105~~ | ✅ **CERRADA** (`bae2b3d`) email owner: `brief_dispatcher`+`_brief_formatters` · SENTINEL diario (issues>0/score<85) + ORACLE semanal siempre · aislado de `alert_dispatcher` · best-effort · test 4/4 | — | 7 |
 | DEBT-FFMPEG-001 | 🟠 FFmpeg en Railway (`nixpacks.toml`) | 0.5h | 7 |
 | DEBT-FFMPEG-002 | 🟠 `ffmpeg_adapter.py` (10 ops: resize/overlay/subs/música/trim/encode) | 3h | 7 |
 | DEBT-FFMPEG-003 | 🟠 integración post-Veo (brandeo automático logo/colores) | 2h | 7 |
