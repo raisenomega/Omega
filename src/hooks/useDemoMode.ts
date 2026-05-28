@@ -9,10 +9,13 @@ const KEY = "omega_demo_mode";
 const EVENT = "omega-demo-mode-change";  // sincroniza instancias del hook (toggle ↔ plan status)
 const DEMO_EMAIL = "cliente@omega.com";
 
-export type DemoMode = Extract<PlanCode, "pro" | "basic">;
+export type DemoMode = Extract<PlanCode, "basic" | "pro" | "enterprise">;
 
 function readMode(): DemoMode {
-  return localStorage.getItem(KEY) === "pro" ? "pro" : "basic";  // default 'basic' (estado real del test account)
+  const v = localStorage.getItem(KEY);
+  if (v === "pro") return "pro";
+  if (v === "basic") return "basic";
+  return "enterprise";  // default · cuenta test owner perpetuo · acceso total sin paywall
 }
 
 export function useDemoMode() {

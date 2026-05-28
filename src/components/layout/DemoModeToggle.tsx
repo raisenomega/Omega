@@ -3,6 +3,7 @@ import { useDemoMode, type DemoMode } from "@/hooks/useDemoMode";
 // Toggle discreto de Demo Mode · SOLO visible para cliente@omega.com · simula el plan gate.
 // No es una feature real del producto: estilo sutil para no confundir.
 const OPTIONS: { mode: DemoMode; label: string }[] = [
+  { mode: "enterprise", label: "Enterprise" },  // default · acceso total (test owner perpetuo)
   { mode: "pro", label: "PRO" },
   { mode: "basic", label: "Básico" },
 ];

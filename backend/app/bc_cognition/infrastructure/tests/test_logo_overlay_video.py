@@ -1,10 +1,10 @@
-"""Tests apply_logo_to_video (DEBT-FFMPEG) · FFmpeg subprocess + tempfiles.
+"""Tests apply_logo_to_video (DEBT-FFMPEG) · FFmpeg subprocess + service-role logo download.
 
-Best-effort: FFmpeg/ffprobe ausente o cualquier fallo → retorna video_path original
-(skip silencioso · nunca rompe el pipeline de generación).
+Best-effort: FFmpeg/ffprobe ausente o download fallo → retorna video_path original
+(skip silencioso · nunca rompe el pipeline de generación). El logo se descarga vía
+service-role (bucket privado · download_logo_bytes en _logo_overlay).
 """
 import subprocess
-from unittest.mock import MagicMock
 
 import app.bc_cognition.infrastructure._logo_overlay_video as lov
 
@@ -23,21 +23,16 @@ def test_ffprobe_missing_returns_original(monkeypatch):
 
 
 def test_logo_download_fails_returns_original(monkeypatch):
-    """httpx.get falla → skip · retorna video_path."""
+    """download_logo_bytes retorna None (bucket privado fallo) → skip · retorna video_path."""
     monkeypatch.setattr(lov.shutil, "which", lambda name: "/usr/bin/" + name)
-
-    def _boom(*a, **k):
-        raise lov.httpx.HTTPError("net down")
-
-    monkeypatch.setattr(lov.httpx, "get", _boom)
+    monkeypatch.setattr(lov, "download_logo_bytes", lambda url: None)
     assert lov.apply_logo_to_video("/tmp/v.mp4", "http://x/logo.png") == "/tmp/v.mp4"
 
 
 def test_ffmpeg_nonzero_returns_original(monkeypatch, tmp_path):
     """ffmpeg returncode != 0 → cleanup + retorna video_path original."""
     monkeypatch.setattr(lov.shutil, "which", lambda name: "/usr/bin/" + name)
-    resp = MagicMock(); resp.content = b"png-bytes"; resp.raise_for_status = lambda: None
-    monkeypatch.setattr(lov.httpx, "get", lambda *a, **k: resp)
+    monkeypatch.setattr(lov, "download_logo_bytes", lambda url: b"png-bytes")
 
     def _run(cmd, **kwargs):
         if cmd[0] == "ffprobe":
@@ -53,8 +48,7 @@ def test_ffmpeg_nonzero_returns_original(monkeypatch, tmp_path):
 def test_happy_path_returns_branded_with_correct_filter(monkeypatch, tmp_path):
     """ffprobe ok + ffmpeg ok → retorna path branded · filter_complex con 15%/80%/20px."""
     monkeypatch.setattr(lov.shutil, "which", lambda name: "/usr/bin/" + name)
-    resp = MagicMock(); resp.content = b"png-bytes"; resp.raise_for_status = lambda: None
-    monkeypatch.setattr(lov.httpx, "get", lambda *a, **k: resp)
+    monkeypatch.setattr(lov, "download_logo_bytes", lambda url: b"png-bytes")
 
     captured: list = []
 

@@ -25,6 +25,12 @@
 - **OAuth (desbloquea DEBT-040 publicación real):** `META_APP_ID`+`META_APP_SECRET` · `GOOGLE_CLIENT_ID`+`GOOGLE_CLIENT_SECRET` · `OAUTH_ENCRYPTION_KEY` (`Fernet.generate_key()`) · `OAUTH_REDIRECT_BASE`.
 - **Stripe:** registrar el webhook en el dashboard + crear los productos/prices faltantes → activa checkout créditos/agentes/ARIA/Enterprise (hoy 503 honesto). Pasar a LIVE mode cuando esté listo.
 
+### Cuentas test owner (enterprise perpetuo · acceso total sin paywall · 28 may)
+- **`cliente@omega.com`** · client `Zafacones Ramos` (`afb9f578-...`) · DB: `clients.plan='enterprise'` + `client_plans.plan='enterprise'` + addons `[video_pack_cinematic_pro, brand_dna_premium, aria_pro]` + `current_period_end=2099-12-31` + `client_agent_credits.budget=$99,999.99/mes` periodo `2099-12-31`. FE: `useDemoMode` default ahora `'enterprise'` (antes `'basic'`); toggle muestra Enterprise/PRO/Básico para testing UX.
+- **`reseller@omega.com`** · `resellers.plan='enterprise'` (era 'pro')
+- **Owner Ibrain** (`OMEGA Direct` · user `741ace1c-...`) · `plan='enterprise'` + `is_super_owner=True` desde antes — no necesita demo mode.
+- **Política**: estas 3 cuentas NUNCA deben ver paywall ni restricción de plan. Si aparece un nuevo gate, agregar bypass para los emails de arriba o reverter a defaults menos restrictivos.
+
 ---
 
 ## 2 · DEBTs CERRADAS · ~50 total

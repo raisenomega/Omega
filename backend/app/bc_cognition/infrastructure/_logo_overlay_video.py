@@ -2,6 +2,7 @@
 
 15% width · inf-derecha · 20px padding · 80% opac. Fail-graceful: si FFmpeg/ffprobe
 ausente o cualquier paso falla → log + retorna video original. Nunca rompe el pipeline.
+Logo se descarga vía service-role (bucket brand-files es PRIVADO · _logo_overlay).
 """
 import logging
 import os
@@ -9,13 +10,12 @@ import shutil
 import subprocess
 import tempfile
 
-import httpx
+from app.bc_cognition.infrastructure._logo_overlay import download_logo_bytes
 
 logger = logging.getLogger(__name__)
 _LOGO_WIDTH_RATIO = 0.15
 _PADDING = 20
 _OPACITY = 0.80
-_DL_TIMEOUT = 20.0
 _FFMPEG_TIMEOUT = 180.0
 
 
@@ -31,14 +31,12 @@ def apply_logo_to_video(video_path: str, logo_url: str) -> str:
     if not (shutil.which("ffmpeg") and shutil.which("ffprobe")):
         logger.warning("logo overlay video skip · FFmpeg/ffprobe no en PATH")
         return video_path
-    try:
-        r = httpx.get(logo_url, timeout=_DL_TIMEOUT, follow_redirects=False)
-        r.raise_for_status()
-    except Exception as e:
-        logger.warning(f"logo overlay video skip · download fallo: {e}")
+    logo_bytes = download_logo_bytes(logo_url)
+    if not logo_bytes:
+        logger.warning("logo overlay video skip · download_logo_bytes None (privado/ausente)")
         return video_path
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as lf:
-        lf.write(r.content); logo_path = lf.name
+        lf.write(logo_bytes); logo_path = lf.name
     out_path = f"{video_path}.branded.mp4"
     try:
         probe = subprocess.run(

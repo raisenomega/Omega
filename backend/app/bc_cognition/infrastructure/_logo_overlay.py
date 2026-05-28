@@ -1,31 +1,69 @@
-"""Overlay del logo del cliente en imágenes generadas (Fase 1 · opt-in apply_logo).
+"""Overlay del logo del cliente en imágenes generadas (DEBT-FFMPEG · opt-in apply_logo).
 
-Descarga la imagen generada + el logo, superpone el logo en la esquina inferior derecha
-(15% del ancho · padding 20px · opacidad 80%) con Pillow y devuelve bytes PNG. El caller
-(handler) lo usa best-effort: si lanza, cae a la imagen original sin marca.
+Imagen generada: bucket público `generated-images` → httpx.get directo.
+Logo: bucket PRIVADO `brand-files` → service-role storage download (la URL pública
+/object/public/ devuelve 404 "Bucket not found"; mismo patrón que _logo_fetcher).
+Superpone el logo en la esquina inf-derecha (15% width · 20px padding · 80% opac) con
+Pillow y devuelve bytes PNG. Best-effort: si lanza, caller cae a imagen sin marca.
 """
 import io
+import logging
+from typing import Optional
+
 import httpx
 from PIL import Image
+
+from app.infrastructure.supabase_service import get_supabase_service
 
 _LOGO_WIDTH_RATIO = 0.15
 _PADDING = 20
 _OPACITY = 0.80
 _TIMEOUT = 20.0
+_BUCKET = "brand-files"
+_MAX_LOGO_BYTES = 5 * 1024 * 1024  # 5 MB guard (mismo límite que _logo_fetcher)
+
+logger = logging.getLogger(__name__)
 
 
-def _fetch(url: str) -> bytes:
-    # follow_redirects=False · las URLs públicas de Supabase Storage son directas (no 3xx);
-    # bloquea el vector SSRF-vía-redirect (defensa en profundidad · guardian rec).
+def _fetch_image(url: str) -> bytes:
+    """HTTP GET de la imagen generada (bucket público generated-images). follow_redirects=False · SSRF defense."""
     r = httpx.get(url, timeout=_TIMEOUT, follow_redirects=False)
     r.raise_for_status()
     return r.content
 
 
+def _storage_path_from_url(logo_url: str) -> Optional[str]:
+    """Extrae el object path dentro de brand-files desde la storage_url."""
+    marker = f"/{_BUCKET}/"
+    idx = logo_url.find(marker)
+    if idx == -1:
+        return None
+    path = logo_url[idx + len(marker):].split("?")[0]
+    return path or None
+
+
+def download_logo_bytes(logo_url: str) -> Optional[bytes]:
+    """Descarga el logo del bucket PRIVADO via service-role · None si fallo o ausencia."""
+    path = _storage_path_from_url(logo_url)
+    if not path:
+        return None
+    try:
+        data = get_supabase_service().client.storage.from_(_BUCKET).download(path)
+    except Exception as exc:
+        logger.warning("download_logo_bytes failed for %s: %s", path, exc)
+        return None
+    if not data or len(data) > _MAX_LOGO_BYTES:
+        return None
+    return data
+
+
 def overlay_logo(image_url: str, logo_url: str) -> bytes:
     """PNG bytes de la imagen con el logo superpuesto (esquina inf-derecha · 15% · 80% opac)."""
-    base = Image.open(io.BytesIO(_fetch(image_url))).convert("RGBA")
-    logo = Image.open(io.BytesIO(_fetch(logo_url))).convert("RGBA")
+    base = Image.open(io.BytesIO(_fetch_image(image_url))).convert("RGBA")
+    logo_bytes = download_logo_bytes(logo_url)
+    if not logo_bytes:
+        raise ValueError(f"logo no descargable desde {logo_url}")
+    logo = Image.open(io.BytesIO(logo_bytes)).convert("RGBA")
     if logo.width == 0 or logo.height == 0:
         raise ValueError("logo vacío (dimensiones 0)")
     target_w = max(1, int(base.width * _LOGO_WIDTH_RATIO))
