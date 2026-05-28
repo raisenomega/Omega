@@ -23,6 +23,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useToast } from "@/hooks/use-toast";
 import { useProAccess } from "@/hooks/useProAccess";
 import { useSuperOwner } from "@/hooks/useSuperOwner";
+import { useIsReseller } from "@/hooks/useIsReseller";
 import {
   Sidebar,
   SidebarContent,
@@ -106,6 +107,7 @@ function LockedItem({ item, onLocked }: { item: NavItemDef; onLocked: () => void
 export function AppSidebar() {
   const { hasBasic, hasPro } = useProAccess();
   const { isSuperOwner } = useSuperOwner();
+  const { isReseller } = useIsReseller();
   const { toast } = useToast();
   const lockedToast = () =>
     toast({ title: "Disponible en plan PRO", description: "Actualizá tu plan para desbloquear esta sección." });
@@ -161,14 +163,14 @@ export function AppSidebar() {
               <CollapsibleTrigger className="flex w-full items-center">
                 <ChevronDown className="mr-1 h-3.5 w-3.5 transition-transform group-data-[state=closed]/avanzado:-rotate-90" />
                 Avanzado
-                {!hasPro && !isSuperOwner && <PlanBadge label="PRO" lit={false} color="blue" />}
+                {!hasPro && !isSuperOwner && !isReseller && <PlanBadge label="PRO" lit={false} color="blue" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {AVANZADO_ITEMS.map((item) =>
-                    (hasPro || isSuperOwner) ? (
+                    (hasPro || isSuperOwner || isReseller) ? (
                       <NavItem key={item.title} item={item} />
                     ) : (
                       <LockedItem key={item.title} item={item} onLocked={lockedToast} />
