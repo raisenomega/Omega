@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, User } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { RaisenLogo } from "@/components/brand/RaisenLogo";
 import { RaisenCircleLogo } from "@/components/brand/RaisenCircleLogo";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,6 +19,8 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegPassword, setShowRegPassword] = useState(false);
 
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
@@ -121,13 +123,22 @@ export default function Auth() {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="login-password"
-                      type="password"
+                      type={showLoginPassword ? "text" : "password"}
                       placeholder="••••••••"
-                      className="pl-10"
+                      className="pl-10 pr-10"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginPassword((v) => !v)}
+                      aria-label={showLoginPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
                 </div>
                 <Button type="submit" className="w-full gradient-primary" disabled={loading}>
@@ -174,14 +185,23 @@ export default function Auth() {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="reg-password"
-                      type="password"
+                      type={showRegPassword ? "text" : "password"}
                       placeholder="Mínimo 6 caracteres"
-                      className="pl-10"
+                      className="pl-10 pr-10"
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
                       required
                       minLength={6}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowRegPassword((v) => !v)}
+                      aria-label={showRegPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showRegPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
                 </div>
                 <Button type="submit" className="w-full gradient-primary" disabled={loading}>
