@@ -1,14 +1,13 @@
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useAutoRedirectFirstTime } from "@/hooks/useAutoRedirectFirstTime";
 import { RaisenLogo } from "@/components/brand/RaisenLogo";
 
+// DEBT-099-v2 · dashboard-first global · sin redirect a /onboarding.
+// El wizard inicial se eliminó · el nudge en Notificaciones invita al
+// cliente nuevo a /clients sin imposición.
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
-  // DEBT-099 · si el client del user es placeholder (auto-trigger 00006) y no es
-  // reseller/super_owner → redirige a /onboarding. No corre en /onboarding mismo.
-  useAutoRedirectFirstTime();
 
   if (loading) {
     return (

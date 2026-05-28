@@ -10,7 +10,6 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { ARIAProvider } from "@/contexts/ARIAContext";
 import { ARIADrawer } from "@/components/aria/ARIADrawer";
 import Auth from "./pages/Auth";
-import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
@@ -41,7 +40,6 @@ const App = () => (
             <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
-              <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route
                 path="/dashboard"

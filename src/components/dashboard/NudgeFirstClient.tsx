@@ -1,11 +1,12 @@
-// DEBT-099-v2 · invitación suave al wizard cuando el cliente aún no rompió el
-// placeholder. Se auto-oculta cuando el user agrega cliente real. Fondo verde
-// que respira (animate-breathe-green) · motion-reduce:animate-none lo deja
-// estático si el sistema pide reduced-motion · accesibilidad cubierta.
+// DEBT-099-v2 · invitación suave a agregar el primer cliente real.
+// Se monta DENTRO del Card "Notificaciones" (ObservationsFeed) · es una
+// notificación más, no un banner flotante. Click → /clients (donde el
+// cliente PYME agrega/edita su negocio). Se auto-oculta cuando el user
+// guarda nombre + industry reales. Verde respirando · respeta
+// prefers-reduced-motion via motion-reduce:animate-none.
 import { useNavigate } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 import { useHasPlaceholderClient } from "@/hooks/useHasPlaceholderClient";
-import { ONBOARDING_PATH } from "@/lib/onboarding-redirect";
 
 export function NudgeFirstClient() {
   const navigate = useNavigate();
@@ -16,9 +17,9 @@ export function NudgeFirstClient() {
   return (
     <button
       type="button"
-      onClick={() => navigate(ONBOARDING_PATH)}
+      onClick={() => navigate("/clients")}
       className="group w-full rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-5 py-4 text-left animate-breathe-green motion-reduce:animate-none transition-colors hover:bg-emerald-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
-      aria-label="Agregá tu primer cliente · abre el asistente"
+      aria-label="Agregá tu primer cliente · ir a Clientes"
     >
       <div className="flex items-center gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/30">

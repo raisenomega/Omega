@@ -9,6 +9,7 @@ import { useWebAnalysis } from "@/hooks/useWebAnalysis";
 import { useNextScheduledPost, type NextScheduledPost } from "@/hooks/useNextScheduledPost";
 import { useBrandVoiceSummary } from "@/hooks/useBrandVoiceSummary";
 import { useSessionReport } from "@/hooks/useSessionReport";
+import { NudgeFirstClient } from "./NudgeFirstClient";
 
 interface Observation {
   id: string;
@@ -71,7 +72,8 @@ export function ObservationsFeed({ clientId }: { clientId: string | null }) {
           Notificaciones
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-3">
+        <NudgeFirstClient />
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
             <Radio className="mb-2 h-10 w-10 opacity-30" />
