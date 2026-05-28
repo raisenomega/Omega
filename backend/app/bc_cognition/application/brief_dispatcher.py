@@ -42,3 +42,12 @@ async def dispatch_sentinel_brief(result: dict[str, Any]) -> bool:
 async def dispatch_oracle_brief(brief: dict[str, Any]) -> bool:
     """Envía el brief semanal de ORACLE al owner (best-effort)."""
     return await _post_resend(*format_oracle(brief))
+
+
+async def dispatch_aria_learning_brief(report: dict[str, Any]) -> bool:
+    """Envía el ARIA Learning Report al owner (DEBT-101 · False si sin actividad → caller skip)."""
+    from app.bc_cognition.application._aria_learning_formatter import format_aria_learning
+    formatted = format_aria_learning(report)
+    if not formatted:
+        return False
+    return await _post_resend(*formatted)

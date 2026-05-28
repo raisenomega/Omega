@@ -22,6 +22,7 @@ from app.services.oracle_service import OracleService
 from app.workers.news_monitor_worker import NewsMonitorWorker
 from app.workers.competitor_tracker_worker import CompetitorTrackerWorker
 from app.workers.trend_spotter_worker import TrendSpotterWorker
+from app.workers import aria_learning_report_worker  # DEBT-101 · cron lunes 07:05
 import logging
 import os
 
@@ -130,6 +131,8 @@ async def startup_event():
     scheduler.add_job(sentinel_service.run_pulse_monitor, 'interval', minutes=5, id='pulse_monitor', replace_existing=True)
     # ORACLE cron jobs
     scheduler.add_job(oracle_service.generate_intelligence_brief, 'cron', day_of_week='mon', hour=7, minute=0, id='oracle_weekly_brief', replace_existing=True)
+    # ARIA Learning Report (DEBT-101) · lunes 07:05 UTC · 5 min después del oracle_weekly_brief
+    scheduler.add_job(aria_learning_report_worker.run, 'cron', day_of_week='mon', hour=7, minute=5, id='aria_learning_report', replace_existing=True)
     # OMEGA Workers v2
     news_worker = NewsMonitorWorker()
     scheduler.add_job(news_worker.run_all_clients, 'interval', hours=2, id='news_monitor', max_instances=1, replace_existing=True)
