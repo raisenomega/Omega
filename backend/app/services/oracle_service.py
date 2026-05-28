@@ -92,6 +92,12 @@ class OracleService:
                 "session_id": f"oracle_{datetime.utcnow().strftime('%Y%m%d')}"
             }).execute()
             logger.info(f"ORACLE brief generated: {len(clients_active)} active clients, sentinel={sentinel_score}")
+            # brief semanal al owner por email (best-effort · siempre · heartbeat · DEBT-105)
+            from app.bc_cognition.application.brief_dispatcher import dispatch_oracle_brief
+            try:
+                await dispatch_oracle_brief(brief)
+            except Exception as e:
+                logger.error(f"oracle brief email dispatch failed: {e}")
             return brief
         except Exception as e:
             logger.error(f"Error generating ORACLE brief: {e}")

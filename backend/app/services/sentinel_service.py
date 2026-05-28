@@ -96,6 +96,13 @@ class SentinelService:
                     await dispatch_sentinel_alert(global_score, all_issues, datetime.now(timezone.utc).isoformat())
                 except Exception as e:
                     logger.error(f"sentinel alert dispatch failed: {e}")
+            # brief diario al owner (best-effort · solo si hay algo que reportar · DEBT-105)
+            if result["total_issues"] > 0 or global_score < 85:
+                from app.bc_cognition.application.brief_dispatcher import dispatch_sentinel_brief
+                try:
+                    await dispatch_sentinel_brief(result)
+                except Exception as e:
+                    logger.error(f"sentinel brief dispatch failed: {e}")
             return result
         except Exception as e:
             logger.error(f"Full scan error: {e}")
