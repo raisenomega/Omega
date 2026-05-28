@@ -67,7 +67,8 @@ export default function Auth() {
     } else {
       toast({
         title: "¡Cuenta creada!",
-        description: "Revisa tu email para verificar tu cuenta.",
+        description: "Revisá tu email para confirmar · después completá tu setup en 5 minutos y empezá a usar OMEGA.",
+        duration: 8000,
       });
     }
   };

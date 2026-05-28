@@ -1,10 +1,14 @@
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useAutoRedirectFirstTime } from "@/hooks/useAutoRedirectFirstTime";
 import { RaisenLogo } from "@/components/brand/RaisenLogo";
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
+  // DEBT-099 · si el client del user es placeholder (auto-trigger 00006) y no es
+  // reseller/super_owner → redirige a /onboarding. No corre en /onboarding mismo.
+  useAutoRedirectFirstTime();
 
   if (loading) {
     return (
