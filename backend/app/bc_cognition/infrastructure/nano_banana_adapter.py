@@ -27,9 +27,8 @@ _VALID_ASPECT_RATIOS: frozenset[str] = frozenset({
     "1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "21:9",
 })
 
-# DEBT-069: el SDK google-genai no impone un timeout agresivo · sin esto una llamada
-# colgada retiene la corrutina indefinidamente. asyncio.wait_for corta y mapea a ImageError.
-_GENERATION_TIMEOUT_S: float = 90.0
+# DEBT-069 · asyncio.wait_for cap sobre SDK google-genai (28 may: 90→120s + 1 retry timeout).
+_GENERATION_TIMEOUT_S: float = 120.0
 
 _client: genai.Client | None = None
 
@@ -69,7 +68,7 @@ async def generate(
         response_modalities=["IMAGE"],
         image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
     )
-    # DEBT-071: retry acotado con backoff+jitter para errores transitorios (429/5xx).
+    # DEBT-071: retry transitorios (429/5xx) · 1 retry timeout en attempt 0 (sleep 5s · NO en errores de contenido).
     for attempt in range(MAX_ATTEMPTS):
         start = time.monotonic()
         try:
@@ -77,7 +76,9 @@ async def generate(
                 _get_client().aio.models.generate_content(model=model, contents=contents, config=config),
                 timeout=_GENERATION_TIMEOUT_S,
             )
-        except asyncio.TimeoutError:                                # DEBT-069 · no se reintenta
+        except asyncio.TimeoutError:
+            if attempt == 0:
+                await asyncio.sleep(5.0); continue
             return None, ImageError("timeout", f"Nano Banana excedió {_GENERATION_TIMEOUT_S:.0f}s")
         except Exception as e:                                      # noqa: BLE001
             kind = classify_error(e)
