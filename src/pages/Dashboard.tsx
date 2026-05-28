@@ -10,6 +10,7 @@ import { SecurityKPICard } from "@/components/dashboard/SecurityKPICard";
 import { AriaSuggestionsCard } from "@/components/dashboard/AriaSuggestionsCard";
 import { AgentActivityChart } from "@/components/dashboard/AgentActivityChart";
 import { ObservationsFeed } from "@/components/dashboard/ObservationsFeed";
+import { NudgeFirstClient } from "@/components/dashboard/NudgeFirstClient";
 import { SentinelDashboardCard } from "@/components/dashboard/SentinelDashboardCard";
 import { PlanStatusBar } from "@/components/clients/PlanStatusBar";
 
@@ -41,6 +42,11 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* DEBT-099-v2 · nudge "Agregá tu primer cliente" · solo visible mientras
+          el client del user siga siendo el placeholder (trigger 00006) ·
+          se auto-oculta cuando el wizard guarda datos reales. */}
+      <NudgeFirstClient />
+
       {/* Header inline · título + Plan Status Bar en misma línea horizontal.
           Bar visible solo para clientes PYME (no Owner/Reseller). En mobile
           flex-wrap lo baja a línea propia automáticamente. */}

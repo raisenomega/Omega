@@ -100,12 +100,19 @@ export default {
           "0%, 100%": { borderColor: "rgb(34 197 94)" },
           "50%": { borderColor: "rgb(255 255 255)" },
         },
+        // DEBT-099-v2 · nudge "Agregá tu primer cliente" · fondo verde suave
+        // que respira sin parpadeo duro · respeta prefers-reduced-motion
+        "breathe-green": {
+          "0%, 100%": { backgroundColor: "rgb(16 185 129 / 0.12)" },
+          "50%": { backgroundColor: "rgb(16 185 129 / 0.28)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.4s ease-out",
         "border-flash": "border-flash 1.5s ease-in-out infinite",
+        "breathe-green": "breathe-green 2s ease-in-out infinite",
       },
     },
   },

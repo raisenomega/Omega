@@ -68,14 +68,14 @@ export function ObservationsFeed({ clientId }: { clientId: string | null }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Radio className="h-5 w-5 text-primary" />
-          Observaciones
+          Notificaciones
         </CardTitle>
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
             <Radio className="mb-2 h-10 w-10 opacity-30" />
-            <p className="text-sm">Sin observaciones por ahora</p>
+            <p className="text-sm">Sin notificaciones por ahora</p>
           </div>
         ) : (
           <div className="space-y-3">

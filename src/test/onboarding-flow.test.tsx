@@ -1,13 +1,16 @@
-// DEBT-099 · self-service onboarding · test de la función pura de decisión de redirect.
-// Mockear React Router + react-query es ruido; extraemos la lógica a una función pura
-// (shouldRedirectToOnboarding) y testeamos solo eso. El hook que la consume es trivial.
+// DEBT-099-v2 · wizard opcional · dashboard-first.
+// shouldRedirectToOnboarding quedó como no-op (siempre false). El nudge usa
+// isPlaceholderClient para decidir si invitar al wizard. Testeamos ambas.
 import { describe, it, expect } from "vitest";
-import { shouldRedirectToOnboarding } from "@/lib/onboarding-redirect";
+import {
+  shouldRedirectToOnboarding,
+  isPlaceholderClient,
+} from "@/lib/onboarding-redirect";
 
 const placeholder = { name: "Mi negocio", industry: null };
 const completed = { name: "Real Biz", industry: "servicios" };
-const partial = { name: "Mi negocio", industry: "servicios" };  // user completó industry pero no nombre
-const renamed = { name: "Real Biz", industry: null };  // user cambió nombre pero no industry
+const partial = { name: "Mi negocio", industry: "servicios" };
+const renamed = { name: "Real Biz", industry: null };
 
 const base = {
   client: placeholder,
@@ -17,32 +20,32 @@ const base = {
   currentPath: "/dashboard",
 };
 
-describe("shouldRedirectToOnboarding · DEBT-099", () => {
-  it("placeholder en /dashboard → redirect TRUE", () => {
-    expect(shouldRedirectToOnboarding(base)).toBe(true);
+describe("shouldRedirectToOnboarding · DEBT-099-v2 (no-op)", () => {
+  it("siempre false aun con placeholder · el wizard es opcional", () => {
+    expect(shouldRedirectToOnboarding(base)).toBe(false);
   });
-  it("loading=true → esperar · no redirect", () => {
-    expect(shouldRedirectToOnboarding({ ...base, loading: true })).toBe(false);
-  });
-  it("ya en /onboarding → no re-redirect (evita loop)", () => {
+  it("siempre false aun en /onboarding mismo", () => {
     expect(shouldRedirectToOnboarding({ ...base, currentPath: "/onboarding" })).toBe(false);
   });
-  it("isOwner=true (reseller) → bypass aunque haya placeholder", () => {
-    expect(shouldRedirectToOnboarding({ ...base, isOwner: true })).toBe(false);
-  });
-  it("isSuperadmin=true (super_owner) → bypass aunque haya placeholder", () => {
-    expect(shouldRedirectToOnboarding({ ...base, isSuperadmin: true })).toBe(false);
-  });
-  it("client completo (name + industry) → no redirect", () => {
-    expect(shouldRedirectToOnboarding({ ...base, client: completed })).toBe(false);
-  });
-  it("client parcial (industry set · name 'Mi negocio') → no redirect (user empezó)", () => {
-    expect(shouldRedirectToOnboarding({ ...base, client: partial })).toBe(false);
-  });
-  it("client renombrado (name custom · industry null) → no redirect (user empezó)", () => {
-    expect(shouldRedirectToOnboarding({ ...base, client: renamed })).toBe(false);
-  });
-  it("client null → no redirect (safe default · trigger 00006 lo crea siempre)", () => {
+  it("siempre false con client null", () => {
     expect(shouldRedirectToOnboarding({ ...base, client: null })).toBe(false);
+  });
+});
+
+describe("isPlaceholderClient · DEBT-099-v2 (decide visibilidad del nudge)", () => {
+  it("placeholder (name='Mi negocio' + industry null) → true", () => {
+    expect(isPlaceholderClient(placeholder)).toBe(true);
+  });
+  it("completed (name custom + industry set) → false", () => {
+    expect(isPlaceholderClient(completed)).toBe(false);
+  });
+  it("partial (name='Mi negocio' + industry set) → false (user empezó)", () => {
+    expect(isPlaceholderClient(partial)).toBe(false);
+  });
+  it("renamed (name custom + industry null) → false (user empezó)", () => {
+    expect(isPlaceholderClient(renamed)).toBe(false);
+  });
+  it("client null → false (sin datos no se nudgea)", () => {
+    expect(isPlaceholderClient(null)).toBe(false);
   });
 });
