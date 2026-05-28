@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useClientPlanStatus } from "@/hooks/useClientPlanStatus";
 import { useUpgradePlan } from "@/hooks/useUpgradePlan";
 import { Card } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Loader2, ArrowUpRight, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NETWORKS, type Network } from "@/lib/plan-limits";
+import { NETWORKS, type Network, type PlanCode } from "@/lib/plan-limits";
 import { getNetworkIcon } from "@/lib/network-icons";
 
 interface PlanStatusBarProps {
@@ -21,9 +22,50 @@ function Divider() {
   return <div className="h-5 w-px bg-border/60 hidden sm:block" aria-hidden />;
 }
 
+// Botón upgrade · cubre tier ordering completo + trial (entrada al selector).
+// adopcion → "Elegí tu plan" lleva a /settings (PlanSection · sin saltar a basic).
+// basic → pro · pro → enterprise · enterprise → sin CTA (plan máximo).
+type UpgradeCta =
+  | { label: string; kind: "navigate"; to: string }
+  | { label: string; kind: "checkout"; targetPlan: "basic" | "pro" | "enterprise" }
+  | null;
+
+function getUpgradeCta(planCode: PlanCode): UpgradeCta {
+  if (planCode === "adopcion") return { label: "Elegí tu plan", kind: "navigate", to: "/settings" };
+  if (planCode === "basic") return { label: "Subir a PRO", kind: "checkout", targetPlan: "pro" };
+  if (planCode === "pro") return { label: "Subir a Enterprise", kind: "checkout", targetPlan: "enterprise" };
+  return null;
+}
+
+// Display de renovación · 7 estados legibles (cuentas perpetuas ocultas).
+// Trial >3d ámbar · ≤3d rojo · vencido rojo+CTA · plan ≤30d días · 31-365d fecha · perpetuo null.
+type RenewalTone = "muted" | "amber" | "destructive";
+type RenewalDisplay = { text: string; tone: RenewalTone } | null;
+
+function getRenewalDisplay(planCode: PlanCode, renewsOn: string | null): RenewalDisplay {
+  if (!renewsOn) return null;
+  const days = Math.ceil((new Date(renewsOn).getTime() - Date.now()) / 86400000);
+  if (planCode === "adopcion") {
+    if (days <= 0) return { text: "Trial vencido · elegí tu plan", tone: "destructive" };
+    return { text: `Trial · ${days}d restantes`, tone: days <= 3 ? "destructive" : "amber" };
+  }
+  if (days <= 0) return { text: "Venció · renovar ahora", tone: "destructive" };
+  if (days > 365) return null;
+  if (days <= 30) return { text: `Renueva en ${days}d`, tone: "muted" };
+  const fmt = new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "short" }).format(new Date(renewsOn));
+  return { text: `Renueva ${fmt}`, tone: "muted" };
+}
+
+const RENEWAL_TONE_CLASS: Record<RenewalTone, string> = {
+  muted: "text-muted-foreground",
+  amber: "text-amber-500 font-medium",
+  destructive: "text-destructive font-medium",
+};
+
 export function PlanStatusBar({ clientId }: PlanStatusBarProps) {
   const status = useClientPlanStatus(clientId);
   const upgradeMutation = useUpgradePlan();
+  const navigate = useNavigate();
 
   if (status.loading) {
     return (
@@ -35,7 +77,9 @@ export function PlanStatusBar({ clientId }: PlanStatusBarProps) {
 
   // Bar siempre se renderiza (incluso pre-activación · status devuelve defaults de Adopción).
   // Cuando cliente activa plan, los números se actualizan reactivamente sin remontaje.
-  const { planConfig, postsUsed, postsTotal, percentUsed, accountsByNetwork, features, renewsInDays } = status;
+  const { planConfig, postsUsed, postsTotal, percentUsed, accountsByNetwork, features, renewsOn } = status;
+  const renewalDisplay = getRenewalDisplay(planConfig.code, renewsOn);
+  const upgradeCta = getUpgradeCta(planConfig.code);
 
   const barColor =
     percentUsed >= 95 ? "bg-destructive" :
@@ -134,30 +178,33 @@ export function PlanStatusBar({ clientId }: PlanStatusBarProps) {
           </Tooltip>
         )}
 
-        {/* Renewal pushed to the right */}
-        <span className="text-muted-foreground whitespace-nowrap sm:ml-auto">
-          {renewsInDays !== null ? `Renueva ${renewsInDays}d` : "Sin renovación"}
-        </span>
+        {/* Renewal display · 7 estados · ver getRenewalDisplay */}
+        {renewalDisplay && (
+          <span className={cn("whitespace-nowrap sm:ml-auto", RENEWAL_TONE_CLASS[renewalDisplay.tone])}>
+            {renewalDisplay.text}
+          </span>
+        )}
 
-        {/* Upgrade CTA · solo Adopción→Básico o Básico→Pro (DEBT-032b · spec §2 camino natural) */}
-        {(planConfig.code === "adopcion" || planConfig.code === "basic") && (
+        {/* Upgrade CTA · tier ordering completo · trial → /settings (selector de planes) */}
+        {upgradeCta && (
           <Button
             size="sm"
-            className="h-7 whitespace-nowrap"
+            className={cn("h-7 whitespace-nowrap", !renewalDisplay && "sm:ml-auto")}
             disabled={upgradeMutation.isPending}
-            onClick={() =>
-              upgradeMutation.mutate({
-                clientId,
-                targetPlan: planConfig.code === "adopcion" ? "basic" : "pro",
-              })
-            }
+            onClick={() => {
+              if (upgradeCta.kind === "navigate") {
+                navigate(upgradeCta.to);
+              } else {
+                upgradeMutation.mutate({ clientId, targetPlan: upgradeCta.targetPlan });
+              }
+            }}
           >
             {upgradeMutation.isPending ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
               <>
                 <ArrowUpRight className="h-3.5 w-3.5" />
-                {planConfig.code === "adopcion" ? "Activar BÁSICO" : "Subir a PRO"}
+                {upgradeCta.label}
               </>
             )}
           </Button>
