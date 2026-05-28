@@ -50,6 +50,8 @@
 
 > **Sesión 27 may (sesión 3 · DEBT-105 email brief):** **DEBT-105 CERRADA** (`bae2b3d`) · brief al owner por email: `brief_dispatcher`+`_brief_formatters` (bc_cognition/application · aislados de `alert_dispatcher` por decisión del owner) · SENTINEL diario condicional (issues>0/score<85) + ORACLE semanal siempre · best-effort · test 4/4 · gate 10/10. **Security Dev panel ✅ desplegado** (migr 00040 + tabs SENTINEL/GUARDIAN reales + sidebar · `f0bc79c`/`d666bb4`) · subpartes A-D (Claude DEV chat/terminal) siguen abiertas (DEBT-106 · Sprint 8). **Sprint 7 restante:** DEBT-FFMPEG-001/002/003/004 (6.5h) · DEBT-096/097/099/101/102.
 
+> **Sesión 27 may (sesión 4 · gate hardening + DEBT-FFMPEG):** **gate self-contained** vía 3 fixes (`bfa60c9` ROOT_DIR · `a6143f0` backend/conftest.py · `6c8a21a` CHECK 9 venv directo) → 10/10 desde shell limpio sin env/PATH. **DEBT-FFMPEG-001/002/003/004 CERRADAS** (`c9baba4`) logo overlay end-to-end imagen+video · `nixpacks.toml` con ffmpeg (001) · `_logo_overlay_video.py` FFmpeg subprocess 15%/80%/inf-derecha/20px best-effort (002, scope acotado a overlay) · `_video_compat` aplica tras download (003) · `logo_url` en metadata jsonb sin tabla nueva (004) · ratio imagen Pillow 10%→15% (alineado) · `apply_logo` cableado e2e: ContentLabFormV2 checkbox imagen+video · `useVideoJobPolling` payload · `GenerateVideoRequest` · handler + worker · 11 archivos · test 5/5 · gate 10/10.
+
 > Detalle/contexto de cada una: `SOURCE_OF_TRUTH.md §6`. Aquí: ID · 1-línea · horas · dependencia · sprint.
 
 ### 🔴 CRÍTICAS (~80h)
@@ -121,10 +123,10 @@
 | DEBT-103 | 🟠 collect_post_metrics Loop 2 (métricas reales Meta/Google) · dep DEBT-040 | 8h | 8 |
 | DEBT-104 | 🟡 correction_detector conversacional (ARIA detecta correcciones en chat → memoria) | 6h | 8 |
 | ~~DEBT-105~~ | ✅ **CERRADA** (`bae2b3d`) email owner: `brief_dispatcher`+`_brief_formatters` · SENTINEL diario (issues>0/score<85) + ORACLE semanal siempre · aislado de `alert_dispatcher` · best-effort · test 4/4 | — | 7 |
-| DEBT-FFMPEG-001 | 🟠 FFmpeg en Railway (`nixpacks.toml`) | 0.5h | 7 |
-| DEBT-FFMPEG-002 | 🟠 `ffmpeg_adapter.py` (10 ops: resize/overlay/subs/música/trim/encode) | 3h | 7 |
-| DEBT-FFMPEG-003 | 🟠 integración post-Veo (brandeo automático logo/colores) | 2h | 7 |
-| DEBT-FFMPEG-004 | 🟠 migración video_processing tables | 1h | 7 |
+| ~~DEBT-FFMPEG-001~~ | ✅ **CERRADA** (`c9baba4`) `nixpacks.toml` con `nixPkgs = ["ffmpeg"]` | — | 7 |
+| ~~DEBT-FFMPEG-002~~ | ✅ **CERRADA scope-acotado** (`c9baba4`) `_logo_overlay_video.py` (71L) con FFmpeg subprocess · overlay logo 15% width · 80% opac · esquina inf-derecha · 20px padding · best-effort (FFmpeg ausente → video original). **Las otras 9 ops del scope original (subs/música/trim/encode/etc) NO construidas** · registrar DEBT nuevo si se necesitan | — | 7 |
+| ~~DEBT-FFMPEG-003~~ | ✅ **CERRADA** (`c9baba4`) `_video_compat` aplica overlay tras descarga + antes de upload via `apply_logo_to_video_bytes` (bridging bytes↔tempfile) | — | 7 |
+| ~~DEBT-FFMPEG-004~~ | ✅ **CERRADA via metadata jsonb** (`c9baba4`) `logo_url` persiste en `video_generation_jobs.metadata` al insert · worker lo lee · **sin tabla nueva** · si se requiere audit table separada de jobs FFmpeg, registrar DEBT | — | 7 |
 | DEBT-EDITOR-001 | 🟡 Editor video nativo (FFmpeg.wasm · timeline 4 capas · presets · brand auto) · por fases | 70h | 8-9 |
 | DEBT-OMNI-001 | acción owner · early access Gemini Omni (aistudio · misma `GEMINI_API_KEY`) | 0h | — |
 | DEBT-106 | 🟢 **Security Dev panel construido** (27 may) · `is_super_owner` (migr **00040** · pendiente db push) + gate `require_super_owner` (defense-in-depth · no toca auth_utils) + endpoints `/security-dev/{health,sentinel,guardian}` + tabs SENTINEL/GUARDIAN **reales** (empty-states honestos) + sidebar solo Ibrain. Subpartes **A/B/C/D** (Claude DEV Chat + Code Terminal E2B funcionales) → placeholders honestos con checklist real de 4 keys · **Sprint 8** | ~40h restantes (A-D) | 8 |
