@@ -88,6 +88,8 @@ def build_client_context_block(ctx: dict[str, Any]) -> str:
     add(joined([ba.get("primary_color"), ba.get("secondary_color"), ba.get("accent_color")]), "Colores de marca")
     add(joined([ba.get("font_primary"), ba.get("font_secondary")]), "Tipografías de marca")  # DEBT-085
     lines.append(_accounts_line(ctx.get("social_accounts") or []))
+    if ctx.get("_plan_block"):  # FASE 0b · bloque "TU PLAN" formateado en aria_plan_repository
+        lines.append(str(ctx["_plan_block"]))
     if ctx.get("uploaded_context_text"):
         lines.append("Documento de referencia del cliente:\n" + str(ctx["uploaded_context_text"])[:_UPLOADED_CAP])
     block = "# CONTEXTO DEL CLIENTE (usalo · nunca inventes datos)\n" + "\n".join(lines)

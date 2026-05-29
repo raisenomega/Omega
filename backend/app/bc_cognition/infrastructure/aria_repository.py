@@ -1,12 +1,11 @@
-"""Repository ARIA · capa Supabase para conversación + behavioral · DDD A1/A9.
-
-safe_insert: best-effort wrapper · log + return None (FIX 4 audit).
-Memory + delete history: ver aria_memory_repository (C4 split).
-"""
+"""Repository ARIA · Supabase conversación + behavioral · DDD A1/A9.
+safe_insert: best-effort (log + None · FIX 4). Memory/history → aria_memory_repository;
+plan vivo → aria_plan_repository (ambos C4 split)."""
 import asyncio, logging
 from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import SupabaseService
 from app.bc_cognition.domain.aria_history import clean_history
+from app.bc_cognition.infrastructure.aria_plan_repository import fetch_live_plan
 
 logger = logging.getLogger(__name__)
 P = ParamSpec("P"); T = TypeVar("T")
@@ -52,6 +51,7 @@ def fetch_aria_context(supabase: SupabaseService, client_id: str) -> Optional[di
             ctx["_logo_url"] = bf.data[0].get("storage_url") if bf.data else None
         sc = supabase.client.table("brand_voice_corpus").select("id", count="exact").eq("client_id", client_id).eq("source", "manual_upload").execute()
         ctx["_samples_count"] = sc.count or 0
+        fetch_live_plan(supabase, client_id, ctx)  # FASE 0b · plan/posts/credits (aria_plan_repository · C4)
         return ctx
     except Exception as e:
         logger.error(f"aria_repository.fetch_aria_context failed: {e}", exc_info=True)
