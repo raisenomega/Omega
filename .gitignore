@@ -174,3 +174,6 @@ lovable-*.json
 # Wiki / generated docs
 docs/generated/
 docs/api-reference/
+
+# Repo anidado legacy (tiene su propio .git + docs estrategicos) · evita submodulo accidental
+legacy/
