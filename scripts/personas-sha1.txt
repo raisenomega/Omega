@@ -1,0 +1,2 @@
+d0e89544433cb55d453ff4088c488fdcee36a821  backend/app/bc_cognition/domain/persona_nova.py
+b2cd074aef7d8f2f9773b26d7234d6f06fbae36f  backend/app/bc_cognition/domain/persona_aria.py

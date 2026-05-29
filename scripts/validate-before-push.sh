@@ -24,7 +24,7 @@ cd "$ROOT_DIR"
 
 FAILURES=0
 WARNINGS=0
-TOTAL=10
+TOTAL=11
 
 print_header() { echo -e "\n${CYAN}═══ $1 ═══${NC}"; }
 print_pass()   { echo -e "${GREEN}✓ $1${NC}"; }
@@ -351,6 +351,32 @@ if [ -d backend ] && [ -n "$PY_VENV" ]; then
   fi
 else
   print_warn "venv no encontrado en backend/venv/ — corré bootstrap.sh"
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# CHECK 10/11 — X2: SHA1 de personas (system prompts) intacto
+# ─────────────────────────────────────────────────────────────────
+print_header "10/$TOTAL · X2 — SHA1 de personas (NOVA/ARIA) intacto"
+
+if [ -f scripts/personas-sha1.txt ]; then
+  PERSONA_FAIL=0
+  while read -r expected path; do
+    [ -z "$expected" ] && continue
+    if [ ! -f "$path" ]; then
+      print_fail "Persona no encontrada: $path"; PERSONA_FAIL=1; continue
+    fi
+    actual=$(sha1sum "$path" | awk '{print $1}')
+    if [ "$expected" != "$actual" ]; then
+      print_fail "SHA1 cambió en $(basename "$path") sin rotar baseline"
+      echo "    Esperado: $expected"
+      echo "    Actual:   $actual"
+      echo "    Si es intencional: bash scripts/verify-personas.sh --update (requiere aprobación owner · X2)"
+      PERSONA_FAIL=1
+    fi
+  done < scripts/personas-sha1.txt
+  [ "$PERSONA_FAIL" -eq 0 ] && print_pass "Personas intactas (NOVA + ARIA)"
+else
+  print_warn "scripts/personas-sha1.txt no encontrado (¿primer commit?)"
 fi
 
 # ─────────────────────────────────────────────────────────────────
