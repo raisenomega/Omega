@@ -1,16 +1,13 @@
 """Use case: ARIA conversational message generation.
 
-DDD A1 + A9: presentation → application → domain.
-§12 ARIA REGLA #2 + §4.1: persistencia OBLIGATORIA en TODOS los paths
-(happy · Claude fail · reseller). FIX 4 audit: cada INSERT via
-repo.safe_insert · errores logueados pero NUNCA propagan al cliente.
-"""
+DDD A1+A9. §12/§4.1: persistencia OBLIGATORIA en todos los paths (happy/fail/reseller).
+FIX 4: cada INSERT via repo.safe_insert · errores logueados, NUNCA propagan al cliente."""
 from typing import Optional, Tuple
 from app.bc_cognition.application._aria_memory_context import load_and_format_memory
 from app.bc_cognition.application.web_context import fetch_web_context
 from app.bc_cognition.domain.persona_aria import build_system_prompt, get_agent_code_for_level, get_history_window
 from app.bc_cognition.domain.client_context_block import build_client_context_block
-from app.bc_cognition.infrastructure.anthropic_adapter import generate
+from app.bc_cognition.application._aria_tools import run_tool_loop
 from app.bc_cognition.infrastructure import aria_repository as repo, aria_memory_repository as mem
 from app.bc_cognition.infrastructure._anthropic_types import ClaudeError
 from app.bc_cognition.application._aria_multimodal import build_user_content
@@ -73,13 +70,14 @@ async def use_aria_message(
     system = "\n\n".join(p for p in (base, ctx_block, web_block, memory_block) if p)
     history = repo.load_recent_history(supabase, user_id, get_history_window(level))
     user_content = await build_user_content(user_message, ctx.get("_logo_url") if ctx else None)
-    response, err = await generate(
-        agent_code=get_agent_code_for_level(level), system=system,
-        messages=history + [{"role": "user", "content": user_content}], max_tokens=1024,
+    # FASE 1 PASO 2: loop agéntico (tool prepare_supervised_draft) · sin tool_use/sin client_id = texto normal.
+    reply, err = await run_tool_loop(
+        get_agent_code_for_level(level), system,
+        history + [{"role": "user", "content": user_content}], client_id,
     )
 
     # Failure path · failure signal + agent_memory was_correct=False
-    if err or not response:
+    if err or reply is None:
         code = err.code if err else "unknown"
         await repo.safe_insert("behavioral_failed", repo.insert_behavioral_event,
                          supabase, user_id, client_id, reseller_id,
@@ -92,9 +90,9 @@ async def use_aria_message(
 
     # Happy path · assistant message + agent_memory was_correct=None (cron 72h)
     await repo.safe_insert("assistant_message", repo.insert_assistant_message,
-                     supabase, user_id, client_id, response.text, level)
+                     supabase, user_id, client_id, reply, level)
     await repo.safe_insert("agent_memory_ok", mem.insert_agent_memory,
                      supabase, user_id, client_id, reseller_id,
-                     user_message=user_message, assistant_response=response.text,
+                     user_message=user_message, assistant_response=reply,
                      level=level, source_event_id=event_id, was_correct=None)
-    return ARIAResult(content=response.text, aria_level=level), None
+    return ARIAResult(content=reply, aria_level=level), None
