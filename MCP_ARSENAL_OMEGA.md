@@ -17,6 +17,12 @@ futura, y cómo potencian cada componente del sistema.
 > (Aurora/Hera/Solaris no aplican). Sin tiers (Solo/Pro/Enterprise no
 > aplican). Modelo de negocio: Reseller → Cliente final con branding propio.
 
+> **Proveedor de publicación elegido: Zernio** (15 plataformas · MCP
+> ejecutable · Meta Business Partner · 84% más barato que Ayrshare).
+> Análisis completo + TikTok Ads MCP oficial + Metricool + HERMES:
+> ver `OMEGA_MCP_MASTER.md` (local v2.0 · gitignored). Adspirer = uso
+> personal del owner, no del sistema.
+
 ---
 
 ## ESTADO ACTUAL (mayo 2026)
