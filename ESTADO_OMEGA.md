@@ -116,7 +116,7 @@
 | ~~DEBT-066~~ | ✅ **CERRADA** (26 may) header ClientDetail → cols reales business_email/website/industry | — | — |
 | DEBT-SEC-003 | EXIF strip en imágenes subidas | 4h | — |
 | DEBT-SEC-004 | Magic bytes verification (uploads) | 4h | — |
-| DEBT-051 | `aria_repository.py` split (extraer `fetch_aria_context` · 99/100L) | 2h | — |
+| ~~DEBT-051~~ | ✅ **CERRADA (29 may · `32c49dd` · Fase 0b)** split a `aria_plan_repository.py` (fetch_live_plan) · aria_repository 100L exactos · C4 ok · gate 11/11 | — | — |
 | DEBT-055 | Remover endpoint diagnóstico `run-now` (tras validar cron en prod) | 0.5h | — |
 | DEBT-056 | `sentinel_check.sh` URL stale + Bearer · script X1 GET→POST+auth | 0.5h | — |
 | DEBT-FK-CASCADE | 5 FKs hacia auth.users en NO ACTION (resellers.owner_user_id / upsell_requests.requested_by+approved_by / anti_fraud_signals.resolved_by / training_pairs.curator_user_id) · follow-up mig 00042 · una sola migración con 5 ALTER · ver SOT §6 | 1h | 8 |
