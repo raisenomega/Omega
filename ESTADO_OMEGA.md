@@ -164,6 +164,7 @@
 | DEBT-MCP-INTEL | 🟡 **NUEVA (28 may · sesión 6)** stack inteligencia ARIA+NOVA: Trends MCP + Firecrawl + Exa + Tavily + Reddit MCP · datos reales trending por industria/región → contenido informado · NOVA Oracle Brief más preciso · cero acción cliente (lo activa owner) · spec `OMEGA_MCP_MASTER.md` v2.0 Cat.3 | ~12h | 8 |
 | DEBT-EDITOR-001 | 🟡 Editor video nativo (FFmpeg.wasm · timeline 4 capas · presets · brand auto) · por fases | 70h | 8-9 |
 | DEBT-OMNI-001 | acción owner · early access Gemini Omni (aistudio · misma `GEMINI_API_KEY`) | 0h | — |
+| DEBT-ARIA-UX | 🟡 **NUEVA (29 may)** bloque UX flujo Supervisado: grid 5×5 panel · clic→modal grande foto+caption+hashtags (absorbe P3) + Aprobar/Rechazar · Rechazar→tab Papelera en Contenido (recuperable) · toggle Supervisado de Configuración→tab por cliente · dep P2 backend · decisión: ¿ARIA genera imagen+hashtags? · atacar como bloque · spec SOT §6 | ~16h | post-P2 |
 | DEBT-106 | 🟢 **Security Dev panel construido** (27 may) · `is_super_owner` (migr **00040** · pendiente db push) + gate `require_super_owner` (defense-in-depth · no toca auth_utils) + endpoints `/security-dev/{health,sentinel,guardian}` + tabs SENTINEL/GUARDIAN **reales** (empty-states honestos) + sidebar solo Ibrain. Subpartes **A/B/C/D** (Claude DEV Chat + Code Terminal E2B funcionales) → placeholders honestos con checklist real de 4 keys · **Sprint 8** | ~40h restantes (A-D) | 8 |
 
 ### Business backlog (sin estimar)

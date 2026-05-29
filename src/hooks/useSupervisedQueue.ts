@@ -36,8 +36,19 @@ export function useSupervisedQueue(clientId: string) {
   const invalidate = () => qc.invalidateQueries({ queryKey });
 
   const approve = useMutation({
-    mutationFn: (id: string) => apiPatch(`/content/${id}/save`, { is_saved: true }),
-    onSuccess: () => { invalidate(); toast({ title: "Aprobado · se publicará" }); },
+    mutationFn: (id: string) => apiPatch<{ scheduled: { scheduled_for: string; falta_cuenta: boolean } | null }>(
+      `/content/${id}/save`, { is_saved: true }),
+    onSuccess: (r) => {
+      invalidate();
+      // P2: toast honesto · refleja lo que REALMENTE pasó (no "se publicará")
+      if (r?.scheduled) {
+        const fecha = String(r.scheduled.scheduled_for).slice(0, 16).replace("T", " ");
+        const aviso = r.scheduled.falta_cuenta ? " · falta conectar una cuenta para publicarlo" : "";
+        toast({ title: `Aprobado · agendado para ${fecha}${aviso}` });
+      } else {
+        toast({ title: "Aprobado · agendalo en el Calendario cuando quieras" });
+      }
+    },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
