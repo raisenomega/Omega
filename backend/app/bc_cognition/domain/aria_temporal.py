@@ -32,6 +32,8 @@ def resolve_future_iso(value: Optional[str], now: datetime) -> Optional[str]:
         dt = datetime.fromisoformat(raw)
     except ValueError:
         return None
-    if dt.tzinfo is None:  # naive → se interpreta en la tz del 'ahora'
+    if dt.tzinfo is None:  # naive → se interpreta en la tz del cliente (la del 'ahora')
         dt = dt.replace(tzinfo=now.tzinfo)
-    return raw if dt > now else None
+    # offset-aware (NO naive): el puente guarda timestamptz · evita el corrimiento de tz
+    # (naive → Postgres lo lee como UTC → la hora local se corre · bug 3pm→11am)
+    return dt.isoformat() if dt > now else None

@@ -10,7 +10,8 @@ _NOW = datetime(2026, 5, 29, 11, 0, tzinfo=_PR)
 
 
 def test_manana_3pm_es_futuro_valido():
-    assert resolve_future_iso("2026-05-30T15:00", _NOW) == "2026-05-30T15:00"
+    # naive → se devuelve offset-aware en la tz del cliente (PR -04:00) · evita corrimiento de tz
+    assert resolve_future_iso("2026-05-30T15:00", _NOW) == "2026-05-30T15:00:00-04:00"
 
 
 def test_fecha_pasada_cae_a_b2():
@@ -26,7 +27,8 @@ def test_none_cae_a_b2():
 
 
 def test_iso_con_offset_futuro_se_conserva():
-    assert resolve_future_iso("2026-05-30T15:00-04:00", _NOW) == "2026-05-30T15:00-04:00"
+    # offset ya presente se respeta; isoformat normaliza segundos
+    assert resolve_future_iso("2026-05-30T15:00-04:00", _NOW) == "2026-05-30T15:00:00-04:00"
 
 
 def test_format_now_block_es_determinista():

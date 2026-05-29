@@ -32,7 +32,7 @@ def test_tool_result_is_honest_not_hype():
 def test_fecha_futura_se_conserva():
     cap = _setup()
     asyncio.run(d.execute_prepare_draft("client-A", {"texto": "p", "fecha_sugerida": "2026-06-01T15:00"}))
-    assert cap["payload"]["metadata"]["fecha_sugerida"] == "2026-06-01T15:00"  # futuro válido
+    assert cap["payload"]["metadata"]["fecha_sugerida"] == "2026-06-01T15:00:00-04:00"  # futuro · offset-aware
 
 
 def test_fecha_pasada_cae_a_b2():

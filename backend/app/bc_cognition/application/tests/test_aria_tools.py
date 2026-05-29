@@ -50,7 +50,7 @@ def test_tool_use_creates_supervised_draft():
     assert err is None and text == "lo dejé en Supervisado"
     assert captured["client_id"] == "client-A"
     md = captured["payload"]["metadata"]
-    assert md["supervisado"] is True and md["fecha_sugerida"] == "2026-06-01T15:00"
+    assert md["supervisado"] is True and md["fecha_sugerida"] == "2026-06-01T15:00:00-04:00"  # offset-aware
     assert captured["payload"]["status"] == "draft"
 
 
