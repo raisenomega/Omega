@@ -52,17 +52,15 @@ export function ClientSupervisedQueue({ clientId }: { clientId: string }) {
   return (
     <Card className="border-border/50 bg-card/60">
       <CardHeader className="space-y-1">
-        <CardTitle className="flex items-center justify-between gap-2 text-sm font-medium">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
           <span className="flex items-center gap-2"><ClipboardCheck className="h-4 w-4" /> Modo Supervisado</span>
-          <div className="flex items-center gap-2">
-            {items.length > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {items.length} pendiente{items.length !== 1 ? "s" : ""}
-              </Badge>
-            )}
-            <Switch checked={enabled} disabled={toggle.isPending}
-              onCheckedChange={(v) => toggle.mutate(v)} aria-label="Revisar antes de publicar" />
-          </div>
+          <Switch checked={enabled} disabled={toggle.isPending}
+            onCheckedChange={(v) => toggle.mutate(v)} aria-label="Revisar antes de publicar" />
+          {items.length > 0 && (
+            <Badge variant="secondary" className="ml-auto text-xs">
+              {items.length} pendiente{items.length !== 1 ? "s" : ""}
+            </Badge>
+          )}
         </CardTitle>
         <p className="text-[11px] text-muted-foreground">
           Con el modo activo, ARIA prepara el contenido y PARA: lo revisás y aprobás antes de que se publique.
