@@ -1,4 +1,4 @@
-# ESTADO OMEGA · Documento Vivo · Última actualización: 29 may 2026 (sync MCP v2.0 Zernio · DEBT-MCP-ZERNIO/ANALYTICS + 3 HERMES registradas · ANALYTICS-BRIDGE re-descrita · orden Sprint 8 re-locked) · 28 may 2026 (sesión 6 · DEBT-099+v2 CERRADAS · plan bar 7 estados · modelo reseller LOCKED · E2E prod ✅)
+# ESTADO OMEGA · Documento Vivo · Última actualización: 29 may 2026 (Sprint 7 · DEBT-102 CERRADA · widget "Qué aprendió ARIA" per-cliente · cross-client → DEBT-033 · sync MCP v2.0 Zernio · DEBT-MCP-ZERNIO/ANALYTICS + 3 HERMES registradas · ANALYTICS-BRIDGE re-descrita · orden Sprint 8 re-locked) · 28 may 2026 (sesión 6 · DEBT-099+v2 CERRADAS · plan bar 7 estados · modelo reseller LOCKED · E2E prod ✅)
 
 > **Fuente de verdad OPERACIONAL** (qué está hecho, qué falta, en qué orden).
 > Fuente de verdad TÉCNICA (contratos DDD, arquitectura, detalle de DEBTs): `SOURCE_OF_TRUTH.md`.
@@ -134,7 +134,7 @@
 | DEBT-097 | 🟠 Modo Supervisado (PRO · ARIA prepara todo · cliente aprueba · panel + notificación) | 20h | 7 |
 | DEBT-098 | 🟠 Modo Autónomo (Enterprise opt-in · gates limits_omega · `autonomo_consent_at` · log) · dep OAuth | 30h | 8 |
 | ~~DEBT-101~~ | ✅ **CERRADA** (`ef00fd0`) ARIA Learning Report semanal · cron lunes 07:05 UTC (5 min después oracle_weekly_brief) · 4 archivos nuevos (`aria_learning_report` 60L · `_aria_learning_formatter` 34L · `aria_learning_report_worker` 27L · test 59L 5/5) + extensión mínima `brief_dispatcher` (+6L · `dispatch_aria_learning_brief`) · agrupa `agent_memory` 7d por cliente: correct/incorrect/pending + top 3 agentes + training_pairs · skip silencioso si 0 actividad · cero migración · gate 10/10. NOVA Nivel 1 auto (mejoras brand_voice_corpus) queda follow-up separado | — | 7 |
-| DEBT-102 | 🟡 learning_events + panel `/superadmin/learning` · migr 00041/00042/00043 (00040 reasignada a Security Dev · el número refleja orden real de aplicación, no reserva de sprint · ver DEBT-106) | 10h | 7 |
+| ~~DEBT-102~~ | ✅ **CERRADA (29 may · acotada a widget per-cliente)** tab "Aprendizaje" en `/clients/:id` · qué aprendió ARIA · lee `agent_memory` RLS solo evaluados (`was_correct IS NOT NULL` · pendientes aparte · P1) · empty-state honesto · **sin migración · SHA1 intacto** · 3 archivos (hook 75L + helper 65L + componente 75L · molde DEBT-053) + tab. **Cross-client `/superadmin/learning` + learning_events + migración → MOVIDO A DEBT-033** (RLS bloquea cross-client desde el front · necesita endpoint superadmin) | — | 7 |
 | DEBT-103 | 🟠 collect_post_metrics Loop 2 (métricas reales Meta/Google) · dep DEBT-040 | 8h | 8 |
 | DEBT-104 | 🟡 correction_detector conversacional (ARIA detecta correcciones en chat → memoria) | 6h | 8 |
 | ~~DEBT-105~~ | ✅ **CERRADA** (`bae2b3d`) email owner: `brief_dispatcher`+`_brief_formatters` · SENTINEL diario (issues>0/score<85) + ORACLE semanal siempre · aislado de `alert_dispatcher` · best-effort · test 4/4 | — | 7 |

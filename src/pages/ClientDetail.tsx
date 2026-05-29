@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Users, Globe, UserCheck, FileText, Loader2, Bot } from "lucide-react";
+import { ArrowLeft, Users, Globe, UserCheck, FileText, Loader2, Bot, Brain } from "lucide-react";
 import { ariaLevelInfo } from "@/lib/aria-levels";
 import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts";
 import { ClientAIConfig } from "@/components/clients/ClientAIConfig";
 import { ClientAgentsActive } from "@/components/clients/ClientAgentsActive";
 import { ClientAgentExecutions } from "@/components/clients/ClientAgentExecutions";
+import { ClientLearningEvents } from "@/components/clients/ClientLearningEvents";
 import { ClientCreditsWidget } from "@/components/clients/ClientCreditsWidget";
 import { AriaUpgradeModal } from "@/components/clients/AriaUpgradeModal";
 import { AriaLevelChips } from "@/components/clients/AriaLevelChips";
@@ -104,6 +105,10 @@ export default function ClientDetail() {
             <FileText className="h-3.5 w-3.5" />
             Posts
           </TabsTrigger>
+          <TabsTrigger value="learning" className="gap-1.5">
+            <Brain className="h-3.5 w-3.5" />
+            Aprendizaje
+          </TabsTrigger>
           <TabsTrigger value="info" className="gap-1.5">
             <Users className="h-3.5 w-3.5" />
             Info
@@ -154,6 +159,11 @@ export default function ClientDetail() {
         {/* Posts Tab · DEBT-053 · historial real de ejecuciones por agente */}
         <TabsContent value="posts">
           <ClientAgentExecutions clientId={client.id} />
+        </TabsContent>
+
+        {/* Learning Tab · DEBT-102 · qué aprendió ARIA (agent_memory evaluado · RLS) */}
+        <TabsContent value="learning">
+          <ClientLearningEvents clientId={client.id} />
         </TabsContent>
 
         {/* Info Tab */}
