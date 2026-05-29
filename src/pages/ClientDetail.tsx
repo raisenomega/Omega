@@ -88,30 +88,30 @@ export default function ClientDetail() {
 
       {/* Tabs */}
       <Tabs defaultValue="social" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5 max-w-2xl">
+        <TabsList className="grid w-full grid-cols-6 max-w-3xl">
           <TabsTrigger value="social" className="gap-1.5">
             <Globe className="h-3.5 w-3.5" />
-            Cuentas
+            <span className="hidden sm:inline">Cuentas</span>
           </TabsTrigger>
           <TabsTrigger value="agent" className="gap-1.5">
             <UserCheck className="h-3.5 w-3.5" />
-            Agente
+            <span className="hidden sm:inline">Agente</span>
           </TabsTrigger>
           <TabsTrigger value="ai" className="gap-1.5">
             <Bot className="h-3.5 w-3.5" />
-            AI
+            <span className="hidden sm:inline">AI</span>
           </TabsTrigger>
           <TabsTrigger value="posts" className="gap-1.5">
             <FileText className="h-3.5 w-3.5" />
-            Posts
+            <span className="hidden sm:inline">Posts</span>
           </TabsTrigger>
           <TabsTrigger value="learning" className="gap-1.5">
             <Brain className="h-3.5 w-3.5" />
-            Aprendizaje
+            <span className="hidden sm:inline">Aprendizaje</span>
           </TabsTrigger>
           <TabsTrigger value="info" className="gap-1.5">
             <Users className="h-3.5 w-3.5" />
-            Info
+            <span className="hidden sm:inline">Info</span>
           </TabsTrigger>
         </TabsList>
 
