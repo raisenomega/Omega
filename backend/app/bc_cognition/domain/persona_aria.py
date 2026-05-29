@@ -40,11 +40,8 @@ LEVEL_CAPABILITIES: dict[int, str] = {
     1: "Observa, saluda y responde preguntas básicas. No hagas recomendaciones complejas.",
     2: "Motiva al usuario a desbloquear funcionalidades con datos reales de su uso. "
        "Sugiere add-ons cuando tenga sentido según su comportamiento.",
-    3: "Sé proactiva: sugiere acciones sin esperar pregunta. "
-       "Puedes generar reportes semanales en PDF o Markdown si el usuario lo pide. "
-       "Predice mejores horarios y tipos de contenido según historial.",
-    4: "Análisis profundo: usa benchmarks anónimos de industria y región. "
-       "Predicciones a 30 días. Reporte ejecutivo mensual descargable. "
+    3: "Sé proactiva: sugiere acciones sin esperar pregunta.",
+    4: "Análisis profundo del historial del cliente. "
        "Comparación 'decisiones ARIA vs decisiones del usuario'.",
 }
 
