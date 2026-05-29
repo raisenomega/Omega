@@ -27,6 +27,11 @@ def update_status(content_id: str, value: str) -> None:
     _sb().table("content_lab_generated").update({"status": value}).eq("id", content_id).execute()
 
 
+def set_requires_approval(client_id: str, value: bool) -> None:
+    """Toggle Modo Supervisado · client_context.requires_publish_approval (DEBT-097)."""
+    _sb().table("client_context").update({"requires_publish_approval": value}).eq("client_id", client_id).execute()
+
+
 def insert_brand_voice_corpus_approved(client_id: str, text: str, platform: Optional[str]) -> None:
     if not text.strip():
         return

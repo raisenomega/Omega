@@ -47,3 +47,12 @@ def count_content(client_ids: list[str], status: Optional[str], content_type: Op
 def get_content_item(content_id: str) -> Optional[dict[str, Any]]:
     r = _sb().table("content_lab_generated").select("*").eq("id", content_id).limit(1).execute()
     return r.data[0] if r.data else None
+
+
+def get_requires_approval(client_id: str) -> bool:
+    """client_context.requires_publish_approval · fallback honesto True (default supervisado on)."""
+    r = _sb().table("client_context").select("requires_publish_approval").eq("client_id", client_id).limit(1).execute()
+    if not r.data:
+        return True
+    val = r.data[0].get("requires_publish_approval")
+    return True if val is None else bool(val)

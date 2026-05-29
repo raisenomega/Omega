@@ -12,14 +12,16 @@ import { ConnectMetaButton } from "@/components/integrations/ConnectMetaButton";
 import { ConnectGoogleButton } from "@/components/integrations/ConnectGoogleButton";
 import { SecuritySection } from "@/components/settings/SecuritySection";
 import { NotificationsSection } from "@/components/settings/NotificationsSection";
+import { SupervisadoSection } from "@/components/settings/SupervisadoSection";
 
-type TabId = "perfil" | "plan" | "aria" | "cuentas" | "seguridad" | "notificaciones";
+type TabId = "perfil" | "plan" | "aria" | "cuentas" | "supervisado" | "seguridad" | "notificaciones";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "perfil", label: "Perfil" },
   { id: "plan", label: "Plan" },
   { id: "aria", label: "ARIA" },
   { id: "cuentas", label: "Cuentas" },
+  { id: "supervisado", label: "Supervisado" },
   { id: "seguridad", label: "Seguridad" },
   { id: "notificaciones", label: "Notificaciones" },
 ];
@@ -70,6 +72,7 @@ export default function SettingsPage() {
           <SocialAccountsSection clientId={my.clientId} />
         </div>
       )}
+      {active === "supervisado" && <SupervisadoSection clientId={my.clientId} />}
       {active === "seguridad" && <SecuritySection />}
       {active === "notificaciones" && <NotificationsSection clientId={my.clientId} />}
     </div>

@@ -5,14 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Users, Globe, UserCheck, FileText, Loader2, Bot, Brain } from "lucide-react";
+import { ArrowLeft, Users, Globe, UserCheck, FileText, Loader2, Bot, Brain, ClipboardCheck, Lock } from "lucide-react";
 import { ariaLevelInfo } from "@/lib/aria-levels";
 import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts";
 import { ClientAIConfig } from "@/components/clients/ClientAIConfig";
 import { ClientAgentsActive } from "@/components/clients/ClientAgentsActive";
 import { ClientAgentExecutions } from "@/components/clients/ClientAgentExecutions";
 import { ClientLearningEvents } from "@/components/clients/ClientLearningEvents";
+import { ClientSupervisedQueue } from "@/components/clients/ClientSupervisedQueue";
 import { ClientCreditsWidget } from "@/components/clients/ClientCreditsWidget";
+import { useClientPlanStatus } from "@/hooks/useClientPlanStatus";
 import { AriaUpgradeModal } from "@/components/clients/AriaUpgradeModal";
 import { AriaLevelChips } from "@/components/clients/AriaLevelChips";
 import { fetchOnboardingData } from "@/lib/onboarding-api";
@@ -35,6 +37,10 @@ export default function ClientDetail() {
     },
     enabled: !!id,
   });
+
+  // DEBT-097: gating del tab Supervisado · PRO/Enterprise (plan de ESTE negocio).
+  const plan = useClientPlanStatus(id ?? "");
+  const hasPro = plan.planCode === "pro" || plan.planCode === "enterprise";
 
   // DEBT-054: client_context (wizard) para el Info Tab · reusa el GET del onboarding · read-only.
   const { data: onboarding } = useQuery({
@@ -88,7 +94,7 @@ export default function ClientDetail() {
 
       {/* Tabs */}
       <Tabs defaultValue="social" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6 max-w-3xl">
+        <TabsList className="grid w-full grid-cols-7 max-w-4xl">
           <TabsTrigger value="social" className="gap-1.5">
             <Globe className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Cuentas</span>
@@ -100,6 +106,10 @@ export default function ClientDetail() {
           <TabsTrigger value="ai" className="gap-1.5">
             <Bot className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">AI</span>
+          </TabsTrigger>
+          <TabsTrigger value="supervisado" className="gap-1.5">
+            <ClipboardCheck className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Supervisado</span>
           </TabsTrigger>
           <TabsTrigger value="posts" className="gap-1.5">
             <FileText className="h-3.5 w-3.5" />
@@ -154,6 +164,24 @@ export default function ClientDetail() {
         {/* AI Config Tab · solo Motor de IA (Anthropic/Nano Banana/Veo) · créditos movidos al Tab Agente */}
         <TabsContent value="ai">
           <ClientAIConfig />
+        </TabsContent>
+
+        {/* Supervisado Tab · DEBT-097 · cola de aprobación · gated PRO/Enterprise */}
+        <TabsContent value="supervisado">
+          {hasPro ? (
+            <ClientSupervisedQueue clientId={client.id} />
+          ) : (
+            <Card className="border-border/50 bg-card/60">
+              <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+                <Lock className="h-6 w-6 text-muted-foreground" />
+                <p className="text-sm font-medium">Modo Supervisado · plan PRO y Enterprise</p>
+                <p className="text-xs text-muted-foreground max-w-sm">
+                  ARIA prepara el contenido y lo dejás revisar antes de publicar. Mejorá el plan para activarlo.
+                </p>
+                <Button size="sm" onClick={() => navigate("/settings?tab=plan")}>Ver planes</Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Posts Tab · DEBT-053 · historial real de ejecuciones por agente */}
