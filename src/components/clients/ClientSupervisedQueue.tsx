@@ -1,12 +1,17 @@
 // DEBT-097 · Modo Supervisado · cola de aprobación por negocio.
 // ARIA generó estos drafts y PARÓ · el cliente aprueba/rechaza · cero auto-publicación.
 // Datos reales vía useSupervisedQueue (backend filtra draft+supervisado+ownership).
+// DEBT-ARIA-UX: cabecera única · el switch (useSupervisadoSetting) vive aquí, a la derecha del
+// título (antes era una tarjeta aparte duplicada). SIN gate propio: el tab padre gatea por plan
+// del cliente (useClientPlanStatus). Tarjetas en grid 5×5 (layout · datos ya llegan ≤100).
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Loader2, ClipboardCheck, Check, X } from "lucide-react";
 import { useSupervisedQueue } from "@/hooks/useSupervisedQueue";
+import { useSupervisadoSetting } from "@/hooks/useSupervisadoSetting";
 import type { SupervisedDraft } from "@/hooks/useSupervisedQueue";
 
 function fmtDate(iso: string): string {
@@ -41,17 +46,29 @@ function DraftRow({ d, onApprove, onReject, busy }: {
 
 export function ClientSupervisedQueue({ clientId }: { clientId: string }) {
   const { items, isLoading, isError, approve, reject } = useSupervisedQueue(clientId);
+  const { enabled, toggle } = useSupervisadoSetting(clientId);
   const busy = approve.isPending || reject.isPending;
 
   return (
     <Card className="border-border/50 bg-card/60">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between text-sm font-medium">
+      <CardHeader className="space-y-1">
+        <CardTitle className="flex items-center justify-between gap-2 text-sm font-medium">
           <span className="flex items-center gap-2"><ClipboardCheck className="h-4 w-4" /> Modo Supervisado</span>
-          {items.length > 0 && <Badge variant="secondary" className="text-xs">{items.length} pendiente{items.length !== 1 ? "s" : ""}</Badge>}
+          <div className="flex items-center gap-2">
+            {items.length > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                {items.length} pendiente{items.length !== 1 ? "s" : ""}
+              </Badge>
+            )}
+            <Switch checked={enabled} disabled={toggle.isPending}
+              onCheckedChange={(v) => toggle.mutate(v)} aria-label="Revisar antes de publicar" />
+          </div>
         </CardTitle>
+        <p className="text-[11px] text-muted-foreground">
+          Con el modo activo, ARIA prepara el contenido y PARA: lo revisás y aprobás antes de que se publique.
+        </p>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent>
         {isLoading ? (
           <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
         ) : isError ? (
@@ -61,10 +78,12 @@ export function ClientSupervisedQueue({ clientId }: { clientId: string }) {
             No hay borradores pendientes de aprobación. Cuando ARIA prepare contenido, aparecerá aquí para que lo revises antes de publicar.
           </p>
         ) : (
-          items.map((d) => (
-            <DraftRow key={d.id} d={d} busy={busy}
-              onApprove={() => approve.mutate(d.id)} onReject={() => reject.mutate(d.id)} />
-          ))
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {items.map((d) => (
+              <DraftRow key={d.id} d={d} busy={busy}
+                onApprove={() => approve.mutate(d.id)} onReject={() => reject.mutate(d.id)} />
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>
