@@ -1,2 +1,2 @@
 0c74ea658cb7d4d81075515fb421edc8ab04bca3  backend/app/bc_cognition/domain/persona_nova.py
-824fea6bb487272468dc5262ab77e5bafe2d9f00  backend/app/bc_cognition/domain/persona_aria.py
+14fad74e9b6f69805b43a260dd7301dc03a401e1  backend/app/bc_cognition/domain/persona_aria.py

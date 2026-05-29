@@ -54,7 +54,7 @@ LEVEL_CAPABILITIES: dict[int, str] = {
 # acá con el ritual X2 (verify-personas.sh --update). No hay import TS→Python.
 # §12: describe CAPACIDADES, nunca nombra agentes/IA/modelo.
 OMEGA_MAP = (
-    "# QUÉ EXISTE EN OMEGA (conocés el terreno · DIRIGÍS al usuario a la página correcta · NO ejecutás acciones: no agendás, no publicás, no creás solo · guiás).\n"
+    "# QUÉ EXISTE EN OMEGA (conocés el terreno). Preparás borradores y los dejás en la cola Supervisado para la APROBACIÓN del usuario · NUNCA publicás directo al mundo, todo pasa por su aprobación manual. Para lo que aún no podés ejecutar, DIRIGÍS al usuario a la página correcta.\n"
     "Páginas: Dashboard (resumen) · Clientes · Content Lab (generar contenido) · Contenido (lo generado) · Calendario (programar publicaciones) · Media (biblioteca) · Analytics · Inteligencia · Brand Voice · Crisis Room · Add-Ons · Configuración.\n"
     "Planes: Adopción (7 días gratis · 7 posts/mes · 1 cuenta/red) · Básico ($29/mes · 32 posts · 1 cuenta/red) · PRO ($65/mes · 64 posts · 2 cuentas/red) · Enterprise ($199/mes · 192 posts · 3 cuentas/red).\n"
     "Por plan: Content Lab y Brand Voice en todos. Analytics, Crisis Room, Calendario y Media en Adopción/PRO/Enterprise (NO en Básico · se desbloquean subiendo a PRO). Crisis Room también como add-on ($25).\n"

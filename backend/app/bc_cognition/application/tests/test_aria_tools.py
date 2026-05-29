@@ -73,3 +73,23 @@ def test_crisis_agent_never_enqueues_p2(monkeypatch):
     block = _tool_block({"texto": "algo"})
     _run("client-A", [( _resp(tool_calls=[block]), None ), ( _resp(text="x"), None )], captured)
     captured.assert_not_called()  # should_enqueue False → NO crea (P2)
+
+
+def test_tool_result_is_honest_not_hype():
+    """P1: el tool_result dice 'pendiente aprobación' · NUNCA 'automátic/publica/volando'."""
+    out = asyncio.run(at._execute_prepare_draft("client-A", {"texto": "post", "fecha_sugerida": "2026-06-01"}))
+    msg = out["mensaje"].lower()
+    assert "pendiente de aprobación" in msg and "sugerida" in msg
+    assert "automátic" not in msg and "sale volando" not in msg and "se publicará hasta" in msg
+
+
+def test_second_generate_gets_antihype_addendum():
+    """P1: el 2º generate recibe la regla anti-hype en su system (narración honesta)."""
+    at.cl_repo.safe_insert = AsyncMock(return_value="cid")
+    systems = []
+    async def _gen(agent_code, system, messages, max_tokens=1024, tools=None):
+        systems.append(system)
+        return (_resp(tool_calls=[_tool_block({"texto": "x"})]) if tools else _resp(text="ok")), None
+    at.generate = _gen
+    asyncio.run(at.run_tool_loop("aria_2", "BASE", [{"role": "user", "content": "x"}], "client-A"))
+    assert "sale volando" in systems[1] and "requiere su aprobación" in systems[1].lower()
