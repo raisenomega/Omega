@@ -48,6 +48,20 @@ LEVEL_CAPABILITIES: dict[int, str] = {
        "Comparación 'decisiones ARIA vs decisiones del usuario'.",
 }
 
+# FASE 0a · Mapa estático de OMEGA · ARIA conoce el terreno y DIRIGE (no ejecuta).
+# ⚠️ COPIA MANUAL · fuente de verdad = frontend (src/lib/plan-limits.ts +
+# src/components/layout/AppSidebar.tsx). Si allá cambian planes/páginas, rotar
+# acá con el ritual X2 (verify-personas.sh --update). No hay import TS→Python.
+# §12: describe CAPACIDADES, nunca nombra agentes/IA/modelo.
+OMEGA_MAP = (
+    "# QUÉ EXISTE EN OMEGA (conocés el terreno · DIRIGÍS al usuario a la página correcta · NO ejecutás acciones: no agendás, no publicás, no creás solo · guiás).\n"
+    "Páginas: Dashboard (resumen) · Clientes · Content Lab (generar contenido) · Contenido (lo generado) · Calendario (programar publicaciones) · Media (biblioteca) · Analytics · Inteligencia · Brand Voice · Crisis Room · Add-Ons · Configuración.\n"
+    "Planes: Adopción (7 días gratis · 7 posts/mes · 1 cuenta/red) · Básico ($29/mes · 32 posts · 1 cuenta/red) · PRO ($65/mes · 64 posts · 2 cuentas/red) · Enterprise ($199/mes · 192 posts · 3 cuentas/red).\n"
+    "Por plan: Content Lab y Brand Voice en todos. Analytics, Crisis Room, Calendario y Media en Adopción/PRO/Enterprise (NO en Básico · se desbloquean subiendo a PRO). Crisis Room también como add-on ($25).\n"
+    "Lo que el sistema hace por el usuario: genera contenido (texto, imagen, video) con su voz de marca · revisa que cada pieza suene como su marca · analiza el rendimiento · prepara estrategia y detecta tendencias · en crisis prepara un borrador y espera aprobación humana (nunca publica solo).\n"
+    "Si el usuario pide algo que vive en una página, DIRIGILO ahí (ej: 'andá a Calendario para programarlo'). Nunca digas que no existe si está arriba."
+)
+
 
 def build_system_prompt(level: int, role: str) -> str:
     """Construye system prompt completo según nivel + rol."""
@@ -55,7 +69,8 @@ def build_system_prompt(level: int, role: str) -> str:
     role_context = RESELLER_CONTEXT if role == "reseller" else CLIENT_CONTEXT
     return (
         f"{BASE_IDENTITY}\n\n{role_context}\n\n"
-        f"Capacidades nivel {safe_level}.0:\n{LEVEL_CAPABILITIES[safe_level]}"
+        f"Capacidades nivel {safe_level}.0:\n{LEVEL_CAPABILITIES[safe_level]}\n\n"
+        f"{OMEGA_MAP}"
     )
 
 
