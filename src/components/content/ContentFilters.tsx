@@ -22,6 +22,7 @@ export function ContentFilters({
           <TabsTrigger value="pending">Pendientes</TabsTrigger>
           <TabsTrigger value="saved">Guardados</TabsTrigger>
           <TabsTrigger value="all">Todo</TabsTrigger>
+          <TabsTrigger value="rejected">Papelera</TabsTrigger>
         </TabsList>
       </Tabs>
       <div className="flex items-center gap-2">

@@ -12,7 +12,9 @@ from app.api.routes.content_v3.models.content_models import ContentItem, Content
 
 router = APIRouter()
 
-UI_TO_DB_STATUS: dict[str, Optional[str]] = {"pending": "draft", "saved": "approved", "all": None}
+UI_TO_DB_STATUS: dict[str, Optional[str]] = {
+    "pending": "draft", "saved": "approved", "all": None, "rejected": "rejected",  # rejected = tab Papelera
+}
 
 
 def _to_item(row: dict) -> ContentItem:

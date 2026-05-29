@@ -11,6 +11,7 @@ const EMPTY_TITLES: Record<ContentStatus, string> = {
   pending: "Sin contenido pendiente",
   saved: "Sin contenido guardado todavía",
   all: "Sin contenido generado",
+  rejected: "La papelera está vacía",
 };
 
 export default function Content() {
@@ -58,7 +59,9 @@ export default function Content() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {q.data!.items.map((item) => <ContentCard key={item.id} item={item} />)}
+          {q.data!.items.map((item) => (
+            <ContentCard key={item.id} item={item} reuseMode={status === "rejected"} />
+          ))}
         </div>
       )}
     </div>

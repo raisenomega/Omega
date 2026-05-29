@@ -1,13 +1,12 @@
 import { useState } from "react";
-import { Check, X, ImageOff } from "lucide-react";
+import { ImageOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PLATFORM_COLORS, PLATFORM_LABELS, type Platform } from "@/lib/onboarding-constants";
 import type { ContentItem } from "@/hooks/useContentActions";
-import { useSaveContent } from "@/hooks/useContentActions";
+import { ContentCardActions } from "@/components/content/ContentCardActions";
 
-interface ContentCardProps { item: ContentItem }
+interface ContentCardProps { item: ContentItem; reuseMode?: boolean }
 
 function formatDate(iso: string): string {
   if (!iso) return "";
@@ -21,10 +20,9 @@ function isImageContent(item: ContentItem): boolean {
   return /^https?:\/\/\S+\.(png|jpe?g|gif|webp|avif|svg)(\?\S*)?$/i.test(item.content);
 }
 
-export function ContentCard({ item }: ContentCardProps) {
+export function ContentCard({ item, reuseMode = false }: ContentCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
-  const save = useSaveContent();
   const platform = item.platform as Platform | null;
   const dotColor = platform && platform in PLATFORM_COLORS ? PLATFORM_COLORS[platform] : "#9CA3AF";
   const platformLabel = platform && platform in PLATFORM_LABELS ? PLATFORM_LABELS[platform] : "—";
@@ -62,29 +60,7 @@ export function ContentCard({ item }: ContentCardProps) {
           </p>
         )}
         {item.model && <p className="text-[10px] text-muted-foreground">Modelo: {item.model}</p>}
-        <div className="flex gap-2 pt-1">
-          <Button
-            size="sm"
-            variant={item.is_saved ? "default" : "outline"}
-            className={`gap-1 h-8 flex-1 ${item.is_saved ? "bg-emerald-600 hover:bg-emerald-700" : ""}`}
-            disabled={save.isPending}
-            onClick={() => save.mutate({ id: item.id, is_saved: !item.is_saved })}
-          >
-            <Check className="h-3.5 w-3.5" />
-            {item.is_saved ? "Guardado" : "Guardar"}
-          </Button>
-          {item.is_saved && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="gap-1 h-8"
-              disabled={save.isPending}
-              onClick={() => save.mutate({ id: item.id, is_saved: false })}
-            >
-              <X className="h-3.5 w-3.5" />Descartar
-            </Button>
-          )}
-        </div>
+        <ContentCardActions item={item} reuseMode={reuseMode} />
       </CardContent>
     </Card>
   );

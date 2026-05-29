@@ -18,7 +18,7 @@ export interface ContentListResult {
   total: number;
 }
 
-export type ContentStatus = "pending" | "saved" | "all";
+export type ContentStatus = "pending" | "saved" | "all" | "rejected";
 
 export function useContentList(opts: { status: ContentStatus; contentType?: string | null }) {
   return useQuery<ContentListResult>({
@@ -41,6 +41,20 @@ export function useSaveContent() {
     onSuccess: (_r, vars) => {
       qc.invalidateQueries({ queryKey: ["content_list"] });
       toast({ title: vars.is_saved ? "Guardado" : "Descartado" });
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+}
+
+// Papelera: reusar un descartado → vuelve a borrador (mismo endpoint que save, is_saved=false).
+export function useReuseContent() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: (id: string) => apiPatch(`/content/${id}/save`, { is_saved: false }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["content_list"] });
+      toast({ title: "Restaurado a borradores" });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
