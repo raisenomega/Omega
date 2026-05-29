@@ -13,6 +13,7 @@ class ClaudeResponse:
     cost_usd: float
     latency_ms: int
     cache_hit: bool
+    tool_calls: list | None = None   # 1b · bloques tool_use de Claude · None si no hay (aditivo)
 
 
 @dataclass(frozen=True)

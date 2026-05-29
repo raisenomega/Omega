@@ -43,6 +43,7 @@ async def generate(
     messages: list[dict[str, Any]],
     max_tokens: int = 1024,
     temperature: float = 1.0,
+    tools: list[dict[str, Any]] | None = None,   # 1b · None → ruta byte-idéntica a hoy
 ) -> tuple[ClaudeResponse | None, ClaudeError | None]:
     """Llama a Claude resolviendo modelo por agent_code. Nunca lanza."""
     try:
@@ -52,18 +53,16 @@ async def generate(
 
     timeout_s = LIMITS_OMEGA["MAX_CLAUDE_LATENCY_MS"] / 1000
     start = time.monotonic()
+    create_kwargs: dict[str, Any] = {
+        "model": model, "max_tokens": max_tokens, "temperature": temperature,
+        "system": [{"type": "text", "text": system,
+                    "cache_control": {"type": "ephemeral"}}],     # I3
+        "messages": messages,
+    }
+    if tools is not None:
+        create_kwargs["tools"] = tools   # solo si hay tools · sin esto = llamada idéntica a hoy
     try:
-        resp = await asyncio.wait_for(
-            _get_client().messages.create(
-                model=model,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                system=[{"type": "text", "text": system,
-                         "cache_control": {"type": "ephemeral"}}],     # I3
-                messages=messages,
-            ),
-            timeout=timeout_s,
-        )
+        resp = await asyncio.wait_for(_get_client().messages.create(**create_kwargs), timeout=timeout_s)
     except asyncio.TimeoutError:
         return None, ClaudeError("timeout", f"Excedió {timeout_s}s")
     except APITimeoutError as e:
@@ -72,6 +71,7 @@ async def generate(
         return None, ClaudeError("api_error", str(e), retry_after_s=getattr(e, "retry_after", None))
 
     text = "".join(b.text for b in resp.content if b.type == "text")
+    tool_calls = [b for b in resp.content if getattr(b, "type", None) == "tool_use"] or None
     cache_read = getattr(resp.usage, "cache_read_input_tokens", 0) or 0
     in_tok, out_tok = resp.usage.input_tokens, resp.usage.output_tokens
     return ClaudeResponse(
@@ -79,5 +79,5 @@ async def generate(
         input_tokens=in_tok, output_tokens=out_tok,
         cost_usd=estimate_cost(model, in_tok, out_tok),
         latency_ms=int((time.monotonic() - start) * 1000),
-        cache_hit=cache_read > 0,
+        cache_hit=cache_read > 0, tool_calls=tool_calls,
     ), None
