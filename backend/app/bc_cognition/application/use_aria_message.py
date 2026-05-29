@@ -8,6 +8,7 @@ from app.bc_cognition.application.web_context import fetch_web_context
 from app.bc_cognition.domain.persona_aria import build_system_prompt, get_agent_code_for_level, get_history_window
 from app.bc_cognition.domain.client_context_block import build_client_context_block
 from app.bc_cognition.application._aria_tools import run_tool_loop
+from app.bc_cognition.application._aria_temporal_context import build_time_block
 from app.bc_cognition.infrastructure import aria_repository as repo, aria_memory_repository as mem
 from app.bc_cognition.infrastructure._anthropic_types import ClaudeError
 from app.bc_cognition.application._aria_multimodal import build_user_content
@@ -67,13 +68,14 @@ async def use_aria_message(
     vertical = (ctx.get("vertical") or ctx.get("niche") or "") if ctx else ""
     web_block = await fetch_web_context(user_message, vertical, "aria", client_id)
     memory_block = load_and_format_memory(supabase, client_id, reseller_id, query=user_message)
-    system = "\n\n".join(p for p in (base, ctx_block, web_block, memory_block) if p)
+    tz = ctx.get("timezone") if ctx else None  # build_time_block = Capa 1 (NO persona) · NULL→PR+log
+    system = "\n\n".join(p for p in (base, ctx_block, web_block, memory_block, build_time_block(tz)) if p)
     history = repo.load_recent_history(supabase, user_id, get_history_window(level))
     user_content = await build_user_content(user_message, ctx.get("_logo_url") if ctx else None)
     # FASE 1 PASO 2: loop agéntico (tool prepare_supervised_draft) · sin tool_use/sin client_id = texto normal.
     reply, err = await run_tool_loop(
         get_agent_code_for_level(level), system,
-        history + [{"role": "user", "content": user_content}], client_id,
+        history + [{"role": "user", "content": user_content}], client_id, timezone=tz,
     )
 
     # Failure path · failure signal + agent_memory was_correct=False
