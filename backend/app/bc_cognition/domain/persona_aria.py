@@ -56,8 +56,7 @@ OMEGA_MAP = (
     "Planes: Adopción (7 días gratis · 7 posts/mes · 1 cuenta/red) · Básico ($29/mes · 32 posts · 1 cuenta/red) · PRO ($65/mes · 64 posts · 2 cuentas/red) · Enterprise ($199/mes · 192 posts · 3 cuentas/red).\n"
     "Por plan: Content Lab y Brand Voice en todos. Analytics, Crisis Room, Calendario y Media en Adopción/PRO/Enterprise (NO en Básico · se desbloquean subiendo a PRO). Crisis Room también como add-on ($25).\n"
     "Lo que el sistema hace por el usuario: genera contenido (texto, imagen, video) con su voz de marca · revisa que cada pieza suene como su marca · analiza el rendimiento · prepara estrategia y detecta tendencias · en crisis prepara un borrador y espera aprobación humana (nunca publica solo).\n"
-    "Si el usuario pide algo que vive en una página, DIRIGILO ahí (ej: 'andá a Calendario para programarlo'). Nunca digas que no existe si está arriba.\n"
-    "REGLA DE HONESTIDAD AL DIRIGIR: no inventes ni enumeres las funciones de otra sección (no prometas 'ahí hay reportes PDF, predicciones o benchmarks'); dirigí sin prometer ('eso lo ves en Analytics, te llevo ahí') · cada sección muestra su verdad cuando el cliente llega. En cambio, sé firme y clara con lo que VOS SÍ hacés (preparar borradores para su aprobación · dirigir): eso nunca lo dudes ni lo niegues."
+    "Si el usuario pide algo que vive en una página, DIRIGILO ahí (ej: 'andá a Calendario para programarlo'). Nunca digas que no existe si está arriba."
 )
 
 

@@ -64,6 +64,24 @@ def test_anti_g5_ignores_client_id_in_params():
     assert captured["client_id"] == "client-A"  # SESIÓN · nunca B (anti-G5 demostrado)
 
 
+def test_response_rules_cierran_el_system_conversacional():
+    """La regla de respuesta (no-enumerar + template + firmeza) va en el system del generate
+    CONVERSACIONAL (el que hoy enumera al redirigir) y AL FINAL (recency · system[-400:])."""
+    d.now_for = lambda tz=None: _NOW
+    systems = []
+    async def _gen(agent_code, system, messages, max_tokens=1024, tools=None):
+        systems.append(system)
+        return _resp(text="ok"), None  # sin tool_calls → devuelve tras el 1er generate (conversacional)
+    at.generate = _gen
+    long_base = "CONTEXTO_LARGO " * 40  # >400 chars · hace que system[-400:] sea cola real
+    asyncio.run(at.run_tool_loop("aria_4", long_base, [{"role": "user", "content": "x"}], "client-A"))
+    s = systems[0].lower()
+    assert "eso lo ves en" in s, "falta el template de redirección"
+    assert "no listes ni describas" in s, "falta la prohibición de enumerar funciones"
+    assert "nunca lo dudes ni lo niegues" in s, "falta la firmeza (anti P1 opuesto)"
+    assert "nunca lo dudes ni lo niegues" in s[-400:], "la regla no quedó al final (recency)"
+
+
 def test_second_generate_gets_antihype_addendum():
     """P1: el 2º generate recibe la regla anti-hype en su system (narración honesta)."""
     d.now_for = lambda tz=None: _NOW

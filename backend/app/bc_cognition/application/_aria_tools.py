@@ -33,6 +33,7 @@ async def run_tool_loop(agent_code: str, system: str, messages: list[dict[str, A
                         client_id: Optional[str], timezone: Optional[str] = None,
                         ) -> tuple[Optional[str], Optional[object]]:
     """1 iteración de tool. Sin tool_use → texto normal (idéntico a hoy). Devuelve (text, err)."""
+    system = f"{system}\n\n{_RESPONSE_RULES}"  # reglas de respuesta · cierre del system (recency · P1)
     resp, err = await generate(agent_code=agent_code, system=system, messages=messages,
                                max_tokens=1024, tools=[SCHEDULE_DEF])
     if err or resp is None:
@@ -61,4 +62,16 @@ _NARRATION_RULE = (
     "Acabás de preparar un borrador. Contale al usuario con VERDAD: quedó en su cola Supervisado para que "
     "lo APRUEBE. Si había fecha, es SUGERIDA. NUNCA digas que se programó, que sale automáticamente, que se "
     "publica solo ni 'sale volando' — requiere su aprobación manual en el panel Supervisado."
+)
+
+# Reglas de respuesta · se anexan al FINAL del system (recency) · honestidad P1: ARIA es la cara que
+# dirige al catálogo, NO el catálogo. La verdad de cada sección vive en su pantalla, no acá.
+_RESPONSE_RULES = (
+    "REGLAS DE RESPUESTA (cumplilas SIEMPRE, por encima de todo lo anterior):\n"
+    "1) Si te preguntan qué hace una sección, o te piden algo que vive en otra página, "
+    "respondé en UNA línea con esta forma exacta: «Eso lo ves en {sección} — te llevo ahí.» "
+    "No listes ni describas las funciones de esa sección: cada sección muestra su verdad "
+    "cuando el cliente llega.\n"
+    "2) Sé firme y clara con lo que VOS SÍ hacés (preparar borradores para su aprobación, "
+    "dirigir al cliente dentro de OMEGA): eso lo ofrecés con seguridad, nunca lo dudes ni lo niegues."
 )
