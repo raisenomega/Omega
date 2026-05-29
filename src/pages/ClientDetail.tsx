@@ -13,6 +13,7 @@ import { ClientAgentsActive } from "@/components/clients/ClientAgentsActive";
 import { ClientAgentExecutions } from "@/components/clients/ClientAgentExecutions";
 import { ClientLearningEvents } from "@/components/clients/ClientLearningEvents";
 import { ClientSupervisedQueue } from "@/components/clients/ClientSupervisedQueue";
+import { ClientSupervisadoToggle } from "@/components/clients/ClientSupervisadoToggle";
 import { ClientCreditsWidget } from "@/components/clients/ClientCreditsWidget";
 import { useClientPlanStatus } from "@/hooks/useClientPlanStatus";
 import { AriaUpgradeModal } from "@/components/clients/AriaUpgradeModal";
@@ -169,7 +170,10 @@ export default function ClientDetail() {
         {/* Supervisado Tab · DEBT-097 · cola de aprobación · gated PRO/Enterprise */}
         <TabsContent value="supervisado">
           {hasPro ? (
-            <ClientSupervisedQueue clientId={client.id} />
+            <div className="space-y-4">
+              <ClientSupervisadoToggle clientId={client.id} />
+              <ClientSupervisedQueue clientId={client.id} />
+            </div>
           ) : (
             <Card className="border-border/50 bg-card/60">
               <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
