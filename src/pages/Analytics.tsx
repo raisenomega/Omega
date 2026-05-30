@@ -39,7 +39,7 @@ export default function Analytics() {
   const hasAnyData = growthData.length > 0 || hasEngagement || heatmapData.length > 0 || totalFollowers !== null || avgEngagement !== null;
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-6 space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-semibold">Analytics</h1>

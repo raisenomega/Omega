@@ -31,7 +31,7 @@ export default function Calendar() {
   const [y, m] = month.split("-").map(Number);
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-6 space-y-4">
+    <div className="space-y-6">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold">Calendario</h1>
         <p className="text-sm text-muted-foreground">Posts programados · click en un día para ver detalles.</p>

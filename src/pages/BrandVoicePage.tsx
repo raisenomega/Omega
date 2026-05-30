@@ -18,7 +18,7 @@ export default function BrandVoicePage() {
     return <ProFeatureGate feature="Brand Voice" description="Lo que ARIA aprendió sobre tu marca." clientId={access.clientId} />;
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-6 space-y-6">
+    <div className="space-y-6">
       <header className="space-y-1">
         <h1 className="text-2xl font-display font-bold tracking-tight">
           Brand Voice

@@ -19,7 +19,7 @@ export default function IntelligencePage() {
   if (!hasPro) return <IntelligencePlanGate clientId={clientId} />;
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-6 space-y-6">
+    <div className="space-y-6">
       <header className="flex items-center gap-3">
         <Brain className="h-7 w-7 text-amber-500" />
         <div>
