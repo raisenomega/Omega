@@ -1,7 +1,8 @@
-import { useState, KeyboardEvent } from "react";
+import { useEffect, useState, KeyboardEvent } from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useARIA } from "@/contexts/ARIAContext";
 
 interface ARIAInputBarProps {
   onSend: (content: string) => void;
@@ -10,6 +11,15 @@ interface ARIAInputBarProps {
 
 export function ARIAInputBar({ onSend, disabled }: ARIAInputBarProps) {
   const [value, setValue] = useState("");
+  const { pendingMessage, clearPending } = useARIA();
+
+  // "Pedir ajuste" (u otra entrada) pre-carga el input · se consume una vez.
+  useEffect(() => {
+    if (pendingMessage) {
+      setValue(pendingMessage);
+      clearPending();
+    }
+  }, [pendingMessage, clearPending]);
 
   const handleSend = () => {
     const trimmed = value.trim();

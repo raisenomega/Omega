@@ -15,6 +15,7 @@ import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
 import Content from "./pages/Content";
 import ContentLabPageV2 from "./pages/ContentLabPageV2";
+import Strategies from "./pages/Strategies";
 import CalendarPage from "./pages/Calendar";
 import Media from "./pages/Media";
 import Analytics from "./pages/Analytics";
@@ -70,6 +71,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <AppLayout><ContentLabPageV2 /></AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/estrategias"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout><Strategies /></AppLayout>
                   </ProtectedRoute>
                 }
               />

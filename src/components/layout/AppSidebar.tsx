@@ -9,6 +9,7 @@ import {
   Mic2,
   ShieldAlert,
   Sparkles,
+  Lightbulb,
   Package,
   Brain,
   ChevronDown,
@@ -49,6 +50,7 @@ const PRINCIPAL_ITEMS: NavItemDef[] = [
   { title: "Clientes", url: "/clients", icon: Users },
   { title: "Content Lab", url: "/content-lab", icon: Sparkles },
   { title: "Contenido", url: "/content", icon: FileText },
+  { title: "Estrategias", url: "/estrategias", icon: Lightbulb },
   { title: "Calendario", url: "/calendar", icon: CalendarDays },
   { title: "Media", url: "/media", icon: ImageIcon },
 ];
