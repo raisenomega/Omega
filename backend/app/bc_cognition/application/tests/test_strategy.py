@@ -41,7 +41,6 @@ def test_build_strategy_system_reusa_bloques():
 # ---------- use case · REUSA el pipeline (lo LLAMA) ----------
 def test_use_generate_strategy_reusa_pipeline_y_persiste(monkeypatch):
     calls = {"web": 0, "ctx": 0}
-    monkeypatch.setattr(ugs, "resolve_role", lambda sb, uid: ("client", "client-A", None, 3))
     monkeypatch.setattr(ugs, "get_supabase_service", lambda: MagicMock())
 
     def _fetch_ctx(sb, cid):
@@ -66,7 +65,7 @@ def test_use_generate_strategy_reusa_pipeline_y_persiste(monkeypatch):
         return "new-strat-id"
     monkeypatch.setattr(ugs.repo, "safe_insert", _safe_insert)
 
-    result, err = asyncio.run(ugs.use_generate_strategy("user-1"))
+    result, err = asyncio.run(ugs.use_generate_strategy("client-A", None))
     assert err is None
     assert result.id == "new-strat-id" and result.titulo == "Estrategia semana 1"
     # reusó el pipeline (lo LLAMÓ, no lo duplicó):
@@ -76,15 +75,7 @@ def test_use_generate_strategy_reusa_pipeline_y_persiste(monkeypatch):
     assert "client-A" in captured["args"] and "Estrategia semana 1" in captured["args"] and "manual" in captured["args"]
 
 
-def test_use_generate_strategy_sin_cliente_forbidden(monkeypatch):
-    monkeypatch.setattr(ugs, "resolve_role", lambda sb, uid: ("reseller", None, "r1", 3))
-    monkeypatch.setattr(ugs, "get_supabase_service", lambda: MagicMock())
-    result, err = asyncio.run(ugs.use_generate_strategy("user-1"))
-    assert result is None and err.code == "forbidden"
-
-
 def test_use_generate_strategy_basura_no_persiste(monkeypatch):
-    monkeypatch.setattr(ugs, "resolve_role", lambda sb, uid: ("client", "client-A", None, 3))
     monkeypatch.setattr(ugs, "get_supabase_service", lambda: MagicMock())
     monkeypatch.setattr(ugs.repo, "fetch_aria_context", lambda sb, cid: {"niche": "x"})
     monkeypatch.setattr(ugs, "build_client_context_block", lambda ctx: "CTX")
@@ -96,5 +87,5 @@ def test_use_generate_strategy_basura_no_persiste(monkeypatch):
     async def _si(*a, **k):
         inserted["n"] += 1; return "x"
     monkeypatch.setattr(ugs.repo, "safe_insert", _si)
-    result, err = asyncio.run(ugs.use_generate_strategy("user-1"))
+    result, err = asyncio.run(ugs.use_generate_strategy("client-A"))
     assert result is None and err.code == "parse_error" and inserted["n"] == 0

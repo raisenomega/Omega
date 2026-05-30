@@ -5,7 +5,6 @@ fetch_web_context + load_and_format_memory + generate) · NO recopia su lógica 
 Brave as-is (genérico · DEBT-BRAVE-CONTEXTO aparte). tipo='manual' (Fase 2 cron usará cadence_for).
 """
 from typing import Optional
-from app.bc_cognition.application._aria_role import resolve_role
 from app.bc_cognition.application._aria_memory_context import load_and_format_memory
 from app.bc_cognition.application.web_context import fetch_web_context
 from app.bc_cognition.domain.client_context_block import build_client_context_block
@@ -25,13 +24,12 @@ class StrategyResult:
         self.contenido = contenido
 
 
-async def use_generate_strategy(user_id: str) -> tuple[Optional[StrategyResult], Optional[ClaudeError]]:
-    """Genera y persiste una estrategia activa para el negocio del usuario. (result, err)."""
+async def use_generate_strategy(
+    client_id: str, reseller_id: Optional[str] = None,
+) -> tuple[Optional[StrategyResult], Optional[ClaudeError]]:
+    """Genera y persiste una estrategia activa para el cliente. (result, err). El handler resuelve
+    el rol y gatea budget ANTES (check_budget · 402) · acá solo generación pura."""
     supabase = get_supabase_service()
-    _role, client_id, reseller_id, _level = resolve_role(supabase, user_id)
-    if not client_id:
-        return None, ClaudeError("forbidden", "Las estrategias se generan para un negocio (cliente).")
-
     # Reuso del pipeline de ARIA · cada bloque se LLAMA, no se reconstruye.
     ctx = repo.fetch_aria_context(supabase, client_id)
     ctx_block = build_client_context_block(ctx) if ctx else ""
