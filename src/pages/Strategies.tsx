@@ -1,21 +1,33 @@
 import { useState } from "react";
-import { Loader2, AlertCircle, Lightbulb, ChevronDown } from "lucide-react";
+import { Loader2, AlertCircle, Lightbulb, ChevronDown, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import { useStrategiesList, useGenerateStrategy } from "@/hooks/useStrategies";
 import { StrategyCard } from "@/components/strategies/StrategyCard";
+import { PackOfStrategiesModal } from "@/components/strategies/PackOfStrategiesModal";
+
+const CADENCE_COPY: Record<string, string> = {
+  semanal: "Tu plan incluye 1 estrategia por semana.",
+  tres_semana: "Tu plan incluye 3 estrategias por semana.",
+  diaria: "Tu plan incluye 1 estrategia por día.",
+};
 
 export default function Strategies() {
   const active = useStrategiesList("active");
   const archived = useStrategiesList("archived");
   const generate = useGenerateStrategy();
   const [histOpen, setHistOpen] = useState(false);
+  const [packOpen, setPackOpen] = useState(false);
   useTrackOnMount("feature_open", { feature: "strategies" });
 
   const items = active.data?.items ?? [];
   const past = archived.data?.items ?? [];
+  const cadence = active.data?.cadence;
+  const planLine = cadence
+    ? CADENCE_COPY[cadence]
+    : "Tu plan Adopción es para configurar tu ARIA. Subí tu plan para recibir estrategias automáticas adaptadas a tu negocio.";
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-6 space-y-4">
@@ -23,13 +35,19 @@ export default function Strategies() {
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold flex items-center gap-2"><Lightbulb className="h-6 w-6" /> Estrategias</h1>
           <p className="text-sm text-muted-foreground">
-            ARIA prepara estrategias con tu contexto y las tendencias. Usalas, agendalas o pedí ajustes.
+            ARIA prepara estrategias con tu contexto y las tendencias. Usalas, archivá las que no apliquen, o pedí ajustes.
           </p>
+          {active.data && <p className="text-xs text-muted-foreground">{planLine}</p>}
         </div>
-        <Button onClick={() => generate.mutate()} disabled={generate.isPending} className="gap-1">
-          {generate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lightbulb className="h-4 w-4" />}
-          Generar estrategia
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => generate.mutate()} disabled={generate.isPending} className="gap-1">
+            {generate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lightbulb className="h-4 w-4" />}
+            Generar estrategia
+          </Button>
+          <Button variant="outline" onClick={() => setPackOpen(true)} className="gap-1">
+            <Sparkles className="h-4 w-4" /> Pack de Estrategias
+          </Button>
+        </div>
       </header>
 
       {active.isLoading ? (
@@ -63,6 +81,8 @@ export default function Strategies() {
           </CollapsibleContent>
         </Collapsible>
       )}
+
+      <PackOfStrategiesModal open={packOpen} onClose={() => setPackOpen(false)} />
     </div>
   );
 }

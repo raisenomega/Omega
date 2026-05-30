@@ -15,7 +15,7 @@ export interface Strategy {
   created_at: string;
 }
 
-interface ListResult { items: Strategy[] }
+interface ListResult { items: Strategy[]; cadence?: string | null }
 
 export function useStrategiesList(estado: "active" | "archived") {
   return useQuery<ListResult>({
