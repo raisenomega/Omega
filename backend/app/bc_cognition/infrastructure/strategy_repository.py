@@ -6,12 +6,21 @@ from app.infrastructure.supabase_service import SupabaseService
 
 
 def insert_strategy(supabase: SupabaseService, client_id: str, titulo: str,
-                    contenido: dict[str, Any], tipo: str) -> Optional[str]:
-    """Inserta una estrategia activa · devuelve su id (None si no se creó)."""
-    r = supabase.client.table("strategies").insert({
+                    contenido: dict[str, Any], tipo: str,
+                    generation_key: Optional[str] = None) -> Optional[str]:
+    """Inserta una estrategia activa · devuelve su id (None si no se creó).
+    Con generation_key (cron Fase 2) → upsert idempotente: si la key ya existe (otra corrida
+    ganó la carrera) el UNIQUE parcial la ignora y devuelve None. Sin key (manual) → insert normal."""
+    row: dict[str, Any] = {
         "client_id": client_id, "titulo": titulo, "contenido": contenido,
         "tipo": tipo, "estado": "active", "created_by_aria": True,
-    }).execute()
+    }
+    if generation_key is None:
+        r = supabase.client.table("strategies").insert(row).execute()
+    else:
+        row["generation_key"] = generation_key
+        r = supabase.client.table("strategies").upsert(
+            row, on_conflict="generation_key", ignore_duplicates=True).execute()
     return str(r.data[0]["id"]) if r.data else None
 
 

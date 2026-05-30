@@ -156,8 +156,12 @@ async def startup_event():
     # DECISION EVALUATOR (DEBT-100 · ARIA_LEARNING_LOOP Loop 1 · cierra was_correct · cada hora :30 · 13vo cron job)
     from app.workers.decision_evaluator_worker import run_decision_evaluator_job
     scheduler.add_job(run_decision_evaluator_job, 'cron', minute=30, id='decision_evaluator', max_instances=1, replace_existing=True, misfire_grace_time=300)
+    # STRATEGY GENERATOR (DEBT-096 Fase 2 · diario 07:10 · filtra por cadencia/cliente · 14vo cron job)
+    from app.workers.strategy_generator_worker import StrategyGeneratorWorker
+    strategy_gen_worker = StrategyGeneratorWorker()
+    scheduler.add_job(strategy_gen_worker.run_all_clients, 'cron', hour=7, minute=10, id='strategy_generator', max_instances=1, replace_existing=True)
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL workers activos — 13 jobs (jobstore persistente DEBT-047)")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN workers activos — 14 jobs (jobstore persistente DEBT-047)")
 
 @app.on_event("shutdown")
 async def shutdown_event():

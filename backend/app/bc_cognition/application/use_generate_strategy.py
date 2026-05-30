@@ -26,6 +26,7 @@ class StrategyResult:
 
 async def use_generate_strategy(
     client_id: str, reseller_id: Optional[str] = None,
+    tipo: str = "manual", generation_key: Optional[str] = None,
 ) -> tuple[Optional[StrategyResult], Optional[ClaudeError]]:
     """Genera y persiste una estrategia activa para el cliente. (result, err). El handler resuelve
     el rol y gatea budget ANTES (check_budget · 402) · acá solo generación pura."""
@@ -50,5 +51,5 @@ async def use_generate_strategy(
         return None, ClaudeError("parse_error", "ARIA no devolvió una estrategia válida. Probá de nuevo.")
 
     sid = await repo.safe_insert("strategy_insert", strat.insert_strategy,
-                                 supabase, client_id, parsed["titulo"], parsed["contenido"], "manual")
+                                 supabase, client_id, parsed["titulo"], parsed["contenido"], tipo, generation_key)
     return StrategyResult(id=sid, titulo=parsed["titulo"], contenido=parsed["contenido"]), None
