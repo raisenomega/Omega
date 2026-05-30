@@ -1,5 +1,4 @@
 import { Navigate } from "react-router-dom";
-import { ShieldCheck } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSuperOwner } from "@/hooks/useSuperOwner";
@@ -17,9 +16,7 @@ export default function SecurityDevPage() {
   return (
     <div className="space-y-6 p-6">
       <header className="space-y-1">
-        <h1 className="flex items-center gap-2 text-2xl font-bold">
-          <ShieldCheck className="h-6 w-6 text-violet-400" /> Security Dev
-        </h1>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Security Dev</h1>
         <p className="text-sm text-muted-foreground">Panel de operador · solo visible para Ibrain</p>
       </header>
       <Tabs defaultValue="sentinel">

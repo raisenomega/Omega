@@ -33,7 +33,7 @@ export default function Calendar() {
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold">Calendario</h1>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Calendario</h1>
         <p className="text-sm text-muted-foreground">Posts programados · click en un día para ver detalles.</p>
       </header>
 

@@ -36,7 +36,7 @@ export default function Strategies() {
     <div className="space-y-6">
       <header className="flex items-start justify-between gap-3 flex-wrap">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold flex items-center gap-2"><Lightbulb className="h-6 w-6" /> Estrategias</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Estrategias</h1>
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
         <div className="flex items-center gap-2">

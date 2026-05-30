@@ -36,7 +36,7 @@ export default function SettingsPage() {
   return (
     <div className="container mx-auto max-w-3xl px-4 py-6 space-y-4">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold">Configuración</h1>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Configuración</h1>
       </header>
 
       <div className="flex flex-wrap gap-2">

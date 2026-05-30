@@ -56,7 +56,7 @@ export default function AddOnsPage() {
         <div className="flex items-center gap-2">
           <Package className="h-5 w-5 text-amber-500" />
           <div>
-            <h1 className="text-2xl font-semibold">Add-Ons</h1>
+            <h1 className="text-2xl font-display font-bold tracking-tight">Add-Ons</h1>
             <p className="text-sm text-muted-foreground">Potenciá tu plan con paquetes especializados.</p>
           </div>
         </div>

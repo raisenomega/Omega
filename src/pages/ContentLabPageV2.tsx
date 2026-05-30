@@ -14,7 +14,7 @@ export default function ContentLabPageV2() {
       <div className="flex items-center justify-between gap-6 flex-wrap">
         <div className="shrink-0 flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-amber-500" />
-          <h1 className="text-2xl font-semibold">Content Lab</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Content Lab</h1>
         </div>
         <div className="flex-1 min-w-[420px]">
           <ContentLabFormBar clientList={s.clientList ?? []} form={s.form} setForm={s.setForm}

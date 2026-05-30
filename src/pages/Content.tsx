@@ -24,7 +24,7 @@ export default function Content() {
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold">Contenido</h1>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Contenido</h1>
         <p className="text-sm text-muted-foreground">
           Historial de contenido generado · aprueba y programa tus posts.
         </p>

@@ -81,7 +81,7 @@ export default function ClientDetail() {
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight">{client.name}</h1>
+            <h1 className="text-2xl font-display font-bold tracking-tight">{client.name}</h1>
             <Badge variant="secondary" className="capitalize">{client.plan}</Badge>
             {client.status === "active" && <div className="h-2.5 w-2.5 rounded-full bg-success" />}
           </div>
