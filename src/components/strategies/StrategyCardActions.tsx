@@ -1,12 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkles, CalendarDays, MessageCircle, Archive } from "lucide-react";
+import { Sparkles, MessageCircle, Archive } from "lucide-react";
 import { useARIA } from "@/contexts/ARIAContext";
 import { useSetStrategyStatus, type Strategy } from "@/hooks/useStrategies";
 
-// Las 4 acciones de Fase 1 · HONESTAS (ninguna promete más de lo que hace):
-// Usar→Content Lab pre-llenado (real) · Agendar→Calendario (navegación simple · pre-llenado=Fase 1.5)
-// Pedir ajuste→chat ARIA con contexto (real) · Archivar→PATCH estado (real).
+// Las 3 acciones de Fase 1 · HONESTAS (ninguna promete más de lo que hace):
+// Usar→Content Lab pre-llenado (real) · Pedir ajuste→chat ARIA (real) · Archivar→PATCH estado (real).
+// "Agendar" se quitó (DEBT-096 F1): una estrategia no es un post (posts_sugeridos = ideas sin
+// content_id). El agendado real va por Usar→Content Lab→ScheduleModalV2. Botón propio = Fase 1.5/2.
 function briefFrom(s: Strategy): string {
   const c = s.contenido || {};
   const pilares = Array.isArray(c.pilares) ? c.pilares.join(", ") : "";
@@ -28,9 +29,6 @@ export function StrategyCardActions({ strategy }: { strategy: Strategy }) {
         }}
       >
         <Sparkles className="h-3.5 w-3.5" /> Usar
-      </Button>
-      <Button size="sm" variant="outline" className="gap-1 h-8" onClick={() => navigate("/calendar")}>
-        <CalendarDays className="h-3.5 w-3.5" /> Agendar
       </Button>
       <Button
         size="sm" variant="ghost" className="gap-1 h-8"
