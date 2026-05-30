@@ -2,7 +2,8 @@
 
 DDD A1+A9. §12/§4.1: persistencia OBLIGATORIA en todos los paths (happy/fail/reseller).
 FIX 4: cada INSERT via repo.safe_insert · errores logueados, NUNCA propagan al cliente."""
-from typing import Optional, Tuple
+from typing import Optional
+from app.bc_cognition.application._aria_role import resolve_role
 from app.bc_cognition.application._aria_memory_context import load_and_format_memory
 from app.bc_cognition.application.web_context import fetch_web_context
 from app.bc_cognition.domain.persona_aria import build_system_prompt, get_agent_code_for_level, get_history_window
@@ -26,22 +27,11 @@ class ARIAResult:
         self.aria_level = aria_level
 
 
-def _resolve_role(supabase, user_id: str) -> Tuple[Optional[str], Optional[str], Optional[str], int]:
-    """Retorna (role, client_id, reseller_id, level) · None role si forbidden."""
-    c = repo.find_client_by_user(supabase, user_id)
-    if c:
-        return "client", c["id"], None, c.get("aria_level") or 1
-    r = repo.find_reseller_by_owner(supabase, user_id)
-    if r:  # DEBT-046: aria_level real (3 base · 4 si aria_premium_reseller)
-        return "reseller", None, r["id"], r.get("aria_level") or 3
-    return None, None, None, 0
-
-
 async def use_aria_message(
     user_id: str, user_message: str,
 ) -> tuple[Optional[ARIAResult], Optional[ClaudeError]]:
     supabase = get_supabase_service()
-    role, client_id, reseller_id, level = _resolve_role(supabase, user_id)
+    role, client_id, reseller_id, level = resolve_role(supabase, user_id)
     if not role:
         return None, ClaudeError("forbidden", "User no es cliente ni reseller")
 

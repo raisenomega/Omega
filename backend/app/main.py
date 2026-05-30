@@ -52,6 +52,7 @@ from app.api.routes import clients_v3
 from app.api.routes import content_v3
 from app.api.routes import calendar_v3
 from app.api.routes import content_lab_v3
+from app.api.routes import strategies_v1
 from app.api.routes import intelligence
 from app.api.routes import brand_voice_v2
 from app.api.routes import guardian
@@ -198,6 +199,7 @@ app.include_router(clients_v3.router, prefix=settings.api_v1_prefix, tags=["Clie
 app.include_router(content_v3.router, prefix=settings.api_v1_prefix, tags=["Content V3"])
 app.include_router(calendar_v3.router, prefix=settings.api_v1_prefix, tags=["Calendar V3"])
 app.include_router(content_lab_v3.router, prefix=settings.api_v1_prefix, tags=["Content Lab V3"])
+app.include_router(strategies_v1.router, prefix=settings.api_v1_prefix, tags=["Strategies V1"])
 app.include_router(intelligence.router, prefix=settings.api_v1_prefix, tags=["Intelligence 🧠"])
 app.include_router(brand_voice_v2.router, prefix=settings.api_v1_prefix, tags=["Brand Voice V2"])
 app.include_router(context.router, prefix=settings.api_v1_prefix)
