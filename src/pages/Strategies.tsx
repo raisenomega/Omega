@@ -8,11 +8,16 @@ import { useStrategiesList, useGenerateStrategy } from "@/hooks/useStrategies";
 import { StrategyCard } from "@/components/strategies/StrategyCard";
 import { PackOfStrategiesModal } from "@/components/strategies/PackOfStrategiesModal";
 
-const CADENCE_COPY: Record<string, string> = {
-  semanal: "Tu plan incluye 1 estrategia por semana.",
-  tres_semana: "Tu plan incluye 3 estrategias por semana.",
-  diaria: "Tu plan incluye 1 estrategia por día.",
+// Subtítulo unificado en UN párrafo · cadencia del backend (single-source). El INTRO se muestra
+// durante el load (sin pantalla muda ni flicker) y se completa con la cadencia al cargar.
+const INTRO = "ARIA prepara estrategias con tu contexto y las tendencias.";
+const USAR = " Usalas, archivá las que no apliquen, o pedí ajustes.";
+const CADENCE_TAIL: Record<string, string> = {
+  semanal: ` Tu plan incluye 1 estrategia por semana, que recibirás automáticamente los lunes.${USAR}`,
+  tres_semana: ` Tu plan incluye 3 estrategias por semana, que recibirás automáticamente los lunes, miércoles y viernes.${USAR}`,
+  diaria: ` Tu plan incluye 1 estrategia por día, que recibirás automáticamente cada mañana.${USAR}`,
 };
+const UPGRADE_TAIL = " Tu plan Adopción es para configurar tu ARIA — subí tu plan para recibir estrategias automáticas adaptadas a tu negocio.";
 
 export default function Strategies() {
   const active = useStrategiesList("active");
@@ -25,19 +30,14 @@ export default function Strategies() {
   const items = active.data?.items ?? [];
   const past = archived.data?.items ?? [];
   const cadence = active.data?.cadence;
-  const planLine = cadence
-    ? CADENCE_COPY[cadence]
-    : "Tu plan Adopción es para configurar tu ARIA. Subí tu plan para recibir estrategias automáticas adaptadas a tu negocio.";
+  const subtitle = !active.data ? INTRO : INTRO + (cadence ? CADENCE_TAIL[cadence] : UPGRADE_TAIL);
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-6 space-y-4">
+    <div className="space-y-6">
       <header className="flex items-start justify-between gap-3 flex-wrap">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold flex items-center gap-2"><Lightbulb className="h-6 w-6" /> Estrategias</h1>
-          <p className="text-sm text-muted-foreground">
-            ARIA prepara estrategias con tu contexto y las tendencias. Usalas, archivá las que no apliquen, o pedí ajustes.
-          </p>
-          {active.data && <p className="text-xs text-muted-foreground">{planLine}</p>}
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={() => generate.mutate()} disabled={generate.isPending} className="gap-1">
