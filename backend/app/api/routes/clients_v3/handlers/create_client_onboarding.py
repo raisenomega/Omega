@@ -62,9 +62,9 @@ async def create_client_onboarding(
     regions = identity_dict.pop("regions")
     identity_dict["region"] = ",".join(regions)
 
-    # CRÍTICO: upsert_client genera el ID · si falla el onboarding entero falla
+    # CRÍTICO: insert_client genera el ID · si falla el onboarding entero falla
     try:
-        client_id = repo.required_insert("upsert_client", repo.upsert_client, user_id, reseller_id, identity_dict)
+        client_id = repo.required_insert("insert_client", repo.insert_client, user_id, reseller_id, identity_dict)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"upsert_client_failed:{type(e).__name__}:{str(e)[:200]}")
 

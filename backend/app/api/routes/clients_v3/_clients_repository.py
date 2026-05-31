@@ -48,6 +48,15 @@ def upsert_client(user_id: str, reseller_id: str, identity: dict[str, str]) -> s
     return str(r.data[0]["id"])
 
 
+def insert_client(user_id: str, reseller_id: str, identity: dict[str, str]) -> str:
+    """SIEMPRE INSERT · cada negocio nuevo = fila nueva (multi-negocio Switcher V1).
+    NO upsertea por user_id: eso sobrescribía el 1er negocio al crear el 2º (bug write-side ·
+    Mail Boxes Design → Omega Raisen). Editar va por PATCH /clients/{id}/onboarding-data
+    con client_id explícito (otro path). upsert_client queda legacy (DEBT-UPSERT-CLIENT-CLEANUP)."""
+    r = _sb().table("clients").insert({**identity, "user_id": user_id, "reseller_id": reseller_id}).execute()
+    return str(r.data[0]["id"])
+
+
 def upsert_client_context(client_id: str, context: dict[str, Any]) -> None:
     _sb().table("client_context").upsert({**context, "client_id": client_id}, on_conflict="client_id").execute()
 
