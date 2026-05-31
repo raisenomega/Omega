@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ARIAProvider } from "@/contexts/ARIAContext";
+import { ActiveBusinessProvider } from "@/contexts/ActiveBusinessContext";
 import { ARIADrawer } from "@/components/aria/ARIADrawer";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -39,6 +40,7 @@ const App = () => (
             <Sonner />
             <ARIADrawer />
             <BrowserRouter>
+            <ActiveBusinessProvider>
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -164,6 +166,7 @@ const App = () => (
               />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </ActiveBusinessProvider>
             </BrowserRouter>
           </TooltipProvider>
         </ARIAProvider>
