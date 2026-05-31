@@ -6,6 +6,8 @@ import { useContentList, type ContentStatus } from "@/hooks/useContentActions";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import { ContentFilters } from "@/components/content/ContentFilters";
 import { ContentCard } from "@/components/content/ContentCard";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
+import { EmptyState } from "@/components/common/EmptyState";
 
 const EMPTY_TITLES: Record<ContentStatus, string> = {
   pending: "Sin contenido pendiente",
@@ -20,6 +22,11 @@ export default function Content() {
   useTrackOnMount("feature_open", { feature: "content" });
 
   const q = useContentList({ status, contentType });
+  const { activeBusinessId, isReady } = useActiveBusiness();
+  const items = (q.data?.items ?? []).filter((i) => i.client_id === activeBusinessId);
+
+  if (!isReady) return null;
+  if (!activeBusinessId) return <EmptyState feature="Contenido" />;
 
   return (
     <div className="space-y-6">
@@ -49,7 +56,7 @@ export default function Content() {
             <Button size="sm" variant="outline" onClick={() => q.refetch()}>Reintentar</Button>
           </CardContent>
         </Card>
-      ) : (q.data?.items.length ?? 0) === 0 ? (
+      ) : items.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
             <FileText className="h-10 w-10 text-muted-foreground/30" />
@@ -59,7 +66,7 @@ export default function Content() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {q.data!.items.map((item) => (
+          {items.map((item) => (
             <ContentCard key={item.id} item={item} reuseMode={status === "rejected"} />
           ))}
         </div>

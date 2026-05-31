@@ -11,6 +11,8 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useProAccess } from "@/hooks/useProAccess";
 import { ProFeatureGate, ProGateLoading } from "@/components/ProFeatureGate";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
+import { EmptyState } from "@/components/common/EmptyState";
 
 type Period = "7d" | "30d" | "90d";
 
@@ -21,6 +23,7 @@ export default function Analytics() {
 
   const access = useProAccess();
   const { loading, growthData, engagementData, heatmapData, avgEngagement, totalFollowers } = useAnalyticsData();
+  const { activeBusinessId, isReady } = useActiveBusiness();
 
   if (access.loading) return <ProGateLoading />;
   if (!access.hasPro)
@@ -33,6 +36,9 @@ export default function Analytics() {
       </div>
     );
   }
+
+  if (!isReady) return null;
+  if (!activeBusinessId) return <EmptyState feature="Analytics" />;
 
   const hasEngagement = engagementData.length > 0;
   const postsCount = hasEngagement ? engagementData.reduce((s, e) => s + e.likes + e.comments + e.shares, 0) : null;
