@@ -1,11 +1,11 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Users, Globe, UserCheck, FileText, Loader2, Bot, Brain, ClipboardCheck, Lock } from "lucide-react";
+import { ArrowLeft, Users, Globe, UserCheck, FileText, Loader2, Bot, Brain, ClipboardCheck, Lock, Pencil, Trash2 } from "lucide-react";
 import { ariaLevelInfo } from "@/lib/aria-levels";
 import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts";
 import { ClientAIConfig } from "@/components/clients/ClientAIConfig";
@@ -19,9 +19,13 @@ import { AriaUpgradeModal } from "@/components/clients/AriaUpgradeModal";
 import { AriaLevelChips } from "@/components/clients/AriaLevelChips";
 import { fetchOnboardingData } from "@/lib/onboarding-api";
 import { buildContextRows, type InfoRow } from "@/lib/client-info-fields";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
-export default function ClientDetail() {
-  const { id } = useParams<{ id: string }>();
+export default function ClientDetail({ clientId, onEdit, onDelete }: { clientId: string; onEdit: () => void; onDelete: () => void }) {
+  const id = clientId;
   const navigate = useNavigate();
 
   const { data: client, isLoading } = useQuery({
@@ -194,11 +198,37 @@ export default function ClientDetail() {
           <ClientLearningEvents clientId={client.id} />
         </TabsContent>
 
-        {/* Info Tab */}
+        {/* Info Tab · A1: editar/eliminar el negocio viven acá (reemplazan las row-actions de la lista) */}
         <TabsContent value="info">
           <Card className="border-border/50 bg-card/60">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Información del Cliente</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-medium">Información del negocio</CardTitle>
+              <div className="flex items-center gap-1.5">
+                <Button variant="outline" size="sm" className="h-8" onClick={onEdit}>
+                  <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70 hover:text-destructive" aria-label="Eliminar negocio">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Eliminar este negocio?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Acción permanente · borra el negocio y sus datos asociados (cascada). No se puede deshacer.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={onDelete}>
+                        Eliminar
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {([

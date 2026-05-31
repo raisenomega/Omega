@@ -1,36 +1,29 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiDelete } from "@/lib/api-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Plus, Search, Mail, Globe, Building, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { ClientRowActions } from "@/components/clients/ClientRowActions";
+import { Building2, Plus, Loader2 } from "lucide-react";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
+import ClientDetail from "./ClientDetail";
 
+// Switcher V1: /clients = "Agente ARIA". Con ?business={id} (negocio activo) → tabs de ClientDetail.
+// Sin negocio activo → empty-state + crear. El listado de cartera se reemplazó por el switcher del
+// header; editar/eliminar viven ahora en el tab Info de ClientDetail (camino A1).
 export default function Clients() {
-  const navigate = useNavigate();
+  const { activeBusinessId, setActiveBusiness, isReady } = useActiveBusiness();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
-  const [filterPlan, setFilterPlan] = useState("all");
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editingClientId, setEditingClientId] = useState<string | null>(null);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  // useOnboardingForm vive en el padre (NO se desmonta al cerrar Dialog/Sheet ·
-  // form persiste). Cuando editingClientId !== null -> hace GET y form.reset(data).
   const wizard = useOnboardingForm({
     clientId: editingClientId,
     onSuccess: (id) => {
@@ -38,195 +31,70 @@ export default function Clients() {
       setWizardOpen(false);
       setEditingClientId(null);
       wizard.form.reset();
-      queryClient.invalidateQueries({ queryKey: ["clients"] });
-      queryClient.invalidateQueries({ queryKey: ["client_onboarding_data", id] });
-      if (!wasEditing) navigate(`/clients/${id}`);
+      queryClient.invalidateQueries({ queryKey: ["my_clients"] });
+      queryClient.invalidateQueries({ queryKey: ["client", id] });
+      if (!wasEditing) setActiveBusiness(id);
     },
   });
 
-  const { data: clients, isLoading } = useQuery({
-    queryKey: ["clients"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("clients")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
+  const handleClose = () => { setWizardOpen(false); setEditingClientId(null); wizard.form.reset(); };
+  const openNew = () => { setEditingClientId(null); wizard.form.reset(); setWizardOpen(true); };
+  const openEdit = () => { setEditingClientId(activeBusinessId); setWizardOpen(true); };
 
-  // DELETE vía backend (service_role bypasea RLS · check de propiedad real): el
-  // Supabase directo era bloqueado por RLS y devolvía 0 filas SIN error → toast falso.
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiDelete(`/clients/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["clients"] });
-      toast({ title: "Cliente eliminado" });
-    },
-    onError: (e: Error) => toast({ title: "No se pudo eliminar", description: e.message, variant: "destructive" }),
-  });
-
-  const handleEdit = (clientId: string) => {
-    setEditingClientId(clientId);
-    setWizardOpen(true);
+  const deleteActive = async () => {
+    if (!activeBusinessId) return;
+    try {
+      await apiDelete(`/clients/${activeBusinessId}`);
+      queryClient.invalidateQueries({ queryKey: ["my_clients"] });
+      setActiveBusiness(null);
+      toast({ title: "Negocio eliminado" });
+    } catch (e) {
+      toast({ title: "No se pudo eliminar", description: (e as Error).message, variant: "destructive" });
+    }
   };
 
-  const handleClose = () => {
-    setWizardOpen(false);
-    setEditingClientId(null);
-    wizard.form.reset();
-  };
+  const wizardModal = isDesktop ? (
+    <Dialog open={wizardOpen} onOpenChange={(o) => { if (!o) handleClose(); }}>
+      <DialogContent aria-describedby={undefined} className="max-w-4xl w-full h-[85vh] p-0 gap-0 border-2 border-warning">
+        <DialogTitle className="sr-only">{wizard.isEditing ? "Editar negocio" : "Nuevo negocio"}</DialogTitle>
+        <OnboardingWizard wizard={wizard} onClose={handleClose} />
+      </DialogContent>
+    </Dialog>
+  ) : (
+    <Sheet open={wizardOpen} onOpenChange={(o) => { if (!o) handleClose(); }}>
+      <SheetContent aria-describedby={undefined} side="bottom" className="h-[90vh] p-0">
+        <SheetTitle className="sr-only">{wizard.isEditing ? "Editar negocio" : "Nuevo negocio"}</SheetTitle>
+        <OnboardingWizard wizard={wizard} onClose={handleClose} />
+      </SheetContent>
+    </Sheet>
+  );
 
-  const handleNewClient = () => {
-    setEditingClientId(null);
-    wizard.form.reset();
-    setWizardOpen(true);
-  };
+  if (!isReady) {
+    return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
 
-  const filtered = (clients ?? []).filter((c) => {
-    // DEBT-073: buscar por columnas reales de clients V3 (antes c.company/c.email inexistentes).
-    const matchSearch =
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      (c.business_email?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
-      (c.industry?.toLowerCase().includes(search.toLowerCase()) ?? false);
-    const matchPlan = filterPlan === "all" || c.plan === filterPlan;
-    return matchSearch && matchPlan;
-  });
+  if (activeBusinessId) {
+    return (<>
+      <ClientDetail clientId={activeBusinessId} onEdit={openEdit} onDelete={deleteActive} />
+      {wizardModal}
+    </>);
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-display font-bold tracking-tight">Clientes</h1>
-          <p className="text-muted-foreground">
-            Gestiona tus clientes y sus cuentas sociales
-          </p>
-        </div>
-        <Button className="gradient-primary" onClick={handleNewClient}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nuevo Cliente
-        </Button>
-      </div>
-
-      <div className="flex gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar clientes..."
-            className="pl-10"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <Select value={filterPlan} onValueChange={setFilterPlan}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Plan" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="basic">Básico</SelectItem>
-            <SelectItem value="pro">Pro</SelectItem>
-            <SelectItem value="enterprise">Enterprise</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : filtered.length === 0 ? (
-        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <Users className="h-12 w-12 text-muted-foreground/30 mb-4" />
-            <h3 className="text-lg font-medium mb-1">
-              {clients?.length === 0 ? "Sin clientes aún" : "Sin resultados"}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {clients?.length === 0
-                ? "Agrega tu primer cliente para empezar"
-                : "Intenta con otros filtros"}
-            </p>
-            {clients?.length === 0 && (
-              <Button className="gradient-primary" onClick={handleNewClient}>
-                <Plus className="mr-2 h-4 w-4" />
-                Agregar Cliente
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map((client) => (
-            <div key={client.id}>
-              <Card
-                className="border-border/50 bg-card/80 backdrop-blur-sm hover:bg-card/90 transition-colors cursor-pointer"
-                onClick={() => navigate(`/clients/${client.id}`)}
-              >
-                <CardContent className="flex items-center gap-4 p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <Users className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium truncate">{client.name}</h3>
-                      <Badge variant="secondary" className="text-xs capitalize">
-                        {client.plan}
-                      </Badge>
-                      {client.status === "active" && (
-                        <div className="h-2 w-2 rounded-full bg-success" />
-                      )}
-                    </div>
-                    {/* DEBT-072: columnas reales de clients V3 · antes leía company/email/phone inexistentes */}
-                    <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                      {client.business_email && (
-                        <span className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          {client.business_email}
-                        </span>
-                      )}
-                      {client.website && (
-                        <span className="flex items-center gap-1">
-                          <Globe className="h-3 w-3" />
-                          {client.website}
-                        </span>
-                      )}
-                      {client.industry && (
-                        <span className="flex items-center gap-1">
-                          <Building className="h-3 w-3" />
-                          {client.industry}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <ClientRowActions
-                    clientId={client.id}
-                    onEdit={() => handleEdit(client.id)}
-                    onDelete={() => deleteMutation.mutate(client.id)}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {isDesktop ? (
-        <Dialog open={wizardOpen} onOpenChange={(o) => { if (!o) handleClose(); }}>
-          <DialogContent aria-describedby={undefined} className="max-w-4xl w-full h-[85vh] p-0 gap-0 border-2 border-warning">
-            <DialogTitle className="sr-only">{wizard.isEditing ? "Editar cliente" : "Nuevo cliente"}</DialogTitle>
-            <OnboardingWizard wizard={wizard} onClose={handleClose} />
-          </DialogContent>
-        </Dialog>
-      ) : (
-        <Sheet open={wizardOpen} onOpenChange={(o) => { if (!o) handleClose(); }}>
-          <SheetContent aria-describedby={undefined} side="bottom" className="h-[90vh] p-0">
-            <SheetTitle className="sr-only">{wizard.isEditing ? "Editar cliente" : "Nuevo cliente"}</SheetTitle>
-            <OnboardingWizard wizard={wizard} onClose={handleClose} />
-          </SheetContent>
-        </Sheet>
-      )}
+      <header className="space-y-1">
+        <h1 className="text-2xl font-display font-bold tracking-tight">Agente ARIA</h1>
+        <p className="text-sm text-muted-foreground">Activá un negocio en el header para operar su ARIA, o creá uno nuevo.</p>
+      </header>
+      <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <Building2 className="h-12 w-12 text-muted-foreground/30 mb-4" />
+          <h3 className="text-lg font-medium mb-1">Sin negocio activo</h3>
+          <p className="text-sm text-muted-foreground mb-4">Seleccioná un negocio en el switcher del header, o creá tu primer negocio.</p>
+          <Button className="gradient-primary" onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuevo Negocio</Button>
+        </CardContent>
+      </Card>
+      {wizardModal}
     </div>
   );
 }

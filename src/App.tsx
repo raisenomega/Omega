@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -13,7 +13,6 @@ import { ARIADrawer } from "@/components/aria/ARIADrawer";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
-import ClientDetail from "./pages/ClientDetail";
 import Content from "./pages/Content";
 import ContentLabPageV2 from "./pages/ContentLabPageV2";
 import Strategies from "./pages/Strategies";
@@ -29,6 +28,12 @@ import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+// Switcher V1: /clients/:id legado → /clients?business=:id (preserva bookmarks viejos).
+function ClientLegacyRedirect() {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={`/clients?business=${id}`} replace />;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -64,7 +69,7 @@ const App = () => (
                 path="/clients/:id"
                 element={
                   <ProtectedRoute>
-                    <AppLayout><ClientDetail /></AppLayout>
+                    <ClientLegacyRedirect />
                   </ProtectedRoute>
                 }
               />
