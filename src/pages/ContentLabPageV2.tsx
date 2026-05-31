@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ContentLabFormV2 } from "@/components/content/ContentLabFormV2";
@@ -6,9 +7,21 @@ import { ResultCardV2 } from "@/components/content/ResultCardV2";
 import { ResultExpandedModal } from "@/components/content/ResultExpandedModal";
 import { ScheduleModalV2 } from "@/components/content/ScheduleModalV2";
 import { useContentLabState } from "@/hooks/useContentLabState";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
+import { EmptyState } from "@/components/common/EmptyState";
 
 export default function ContentLabPageV2() {
   const s = useContentLabState();
+  const { activeBusinessId, isReady } = useActiveBusiness();
+  // Preset del negocio activo en el form (el usuario puede cambiarlo · no se elimina la opción).
+  useEffect(() => {
+    if (activeBusinessId) s.setForm((f) => (f.clientId === activeBusinessId ? f : { ...f, clientId: activeBusinessId }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeBusinessId]);
+
+  if (!isReady) return null;
+  if (!activeBusinessId) return <EmptyState feature="Content Lab" />;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-6 flex-wrap">

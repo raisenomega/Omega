@@ -10,13 +10,18 @@ import { MetaIntelChip } from "@/components/intelligence/MetaIntelChip";
 import { GoogleIntelChip } from "@/components/intelligence/GoogleIntelChip";
 import { IntelligenceLoading, IntelligencePlanGate } from "@/components/intelligence/IntelligenceGate";
 import { type ChipId } from "@/components/intelligence/_chips";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
+import { EmptyState } from "@/components/common/EmptyState";
 
 export default function IntelligencePage() {
   const { clientId, loading, hasPro } = useProAccess();
+  const { activeBusinessId, isReady } = useActiveBusiness();
   const [active, setActive] = useState<ChipId>("resumen");
 
   if (loading) return <IntelligenceLoading />;
   if (!hasPro) return <IntelligencePlanGate clientId={clientId} />;
+  if (!isReady) return null;
+  if (!activeBusinessId) return <EmptyState feature="Inteligencia" />;
 
   return (
     <div className="space-y-6">
@@ -34,10 +39,10 @@ export default function IntelligencePage() {
 
       <IntelligenceChips active={active} onSelect={setActive} />
 
-      {active === "resumen" && <ResumenChip clientId={clientId ?? ""} />}
-      {active === "seo" && <SeoChip clientId={clientId ?? ""} />}
-      {active === "geo" && <GeoChip clientId={clientId ?? ""} />}
-      {active === "aeo" && <AeoChip clientId={clientId ?? ""} />}
+      {active === "resumen" && <ResumenChip clientId={activeBusinessId ?? ""} />}
+      {active === "seo" && <SeoChip clientId={activeBusinessId ?? ""} />}
+      {active === "geo" && <GeoChip clientId={activeBusinessId ?? ""} />}
+      {active === "aeo" && <AeoChip clientId={activeBusinessId ?? ""} />}
       {active === "meta" && <MetaIntelChip />}
       {active === "google" && <GoogleIntelChip />}
     </div>

@@ -7,15 +7,20 @@ import { LatestApprovals } from "@/components/brand-voice/LatestApprovals";
 import { TopKeywords } from "@/components/brand-voice/TopKeywords";
 import { useProAccess } from "@/hooks/useProAccess";
 import { ProFeatureGate, ProGateLoading } from "@/components/ProFeatureGate";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
+import { EmptyState } from "@/components/common/EmptyState";
 
 export default function BrandVoicePage() {
   useTrackOnMount("feature_open", { feature: "brand_voice" });
   const access = useProAccess();
   const q = useBrandVoiceSummary();
+  const { activeBusinessId, isReady } = useActiveBusiness();
 
   if (access.loading) return <ProGateLoading />;
   if (!access.hasPro)
     return <ProFeatureGate feature="Brand Voice" description="Lo que ARIA aprendió sobre tu marca." clientId={access.clientId} />;
+  if (!isReady) return null;
+  if (!activeBusinessId) return <EmptyState feature="Brand Voice" />;
 
   return (
     <div className="space-y-6">
