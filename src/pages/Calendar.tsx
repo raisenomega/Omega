@@ -6,6 +6,8 @@ import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import { useCalendarList, groupByDay } from "@/hooks/useCalendarData";
 import { CalendarGrid } from "@/components/calendar/CalendarGrid";
 import { PostsList } from "@/components/calendar/PostsList";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
+import { EmptyState } from "@/components/common/EmptyState";
 
 const MONTH_LABELS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -24,11 +26,18 @@ export default function Calendar() {
   const [month, setMonth] = useState<string>(currentMonthKey);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   useTrackOnMount("feature_open", { feature: "calendar" });
+  const { activeBusinessId, isReady } = useActiveBusiness();
 
   const q = useCalendarList(month, "all");
-  const grouped = useMemo(() => groupByDay(q.data?.items ?? []), [q.data]);
+  const grouped = useMemo(
+    () => groupByDay((q.data?.items ?? []).filter((p) => p.client_id === activeBusinessId)),
+    [q.data, activeBusinessId],
+  );
   const dayPosts = selectedDay ? (grouped.get(selectedDay) ?? []) : [];
   const [y, m] = month.split("-").map(Number);
+
+  if (!isReady) return null;
+  if (!activeBusinessId) return <EmptyState feature="Calendario" />;
 
   return (
     <div className="space-y-6">

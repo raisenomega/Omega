@@ -4,6 +4,7 @@ import { useToast } from "./use-toast";
 
 export interface Strategy {
   id: string;
+  client_id?: string;
   titulo: string;
   tipo: string;
   contenido: {

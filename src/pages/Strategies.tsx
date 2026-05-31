@@ -7,6 +7,8 @@ import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import { useStrategiesList, useGenerateStrategy } from "@/hooks/useStrategies";
 import { StrategyCard } from "@/components/strategies/StrategyCard";
 import { PackOfStrategiesModal } from "@/components/strategies/PackOfStrategiesModal";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
+import { EmptyState } from "@/components/common/EmptyState";
 
 // Subtítulo unificado en UN párrafo · cadencia del backend (single-source). El INTRO se muestra
 // durante el load (sin pantalla muda ni flicker) y se completa con la cadencia al cargar.
@@ -26,11 +28,15 @@ export default function Strategies() {
   const [histOpen, setHistOpen] = useState(false);
   const [packOpen, setPackOpen] = useState(false);
   useTrackOnMount("feature_open", { feature: "strategies" });
+  const { activeBusinessId, isReady } = useActiveBusiness();
 
-  const items = active.data?.items ?? [];
-  const past = archived.data?.items ?? [];
+  const items = (active.data?.items ?? []).filter((s) => s.client_id === activeBusinessId);
+  const past = (archived.data?.items ?? []).filter((s) => s.client_id === activeBusinessId);
   const cadence = active.data?.cadence;
   const subtitle = !active.data ? INTRO : INTRO + (cadence ? CADENCE_TAIL[cadence] : UPGRADE_TAIL);
+
+  if (!isReady) return null;
+  if (!activeBusinessId) return <EmptyState feature="Estrategias" />;
 
   return (
     <div className="space-y-6">
