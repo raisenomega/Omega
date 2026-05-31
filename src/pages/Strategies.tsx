@@ -46,7 +46,7 @@ export default function Strategies() {
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={() => generate.mutate()} disabled={generate.isPending} className="gap-1">
+          <Button onClick={() => generate.mutate(activeBusinessId ?? undefined)} disabled={generate.isPending} className="gap-1">
             {generate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lightbulb className="h-4 w-4" />}
             Generar estrategia
           </Button>

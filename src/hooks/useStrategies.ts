@@ -30,7 +30,7 @@ export function useGenerateStrategy() {
   const qc = useQueryClient();
   const { toast } = useToast();
   return useMutation({
-    mutationFn: () => apiPost<Strategy>(`/strategies/generate`, {}),
+    mutationFn: (clientId?: string) => apiPost<Strategy>(`/strategies/generate`, clientId ? { client_id: clientId } : {}),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["strategies_list"] });
       toast({ title: "Estrategia generada" });

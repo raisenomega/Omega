@@ -7,7 +7,9 @@ import type { PlanCode } from "@/lib/plan-limits";
 // Frontend-only · localStorage · cero impacto en clientes reales (condición email exacta).
 const KEY = "omega_demo_mode";
 const EVENT = "omega-demo-mode-change";  // sincroniza instancias del hook (toggle ↔ plan status)
-const DEMO_EMAIL = "cliente@omega.com";
+// Switcher V1: reseller@omega.com sumado para acceso Enterprise de testing multi-negocio
+// (override frontend · DEBT-RESELLER-PLAN-NATIVO · el rol reseller no tiene plan nativo aún).
+const DEMO_EMAILS = new Set(["cliente@omega.com", "reseller@omega.com"]);
 
 export type DemoMode = Extract<PlanCode, "basic" | "pro" | "enterprise">;
 
@@ -20,7 +22,7 @@ function readMode(): DemoMode {
 
 export function useDemoMode() {
   const { user } = useAuth();
-  const isDemoAccount = user?.email === DEMO_EMAIL;
+  const isDemoAccount = !!user?.email && DEMO_EMAILS.has(user.email);
   const [demoMode, setMode] = useState<DemoMode>(readMode);
 
   useEffect(() => {
