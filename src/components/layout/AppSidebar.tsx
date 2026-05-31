@@ -38,6 +38,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { SidebarUserFooter } from "@/components/layout/SidebarUserFooter";
+import { BusinessSwitcher } from "@/components/layout/BusinessSwitcher";
 
 interface NavItemDef {
   title: string;
@@ -47,7 +48,7 @@ interface NavItemDef {
 
 const PRINCIPAL_ITEMS: NavItemDef[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Clientes", url: "/clients", icon: Users },
+  { title: "Mis Negocios", url: "/clients", icon: Users },
   { title: "Content Lab", url: "/content-lab", icon: Sparkles },
   { title: "Contenido", url: "/content", icon: FileText },
   { title: "Estrategias", url: "/estrategias", icon: Lightbulb },
@@ -126,6 +127,7 @@ export function AppSidebar() {
             <RaisenCircleLogo size={32} />
           </div>
         </div>
+        <BusinessSwitcher />
       </SidebarHeader>
 
       <SidebarContent className="[scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
