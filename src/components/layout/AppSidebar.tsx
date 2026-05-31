@@ -48,7 +48,7 @@ interface NavItemDef {
 
 const PRINCIPAL_ITEMS: NavItemDef[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Mis Negocios", url: "/clients", icon: Users },
+  { title: "Agente ARIA", url: "/clients", icon: Users },
   { title: "Content Lab", url: "/content-lab", icon: Sparkles },
   { title: "Contenido", url: "/content", icon: FileText },
   { title: "Estrategias", url: "/estrategias", icon: Lightbulb },
