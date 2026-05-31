@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { Building2, Plus, Loader2 } from "lucide-react";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
+import { NewBusinessIntroDialog } from "@/components/onboarding/NewBusinessIntroDialog";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
@@ -49,7 +50,7 @@ export default function Clients() {
       toast({ title: "No se pudo eliminar", description: (e as Error).message, variant: "destructive" });
     }
   };
-  const wizardModal = isDesktop ? (
+  const wizardInner = isDesktop ? (
     <Dialog open={modal.isOpen} onOpenChange={(o) => { if (!o) closeWizard(); }}>
       <DialogContent aria-describedby={undefined} className="max-w-4xl w-full h-[85vh] p-0 gap-0 border-2 border-warning">
         <DialogTitle className="sr-only">{wizard.isEditing ? "Editar negocio" : "Nuevo negocio"}</DialogTitle>
@@ -64,6 +65,7 @@ export default function Clients() {
       </SheetContent>
     </Sheet>
   );
+  const wizardModal = (<><NewBusinessIntroDialog isOpen={modal.introOpen} onAccept={modal.acceptIntro} onCancel={modal.cancelIntro} />{wizardInner}</>);
   if (!isReady) {
     return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
