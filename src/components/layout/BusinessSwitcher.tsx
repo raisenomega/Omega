@@ -60,7 +60,7 @@ export function BusinessSwitcher() {
           </DropdownMenuItem>
         ))}
         {list.length > 0 && <DropdownMenuSeparator />}
-        <DropdownMenuItem onClick={() => navigate("/clients")} className="gap-2">
+        <DropdownMenuItem onClick={() => navigate("/clients?new=1")} className="gap-2">
           <Plus className="h-3.5 w-3.5" /> Nuevo Negocio
         </DropdownMenuItem>
         {activeBusinessId && (

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiDelete } from "@/lib/api-client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,36 +11,33 @@ import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
+import { useBusinessWizardModal } from "@/hooks/useBusinessWizardModal";
 import ClientDetail from "./ClientDetail";
 
-// Switcher V1: /clients = "Agente ARIA". Con ?business={id} (negocio activo) → tabs de ClientDetail.
-// Sin negocio activo → empty-state + crear. El listado de cartera se reemplazó por el switcher del
-// header; editar/eliminar viven ahora en el tab Info de ClientDetail (camino A1).
+// Switcher V1: /clients = "Agente ARIA". ?business={id} → tabs de ClientDetail · sin activo → empty-state.
+// El modal del wizard vive en useBusinessWizardModal (abrible vía ?new=1 desde el switcher). A1: editar/eliminar en tab Info.
 export default function Clients() {
   const { activeBusinessId, setActiveBusiness, isReady } = useActiveBusiness();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [wizardOpen, setWizardOpen] = useState(false);
-  const [editingClientId, setEditingClientId] = useState<string | null>(null);
+  const modal = useBusinessWizardModal();
   const isDesktop = useMediaQuery("(min-width: 768px)");
-
   const wizard = useOnboardingForm({
-    clientId: editingClientId,
+    clientId: modal.editingClientId,
     onSuccess: (id) => {
-      const wasEditing = editingClientId !== null;
-      setWizardOpen(false);
-      setEditingClientId(null);
+      const wasEditing = modal.editingClientId !== null;
+      modal.close();
       wizard.form.reset();
       queryClient.invalidateQueries({ queryKey: ["my_clients"] });
       queryClient.invalidateQueries({ queryKey: ["client", id] });
       if (!wasEditing) setActiveBusiness(id);
     },
   });
-
-  const handleClose = () => { setWizardOpen(false); setEditingClientId(null); wizard.form.reset(); };
-  const openNew = () => { setEditingClientId(null); wizard.form.reset(); setWizardOpen(true); };
-  const openEdit = () => { setEditingClientId(activeBusinessId); setWizardOpen(true); };
-
+  // Reset híbrido (DEBT-WIZARD-RESET-DECLARATIVE): declarativo al abrir "nuevo" · síncrono al cerrar.
+  useEffect(() => {
+    if (modal.isOpen && modal.editingClientId === null) wizard.form.reset();
+  }, [modal.isOpen, modal.editingClientId]);
+  const closeWizard = () => { modal.close(); wizard.form.reset(); };
   const deleteActive = async () => {
     if (!activeBusinessId) return;
     try {
@@ -52,34 +49,30 @@ export default function Clients() {
       toast({ title: "No se pudo eliminar", description: (e as Error).message, variant: "destructive" });
     }
   };
-
   const wizardModal = isDesktop ? (
-    <Dialog open={wizardOpen} onOpenChange={(o) => { if (!o) handleClose(); }}>
+    <Dialog open={modal.isOpen} onOpenChange={(o) => { if (!o) closeWizard(); }}>
       <DialogContent aria-describedby={undefined} className="max-w-4xl w-full h-[85vh] p-0 gap-0 border-2 border-warning">
         <DialogTitle className="sr-only">{wizard.isEditing ? "Editar negocio" : "Nuevo negocio"}</DialogTitle>
-        <OnboardingWizard wizard={wizard} onClose={handleClose} />
+        <OnboardingWizard wizard={wizard} onClose={closeWizard} />
       </DialogContent>
     </Dialog>
   ) : (
-    <Sheet open={wizardOpen} onOpenChange={(o) => { if (!o) handleClose(); }}>
+    <Sheet open={modal.isOpen} onOpenChange={(o) => { if (!o) closeWizard(); }}>
       <SheetContent aria-describedby={undefined} side="bottom" className="h-[90vh] p-0">
         <SheetTitle className="sr-only">{wizard.isEditing ? "Editar negocio" : "Nuevo negocio"}</SheetTitle>
-        <OnboardingWizard wizard={wizard} onClose={handleClose} />
+        <OnboardingWizard wizard={wizard} onClose={closeWizard} />
       </SheetContent>
     </Sheet>
   );
-
   if (!isReady) {
     return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
-
   if (activeBusinessId) {
     return (<>
-      <ClientDetail clientId={activeBusinessId} onEdit={openEdit} onDelete={deleteActive} />
+      <ClientDetail clientId={activeBusinessId} onEdit={() => modal.openEdit(activeBusinessId)} onDelete={deleteActive} />
       {wizardModal}
     </>);
   }
-
   return (
     <div className="space-y-6">
       <header className="space-y-1">
@@ -91,7 +84,7 @@ export default function Clients() {
           <Building2 className="h-12 w-12 text-muted-foreground/30 mb-4" />
           <h3 className="text-lg font-medium mb-1">Sin negocio activo</h3>
           <p className="text-sm text-muted-foreground mb-4">Seleccioná un negocio en el switcher del header, o creá tu primer negocio.</p>
-          <Button className="gradient-primary" onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuevo Negocio</Button>
+          <Button className="gradient-primary" onClick={modal.openNew}><Plus className="mr-2 h-4 w-4" /> Nuevo Negocio</Button>
         </CardContent>
       </Card>
       {wizardModal}
