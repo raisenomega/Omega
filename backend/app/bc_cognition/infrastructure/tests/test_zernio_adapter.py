@@ -64,10 +64,11 @@ def test_scheduled_usa_scheduledFor_no_publishNow(monkeypatch):
     assert "publishNow" not in _FakeClient.last_body  # uno u otro
 
 
-def test_media_urls_van_en_body(monkeypatch):
+def test_media_va_como_mediaItems_url_type(monkeypatch):  # mediaItems:[{url,type}] no mediaUrls · type por ext
     _patch(monkeypatch, _Resp(201, {"post": {"_id": "p3"}}))
-    asyncio.run(za.create_post("x", _PLAT, media_urls=["https://x/img.png"]))
-    assert _FakeClient.last_body["mediaUrls"] == ["https://x/img.png"]
+    asyncio.run(za.create_post("x", _PLAT, media_urls=["https://a/img.png", "https://a/v.mp4"]))
+    assert _FakeClient.last_body["mediaItems"] == [{"url": "https://a/img.png", "type": "image"}, {"url": "https://a/v.mp4", "type": "video"}]
+    assert "mediaUrls" not in _FakeClient.last_body
 
 
 def test_4xx_levanta_honesto(monkeypatch):

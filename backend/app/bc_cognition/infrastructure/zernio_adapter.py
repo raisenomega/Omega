@@ -4,7 +4,7 @@ Cero fabricacion (patron espejo de _meta_publisher.py): si Zernio no devuelve 2x
 levanta ZernioPublishError con el detalle honesto · NUNCA finge exito. Si falta la key →
 ZernioNotConfigured (no publica · no inventa). Contrato verificado en vivo contra docs.zernio.com
 (1 jun 2026): POST /posts {content, platforms:[{platform, accountId}], publishNow|scheduledFor,
-mediaUrls} → 201 {post:{_id}} · GET /accounts → {accounts:[{_id, platform, ...}]}.
+mediaItems:[{url,type}]} → 201 {post:{_id}} · GET /accounts → {accounts:[{_id, platform, ...}]}.
 """
 import logging
 from typing import Optional
@@ -52,6 +52,13 @@ async def list_accounts() -> list[dict]:
     return resp.json().get("accounts", [])
 
 
+def _media_type(url: str) -> str:
+    """Infiere el type que Zernio exige en mediaItems ('image'|'video') desde la extension.
+    Default 'image' (la mayoria de los posts). TikTok/video sin extension clara = limitacion conocida."""
+    u = url.lower().split("?")[0]
+    return "video" if u.endswith((".mp4", ".mov", ".webm", ".m4v")) else "image"
+
+
 async def create_post(content: str, platforms: list[dict], publish_now: bool = True,
                       scheduled_for: Optional[str] = None,
                       media_urls: Optional[list[str]] = None) -> str:
@@ -59,7 +66,9 @@ async def create_post(content: str, platforms: list[dict], publish_now: bool = T
     Devuelve el post _id real · raise ZernioPublishError si Zernio no confirma (jamas finge exito)."""
     body: dict[str, object] = {"content": content, "platforms": platforms}
     if media_urls:
-        body["mediaUrls"] = media_urls
+        # Zernio exige mediaItems:[{url,type}] al top-level (NO mediaUrls · verificado docs.zernio.com
+        # /guides/media-uploads · sin esto IG/TikTok rechazan "requires media"). type inferido por ext.
+        body["mediaItems"] = [{"url": u, "type": _media_type(u)} for u in media_urls]
     if scheduled_for:
         body["scheduledFor"] = scheduled_for  # uno u otro · no ambos
     else:
