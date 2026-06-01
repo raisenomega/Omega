@@ -10,6 +10,7 @@ interface AutoPublishResponse {
 
 interface AutoPublishInput {
   scheduled_post_id: string;
+  client_id: string;  // negocio ACTIVO del switcher (Switcher V1 · DEBT-LIMIT1)
 }
 
 // Mensajes §8 (cero jerga · cero codigo crudo en pantalla) para los estados de publicacion via Zernio.
@@ -39,8 +40,8 @@ export function useAutoPublish() {
   const qc = useQueryClient();
   const { toast } = useToast();
   return useMutation({
-    mutationFn: ({ scheduled_post_id }: AutoPublishInput) =>
-      apiPost<AutoPublishResponse>(`/publish/auto`, { scheduled_post_id }),
+    mutationFn: ({ scheduled_post_id, client_id }: AutoPublishInput) =>
+      apiPost<AutoPublishResponse>(`/publish/auto`, { scheduled_post_id, client_id }),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["calendar_list"] });
       if (data.published) {

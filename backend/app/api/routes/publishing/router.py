@@ -18,7 +18,7 @@ from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
 
 from app.api.routes.auth.auth_utils import get_current_user
-from app.api.routes.content_lab_v3 import _content_lab_repository as repo
+from app.api.routes.calendar_v3._access import resolve_client_or_403
 from app.api.routes.publishing._publish_service import (
     PublishGateError,
     publish_scheduled_post,
@@ -42,9 +42,9 @@ async def auto_publish(
     authorization: Optional[str] = Header(None),
 ) -> AutoPublishResponse:
     user = await get_current_user(authorization)
-    client = repo.find_client_for_user(user["id"])
-    if not client:
-        raise HTTPException(status_code=403, detail="no_client_for_user")
+    # DEBT-LIMIT1: publica contra el negocio ACTIVO del switcher (request.client_id), NO el primero
+    # (find_client_for_user LIMIT 1). resolve_client_or_403 valida que el user sea dueño (404/403).
+    client = resolve_client_or_403(user["id"], request.client_id)
     client_id = str(client["id"])
 
     try:
