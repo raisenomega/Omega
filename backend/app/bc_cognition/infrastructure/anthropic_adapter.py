@@ -20,6 +20,7 @@ from anthropic import AsyncAnthropic, APIError, APITimeoutError
 
 from app.bc_cognition.domain.limits_omega import LIMITS_OMEGA
 from app.bc_cognition.domain.routing_table import resolve_model
+from app.bc_cognition.infrastructure.hermes_usage import record_mcp_use  # HERMES f1.5 · usage-tracking
 from app.bc_cognition.infrastructure._anthropic_types import (
     ClaudeResponse, ClaudeError, estimate_cost,
 )
@@ -64,12 +65,16 @@ async def generate(
     try:
         resp = await asyncio.wait_for(_get_client().messages.create(**create_kwargs), timeout=timeout_s)
     except asyncio.TimeoutError:
+        record_mcp_use("anthropic", ok=False, detail=f"timeout {timeout_s}s")  # HERMES f1.5
         return None, ClaudeError("timeout", f"Excedió {timeout_s}s")
     except APITimeoutError as e:
+        record_mcp_use("anthropic", ok=False, detail=f"timeout: {e}")
         return None, ClaudeError("timeout", str(e))
     except APIError as e:
+        record_mcp_use("anthropic", ok=False, detail=f"api_error: {e}")
         return None, ClaudeError("api_error", str(e), retry_after_s=getattr(e, "retry_after", None))
 
+    record_mcp_use("anthropic", ok=True)  # HERMES f1.5 · uso exitoso
     text = "".join(b.text for b in resp.content if b.type == "text")
     tool_calls = [b for b in resp.content if getattr(b, "type", None) == "tool_use"] or None
     cache_read = getattr(resp.usage, "cache_read_input_tokens", 0) or 0
