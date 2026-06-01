@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api-client";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 
 // Centro de Inteligencia Fase 2 · chip Google. GET /intelligence/chips/google devuelve
 // métricas REALES del cliente (sessions/clicks/impressions) leídas con su token OAuth, o
@@ -16,12 +17,14 @@ export interface GoogleChipResponse {
   message: string | null;
 }
 
-const KEY = ["intelligence", "chip", "google"];
-
 export function useGoogleChip() {
+  // Switcher V1: scope al negocio activo · queryKey incluye el id → cache invalida al cambiar.
+  const { activeBusinessId } = useActiveBusiness();
   return useQuery<GoogleChipResponse, Error>({
-    queryKey: KEY,
-    queryFn: () => apiGet<GoogleChipResponse>(`/intelligence/chips/google`),
+    queryKey: ["intelligence", "chip", "google", activeBusinessId],
+    queryFn: () => apiGet<GoogleChipResponse>(
+      `/intelligence/chips/google${activeBusinessId ? `?client_id=${encodeURIComponent(activeBusinessId)}` : ""}`,
+    ),
     staleTime: 60_000,
   });
 }

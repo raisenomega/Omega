@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api-client";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 
 export interface CorpusEntry {
   text: string;
@@ -19,9 +20,13 @@ export interface BrandVoiceSummary {
 }
 
 export function useBrandVoiceSummary() {
+  // Switcher V1: scope al negocio activo · queryKey incluye el id → cache invalida al cambiar.
+  const { activeBusinessId } = useActiveBusiness();
   return useQuery<BrandVoiceSummary, Error>({
-    queryKey: ["brand-voice", "summary"],
-    queryFn: () => apiGet<BrandVoiceSummary>("/brand-voice/summary"),
+    queryKey: ["brand-voice", "summary", activeBusinessId],
+    queryFn: () => apiGet<BrandVoiceSummary>(
+      `/brand-voice/summary${activeBusinessId ? `?client_id=${encodeURIComponent(activeBusinessId)}` : ""}`,
+    ),
     staleTime: 60_000,
   });
 }
