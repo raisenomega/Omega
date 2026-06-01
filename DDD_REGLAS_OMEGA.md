@@ -438,13 +438,13 @@ ENFORCE       scripts/verify-personas.sh
 RAZÓN         La identidad del CEO virtual no muta sin aprobación owner
 ```
 
-## X3 · 15 Cron Workers Verificados Post-Deploy
+## X3 · 16 Cron Workers Verificados Post-Deploy
 
 ```
 FUENTE        backend/app/main.py (scheduler.start() en @app.on_event startup, ~L163).
               ⚠️ backend/app/workers/scheduler.py NO es el scheduler activo (código
               legacy, 3 jobs, start_scheduler() sin caller · DEBT-SCHEDULER-LEGACY-DUP).
-REGLA         Después de cada deploy: verificar que los 15 cron jobs
+REGLA         Después de cada deploy: verificar que los 16 cron jobs
               están activos en APScheduler
 JOBS          vault_scan (cron 2 AM) · db_guardian (cron 5 AM) · sentinel_brief (cron 7 AM) ·
               pulse_monitor (interval 5 min) · oracle_weekly_brief (cron lun 7 AM) ·
@@ -455,8 +455,9 @@ JOBS          vault_scan (cron 2 AM) · db_guardian (cron 5 AM) · sentinel_brie
               outcome_evaluator (cron 4 AM · 4A-2 PASO 3 ciclo auto-aprendizaje) ·
               credit_period_reset (cron 0:05 fin-de-mes · DEBT-052) ·
               decision_evaluator (cron :30 cada hora · DEBT-100 ARIA_LEARNING_LOOP) ·
-              strategy_generator (cron 7:10 diario · DEBT-096 F2 · filtra por cadencia/cliente)
-ENFORCE       Endpoint /api/v1/system/cron-status debe retornar 15/15 active
+              strategy_generator (cron 7:10 diario · DEBT-096 F2 · filtra por cadencia/cliente) ·
+              hermes_ping (interval 5 min · DEBT-HERMES-CORE f1 · salud integraciones → mcp_health_log)
+ENFORCE       Endpoint /api/v1/system/cron-status debe retornar 16/16 active
 ```
 
 ## X4 · Stripe Connect Webhooks Idempotentes

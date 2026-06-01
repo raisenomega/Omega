@@ -160,8 +160,11 @@ async def startup_event():
     from app.workers.strategy_generator_worker import StrategyGeneratorWorker
     strategy_gen_worker = StrategyGeneratorWorker()
     scheduler.add_job(strategy_gen_worker.run_all_clients, 'cron', hour=7, minute=10, id='strategy_generator', max_instances=1, replace_existing=True)
+    # HERMES Capa 1 — ping liviano salud integraciones · cada 5 min · 16vo cron job (DEBT-HERMES-CORE f1)
+    from app.bc_cognition.infrastructure.hermes_checks import run_hermes_ping
+    scheduler.add_job(run_hermes_ping, 'interval', minutes=5, id='hermes_ping', max_instances=1, replace_existing=True)
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN workers activos — 14 jobs (jobstore persistente DEBT-047)")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES workers activos — 16 jobs (jobstore persistente DEBT-047)")
 
 @app.on_event("shutdown")
 async def shutdown_event():
