@@ -43,9 +43,11 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <ARIADrawer />
             <BrowserRouter>
             <ActiveBusinessProvider>
+            {/* ARIADrawer (chat flotante global) DENTRO del Provider: usa useARIAChat → useActiveBusiness.
+                Antes se montaba fuera → crash "must be used within ActiveBusinessProvider" (Commit B). */}
+            <ARIADrawer />
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
