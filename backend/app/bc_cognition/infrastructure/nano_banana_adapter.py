@@ -1,11 +1,5 @@
-"""
-OmegaRaisen — Nano Banana Adapter (ÚNICO entry GENERACIÓN IMÁGENES · DDD I1 exception)
-
-Excepción documentada, aprobada owner 17 may 2026.
-Re-evaluación: Q4 2026 si Anthropic lanza generación de imágenes nativa.
-
-Tipos y routing: _nano_banana_types.py
-"""
+"""Nano Banana Adapter · ÚNICO entry GENERACIÓN IMÁGENES (DDD I1 exception · aprobada owner
+17 may 2026 · re-eval Q4 2026 si Anthropic lanza imágenes nativo). Tipos y routing: _nano_banana_types.py."""
 
 from __future__ import annotations
 
@@ -21,6 +15,7 @@ from app.bc_cognition.infrastructure._nano_banana_types import (
     ImageRoute, MODEL_BY_ROUTE, ImageResponse, ImageError,
     MAX_ATTEMPTS, classify_error, backoff_delay,            # DEBT-071
 )
+from app.bc_cognition.infrastructure.hermes_usage import record_mcp_use  # HERMES f1.5 · usage-tracking
 
 # google-genai 2.6 ImageConfig.aspect_ratio · supported values (DEBT-CL-011)
 _VALID_ASPECT_RATIOS: frozenset[str] = frozenset({
@@ -85,11 +80,13 @@ async def generate(
             if kind in ("rate_limited", "transient") and attempt < MAX_ATTEMPTS - 1:
                 await asyncio.sleep(backoff_delay(attempt))
                 continue
+            record_mcp_use("nano_banana", ok=False, detail=str(e)[:80])  # HERMES f1.5
             return None, ImageError("rate_limited" if kind == "rate_limited" else "api_error", str(e))
 
         latency_ms = int((time.monotonic() - start) * 1000)
         for part in resp.candidates[0].content.parts:
             if part.inline_data and part.inline_data.data:
+                record_mcp_use("nano_banana", ok=True)  # HERMES f1.5
                 return ImageResponse(
                     image_b64=base64.b64encode(part.inline_data.data).decode("ascii"),
                     mime_type=part.inline_data.mime_type or "image/png",
