@@ -3,7 +3,7 @@
 // conteos/accuracy idéntico a aria_learning_report._aggregate (DEBT-101).
 // Render en español de negocio vía learning-labels (cero jerga técnica al cliente).
 
-import { labelDecision, labelOutcome, labelAgent } from "@/lib/learning-labels";
+import { labelDecision, labelOutcome, labelAgent, isInternalErrorDecision } from "@/lib/learning-labels";
 
 export interface LearningEvent {
   id: string;
@@ -61,6 +61,7 @@ export function buildLearningEvents(
   const events: LearningEvent[] = rawRows.flatMap((row) => {
     const p = parseRaw(row);
     if (!p) return [];
+    if (isInternalErrorDecision(p.decision)) return [];  // fallo de API/infra · no es aprendizaje (excluido del denominador)
     const { agent_code, decision, outcome, ...rest } = p;
     // agentName: etiqueta ES de negocio (labelAgent · cubre nova/aria + códigos conocidos); si el
     // code no tiene etiqueta ES, usar el nombre de la tabla agents; si tampoco, humanize. NUNCA

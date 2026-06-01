@@ -1,14 +1,19 @@
 // Cliente PYME ve la pestaña Aprendizaje: cero jerga técnica · español de negocio.
 // Cubre el mapeo crudo→ES, el fallback legible, y que parseRaw no descarte filas sin evaluated_at.
 import { describe, it, expect } from "vitest";
-import { labelDecision, labelOutcome, labelAgent } from "@/lib/learning-labels";
+import { labelDecision, labelOutcome, labelAgent, isInternalErrorDecision } from "@/lib/learning-labels";
 import { parseRaw, buildLearningEvents } from "@/hooks/learning-events-data";
 
 describe("learning-labels · español de negocio", () => {
   it("decision: crudos conocidos → etiqueta ES", () => {
     expect(labelDecision("generated_not_saved")).toBe("Propuse contenido que no se usó");
     expect(labelDecision("approved_by_client")).toBe("Acertó: contenido aprobado");
-    expect(labelDecision("[failed:api_error]")).toBe("Error técnico al generar");
+  });
+
+  it("error interno [failed:...] se detecta para excluir (no es aprendizaje)", () => {
+    expect(isInternalErrorDecision("[failed:api_error]")).toBe(true);
+    expect(isInternalErrorDecision("[failed:timeout]")).toBe(true);
+    expect(isInternalErrorDecision("approved_by_client")).toBe(false);
   });
 
   it("decision: completion=NN% → 'Perfil completado al NN%'", () => {
@@ -66,5 +71,18 @@ describe("parseRaw · evaluated_at nullable (bug del 0%)", () => {
     expect(r.accuracy).toBe(50);
     expect(r.events[0].agentName).toBe("Voz de marca");        // ES, no "Brand Voice Agent" ni code
     expect(r.events[0].decision).toBe("Acertó: contenido aprobado");
+  });
+
+  it("excluye [failed:...] del denominador y de los eventos (plomería, no aprendizaje)", () => {
+    const rows = [
+      { ...base, id: "ok", was_correct: true, evaluated_at: "2026-06-01T00:00:00Z" },
+      { ...base, id: "err1", was_correct: false, decision: "[failed:api_error]", evaluated_at: "2026-06-01T00:00:00Z" },
+      { ...base, id: "err2", was_correct: false, decision: "[failed:timeout]", evaluated_at: "2026-06-01T00:00:00Z" },
+    ];
+    const r = buildLearningEvents(rows, []);
+    expect(r.events).toHaveLength(1);          // los 2 errores fuera
+    expect(r.correctCount).toBe(1);
+    expect(r.incorrectCount).toBe(0);          // los failed NO cuentan como incorrectas
+    expect(r.accuracy).toBe(100);              // 1/1, no 1/3
   });
 });

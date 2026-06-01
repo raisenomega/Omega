@@ -6,7 +6,7 @@
 const DECISION_LABELS: Record<string, string> = {
   generated_not_saved: "Propuse contenido que no se usó",
   approved_by_client: "Acertó: contenido aprobado",
-  "[failed:api_error]": "Error técnico al generar",
+  // [failed:...] NO se etiqueta: se excluye de la pestaña (isInternalErrorDecision · no es aprendizaje).
 };
 
 const OUTCOME_LABELS: Record<string, string> = {
@@ -20,6 +20,13 @@ const AGENT_LABELS: Record<string, string> = {
   brand_voice: "Voz de marca",
   content_creator: "Creador de contenido",
 };
+
+// Eventos de PLOMERÍA INTERNA que NO son aprendizajes de ARIA (fallo de infra/API) → se excluyen
+// de la pestaña del cliente: un error técnico no es algo que ARIA "decidió" ni "acertó/erró".
+// No se borran de agent_memory · solo no se muestran ni cuentan en accuracy. (P2: no exponer fallos.)
+export function isInternalErrorDecision(raw: string): boolean {
+  return raw.startsWith("[failed:");
+}
 
 // Fallback: convierte un crudo técnico desconocido en algo legible (sin snake_case ni símbolos).
 // Ej. "draft_abandoned_72h" → "Draft abandoned 72h" · "completion=90%" → "Completion 90%".
