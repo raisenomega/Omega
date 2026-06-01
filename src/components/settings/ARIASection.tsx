@@ -9,19 +9,24 @@ import { useToast } from "@/hooks/use-toast";
 import { apiGet, apiDelete } from "@/lib/api-client";
 import { PillGroup } from "@/components/onboarding/PillGroup";
 import { ariaLevelInfo } from "@/lib/aria-levels";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
+import { ariaHistoryQuery } from "@/lib/aria-scope";
 
 // DEBT-CL-021 cerrada: api-client wrappers (fuente única auth + apiBase).
-const callDeleteHistory = () => apiDelete(`/aria/history`);
+// Switcher V1: client_id → borra solo el negocio activo (ausente = todo, legacy).
+const callDeleteHistory = (clientId: string | null) =>
+  apiDelete(`/aria/history${ariaHistoryQuery(clientId)}`);
 const fetchAriaLevel = () => apiGet<{ aria_level: number | null }>(`/clients/profile`);
 
 export function ARIASection() {
   const { toast } = useToast();
+  const { activeBusinessId } = useActiveBusiness();
   const [lang, setLang] = useState<string>(() => localStorage.getItem("aria_language") || "es");
   useEffect(() => { localStorage.setItem("aria_language", lang); }, [lang]);
   const q = useQuery<{ aria_level: number | null }>({ queryKey: ["client_profile_aria"], queryFn: fetchAriaLevel });
   const level = q.data?.aria_level ?? 1;
   const info = ariaLevelInfo(level);
-  const onDelete = () => callDeleteHistory().then(() => toast({ title: "Historial eliminado" })).catch((e) => toast({ title: "Error", description: String(e), variant: "destructive" }));
+  const onDelete = () => callDeleteHistory(activeBusinessId).then(() => toast({ title: "Historial eliminado" })).catch((e) => toast({ title: "Error", description: String(e), variant: "destructive" }));
 
   return (
     <div className="space-y-4">

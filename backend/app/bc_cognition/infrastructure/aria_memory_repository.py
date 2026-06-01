@@ -40,9 +40,13 @@ def insert_agent_memory(
     }).execute()
 
 
-def delete_aria_history(supabase: SupabaseService, user_id: str) -> None:
-    """DELETE aria_conversations WHERE user_id · Settings ARIA tab."""
-    supabase.client.table("aria_conversations").delete().eq("user_id", user_id).execute()
+def delete_aria_history(supabase: SupabaseService, user_id: str, client_id: Optional[str] = None) -> None:
+    """DELETE aria_conversations del user · Settings ARIA tab. Switcher V1: client_id → borra
+    solo ese negocio (ausente = todo, legacy backward-compat)."""
+    q = supabase.client.table("aria_conversations").delete().eq("user_id", user_id)
+    if client_id:
+        q = q.eq("client_id", client_id)
+    q.execute()
 
 
 def fetch_recent_for_owner(

@@ -1,6 +1,4 @@
-"""Repository ARIA · Supabase conversación + behavioral · DDD A1/A9.
-safe_insert: best-effort (log + None · FIX 4). Memory/history → aria_memory_repository;
-plan vivo → aria_plan_repository (ambos C4 split)."""
+"""Repository ARIA · Supabase conversación + behavioral · DDD A1/A9. safe_insert best-effort (log+None · FIX 4)."""
 import asyncio, logging
 from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import SupabaseService
@@ -31,8 +29,7 @@ def find_reseller_by_owner(supabase: SupabaseService, user_id: str) -> Optional[
 
 
 def fetch_aria_context(supabase: SupabaseService, client_id: str) -> Optional[dict[str, Any]]:
-    """Contexto enriquecido para ARIA: client_context (todas las cols) + cuentas sociales +
-    identidad + presencia de assets/samples (para el % de perfil). Best-effort: None si no hay context."""
+    """Contexto enriquecido ARIA: client_context + social + identidad + assets/samples. Best-effort: None si no hay context."""
     try:
         r = supabase.client.table("client_context").select("*").eq("client_id", client_id).limit(1).execute()
         if not r.data:
@@ -44,7 +41,7 @@ def fetch_aria_context(supabase: SupabaseService, client_id: str) -> Optional[di
         ctx["_client"] = cl.data[0] if cl.data else {}
         ba = supabase.client.table("client_brand_assets").select("primary_color, secondary_color, accent_color, font_primary, font_secondary, logo_file_id").eq("client_id", client_id).limit(1).execute()
         ctx["_brand_assets"] = ba.data[0] if ba.data else {}
-        logo_id = ctx["_brand_assets"].get("logo_file_id")  # logo_file_id → brand_files.storage_url (ARIA sabe que existe + URL)
+        logo_id = ctx["_brand_assets"].get("logo_file_id")  # → brand_files.storage_url
         ctx["_logo_url"] = None
         if logo_id:
             bf = supabase.client.table("brand_files").select("storage_url").eq("id", logo_id).limit(1).execute()
@@ -58,25 +55,22 @@ def fetch_aria_context(supabase: SupabaseService, client_id: str) -> Optional[di
         return None
 
 
+def _insert_msg(supabase: SupabaseService, user_id: str, client_id: Optional[str], role: str, content: str, level: int) -> None:
+    supabase.client.table("aria_conversations").insert(
+        {"user_id": user_id, "client_id": client_id, "role": role, "content": content, "aria_level": level}).execute()
+
+
 def insert_user_message(supabase: SupabaseService, user_id: str, client_id: Optional[str], content: str, level: int) -> None:
-    supabase.client.table("aria_conversations").insert({
-        "user_id": user_id, "client_id": client_id, "role": "user",
-        "content": content, "aria_level": level,
-    }).execute()
+    _insert_msg(supabase, user_id, client_id, "user", content, level)
 
 
 def insert_assistant_message(supabase: SupabaseService, user_id: str, client_id: Optional[str], content: str, level: int) -> None:
-    supabase.client.table("aria_conversations").insert({
-        "user_id": user_id, "client_id": client_id, "role": "assistant",
-        "content": content, "aria_level": level,
-    }).execute()
+    _insert_msg(supabase, user_id, client_id, "assistant", content, level)
 
 
 def insert_behavioral_event(
-    supabase: SupabaseService, user_id: str,
-    client_id: Optional[str], reseller_id: Optional[str],
-    event_type: str, event_data: Optional[dict] = None,
-    session_id: Optional[str] = None,
+    supabase: SupabaseService, user_id: str, client_id: Optional[str], reseller_id: Optional[str],
+    event_type: str, event_data: Optional[dict] = None, session_id: Optional[str] = None,
 ) -> Optional[str]:
     """Persiste signal · client_id OR reseller_id (chk_behavioral_owner_present)."""
     r = supabase.client.table("behavioral_events").insert({
@@ -86,15 +80,21 @@ def insert_behavioral_event(
     return r.data[0]["id"] if r.data else None
 
 
-def load_recent_history(supabase: SupabaseService, user_id: str, window: int) -> list[dict[str, str]]:
+def _conv_query(supabase: SupabaseService, user_id: str, client_id: Optional[str], cols: str):
+    # SELECT aria_conversations del user · Switcher V1: client_id → scope a ese negocio (ausente = todo, legacy)
+    q = supabase.client.table("aria_conversations").select(cols).eq("user_id", user_id)
+    return q.eq("client_id", client_id) if client_id else q
+
+
+def load_recent_history(supabase: SupabaseService, user_id: str, window: int, client_id: Optional[str] = None) -> list[dict[str, str]]:
     try:  # fallo de DB → [] · ARIA nunca cae por el historial (window*2 → clean_history)
-        r = supabase.client.table("aria_conversations").select("role, content, created_at").eq("user_id", user_id).order("created_at", desc=True).limit(window * 2).execute()
+        r = _conv_query(supabase, user_id, client_id, "role, content, created_at").order("created_at", desc=True).limit(window * 2).execute()
         return clean_history([{"role": x["role"], "content": x["content"]} for x in reversed(r.data or [])], window)
     except Exception as e:
         logger.error(f"load_recent_history failed: {e}", exc_info=True); return []
 
 
-def load_history_for_endpoint(supabase: SupabaseService, user_id: str, limit: int = 50) -> list[dict[str, Any]]:
-    # DESC+limit = últimos N · reversed = ASC. Bug previo: desc=False traía los 50 más VIEJOS → nuevos fuera de la ventana.
-    r = supabase.client.table("aria_conversations").select("role, content, aria_level, created_at").eq("user_id", user_id).order("created_at", desc=True).limit(limit).execute()
+def load_history_for_endpoint(supabase: SupabaseService, user_id: str, limit: int = 50, client_id: Optional[str] = None) -> list[dict[str, Any]]:
+    # DESC+limit = últimos N · reversed = ASC
+    r = _conv_query(supabase, user_id, client_id, "role, content, aria_level, created_at").order("created_at", desc=True).limit(limit).execute()
     return list(reversed(r.data or []))

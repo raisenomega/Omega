@@ -3,6 +3,8 @@ import { useMyPlanStatus } from "./useMyPlanStatus";
 import { useClientPlanStatus } from "./useClientPlanStatus";
 import { useToast } from "@/hooks/use-toast";
 import { ariaGet, ariaPost } from "@/lib/aria-fetch";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
+import { ariaHistoryQuery, ariaMessageBody, ariaHistoryKey } from "@/lib/aria-scope";
 import type { PlanCode } from "@/lib/plan-limits";
 
 // Mapping plan → ARIA level BASE (Q2=A · spec §6 ARIA_NOVA_INTELLIGENCE)
@@ -32,6 +34,7 @@ export function useARIAChat() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const myPlan = useMyPlanStatus();
+  const { activeBusinessId } = useActiveBusiness();  // Switcher V1: ARIA contextualizada al negocio activo
   const planStatus = useClientPlanStatus(myPlan.clientId ?? "");
   // DEBT-046: for reseller owners (isOwner=true, clientId=null) use the reseller base level
   // rather than falling through to "adopcion" (level 1) from the empty clientId path.
@@ -39,10 +42,11 @@ export function useARIAChat() {
     ? RESELLER_BASE_ARIA_LEVEL
     : (PLAN_TO_LEVEL[planStatus.planCode] ?? 1);
 
+  // Switcher V1: queryKey incluye activeBusinessId → cache se invalida al cambiar de negocio.
   const historyQuery = useQuery({
-    queryKey: ["aria_history"],
+    queryKey: ariaHistoryKey(activeBusinessId),
     queryFn: async (): Promise<ARIAMessage[]> => {
-      const data = await ariaGet<HistoryResponse>(`/aria/history`);
+      const data = await ariaGet<HistoryResponse>(`/aria/history${ariaHistoryQuery(activeBusinessId)}`);
       return data.messages ?? [];
     },
     enabled: !myPlan.loading,
@@ -50,9 +54,9 @@ export function useARIAChat() {
 
   const sendMutation = useMutation({
     mutationFn: (content: string): Promise<ARIAMessage> =>
-      ariaPost<ARIAMessage>(`/aria/message`, { content }),
+      ariaPost<ARIAMessage>(`/aria/message`, ariaMessageBody(content, activeBusinessId)),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["aria_history"] });
+      queryClient.invalidateQueries({ queryKey: ariaHistoryKey(activeBusinessId) });
     },
     onError: (e: unknown) => {  // fallo/abort visible → input no queda mudo (fix deadlock)
       toast({

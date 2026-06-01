@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 class ARIAMessageRequest(BaseModel):
     content: str = Field(..., min_length=1, max_length=4000)
+    client_id: Optional[str] = None  # Switcher V1: negocio activo · ausente → legacy LIMIT 1
 
 
 class ARIAMessageResponse(BaseModel):

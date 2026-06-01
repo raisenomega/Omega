@@ -29,9 +29,17 @@ class ARIAResult:
 
 async def use_aria_message(
     user_id: str, user_message: str,
+    client_id: Optional[str] = None, level: Optional[int] = None,
 ) -> tuple[Optional[ARIAResult], Optional[ClaudeError]]:
     supabase = get_supabase_service()
-    role, client_id, reseller_id, level = resolve_role(supabase, user_id)
+    # Switcher V1: client_id ya validado (resolve_client_or_403 en el handler · A2: el use case
+    # no importa api.routes) → ARIA habla como asistente de ESE negocio (role client, su level).
+    # Ausente → legacy resolve_role LIMIT 1 (backward-compat).
+    if client_id is not None:
+        role, reseller_id = "client", None
+        level = level if level is not None else 1
+    else:
+        role, client_id, reseller_id, level = resolve_role(supabase, user_id)
     if not role:
         return None, ClaudeError("forbidden", "User no es cliente ni reseller")
 
@@ -60,7 +68,7 @@ async def use_aria_message(
     memory_block = load_and_format_memory(supabase, client_id, reseller_id, query=user_message)
     tz = ctx.get("timezone") if ctx else None  # build_time_block = Capa 1 (NO persona) · NULL→PR+log
     system = "\n\n".join(p for p in (base, ctx_block, web_block, memory_block, build_time_block(tz)) if p)
-    history = repo.load_recent_history(supabase, user_id, get_history_window(level))
+    history = repo.load_recent_history(supabase, user_id, get_history_window(level), client_id)
     user_content = await build_user_content(user_message, ctx.get("_logo_url") if ctx else None)
     # FASE 1 PASO 2: loop agéntico (tool prepare_supervised_draft) · sin tool_use/sin client_id = texto normal.
     reply, err = await run_tool_loop(
