@@ -1,15 +1,16 @@
 """POST /api/v1/publish/auto · ejecuta la auto-publicación real (Publicador agent).
 
 Auth cliente (JWT). Resuelve el client propio del usuario y publica de verdad un
-scheduled_post YA aprobado (status='pending') vía el token Meta del cliente.
+scheduled_post YA aprobado (status='pending') vía Zernio (zernio_adapter).
 
-Mapeo de gates a HTTP honesto (cero fabricación):
+Mapeo de gates a HTTP honesto (cero fabricación · config faltante = post QUEDA pending):
   post_not_found            → 404
   post_access_denied        → 403
   post_not_publishable:<s>  → 409  (no se re-publica algo ya publicado/cancelado/fallido)
-  meta_not_connected        → 409  (el cliente debe conectar Meta primero · OAuth RONDA D)
-  meta_no_page              → 409  (token sin Page id · reconectar Meta)
-Si Meta rechaza la publicación → 200 {published:false, error:<detalle Graph>} (honesto).
+  sin_red                   → 409  (post sin red asociada · estructural)
+  zernio_sin_cuenta:<p>     → 409  (no hay cuenta Zernio conectada para esa red · conectar y reintentar)
+  zernio_cuenta_ambigua:..  → 409  (2+ cuentas misma red · elegir una · multi-negocio = Fase 2b)
+Fallo REAL de publicación (Zernio rechaza, media faltante, transporte) → 200 {published:false, error}.
 """
 import logging
 from typing import Optional
@@ -30,9 +31,9 @@ logger = logging.getLogger(__name__)
 _GATE_TO_STATUS: dict[str, int] = {
     "post_not_found": 404,
     "post_access_denied": 403,
-    "meta_not_connected": 409,
-    "meta_no_page": 409,
 }
+# Resto (post_not_publishable:* · sin_red · zernio_sin_cuenta:* · zernio_cuenta_ambigua:* ·
+# zernio_api_key_ausente · zernio_transport_error:*) → default 409 honesto (config · queda pending).
 
 
 @router.post("/publish/auto", response_model=AutoPublishResponse, tags=["Publishing"])

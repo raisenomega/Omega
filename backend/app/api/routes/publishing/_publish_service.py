@@ -1,38 +1,41 @@
-"""Service · auto-publicación real de un scheduled_post YA aprobado.
+"""Service · auto-publicacion real de un scheduled_post YA aprobado, via Zernio.
 
-Flujo (best-effort · cero fabricación):
-  1. Carga el post + valida ownership (client) + status publicable.
-  2. Lee el token Meta del cliente (RONDA D). Sin token → meta_not_connected.
-  3. POST real a Meta Graph (vía _meta_publisher).
-  4. Éxito  → status='published' + platform_post_id.
-     Fallo  → status='failed' + error_message honesto. JAMÁS finge éxito.
+Flujo (best-effort · cero fabricacion):
+  1. Carga el post + valida ownership (client) + status publicable ('pending').
+  2. Resuelve la plataforma (social_account) y la cuenta Zernio (resolver 2a).
+  3. POST real a Zernio (via zernio_adapter.create_post).
+  4. Exito → status='published' + platform_post_id · Fallo REAL → status='failed'. JAMAS finge exito.
 
-SAFETY (P2/P3/P4): NO genera ni aprueba contenido. El único estado publicable es
-'pending' (el humano ya lo programó/aprobó desde el calendario). Cualquier otro
-status → PublishGateError (el handler responde 409 honesto).
+LINEA DIVISORIA config-vs-fallo (decision owner · NO mezclar):
+  - TODO lo PREVIO a mark_publishing (sin red · media faltante · resolver cuenta 0/2+ · key ausente)
+    = config/precondicion → PublishGateError (409 · el post QUEDA 'pending', reintentable apenas se
+    conecta/corrige). NO se marca failed: "no se pudo intentar aun por config".
+  - SOLO el intento REAL de publicacion (create_post: Zernio rechaza, transporte) → mark_failed:
+    "se intento y no salio". Excepcion: media faltante → failed (el post no puede salir en esa red).
+
+SAFETY (P2/P3/P4): NO genera ni aprueba contenido · unico estado publicable 'pending' (humano ya
+aprobo) · cuenta ambigua (2+) NUNCA se adivina (resolver 2a · protege la marca del cliente).
 """
 import asyncio
 import logging
 from typing import NamedTuple, Optional
 
-from app.api.routes.oauth._oauth_token_repository import get_token
 from app.api.routes.publishing import _publish_repository as repo
-from app.api.routes.publishing._meta_publisher import MetaPublishError, publish_to_meta
+from app.bc_cognition.infrastructure.zernio_adapter import ZernioError, create_post
+from app.bc_cognition.infrastructure.zernio_resolver import resolve_account_id
 
 logger = logging.getLogger(__name__)
 
-# Único estado desde el que se permite ejecutar la publicación real:
-# 'pending' = post programado y aprobado por el humano en el calendario.
-# (publishing/published/failed/published_manual/cancelled NO se re-publican.)
 _PUBLISHABLE_STATUS = "pending"
+# Redes que exigen media (validacion de PRESENCIA · IG=imagen, TikTok=video). La validacion de TIPO
+# la hace Zernio (si la media no sirve, lo rechaza → mark_failed honesto · decision owner #3).
+_MEDIA_REQUIRED = {"instagram", "tiktok"}
 
 
 class PublishGateError(Exception):
-    """Violación de un gate de seguridad/precondición · el handler mapea a 4xx honesto.
-
-    code ∈ {post_not_found, post_access_denied, post_not_publishable:<status>,
-            meta_not_connected, meta_no_page}.
-    """
+    """Precondicion/config faltante · el handler mapea a 4xx · el post QUEDA 'pending' (reintentable).
+    code ∈ {post_not_found, post_access_denied, post_not_publishable:<status>, sin_red,
+            zernio_sin_cuenta:<plat>, zernio_cuenta_ambigua:<plat>:<n>, zernio_api_key_ausente, ...}."""
 
     def __init__(self, code: str) -> None:
         super().__init__(code)
@@ -46,52 +49,57 @@ class PublishResult(NamedTuple):
 
 
 async def publish_scheduled_post(scheduled_post_id: str, client_id: str) -> PublishResult:
-    """Publica de verdad un post aprobado. Raise PublishGateError en precondición
-    fallida · devuelve PublishResult(published=False, error=...) si Meta rechaza."""
+    """Publica de verdad un post aprobado via Zernio. PublishGateError (4xx · queda pending) en
+    precondicion/config · PublishResult(published=False, error) si el intento real de publicar falla."""
     post = await asyncio.to_thread(repo.get_scheduled_post, scheduled_post_id)
     if not post:
         raise PublishGateError("post_not_found")
     if str(post.get("client_id") or "") != client_id:
         raise PublishGateError("post_access_denied")
+    if str(post.get("status") or "") != _PUBLISHABLE_STATUS:
+        # gate intacto: solo 'pending' (aprobado) · un post que volvio de un 409 sigue pending → reintentable
+        raise PublishGateError(f"post_not_publishable:{post.get('status')}")
 
-    status = str(post.get("status") or "")
-    if status != _PUBLISHABLE_STATUS:
-        # Cero fabricación: no re-publica algo ya publicado/cancelado/fallido.
-        raise PublishGateError(f"post_not_publishable:{status}")
-
-    token = await get_token(client_id, "meta")
-    if not token or not token.get("access_token"):
-        # Cero fabricación: sin token NO se finge publicación. Honesto + accionable.
-        raise PublishGateError("meta_not_connected")
-    page_id = token.get("external_account_id")
-    if not page_id:
-        raise PublishGateError("meta_no_page")
+    sa_id = post.get("social_account_id")
+    platform = await asyncio.to_thread(repo.get_account_platform, str(sa_id)) if sa_id else None
+    if not platform:
+        raise PublishGateError("sin_red")  # post sin red asociada (estructural · queda pending)
 
     content_id = post.get("content_id")
-    message = ""
-    if content_id:
-        message = await asyncio.to_thread(repo.get_content_text, str(content_id))
+    message = await asyncio.to_thread(repo.get_content_text, str(content_id)) if content_id else ""
     media_url = post.get("media_url")
+    if platform in _MEDIA_REQUIRED and not media_url:
+        # media faltante = el post NO puede salir en esta red → fallo real del post → failed honesto.
+        err = f"zernio_media_requerida:{platform}"
+        await asyncio.to_thread(repo.mark_failed, scheduled_post_id, err)
+        return PublishResult(published=False, error=err)
 
+    # CONFIG (NO fallo real · ANTES de mark_publishing): resolver la cuenta Zernio. 0/2+ cuentas o key
+    # ausente o no se pudo consultar → PublishGateError (409 · el post QUEDA 'pending', reintentable).
+    # NO mark_failed: el intento de publicar aun NO se hizo (no se mata un post bueno por config faltante).
+    try:
+        account_id = await resolve_account_id(platform)
+    except ZernioError as e:
+        raise PublishGateError(str(e))
+
+    # ── A PARTIR DE ACA el intento de publicacion es REAL → un fallo va a mark_failed ──
     await asyncio.to_thread(repo.mark_publishing, scheduled_post_id)
     try:
-        platform_post_id = await publish_to_meta(
-            page_id=str(page_id),
-            access_token=str(token["access_token"]),
-            message=message,
-            media_url=str(media_url) if media_url else None,
+        platform_post_id = await create_post(
+            content=message,
+            platforms=[{"platform": platform, "accountId": account_id}],
+            publish_now=True,
+            media_urls=[str(media_url)] if media_url else None,
         )
-    except MetaPublishError as e:
-        error = str(e)
-        logger.warning(f"auto-publish failed · post={scheduled_post_id} client={client_id} · {error}")
-        await asyncio.to_thread(repo.mark_failed, scheduled_post_id, error)
-        return PublishResult(published=False, error=error)
-    except Exception as e:  # noqa: BLE001 · cualquier fallo inesperado → honesto, nunca finge éxito
-        error = f"unexpected:{type(e).__name__}"
+    except ZernioError as e:
+        logger.warning(f"auto-publish failed · post={scheduled_post_id} client={client_id} · {e}")
+        await asyncio.to_thread(repo.mark_failed, scheduled_post_id, str(e))
+        return PublishResult(published=False, error=str(e))
+    except Exception as e:  # noqa: BLE001 · inesperado → honesto, nunca finge exito
         logger.error(f"auto-publish unexpected · post={scheduled_post_id} · {e}", exc_info=True)
-        await asyncio.to_thread(repo.mark_failed, scheduled_post_id, error)
-        return PublishResult(published=False, error=error)
+        await asyncio.to_thread(repo.mark_failed, scheduled_post_id, f"unexpected:{type(e).__name__}")
+        return PublishResult(published=False, error=f"unexpected:{type(e).__name__}")
 
     await asyncio.to_thread(repo.mark_published, scheduled_post_id, platform_post_id)
-    logger.info(f"auto-publish OK · post={scheduled_post_id} client={client_id} platform_post_id={platform_post_id}")
+    logger.info(f"auto-publish OK · post={scheduled_post_id} client={client_id} platform={platform} id={platform_post_id}")
     return PublishResult(published=True, platform_post_id=platform_post_id)

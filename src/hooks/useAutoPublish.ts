@@ -12,11 +12,29 @@ interface AutoPublishInput {
   scheduled_post_id: string;
 }
 
-// Auto-publicación real (Publicador agent): ejecuta la publicación de un post YA
-// aprobado/programado (status 'pending') vía el token Meta del cliente (OAuth RONDA D).
-// Cero fabricación: el backend responde 409 'meta_not_connected' si no hay token,
-// 409 'post_not_publishable' si el status no es publicable, y {published:false,error}
-// si Meta rechaza. Patrón espejo de useVideoPackCheckout + useUpdatePostStatus.
+// Mensajes §8 (cero jerga · cero codigo crudo en pantalla) para los estados de publicacion via Zernio.
+// Config faltante (gate 4xx · post sigue pending, reintentable) y fallo real comparten este mapeo.
+function zernioMessage(code: string): { title: string; description: string } {
+  if (code.includes("zernio_sin_cuenta") || code.includes("sin_red"))
+    return { title: "Conectá la red primero", description: "No hay una cuenta conectada para esta red. Conectala y volvé a intentar." };
+  if (code.includes("zernio_cuenta_ambigua"))
+    return { title: "Hay varias cuentas para esta red", description: "Conectá una sola cuenta para esta red para publicar de forma automática." };
+  if (code.includes("zernio_media_requerida"))
+    return { title: "Falta imagen o video", description: "Esta red necesita una imagen o video y el post no la tiene." };
+  if (code.includes("zernio_api_key_ausente"))
+    return { title: "Publicación no configurada", description: "La publicación automática todavía no está disponible." };
+  if (code.includes("post_not_publishable"))
+    return { title: "Este post no se puede publicar", description: "Solo se pueden auto-publicar posts programados pendientes." };
+  if (code.includes("post_access_denied"))
+    return { title: "Sin acceso a este post", description: "No tenés permiso sobre este post." };
+  if (code.includes("post_not_found"))
+    return { title: "Post no encontrado", description: "El post ya no existe." };
+  return { title: "No se pudo publicar", description: "La red rechazó la publicación. Intentá de nuevo más tarde." };
+}
+
+// Auto-publicacion real (Publicador agent) via Zernio: publica un post YA aprobado (status 'pending').
+// Cero fabricacion: config faltante → 409 (el post sigue pending, reintentable) · fallo real de
+// publicacion → {published:false, error}. Ningun camino finge exito. Patron espejo de useUpdatePostStatus.
 export function useAutoPublish() {
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -26,35 +44,17 @@ export function useAutoPublish() {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["calendar_list"] });
       if (data.published) {
-        toast({ title: "Publicado", description: "El post se publicó en Meta." });
+        toast({ title: "Publicado", description: "El post se publicó." });
       } else {
-        // Meta aceptó la request pero rechazó la publicación: error honesto, no fabricado.
-        toast({
-          title: "No se pudo publicar",
-          description: data.error ?? "Meta rechazó la publicación.",
-          variant: "destructive",
-        });
+        // El intento real de publicar se hizo pero la red lo rechazo: error honesto §8, no fabricado.
+        const m = zernioMessage(data.error ?? "");
+        toast({ title: m.title, description: m.description, variant: "destructive" });
       }
     },
     onError: (e: Error) => {
-      const msg = e.message;
-      const title =
-        msg.includes("meta_not_connected") || msg.includes("meta_no_page")
-          ? "Conectá Meta primero"
-          : msg.includes("post_not_publishable")
-            ? "Este post no se puede publicar"
-            : msg.includes("post_access_denied")
-              ? "Sin acceso a este post"
-              : msg.includes("post_not_found")
-                ? "Post no encontrado"
-                : "No se pudo publicar";
-      const description =
-        msg.includes("meta_not_connected") || msg.includes("meta_no_page")
-          ? "Conectá tu cuenta de Meta en Ajustes para publicar de forma automática."
-          : msg.includes("post_not_publishable")
-            ? "Solo se pueden auto-publicar posts programados pendientes."
-            : msg;
-      toast({ title, description, variant: "destructive" });
+      // Gate 4xx (config faltante · el post sigue pending y reintentable) → mensaje §8 legible.
+      const m = zernioMessage(e.message);
+      toast({ title: m.title, description: m.description, variant: "destructive" });
     },
   });
 }
