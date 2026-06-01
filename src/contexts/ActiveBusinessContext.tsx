@@ -9,17 +9,29 @@ interface ActiveBusinessValue {
 }
 
 const ActiveBusinessContext = createContext<ActiveBusinessValue | undefined>(undefined);
+const LS_KEY = "omega.activeBusinessId";
 
-// Negocio activo global, sincronizado con ?business={id} (la URL es la fuente de verdad · refresh y
-// compartir-link conservan la selección). Auto-selecciona si N=1 (backward-compat cliente@omega →
-// Zafacones). N>=2 lo elige el usuario en el switcher. `isReady` evita el flash de empty-state durante
-// la carga de useMyClients y la auto-selección. Cero backend · solo lectura del estado actual.
+const readStored = (): string | null => {
+  try { return localStorage.getItem(LS_KEY); } catch { return null; }
+};
+const writeStored = (id: string | null) => {
+  try { if (id) localStorage.setItem(LS_KEY, id); else localStorage.removeItem(LS_KEY); } catch { /* sin storage */ }
+};
+
+// Negocio activo global. Persistido en localStorage (sobrevive a la navegación interna, que con N>=2
+// perdía el ?business y apagaba las páginas) y espejado en ?business={id} para refresh/compartir-link.
+// id efectivo = URL ?? localStorage, validado contra la cartera real (tras "borré todo y recreé", un id
+// viejo queda stale y se limpia). N=1 auto-selecciona; N>=2 lo elige el usuario y queda fijo. `isReady`
+// evita el flash de empty-state durante la carga. Cero backend · solo lectura del estado actual.
 export function ActiveBusinessProvider({ children }: { children: ReactNode }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: clients, isLoading } = useMyClients();
   const urlId = searchParams.get("business");
+  const candidateId = urlId ?? readStored();
+  const validId = clients?.some((c) => c.id === candidateId) ? candidateId : null;
 
   const setActiveBusiness = useCallback((id: string | null) => {
+    writeStored(id);
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       if (id) next.set("business", id);
@@ -28,18 +40,21 @@ export function ActiveBusinessProvider({ children }: { children: ReactNode }) {
     }, { replace: true });
   }, [setSearchParams]);
 
-  // N=1 sin selección en URL → auto-seleccionar el único negocio (no flashea empty-state).
-  const pendingAutoSelect = !isLoading && !urlId && clients?.length === 1;
+  // N=1 sin selección → auto-seleccionar. Restaurar URL tras navegación. Limpiar id stale.
+  const pendingAutoSelect = !isLoading && !validId && clients?.length === 1;
 
   useEffect(() => {
-    if (pendingAutoSelect && clients) setActiveBusiness(clients[0].id);
-  }, [pendingAutoSelect, clients, setActiveBusiness]);
+    if (pendingAutoSelect && clients) { setActiveBusiness(clients[0].id); return; }
+    if (!validId) { if (!isLoading && candidateId) writeStored(null); return; }
+    writeStored(validId);
+    if (validId !== urlId) setActiveBusiness(validId);
+  }, [pendingAutoSelect, clients, validId, urlId, candidateId, isLoading, setActiveBusiness]);
 
   const value = useMemo<ActiveBusinessValue>(() => ({
-    activeBusinessId: urlId,
+    activeBusinessId: validId,
     setActiveBusiness,
     isReady: !isLoading && !pendingAutoSelect,
-  }), [urlId, setActiveBusiness, isLoading, pendingAutoSelect]);
+  }), [validId, setActiveBusiness, isLoading, pendingAutoSelect]);
 
   return <ActiveBusinessContext.Provider value={value}>{children}</ActiveBusinessContext.Provider>;
 }
