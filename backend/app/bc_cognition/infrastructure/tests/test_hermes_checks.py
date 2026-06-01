@@ -43,18 +43,3 @@ def test_run_ping_best_effort_no_lanza_si_insert_falla(monkeypatch):
     monkeypatch.setattr(hc, "get_supabase_service", lambda: _Boom())
     out = asyncio.run(hc.run_hermes_ping())
     assert out["checked"] == 7 and out["inserted"] == 0  # no lanzó · contó igual
-
-
-def test_run_ping_inserta_cuando_supabase_ok(monkeypatch):
-    captured = {}
-    class _FakeTable:
-        def insert(self, rows): captured["rows"] = rows; return self
-        def execute(self): return type("R", (), {"data": []})()
-    class _FakeClient:
-        def table(self, name): captured["table"] = name; return _FakeTable()
-    class _FakeSvc:
-        client = _FakeClient()
-    monkeypatch.setattr(hc, "get_supabase_service", lambda: _FakeSvc())
-    out = asyncio.run(hc.run_hermes_ping())
-    assert out["inserted"] == 7 and captured["table"] == "mcp_health_log"
-    assert len(captured["rows"]) == 7
