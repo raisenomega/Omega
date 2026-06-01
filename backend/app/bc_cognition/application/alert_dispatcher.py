@@ -8,6 +8,7 @@ import logging
 import httpx
 from typing import Any
 from app.config import settings
+from app.bc_cognition.infrastructure.hermes_usage import record_mcp_use  # HERMES f1.5 · usage-tracking
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +42,10 @@ async def _send_resend(body: str, score: int) -> bool:
                 json={"from": settings.alert_email_from, "to": [settings.alert_email_to],
                       "subject": f"🛡️ SENTINEL · score {score}/100 (<80)", "text": body})
             resp.raise_for_status()
+        record_mcp_use("resend", ok=True)  # HERMES f1.5
         return True
     except Exception as e:
+        record_mcp_use("resend", ok=False, detail=str(e)[:80])  # HERMES f1.5
         logger.error(f"alert · Resend falló: {e}")
         return False
 

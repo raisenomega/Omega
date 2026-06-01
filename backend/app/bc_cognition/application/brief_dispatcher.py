@@ -9,6 +9,7 @@ import httpx
 from typing import Any
 from app.config import settings
 from app.bc_cognition.application._brief_formatters import format_sentinel, format_oracle
+from app.bc_cognition.infrastructure.hermes_usage import record_mcp_use  # HERMES f1.5 · usage-tracking
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +29,10 @@ async def _post_resend(subject: str, text: str) -> bool:
                 json={"from": settings.alert_email_from, "to": [settings.alert_email_to],
                       "subject": subject, "text": text})
             resp.raise_for_status()
+        record_mcp_use("resend", ok=True)  # HERMES f1.5
         return True
     except Exception as e:
+        record_mcp_use("resend", ok=False, detail=str(e)[:80])  # HERMES f1.5
         logger.error(f"brief · Resend fallo: {e}")
         return False
 
