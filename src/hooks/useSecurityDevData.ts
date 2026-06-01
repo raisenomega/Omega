@@ -42,7 +42,7 @@ export interface GuardianIncident { id: string; incident_type: string; severity:
 export interface GuardianWatch { id: string; ip_address: string; list_type: string; reason: string | null; created_at: string; }
 export interface GuardianData { logs: GuardianLog[]; incidents: GuardianIncident[]; watchlist: GuardianWatch[]; error?: string; }
 
-export interface HermesIntegration { integration: string; status: string; last_use: string | null; checked_at: string; }
+export interface HermesIntegration { integration: string; status: string; last_use: string | null; checked_at: string; created_at: string; }
 export interface HermesData { integrations: HermesIntegration[]; count: number; error?: string; }
 
 const STALE = 30 * 1000;

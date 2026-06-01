@@ -1,6 +1,8 @@
 // HERMES tab · labels §8 · cero jerga técnica en pantalla (panel del super_owner).
 import { describe, it, expect } from "vitest";
-import { integrationLabel, statusInfo } from "@/components/security-dev/hermes-labels";
+import { effectiveStatus, integrationLabel, integrationUrl, statusInfo } from "@/components/security-dev/hermes-labels";
+
+const agoMin = (m: number) => new Date(Date.now() - m * 60000).toISOString();
 
 describe("hermes-labels · §8 español de negocio", () => {
   it("integraciones conocidas → nombre legible", () => {
@@ -29,5 +31,36 @@ describe("hermes-labels · §8 español de negocio", () => {
   it("estado desconocido → humanize, no snake_case", () => {
     const s = statusInfo("weird_state");
     expect(s.label).not.toContain("_");
+  });
+});
+
+describe("hermes-labels · semáforo amarillo derivado + links", () => {
+  it("ok + last_use reciente → ok (verde)", () => {
+    expect(effectiveStatus({ integration: "anthropic", status: "ok", last_use: agoMin(30) })).toBe("ok");
+  });
+
+  it("ok + last_use más viejo que el umbral por integración → sin_uso_reciente (amarillo)", () => {
+    expect(effectiveStatus({ integration: "anthropic", status: "ok", last_use: agoMin(90) })).toBe("sin_uso_reciente"); // anthropic 60m
+    expect(effectiveStatus({ integration: "veo3", status: "ok", last_use: agoMin(90) })).toBe("ok");                    // veo3 21d → 90m sigue ok
+  });
+
+  it("ok + sin last_use → sin_uso (gris · ausencia de señal, NO amarillo)", () => {
+    expect(effectiveStatus({ integration: "anthropic", status: "ok", last_use: null })).toBe("sin_uso");
+  });
+
+  it("estados no-ok pasan tal cual (failed/no_configurado mandan)", () => {
+    expect(effectiveStatus({ integration: "brave", status: "last_use_failed", last_use: null })).toBe("last_use_failed");
+    expect(effectiveStatus({ integration: "brave", status: "no_configurado", last_use: null })).toBe("no_configurado");
+  });
+
+  it("orden de severidad: amarillo < operativo < gris", () => {
+    expect(statusInfo("sin_uso_reciente").rank).toBeLessThan(statusInfo("ok").rank);
+    expect(statusInfo("ok").rank).toBeLessThan(statusInfo("sin_uso").rank);
+  });
+
+  it("link de proveedor: conocido → URL https, desconocido → null", () => {
+    expect(integrationUrl("anthropic")).toBe("https://console.anthropic.com");
+    expect(integrationUrl("nano_banana")).toContain("aistudio.google.com");
+    expect(integrationUrl("inexistente")).toBeNull();
   });
 });
