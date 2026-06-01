@@ -15,6 +15,7 @@ from __future__ import annotations
 import logging
 
 from app.config import settings
+from app.bc_cognition.infrastructure.hermes_usage import record_mcp_use  # HERMES f1.5 · usage-tracking
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,10 @@ def embed_texts(texts: list[str], input_type: str) -> list[list[float]] | None:
     if adapter is None:
         return None
     try:
-        return adapter.embed(texts, input_type)
+        vecs = adapter.embed(texts, input_type)
+        record_mcp_use("voyage", ok=True)  # HERMES f1.5
+        return vecs
     except Exception as e:
+        record_mcp_use("voyage", ok=False, detail=str(e)[:80])  # HERMES f1.5
         logger.warning(f"voyage_adapter.embed_texts failed: {e}")
         return None
