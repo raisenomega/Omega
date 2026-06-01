@@ -238,6 +238,19 @@ nace al cierre, muere al absorberse. Cualquier doc que necesite una deuda → **
 (`ver SOT §6`), no la copia. Si te encontrás copiando una deuda o un HEAD en un 2do lugar,
 PARÁ: eso crea drift.
 
+## 8 · REGLA: CERO JERGA TÉCNICA EN VISTAS DE CLIENTE (P1 + P2)
+
+Toda vista de cara al cliente (PYME) renderiza **español de negocio**. CERO `snake_case`, CERO
+`agent_code` crudo, CERO nombres de tabla/columna/evento internos, CERO nombres de archivo.
+La verdad honesta (P1) se presenta en el idioma del cliente, no en el del código; mostrar jerga
+cruda descuida su imagen del producto (P2).
+
+- El mapeo crudo→etiqueta vive en `src/lib/*-labels.ts` (fuente única · patrón `learning-labels.ts`),
+  NO en strings sueltos por el JSX. Crudo sin mapeo → fallback `humanize()` legible, nunca snake_case.
+- **NOVA nunca se nombra al cliente** (es el cerebro interno · se muestra como "Tu asistente"/"ARIA").
+- Implementado 1 jun en la pestaña Aprendizaje (`learning-labels.ts`). **Pendiente auditar otras
+  vistas de cliente** con el mismo lente (seguimiento · no bloqueante).
+
 ---
 
 🐢💎 No velocity. Only precision.
