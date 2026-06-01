@@ -26,15 +26,16 @@ def _patch(monkeypatch, rows):
 def test_latest_por_integracion(monkeypatch):
     # 2 filas anthropic (la más reciente primero por DESC) + 1 brave → 2 integraciones, 1 c/u
     rows = [
-        {"integration": "anthropic", "status": "ok", "last_use": "2026-06-01T11:00:00Z", "checked_at": "2026-06-01T11:00:00Z"},
-        {"integration": "anthropic", "status": "last_use_failed", "last_use": None, "checked_at": "2026-06-01T10:00:00Z"},
-        {"integration": "brave", "status": "ok", "last_use": "2026-06-01T10:55:00Z", "checked_at": "2026-06-01T10:55:00Z"},
+        {"integration": "anthropic", "status": "ok", "last_use": "2026-06-01T11:00:00Z", "checked_at": "2026-06-01T11:00:00Z", "created_at": "2026-06-01T09:30:00Z"},
+        {"integration": "anthropic", "status": "last_use_failed", "last_use": None, "checked_at": "2026-06-01T10:00:00Z", "created_at": "2026-06-01T08:00:00Z"},
+        {"integration": "brave", "status": "ok", "last_use": "2026-06-01T10:55:00Z", "checked_at": "2026-06-01T10:55:00Z", "created_at": "2026-06-01T09:00:00Z"},
     ]
     _patch(monkeypatch, rows)
     out = asyncio.run(hd.handle_hermes_data("auth"))
     assert out["count"] == 2
     by = {i["integration"]: i for i in out["integrations"]}
     assert by["anthropic"]["status"] == "ok"   # la más reciente (11:00), no la failed (10:00)
+    assert by["anthropic"]["created_at"] == "2026-06-01T09:30:00Z"  # "operativa desde" = created_at de la fila top
     assert by["brave"]["status"] == "ok"
 
 

@@ -1,7 +1,8 @@
 """GET /security-dev/hermes · estado actual de salud de las integraciones externas (HERMES).
 
 Última fila por integración de mcp_health_log (patrón latest-per-group de get_status.py):
-trae ordenado por checked_at DESC y se queda con el 1er match de cada integration."""
+trae ordenado por checked_at DESC y se queda con el 1er match. created_at = "operativa desde"
+(cuándo entró al estado actual · el cron pisa checked_at pero NO created_at)."""
 import logging
 from typing import Optional, Dict, Any
 from app.api.routes.auth.super_owner import require_super_owner
@@ -17,7 +18,7 @@ async def handle_hermes_data(authorization: Optional[str]) -> Dict[str, Any]:
     try:
         sb = get_supabase_service().client
         r = sb.table("mcp_health_log") \
-            .select("integration, status, last_use, checked_at") \
+            .select("integration, status, last_use, checked_at, created_at") \
             .order("checked_at", desc=True) \
             .limit(_FETCH_LIMIT) \
             .execute()
