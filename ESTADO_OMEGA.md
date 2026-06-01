@@ -229,12 +229,14 @@ Al cerrar cualquier sesión, cada cosa va a UN solo lugar (cero fuentes de verda
 |---|---|---|
 | **Deuda técnica** (bug, limitación de código, infra, seguridad) | `SOURCE_OF_TRUTH.md` §6 | tabla canónica · es donde escribe el skill `registrar-deuda` |
 | **Roadmap / rumbo / negocio** (pricing, features de producto, decisiones BIZ) | `ESTADO_OMEGA.md` (este) | estado operacional · qué está hecho/falta/orden |
-| **Narrativa de la sesión** (qué se hizo, hallazgos, lecciones) | `OMEGA_RECALL_MAESTRO.md` | memoria portable entre chats |
+| **Protocolos de verificación** (E2E manual, smoke tests) | docstring del código que validan | cerca del test · ej. los 4 tests ARIA viven en `test_message_client_scope.py` |
+| **Narrativa de sesión / puesta-al-día entre instancias** | **documento-puente de un solo uso** | se genera AL CIERRE para la próxima sesión, se lee al inicio, y se **descarta** una vez absorbido. NO es doc permanente del repo (así fue el RECALL · puente cumplido y eliminado 1 jun) |
 | **Mapa de lectura** | `INDICE_PROYECTO.md` | orden de tier · gates |
 
-**NO crear más handoffs/checkpoints sueltos:** se absorben en el RECALL al cierre y los efímeros
-se archivan en `docs/archive/`. Cualquier doc que necesite una deuda → **apunta** (`ver SOT §6`),
-no la copia. Si te encontrás copiando una deuda o un HEAD en un 2do lugar, PARÁ: eso crea drift.
+**NO crear docs de estado permanentes nuevos.** El puente de sesión es efímero por diseño:
+nace al cierre, muere al absorberse. Cualquier doc que necesite una deuda → **apunta**
+(`ver SOT §6`), no la copia. Si te encontrás copiando una deuda o un HEAD en un 2do lugar,
+PARÁ: eso crea drift.
 
 ---
 

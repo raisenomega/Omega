@@ -1,5 +1,37 @@
 """Switcher V1 · ARIA message contextualizada al negocio activo (DEBT-ARIA-CHAT-CLIENT-ID).
-Estilo monkeypatch + asyncio.run (igual que test_strategies_generate_handler.py). G9 exime tests."""
+Estilo monkeypatch + asyncio.run (igual que test_strategies_generate_handler.py). G9 exime tests.
+
+═══════════════════════════════════════════════════════════════════════════════
+PROTOCOLO DE VERIFICACIÓN MANUAL — aislamiento multi-negocio (4 tests)
+═══════════════════════════════════════════════════════════════════════════════
+Estos unit tests cubren la lógica; el protocolo de abajo es la verificación E2E
+en producción (con `reseller@omega.com` y 2 negocios A/B). Pasó 100% al cerrar el
+Switcher V1 (commits f4576fc..5bffb55). Rescatado del RECALL al eliminarlo (1 jun).
+Re-correr este protocolo si se toca el flujo de ARIA chat / historial / memoria.
+
+  Test 1 — Context y level por negocio:
+    · Activar negocio A → ARIA chat → "¿quién soy?" → responde identidad de A
+    · Cambiar a negocio B → "¿quién soy?" → responde identidad de B
+
+  Test 2 — Historial aislado:
+    · En negocio B, mirar chat → NO ve mensajes escritos en negocio A
+    · Volver a A → ve SOLO mensajes de A
+
+  Test 3 — Cross-contamination (el bonus crítico):
+    · En A decir "mi producto estrella es X-buzón" (algo único)
+    · Cambiar a B, preguntar "¿cuál es mi producto estrella?" → NO menciona X-buzón
+    · Volver a A, preguntar lo mismo → recuerda X-buzón
+    · NOTA: usar frases NUEVAS post-deploy (mensajes legacy pre-Commit-B quedaron
+      con client_id del 1er cliente · DEBT-ARIA-LEGACY-HISTORY-CROSS-CONTAMINATION)
+
+  Test 4 — DELETE por negocio:
+    · En B borrar historial → chat de B vacío
+    · Cambiar a A → chat de A INTACTO (no se borró)
+
+Cobertura unit relacionada: este archivo (context/level por negocio) +
+infrastructure/tests/test_aria_history_scope.py (historial + DELETE scoped).
+═══════════════════════════════════════════════════════════════════════════════
+"""
 import asyncio
 import pytest
 from unittest.mock import AsyncMock
