@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
+import { EmptyState } from "@/components/common/EmptyState";
 import { MediaCardActions } from "@/components/media/MediaCardActions";
 import {
   ImageIcon,
@@ -40,8 +42,10 @@ export default function Media() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
   const [uploading, setUploading] = useState(false);
+  const { activeBusinessId, isReady } = useActiveBusiness();
 
-  // DEBT-060: media folder-scoped por usuario · aislamiento cross-tenant (RLS {uid}/).
+  // DEBT-060: media folder-scoped por usuario (RLS {uid}/, aislamiento cross-tenant) y, dentro,
+  // por negocio ({uid}/{clientId}/) para que multi-negocio del mismo dueño no comparta biblioteca.
   const { data: userId } = useQuery({
     queryKey: ["auth-user-id"],
     queryFn: async () => {
@@ -50,36 +54,38 @@ export default function Media() {
     },
   });
 
+  const prefix = `${userId}/${activeBusinessId}`;
+
   const { data: files, isLoading } = useQuery({
-    queryKey: ["media-files", userId],
+    queryKey: ["media-files", userId, activeBusinessId],
     queryFn: async () => {
       const { data, error } = await supabase.storage
         .from("media")
-        .list(userId!, { limit: 200, sortBy: { column: "created_at", order: "desc" } });
+        .list(prefix, { limit: 200, sortBy: { column: "created_at", order: "desc" } });
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!userId,
+    enabled: !!userId && !!activeBusinessId,
   });
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadFiles = e.target.files;
     if (!uploadFiles || uploadFiles.length === 0) return;
 
-    if (!userId) {
-      toast({ title: "Sesión no disponible", description: "Recargá la página.", variant: "destructive" });
+    if (!userId || !activeBusinessId) {
+      toast({ title: "Sesión no disponible", description: "Activá un negocio y recargá.", variant: "destructive" });
       return;
     }
     setUploading(true);
     try {
       for (const file of Array.from(uploadFiles)) {
-        const fileName = `${userId}/${Date.now()}-${file.name}`;
+        const fileName = `${prefix}/${Date.now()}-${file.name}`;
         const { error } = await supabase.storage
           .from("media")
           .upload(fileName, file);
         if (error) throw error;
       }
-      queryClient.invalidateQueries({ queryKey: ["media-files", userId] });
+      queryClient.invalidateQueries({ queryKey: ["media-files", userId, activeBusinessId] });
       toast({ title: `${uploadFiles.length} archivo(s) subido(s)` });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error desconocido";
@@ -90,12 +96,12 @@ export default function Media() {
   };
 
   const handleDelete = async (name: string) => {
-    if (!userId) return;
-    const { error } = await supabase.storage.from("media").remove([`${userId}/${name}`]);
+    if (!userId || !activeBusinessId) return;
+    const { error } = await supabase.storage.from("media").remove([`${prefix}/${name}`]);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      queryClient.invalidateQueries({ queryKey: ["media-files", userId] });
+      queryClient.invalidateQueries({ queryKey: ["media-files", userId, activeBusinessId] });
       toast({ title: "Archivo eliminado" });
     }
   };
@@ -105,7 +111,10 @@ export default function Media() {
   );
 
   const getPublicUrl = (name: string) =>
-    supabase.storage.from("media").getPublicUrl(`${userId}/${name}`).data.publicUrl;
+    supabase.storage.from("media").getPublicUrl(`${prefix}/${name}`).data.publicUrl;
+
+  if (!isReady) return null;
+  if (!activeBusinessId) return <EmptyState feature="Biblioteca de Medios" />;
 
   return (
     <div className="space-y-6">
