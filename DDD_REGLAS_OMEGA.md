@@ -608,7 +608,7 @@ DATABASE INICIAL
 PRIMER COMMIT                                                  
 ═══════════════════════════════════════════════════════════════
 [ ] git config user.email = raisenagencypr@gmail.com
-[ ] git add . && git status muestra TODO esperado
+[ ] git add <archivo> por archivo (NUNCA `git add .`) && git status muestra TODO esperado
 [ ] bash scripts/validate-before-push.sh pasa 11/11
 [ ] git commit -m "feat: bootstrap V3 stack (OmegaRaisen rebuild)"
 [ ] git push -u origin main exitoso
