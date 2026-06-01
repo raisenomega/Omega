@@ -4,6 +4,7 @@ Verifica disponibilidad, latencia y que los endpoints protegidos
 requieran autenticación.
 MAX 200L — R-LINES-001
 """
+import os
 import time
 import logging
 from typing import Dict, Any
@@ -14,7 +15,11 @@ logger = logging.getLogger(__name__)
 
 # ── CONFIG ────────────────────────────────────────────────────
 
-_ROOT_URL = "https://omegaraisen-production-2031.up.railway.app"
+# SENTINEL_SELF_URL override opcional (Railway) · fallback = URL real de prod (3c67). Si el dominio
+# cambia, se setea la env var sin re-deploy de código; si no está, cae a la URL correcta actual,
+# NUNCA a una vieja. Antes hardcodeaba "...2031..." (fantasma) → pulse_monitor reportaba todo
+# unreachable y arrastraba el score SENTINEL con CRITICAL falsos.
+_ROOT_URL = os.environ.get("SENTINEL_SELF_URL", "https://omega-production-3c67.up.railway.app").rstrip("/")
 
 # (path, method, expected_status, requires_auth)
 # requires_auth=True → un 200 sin token es CRITICAL AUTH_REGRESSION
