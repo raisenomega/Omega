@@ -334,7 +334,7 @@ ENFORCE        Pre-push hook + CI/CD
 
 Cambio requiere test que falla primero · acciones prohibidas hardcoded · RLS
 en todas las tablas con user_id/client_id/reseller_id/org_id · cero secretos
-hardcoded · validación de entrada con Result · pre-push 9 checks · cero
+hardcoded · validación de entrada con Result · pre-push 11 checks · cero
 mock/fake/dummy en producción · permisos mínimos por subagente.
 
 ---
@@ -388,7 +388,7 @@ Memory) · Plan Mode para cambios ≥3 archivos.
 
 Tests en limits + Value Objects + Mappers + classify/decide logic ·
 Promptfoo evals para bc_cognition · Smoke test pre-deploy · Pre-push hook
-9/9 verde · Tests pasando pre-commit.
+11/11 verde · Tests pasando pre-commit.
 
 ---
 
@@ -482,22 +482,27 @@ RAZÓN         Es la regla P2 traducida a código: la marca del cliente
 
 # SCRIPT DE VERIFICACIÓN ÚNICA
 
-Ver `scripts/validate-before-push.sh` para implementación completa con 12 checks:
+Ver `scripts/validate-before-push.sh` para implementación completa con 11 checks
+(numerados 0/11 a 10/11 · `TOTAL=11` en el script):
 
 ```
-1. C1+C2: Cero any / @ts-ignore (TS) y cero Any / type: ignore (Python)
-2. I1:    Solo Anthropic (con excepciones Nano Banana + Veo 3.1 en adapters)
-3. A2:    Domain puro (sin imports externos)
-4. G6:    Sin secretos hardcoded
-5. G9:    Sin mock/fake/dummy en producción
-6. G2:    SHA1 de guardrails intacto
-7. C4:    Archivos ≤100 líneas (error) / ≤75 líneas (warning)
-8. T4:    TypeScript compila sin errores
-9. T5:    Tests pasando (Vitest + pytest)
-10. X1:   SENTINEL score ≥ 95 (solo en pre-deploy, no en pre-push diario)
-11. X2:   SHA1 personas intacto
-12. X4:   Test idempotencia Stripe webhooks pasa
+0.  Identidad git (bloqueante · raisenomega / raisenagencypr@gmail.com)
+1.  C1+C2: Cero any / @ts-ignore (TS) y cero Any / type: ignore (Python)
+2.  I1:    Solo Anthropic (con excepciones Nano Banana + Veo 3.1 en adapters)
+3.  A2:    Domain puro (sin imports externos)
+4.  G6:    Sin secretos hardcoded
+5.  G9:    Sin mock/fake/dummy en producción
+6.  G2:    SHA1 de limits_omega.py intacto
+7.  C4:    Archivos ≤100 líneas (error) / ≤75 líneas (warning)
+8.  T4:    TypeScript compila sin errores
+9.  T5:    Tests pasando (Vitest + pytest)
+10. X2:    SHA1 personas (NOVA/ARIA) intacto
 ```
+
+**NO están en el gate pre-push ejecutable** (el doc los listaba antes, pero el script
+no los corre): `X1` (SENTINEL score ≥95 — es verificación pre-deploy, no pre-push) y
+`X4` (idempotencia Stripe webhooks — cubierto por test suite T5, no como check propio).
+Siguen siendo reglas del proyecto; simplemente no son checks del gate diario.
 
 ---
 
@@ -604,7 +609,7 @@ PRIMER COMMIT
 ═══════════════════════════════════════════════════════════════
 [ ] git config user.email = raisenagencypr@gmail.com
 [ ] git add . && git status muestra TODO esperado
-[ ] bash scripts/validate-before-push.sh pasa 9/9
+[ ] bash scripts/validate-before-push.sh pasa 11/11
 [ ] git commit -m "feat: bootstrap V3 stack (OmegaRaisen rebuild)"
 [ ] git push -u origin main exitoso
 ```
