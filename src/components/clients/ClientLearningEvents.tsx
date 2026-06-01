@@ -7,7 +7,8 @@ import { Loader2, Brain, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { useClientLearningEvents } from "@/hooks/useClientLearningEvents";
 import type { LearningEvent } from "@/hooks/useClientLearningEvents";
 
-function fmtDate(iso: string): string {
+function fmtDate(iso: string | null): string | null {
+  if (!iso) return null;  // señal directa sin fecha de cron → no mostramos "· undefined"
   return new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
 }
 
@@ -23,7 +24,7 @@ function EventRow({ ev }: { ev: LearningEvent }) {
         <p className="text-sm font-medium">{ev.decision}</p>
         {ev.outcome && <p className="text-xs text-muted-foreground mt-0.5">{ev.outcome}</p>}
         <p className="text-[11px] text-muted-foreground/70 mt-1">
-          {ev.agentName} · {fmtDate(ev.evaluated_at)}
+          {ev.agentName}{fmtDate(ev.evaluated_at) ? ` · ${fmtDate(ev.evaluated_at)}` : ""}
         </p>
       </div>
     </div>

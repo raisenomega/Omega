@@ -9,7 +9,7 @@ export interface LearningEvent {
   outcome: string | null;     // qué resultó
   was_correct: boolean;       // garantizado non-null (filtrado en query)
   confidence: number;
-  evaluated_at: string;       // ISO · fecha de evaluación
+  evaluated_at: string | null; // ISO · fecha de evaluación · NULL si la señal vino directa (sin cron)
 }
 
 interface RawEvent {
@@ -19,7 +19,7 @@ interface RawEvent {
   outcome: string | null;
   was_correct: boolean;
   confidence: number;
-  evaluated_at: string;
+  evaluated_at: string | null;
 }
 
 export function parseRaw(row: unknown): RawEvent | null {
@@ -28,7 +28,10 @@ export function parseRaw(row: unknown): RawEvent | null {
   if (typeof r.id !== "string" || typeof r.agent_code !== "string") return null;
   if (typeof r.decision !== "string" || typeof r.was_correct !== "boolean") return null;
   if (typeof r.confidence !== "number") return null;
-  if (typeof r.evaluated_at !== "string") return null;
+  // evaluated_at es OPCIONAL (igual que outcome): es la fecha en que el cron tocó la fila, no la
+  // señal. Una fila con was_correct real puede nacer sin cron (brand_voice/nova · veredicto directo)
+  // → evaluated_at NULL. Exigirlo descartaba las acertadas y mostraba 0% (bug). Solo se requiere la
+  // señal (was_correct bool), no el timestamp.
   return {
     id: r.id,
     agent_code: r.agent_code,
@@ -36,7 +39,7 @@ export function parseRaw(row: unknown): RawEvent | null {
     outcome: typeof r.outcome === "string" ? r.outcome : null,
     was_correct: r.was_correct,
     confidence: r.confidence,
-    evaluated_at: r.evaluated_at,
+    evaluated_at: typeof r.evaluated_at === "string" ? r.evaluated_at : null,
   };
 }
 
