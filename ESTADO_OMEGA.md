@@ -1,4 +1,4 @@
-# ESTADO OMEGA · Documento Vivo · Última actualización: 29 may 2026 (Sprint 7 · DEBT-097 CERRADA · Modo Supervisado acotado: máquina estados P2/P3 + panel cola por-negocio + toggle · cron auto → DEBT-096 · DEBT-102 CERRADA widget "Qué aprendió ARIA" · cross-client → DEBT-033 · sync MCP v2.0 Zernio · DEBT-MCP-ZERNIO/ANALYTICS + 3 HERMES registradas · orden Sprint 8 re-locked) · 28 may 2026 (sesión 6 · DEBT-099+v2 CERRADAS · plan bar 7 estados · modelo reseller LOCKED · E2E prod ✅)
+# ESTADO OMEGA · Documento Vivo · Última actualización: 1 jun 2026 (HEAD `cb585b6` · Switcher V1 CERRADO 100% + reconciliación censo · 4 deudas técnicas migradas a SOT §6 · regla de cierre de sesión añadida §7) · 29 may 2026 (Sprint 7 · DEBT-097 CERRADA · Modo Supervisado acotado: máquina estados P2/P3 + panel cola por-negocio + toggle · cron auto → DEBT-096 · DEBT-102 CERRADA widget "Qué aprendió ARIA" · cross-client → DEBT-033 · sync MCP v2.0 Zernio · DEBT-MCP-ZERNIO/ANALYTICS + 3 HERMES registradas · orden Sprint 8 re-locked) · 28 may 2026 (sesión 6 · DEBT-099+v2 CERRADAS · plan bar 7 estados · modelo reseller LOCKED · E2E prod ✅)
 
 > **Fuente de verdad OPERACIONAL** (qué está hecho, qué falta, en qué orden).
 > Fuente de verdad TÉCNICA (contratos DDD, arquitectura, detalle de DEBTs): `SOURCE_OF_TRUTH.md`.
@@ -10,7 +10,7 @@
 
 | Componente | Estado | Identificador |
 |---|---|---|
-| Git HEAD | ✅ | `12dfed8` (28 may · correr `git log --oneline -1` para el vivo) |
+| Git HEAD | ✅ | `cb585b6` (1 jun · post-Switcher V1 + reconciliación censo · correr `git log --oneline -1` para el vivo) |
 | Frontend | ✅ Vercel | `omegaraisen.agency` (deploy auto en push a `main`) |
 | Backend | ✅ Railway | `omega-production-3c67.up.railway.app` |
 | Supabase | ✅ | proyecto `rwlnihoqhxwpbehibgxu` (PostgreSQL + RLS) · **Site URL = `https://omegaraisen.agency`** (corregido 28 may) · Redirect URLs `omegaraisen.agency` + `omegaraisen.agency/**` |
@@ -19,7 +19,7 @@
 | Alertas Email (SENTINEL) | ✅ **prod confirmado 28 may 07:00** | Resend live · **alarma** (`alert_dispatcher` · score<80 · siempre · E2E 25 may) + **brief al owner** (`brief_dispatcher` · DEBT-105 `bae2b3d`): SENTINEL diario condicional (issues>0/score<85 · score 86/100 reportado 28 may) · ORACLE semanal siempre · best-effort · `RESEND_API_KEY` puesta |
 | Alertas Telegram | ⏸️ | Preparado · activa al pegar `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` (falta crear el bot) |
 | Email template `confirm_signup` | ✅ (28 may) | `supabase/email_templates/confirm_signup.html` `ff73922` · paleta OMEGA gold `#EEA62B` + Syne `RAISEN. OMEGA` · cargado al Supabase Dashboard manualmente (Supabase no expone API templates) |
-| Login → /dashboard global todos los roles | ✅ (28 may) | `12dfed8` · wizard inicial eliminado del repo · `App.tsx` sin ruta `/onboarding` · `ProtectedRoute.tsx` sin redirect · 4 roles probados E2E prod ~07:33 AM (super_owner · reseller · cliente PYME · cliente nuevo fresh) |
+| Login → /dashboard global todos los roles | ✅ (28 may · commit histórico `12dfed8`) | wizard inicial eliminado del repo · `App.tsx` sin ruta `/onboarding` · `ProtectedRoute.tsx` sin redirect · 4 roles probados E2E prod ~07:33 AM (super_owner · reseller · cliente PYME · cliente nuevo fresh) |
 | Self-service signup E2E producción | ✅ (28 may ~07:33 AM) | signup → email OMEGA → confirm → `/dashboard` → nudge "Agregá tu primer cliente" en Card Notificaciones → click → `/clients` → wizard opcional → cliente real guardado → nudge auto-oculto |
 | Plan status bar · 7 estados legibles | ✅ (28 may) | `55cc797` · trial >3d ámbar · trial ≤3d rojo · trial vencido rojo+CTA · plan ≤30d urgencia · plan 31-365d fecha corta es-AR · plan venció rojo · **perpetuo (>365d) oculto** (fix `Renueva 26880d`) · upgrade tier completo (ADOPCION→/settings · BÁSICO→PRO · PRO→Enterprise · ENTERPRISE sin CTA) |
 
@@ -114,8 +114,8 @@
 | DEBT | Descripción | Horas | Sprint |
 |---|---|---|---|
 | ~~DEBT-066~~ | ✅ **CERRADA** (26 may) header ClientDetail → cols reales business_email/website/industry | — | — |
-| DEBT-SEC-003 | EXIF strip en imágenes subidas | 4h | — |
-| DEBT-SEC-004 | Magic bytes verification (uploads) | 4h | — |
+| ~~DEBT-SEC-003~~ | → migrada a `SOURCE_OF_TRUTH.md` §6 (técnica · una deuda un hogar · 1 jun) | — | — |
+| ~~DEBT-SEC-004~~ | → migrada a `SOURCE_OF_TRUTH.md` §6 (técnica · una deuda un hogar · 1 jun) | — | — |
 | ~~DEBT-051~~ | ✅ **CERRADA (29 may · `32c49dd` · Fase 0b)** split a `aria_plan_repository.py` (fetch_live_plan) · aria_repository 100L exactos · C4 ok · gate 11/11 | — | — |
 | DEBT-055 | Remover endpoint diagnóstico `run-now` (tras validar cron en prod) | 0.5h | — |
 | DEBT-056 | `sentinel_check.sh` URL stale + Bearer · script X1 GET→POST+auth | 0.5h | — |
@@ -142,8 +142,8 @@
 | ~~DEBT-FFMPEG-002~~ | ✅ **CERRADA scope-acotado** (`c9baba4`) `_logo_overlay_video.py` (71L) con FFmpeg subprocess · overlay logo 15% width · 80% opac · esquina inf-derecha · 20px padding · best-effort (FFmpeg ausente → video original). **Las otras 9 ops del scope original (subs/música/trim/encode/etc) NO construidas** · registrar DEBT nuevo si se necesitan | — | 7 |
 | ~~DEBT-FFMPEG-003~~ | ✅ **CERRADA** (`c9baba4`) `_video_compat` aplica overlay tras descarga + antes de upload via `apply_logo_to_video_bytes` (bridging bytes↔tempfile) | — | 7 |
 | ~~DEBT-FFMPEG-004~~ | ✅ **CERRADA via metadata jsonb** (`c9baba4`) `logo_url` persiste en `video_generation_jobs.metadata` al insert · worker lo lee · **sin tabla nueva** · si se requiere audit table separada de jobs FFmpeg, registrar DEBT | — | 7 |
-| DEBT-FFMPEG-005 | 🟡 **NUEVA (28 may)** logo overlay en VIDEO pendiente · imagen ✅ confirmada smoke test 27 may · video ❌ FFmpeg en Railway no aplica overlay (fail-graceful · video sale limpio sin romper) · causa probable: `nixpacks.toml` con ffmpeg no tomado en build actual de Railway O subprocess PATH issue en runtime · fix Sprint 8: verificar build logs Railway + ajustar PATH en `apply_logo_to_video` si FFmpeg está instalado pero no en PATH | 4h | 8 |
-| DEBT-IMAGE-ASYNC | 🟠 **NUEVA (28 may)** `generate_image` síncrono/bloqueante · 1 worker uvicorn ocupado ~180s/request · con 100 usuarios simultáneos → colapso · solución Sprint 8: mismo patrón que `video_generation_jobs` (job_id + polling · `apply_logo_to_video_bytes` pipeline) · **parche temporal hoy**: timeout `_GENERATION_TIMEOUT_S` 120→180s en `nano_banana_adapter` (compra tiempo hasta Sprint 8) | 10h | 8 |
+| ~~DEBT-FFMPEG-005~~ | → migrada a `SOURCE_OF_TRUTH.md` §6 (técnica · una deuda un hogar · 1 jun) | — | 8 |
+| ~~DEBT-IMAGE-ASYNC~~ | → migrada a `SOURCE_OF_TRUTH.md` §6 (técnica · una deuda un hogar · 1 jun) | — | 8 |
 | DEBT-CONTENTLAB-422 | 🟠 **NUEVA (28 may)** Content Lab HTTP 422 intermitente en gen de imagen (otras del mismo batch sí salen) · causa probable filtro Gemini / payload malformado / prompt fuera de límite en `nano_banana_adapter` · **incluye fix UX**: nunca mostrar "HTTP 422" crudo al cliente · copy honesto + botón reintentar single-item · producto en sí funciona (pulido, no estructural) | 4h | 8 |
 | DEBT-UI-POLISH | 🟢 **NUEVA (28 may · sesión 6)** contenedor para pulidos visuales detectados en uso real · NO un DEBT específico · bucket de fixes pequeños UX (spacing/copy/tooltips/hover/focus/micro-animaciones) · cierre por lotes `polish(ui): ...` | TBD | 8+ |
 | DEBT-LANDING-CMS | 🟡 **NUEVA (28 may · sesión 6)** editor super-admin de landing page (secciones/CTAs/fotos agentes/video hero) + white-label reseller generator (cada reseller con landing brandeada) · landing oficial `omega-landing-v3.html` local pendiente subir a Vercel | ~30h | 8-9 |
@@ -218,6 +218,23 @@ git log --oneline -5
 curl https://omega-production-3c67.up.railway.app/health   # version · agents 37/37 · git_sha
 ```
 Orden de lectura (`INDICE_PROYECTO.md`): `IDENTIDAD_GIT_CRITICA.md §2` → **`ESTADO_OMEGA.md`** (este · operacional) → `SOURCE_OF_TRUTH.md` (técnico) → Tier 2 según scope → últimos 5 episodios `agent_memory` (Supabase MCP) → **declarar intención y esperar confirmación**.
+
+---
+
+## 7 · REGLA DE CIERRE DE SESIÓN (un doc por tipo · "una deuda, un hogar")
+
+Al cerrar cualquier sesión, cada cosa va a UN solo lugar (cero fuentes de verdad paralelas):
+
+| Qué | Dónde | Regla |
+|---|---|---|
+| **Deuda técnica** (bug, limitación de código, infra, seguridad) | `SOURCE_OF_TRUTH.md` §6 | tabla canónica · es donde escribe el skill `registrar-deuda` |
+| **Roadmap / rumbo / negocio** (pricing, features de producto, decisiones BIZ) | `ESTADO_OMEGA.md` (este) | estado operacional · qué está hecho/falta/orden |
+| **Narrativa de la sesión** (qué se hizo, hallazgos, lecciones) | `OMEGA_RECALL_MAESTRO.md` | memoria portable entre chats |
+| **Mapa de lectura** | `INDICE_PROYECTO.md` | orden de tier · gates |
+
+**NO crear más handoffs/checkpoints sueltos:** se absorben en el RECALL al cierre y los efímeros
+se archivan en `docs/archive/`. Cualquier doc que necesite una deuda → **apunta** (`ver SOT §6`),
+no la copia. Si te encontrás copiando una deuda o un HEAD en un 2do lugar, PARÁ: eso crea drift.
 
 ---
 
