@@ -14,8 +14,8 @@ _FETCH_LIMIT = 200  # suficiente para cubrir las últimas corridas de las 7 inte
 
 async def handle_hermes_data(authorization: Optional[str]) -> Dict[str, Any]:
     await require_super_owner(authorization)
-    sb = get_supabase_service().client
     try:
+        sb = get_supabase_service().client
         r = sb.table("mcp_health_log") \
             .select("integration, status, last_use, checked_at") \
             .order("checked_at", desc=True) \
