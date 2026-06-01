@@ -1,12 +1,6 @@
-"""
-OmegaRaisen — Veo 3.1 Adapter (ÚNICO entry GENERACIÓN VIDEO · DDD I1 exception)
-
-Excepción documentada, aprobada owner 17 may 2026.
-Re-evaluación: Q4 2026 si Anthropic lanza generación de video nativa.
-
-Video generation es ASYNC (LRO). Caller hace start_generation() y luego poll().
-Tipos y routing: _veo3_types.py
-"""
+"""Veo 3.1 Adapter · ÚNICO entry GENERACIÓN VIDEO (DDD I1 exception · aprobada owner 17 may 2026 ·
+re-eval Q4 2026 si Anthropic lanza video nativo). ASYNC/LRO: start_generation() luego poll().
+Tipos y routing: _veo3_types.py."""
 
 from __future__ import annotations
 
@@ -21,6 +15,7 @@ from google.genai import types
 from app.bc_cognition.infrastructure._veo3_types import (
     VideoRoute, MODEL_BY_ROUTE, VideoOperation, VideoResult, VideoError,
 )
+from app.bc_cognition.infrastructure.hermes_usage import record_mcp_use  # HERMES f1.5 · usage-tracking
 
 _client: genai.Client | None = None
 
@@ -82,8 +77,10 @@ async def poll(
         )
         if op.done:
             if op.error:
+                record_mcp_use("veo3", ok=False, detail=str(op.error)[:80])  # HERMES f1.5
                 return None, VideoError("api_error", str(op.error))
             video = op.response.generated_videos[0]
+            record_mcp_use("veo3", ok=True)  # HERMES f1.5
             return VideoResult(
                 video_uri=video.video.uri,
                 duration_s=8,
@@ -93,4 +90,5 @@ async def poll(
             ), None
         await asyncio.sleep(poll_interval_s)
 
+    record_mcp_use("veo3", ok=False, detail=f"timeout {max_wait_s}s")  # HERMES f1.5
     return None, VideoError("timeout", f"Excedió {max_wait_s}s sin completar")
