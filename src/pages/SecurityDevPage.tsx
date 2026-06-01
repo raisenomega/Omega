@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSuperOwner } from "@/hooks/useSuperOwner";
 import { SentinelTab } from "@/components/security-dev/SentinelTab";
 import { GuardianTab } from "@/components/security-dev/GuardianTab";
+import { HermesTab } from "@/components/security-dev/HermesTab";
 import { DevChatTab } from "@/components/security-dev/DevChatTab";
 import { DevTerminalTab } from "@/components/security-dev/DevTerminalTab";
 
@@ -23,11 +24,13 @@ export default function SecurityDevPage() {
         <TabsList>
           <TabsTrigger value="sentinel">SENTINEL</TabsTrigger>
           <TabsTrigger value="guardian">GUARDIAN</TabsTrigger>
+          <TabsTrigger value="hermes">HERMES</TabsTrigger>
           <TabsTrigger value="chat">Dev Chat</TabsTrigger>
           <TabsTrigger value="terminal">Dev Terminal</TabsTrigger>
         </TabsList>
         <TabsContent value="sentinel"><SentinelTab /></TabsContent>
         <TabsContent value="guardian"><GuardianTab /></TabsContent>
+        <TabsContent value="hermes"><HermesTab /></TabsContent>
         <TabsContent value="chat"><DevChatTab /></TabsContent>
         <TabsContent value="terminal"><DevTerminalTab /></TabsContent>
       </Tabs>
