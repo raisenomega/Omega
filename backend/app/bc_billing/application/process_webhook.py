@@ -12,6 +12,7 @@ from app.bc_billing.domain.billing_events import BillingResult, ok, fail
 from app.bc_billing.infrastructure.stripe_adapter import get_stripe_adapter
 from app.bc_billing.application._webhook_handlers import EVENT_HANDLERS
 from app.infrastructure.supabase_service import get_supabase_service
+from app.bc_cognition.infrastructure.hermes_usage import record_mcp_use  # HERMES f1.5 · usage-tracking
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +22,11 @@ async def process_stripe_event(raw_payload: bytes, signature: str) -> BillingRes
     try:
         event = adapter.verify_and_construct_event(raw_payload, signature)
     except Exception as e:
+        record_mcp_use("stripe", ok=False, detail=str(e)[:80])  # HERMES f1.5 · firma inválida/Stripe problema
         logger.warning(f"Webhook signature verification failed: {e}")
         return fail(f"Invalid signature: {e}", "invalid_signature")
 
+    record_mcp_use("stripe", ok=True)  # HERMES f1.5 · evento válido = Stripe vivo (antes del idempotent-skip)
     event_id, event_type = event["id"], event["type"]
     supabase = get_supabase_service()
 
