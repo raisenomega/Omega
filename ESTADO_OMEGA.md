@@ -15,7 +15,7 @@
 | Backend | ✅ Railway | `omega-production-3c67.up.railway.app` |
 | Supabase | ✅ | proyecto `rwlnihoqhxwpbehibgxu` (PostgreSQL + RLS) · **Site URL = `https://omegaraisen.agency`** (corregido 28 may) · Redirect URLs `omegaraisen.agency` + `omegaraisen.agency/**` |
 | Migraciones | ✅ | `00001` → `00042` aplicadas (28 may · +`00041` signup trigger idempotente `6bab6a0` · +`00042` `clients.user_id` ON DELETE CASCADE `2960000` · ver `SOURCE_OF_TRUTH.md §16`+§18) |
-| Crons APScheduler | ✅ | **12/12** (incluye `reset_credit_periods` 00:05 fin-de-mes · DEBT-052 · ver `DDD_REGLAS_OMEGA.md` X3) |
+| Crons APScheduler | ✅ | **15/15** (en `backend/app/main.py` · incluye `reset_credit_periods` 00:05 fin-de-mes DEBT-052 · `decision_evaluator` DEBT-100 · `strategy_generator` DEBT-096 F2 · lista completa en `DDD_REGLAS_OMEGA.md` X3) |
 | Alertas Email (SENTINEL) | ✅ **prod confirmado 28 may 07:00** | Resend live · **alarma** (`alert_dispatcher` · score<80 · siempre · E2E 25 may) + **brief al owner** (`brief_dispatcher` · DEBT-105 `bae2b3d`): SENTINEL diario condicional (issues>0/score<85 · score 86/100 reportado 28 may) · ORACLE semanal siempre · best-effort · `RESEND_API_KEY` puesta |
 | Alertas Telegram | ⏸️ | Preparado · activa al pegar `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` (falta crear el bot) |
 | Email template `confirm_signup` | ✅ (28 may) | `supabase/email_templates/confirm_signup.html` `ff73922` · paleta OMEGA gold `#EEA62B` + Syne `RAISEN. OMEGA` · cargado al Supabase Dashboard manualmente (Supabase no expone API templates) |

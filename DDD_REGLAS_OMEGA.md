@@ -438,18 +438,25 @@ ENFORCE       scripts/verify-personas.sh
 RAZÓN         La identidad del CEO virtual no muta sin aprobación owner
 ```
 
-## X3 · 11 Cron Workers Verificados Post-Deploy
+## X3 · 15 Cron Workers Verificados Post-Deploy
 
 ```
-REGLA         Después de cada deploy: verificar que los 11 cron jobs
+FUENTE        backend/app/main.py (scheduler.start() en @app.on_event startup, ~L163).
+              ⚠️ backend/app/workers/scheduler.py NO es el scheduler activo (código
+              legacy, 3 jobs, start_scheduler() sin caller · DEBT-SCHEDULER-LEGACY-DUP).
+REGLA         Después de cada deploy: verificar que los 15 cron jobs
               están activos en APScheduler
-JOBS          vault_scan (2 AM) · db_guardian (5 AM) · sentinel_brief (7 AM)
-              pulse_monitor (cada 5 min) · oracle_weekly_brief (lun 7 AM)
-              news_monitor (cada 2h) · competitor_tracker (cada 6h)
-              trend_spotter (cada 12h) · brand_dna_refresh (3 AM diario) ·
-              video_jobs_orphan_cleanup (cada 1h) ·
-              outcome_evaluator (4 AM diario · 4A-2 PASO 3 ciclo auto-aprendizaje)
-ENFORCE       Endpoint /api/v1/system/cron-status debe retornar 11/11 active
+JOBS          vault_scan (cron 2 AM) · db_guardian (cron 5 AM) · sentinel_brief (cron 7 AM) ·
+              pulse_monitor (interval 5 min) · oracle_weekly_brief (cron lun 7 AM) ·
+              aria_learning_report (cron lun 7:05 · DEBT-101) ·
+              news_monitor (interval 2h) · competitor_tracker (interval 6h) ·
+              trend_spotter (interval 12h) · brand_dna_refresh (cron 3 AM · DEBT-044) ·
+              video_jobs_orphan_cleanup (interval 1h · DEBT-045) ·
+              outcome_evaluator (cron 4 AM · 4A-2 PASO 3 ciclo auto-aprendizaje) ·
+              credit_period_reset (cron 0:05 fin-de-mes · DEBT-052) ·
+              decision_evaluator (cron :30 cada hora · DEBT-100 ARIA_LEARNING_LOOP) ·
+              strategy_generator (cron 7:10 diario · DEBT-096 F2 · filtra por cadencia/cliente)
+ENFORCE       Endpoint /api/v1/system/cron-status debe retornar 15/15 active
 ```
 
 ## X4 · Stripe Connect Webhooks Idempotentes
