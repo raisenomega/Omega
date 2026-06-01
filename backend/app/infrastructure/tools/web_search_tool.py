@@ -8,6 +8,7 @@ import os
 import time
 import httpx
 from typing import Any
+from app.bc_cognition.infrastructure.hermes_usage import record_mcp_use  # HERMES f1.5 · usage-tracking
 
 BRAVE_API_KEY = os.getenv("BRAVE_API_KEY", "")
 BRAVE_URL     = "https://api.search.brave.com/res/v1/web/search"
@@ -76,6 +77,7 @@ async def web_search(
 
         answer = data.get("query", {}).get("altered", "")
 
+        record_mcp_use("brave", ok=True)  # HERMES f1.5 · búsqueda exitosa
         return {
             "success":  True,
             "query":    query,
@@ -86,6 +88,7 @@ async def web_search(
         }
 
     except httpx.HTTPStatusError as e:
+        record_mcp_use("brave", ok=False, detail=f"HTTP {e.response.status_code}")  # HERMES f1.5
         return {
             "success": False,
             "error": f"Brave HTTP {e.response.status_code}",
@@ -93,6 +96,7 @@ async def web_search(
         }
 
     except httpx.TimeoutException:
+        record_mcp_use("brave", ok=False, detail="timeout 8s")
         return {
             "success": False,
             "error": "Timeout — Brave no respondió en 8s",
@@ -100,6 +104,7 @@ async def web_search(
         }
 
     except Exception as e:
+        record_mcp_use("brave", ok=False, detail=str(e)[:80])
         return {
             "success": False,
             "error": str(e),
