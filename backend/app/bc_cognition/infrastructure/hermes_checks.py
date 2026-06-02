@@ -13,8 +13,8 @@ from app.infrastructure.supabase_service import get_supabase_service
 
 logger = logging.getLogger(__name__)
 
-# 7 integraciones vivas → env var de su credencial. Las aspiracionales (Zernio/Tavily/Exa/
-# Firecrawl/Apify) NO entran (no existen en código). Google/Meta fuera de fase 1 (503 sin creds).
+# 8 integraciones vivas → env var de su credencial. Las aspiracionales (Tavily/Exa/Firecrawl/
+# Apify) NO entran (no existen en código). Google/Meta fuera de fase 1 (503 sin creds).
 _INTEGRATIONS: dict[str, str] = {
     "anthropic": "ANTHROPIC_API_KEY",
     "nano_banana": "GEMINI_API_KEY",
@@ -23,6 +23,7 @@ _INTEGRATIONS: dict[str, str] = {
     "brave": "BRAVE_API_KEY",
     "stripe": "STRIPE_SECRET_KEY",
     "resend": "RESEND_API_KEY",
+    "zernio": "ZERNIO_API_KEY",        # F5 · publicación social per-negocio
 }
 
 

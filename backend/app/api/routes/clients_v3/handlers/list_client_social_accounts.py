@@ -39,7 +39,7 @@ async def list_client_social_accounts(
         raise HTTPException(status_code=403, detail="client_access_denied")
     sb = get_supabase_service().client
     q = sb.table("social_accounts").select(
-        "id, platform, account_name, status",
+        "id, platform, account_name, status, zernio_account_id, zernio_account_handle",
     ).eq("client_id", client_id).eq("status", "active").order("created_at")
     if platform:
         q = q.eq("platform", platform)

@@ -4,9 +4,9 @@ import asyncio
 from app.bc_cognition.infrastructure import hermes_checks as hc
 
 
-def test_build_rows_cubre_las_7_integraciones():
+def test_build_rows_cubre_las_8_integraciones():
     rows = hc.build_health_rows()
-    assert len(rows) == 7
+    assert len(rows) == 8
     assert {r["integration"] for r in rows} == set(hc._INTEGRATIONS.keys())
     # todas con status válido del enum + last_use None en fase 1
     for r in rows:
@@ -42,4 +42,4 @@ def test_run_ping_best_effort_no_lanza_si_insert_falla(monkeypatch):
             raise RuntimeError("supabase down")
     monkeypatch.setattr(hc, "get_supabase_service", lambda: _Boom())
     out = asyncio.run(hc.run_hermes_ping())
-    assert out["checked"] == 7 and out["inserted"] == 0  # no lanzó · contó igual
+    assert out["checked"] == 8 and out["inserted"] == 0  # no lanzó · contó igual

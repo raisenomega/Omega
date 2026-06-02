@@ -12,6 +12,7 @@ la key → FALLA CLARO (P2 · proteger la marca: jamas publicar en la cuenta equ
 que adivinar). Esa rama es justo el puente a 2b.
 """
 import logging
+from typing import Optional
 
 from app.bc_cognition.infrastructure.zernio_adapter import ZernioPublishError, list_accounts
 
@@ -22,9 +23,13 @@ class ZernioAccountResolutionError(ZernioPublishError):
     """No se pudo resolver UNA cuenta para la plataforma (0 conectadas, o 2+ ambiguas · cero adivinanza)."""
 
 
-async def resolve_account_id(platform: str) -> str:
-    """Devuelve el _id de la UNICA cuenta Zernio conectada para `platform` (FASE 2a · un negocio).
-    0 → ZernioAccountResolutionError (no conectada) · 2+ → error (ambiguo · desambiguar = FASE 2b)."""
+async def resolve_account_id(platform: str, mapped_account_id: Optional[str] = None) -> str:
+    """Devuelve el _id de la cuenta Zernio para `platform`.
+    F5/2b: si el caller pasa `mapped_account_id` (mapeo per-negocio persistido), GANA (adapter-puro:
+    el resolver no toca Supabase · el caller lee el mapeo). Sin mapeo → fallback 2a en vivo:
+    0 → ZernioAccountResolutionError (no conectada) · 2+ → error (ambiguo · no adivina)."""
+    if mapped_account_id:
+        return mapped_account_id
     accounts = await list_accounts()
     matches = [a for a in accounts if a.get("platform") == platform and a.get("_id")]
     if not matches:

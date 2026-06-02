@@ -23,6 +23,7 @@ from typing import NamedTuple, Optional
 from app.api.routes.publishing import _publish_repository as repo
 from app.bc_cognition.infrastructure.zernio_adapter import ZernioError, create_post
 from app.bc_cognition.infrastructure.zernio_resolver import resolve_account_id
+from app.api.routes.clients_v3._clients_reader import get_zernio_account_id  # F5/2b · mapeo per-negocio
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +79,8 @@ async def publish_scheduled_post(scheduled_post_id: str, client_id: str) -> Publ
     # ausente o no se pudo consultar → PublishGateError (409 · el post QUEDA 'pending', reintentable).
     # NO mark_failed: el intento de publicar aun NO se hizo (no se mata un post bueno por config faltante).
     try:
-        account_id = await resolve_account_id(platform)
+        mapped = await asyncio.to_thread(get_zernio_account_id, client_id, platform)  # F5/2b
+        account_id = await resolve_account_id(platform, mapped)
     except ZernioError as e:
         raise PublishGateError(str(e))
 

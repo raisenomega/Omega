@@ -22,6 +22,14 @@ def get_social_accounts(client_id: str) -> list[dict[str, Any]]:
     return r.data or []
 
 
+def get_zernio_account_id(client_id: str, platform: str) -> Optional[str]:
+    """F5/2b · mapeo persistido (client_id, platform) → zernio_account_id. None si sin mapeo."""
+    r = (_sb().table("social_accounts").select("zernio_account_id")
+         .eq("client_id", client_id).eq("platform", platform)
+         .not_.is_("zernio_account_id", "null").limit(1).execute())
+    return r.data[0]["zernio_account_id"] if r.data else None
+
+
 def get_brand_assets(client_id: str) -> dict[str, Any]:
     r = _sb().table("client_brand_assets").select("*").eq("client_id", client_id).limit(1).execute()
     return r.data[0] if r.data else {}

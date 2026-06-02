@@ -8,6 +8,7 @@ const INTEGRATION_LABELS: Record<string, string> = {
   brave: "Búsqueda web",
   stripe: "Pagos",
   resend: "Emails",
+  zernio: "Zernio (publicación)",
 };
 
 // Consola del proveedor para ir a actuar (abre en pestaña nueva · GEMINI key = AI Studio).
@@ -19,12 +20,14 @@ const INTEGRATION_URLS: Record<string, string> = {
   brave: "https://api-dashboard.search.brave.com",
   stripe: "https://dashboard.stripe.com",
   resend: "https://resend.com/overview",
+  zernio: "https://dashboard.zernio.com",
 };
 
 // Umbral del amarillo POR integración (minutos): 'ok' con last_use más viejo = "Sin uso reciente".
 const YELLOW_MIN: Record<string, number> = {
   anthropic: 60, brave: 180, voyage: 360, stripe: 1440, resend: 1440,
   nano_banana: 10080, veo3: 30240,  // 7d · 21d
+  zernio: 1440,  // 1d
 };
 
 interface StatusInfo { label: string; cls: string; rank: number; meaning: string }  // rank: severidad (0 arriba)
