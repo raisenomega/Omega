@@ -61,6 +61,11 @@ Validate:     `bash scripts/validate-before-push.sh`
 - Datos canónicos de identidad en `IDENTIDAD_GIT_CRITICA.md`
 - Mapa de lectura en `INDICE_PROYECTO.md` (orden de tier · gates)
 
+## Patrones aprendidos
+- **Tocar prompts es trabajo iterativo.** Presupuestá 2-3 iteraciones de verificación viva entre push y cierre. Un fix de prompt rara vez sale al primer intento.
+- **Los tests de string verifican el INPUT al modelo** (que las directivas/jerarquía llegan al user_message/system), **NO el OUTPUT** (cómo responde el modelo). El output solo lo verifica un humano en vivo hasta que exista DEBT-009 (promptfoo evals).
+- **Cache_control ephemeral:** lo que varía por variación va al user_message; lo compartido (reglas, jerarquía) al system. Mover texto variable al system rompe el cache.
+
 ## El principio madre
 🐢💎 No velocity, only precision.
 
