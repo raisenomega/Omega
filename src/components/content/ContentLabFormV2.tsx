@@ -91,7 +91,7 @@ export function ContentLabFormV2({ form, setForm, variations, setVariations, onG
       <Button onClick={onGenerate} disabled={isPending || !form.topic.trim() || !hasVar}
         className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white h-11">
         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-        {isPending ? "Generando…" : "Generar con ARIA"}
+        {isPending ? (form.type === "image" ? "Generando imagen… ~45s" : "Generando…") : "Generar con ARIA"}
       </Button>
     </div>
   );
