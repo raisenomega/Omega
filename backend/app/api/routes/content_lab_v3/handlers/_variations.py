@@ -1,8 +1,10 @@
 """Generate 1 or N text variations in parallel · Sprint 2 P2.
 
-asyncio.gather() con 3 temperaturas (0.3 / 0.7 / 1.0) cuando n=3 · una sola
-con 0.7 cuando n=1. Por cada variación exitosa: compute virality + insert draft
-+ collect VariationItem. Si todas fallan retorna [] · handler convierte a 503.
+asyncio.gather() con 3 temperaturas (0.4 / 0.7 / 0.9) cuando n=3 · una sola
+con 0.7 cuando n=1. Cada variación A/B/C appendea su directiva de tono al USER
+MESSAGE (no al system → no rompe cache). Por cada variación exitosa: compute
+virality + insert draft + collect VariationItem. Si todas fallan retorna [] ·
+handler convierte a 503.
 Cache_control ephemeral en system hace cache HIT en calls 2 y 3 → costo ~1.5x.
 
 Sprint 1 Subtarea 1.2: user_message viene formateado del handler (vault prompt
@@ -21,8 +23,17 @@ from app.bc_cognition.infrastructure._anthropic_types import ClaudeResponse
 from app.bc_cognition.infrastructure.anthropic_adapter import generate
 from app.bc_billing.application.credits_service import debit
 
-_TEMP_TRIPLE = [(0.3, "A"), (0.7, "B"), (1.0, "C")]
-_TEMP_SINGLE = [(0.7, "A")]
+# Directivas de tono por variación · van al USER MESSAGE (varían sin romper el
+# cache_control ephemeral del system · DEBT-TONO).
+_DIR_A = ("TONO DE ESTA VERSIÓN: prudente, mesurado, profesional. "
+          "Priorizá claridad y confianza sobre impacto.")
+_DIR_B = ("TONO DE ESTA VERSIÓN: equilibrado — expresivo donde el tema lo "
+          "permite, mesurado donde conviene. Ni tímido ni extremo.")
+_DIR_C = ("TONO DE ESTA VERSIÓN: audaz, provocador, con opinión definida y "
+          "ganchos fuertes. Empujá los límites SIN perder la voz de marca.")
+# (temperatura, label, directiva_de_tono)
+_TEMP_TRIPLE = [(0.4, "A", _DIR_A), (0.7, "B", _DIR_B), (0.9, "C", _DIR_C)]
+_TEMP_SINGLE = [(0.7, "A", "")]  # n=1: sin directiva · comportamiento actual intacto
 _UI_TO_DB_TYPE = {"caption": "text", "hashtags": "text", "video_script": "video"}
 
 
@@ -30,23 +41,28 @@ async def generate_variations(
     system: str, request: GenerateTextRequest, dna: BrandDNA,
     client_id: str, n: int, user_message: str,
 ) -> list[VariationItem]:
-    pairs = _TEMP_TRIPLE if n == 3 else _TEMP_SINGLE
-    messages = [{"role": "user", "content": user_message}]
+    triples = _TEMP_TRIPLE if n == 3 else _TEMP_SINGLE
     coros = [
-        generate(agent_code="content_creator", system=system, messages=messages,
+        generate(agent_code="content_creator", system=system,
+                 messages=[{"role": "user", "content": _with_tone(user_message, directive)}],
                  max_tokens=1500, temperature=t)
-        for t, _ in pairs
+        for t, _, directive in triples
     ]
     results = await asyncio.gather(*coros)
 
     out: list[VariationItem] = []
-    for (resp, err), (temp, label) in zip(results, pairs):
+    for (resp, err), (temp, label, _) in zip(results, triples):
         if err or not resp:
             continue
         item = await _persist_variation(resp, temp, label, request, dna, client_id)
         if item:
             out.append(item)
     return out
+
+
+def _with_tone(user_message: str, directive: str) -> str:
+    """Appendea la directiva de tono al user_message (vacía en n=1 → sin cambio)."""
+    return f"{user_message}\n\n{directive}" if directive else user_message
 
 
 async def _persist_variation(

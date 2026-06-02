@@ -18,7 +18,8 @@ def build_rafa_system(
     audience = ctx.get("target_audience") or client.get("target_audience") or "su audiencia"
     parts = [
         CONTENT_CREATOR_SYSTEM_PROMPT,
-        _client_context_block(name, industry, audience, platform, content_type, tone),
+        _tone_hierarchy_block(tone),
+        _client_context_block(name, industry, audience, platform, content_type),
         _brand_dna_block(dna),
     ]
     # Documento permanente del cliente (DEBT-039 V2 · /clients/{id}/upload-context).
@@ -38,14 +39,24 @@ def _uploaded_context_block(text: str) -> str:
     )
 
 
-def _client_context_block(name, industry, audience, platform, content_type, tone) -> str:
+def _client_context_block(name, industry, audience, platform, content_type) -> str:
     return (
         "# CONTEXTO DEL CLIENTE\n"
         f"Cliente: {name} ({industry})\n"
         f"Audiencia: {audience}\n"
         f"Plataforma destino: {platform}\n"
-        f"Tipo de contenido: {content_type}\n"
-        f"Tono solicitado: {tone}"
+        f"Tipo de contenido: {content_type}"
+    )
+
+
+def _tone_hierarchy_block(tone: str) -> str:
+    return (
+        "# TONO SOLICITADO (PRIORIDAD MÁXIMA)\n"
+        f"Tono base solicitado: {tone}\n"
+        "Jerarquía:\n"
+        "(1) el tono de esta versión manda.\n"
+        "(2) el Brand DNA modula contenido/vocabulario/voz, NO el tono.\n"
+        "(3) si chocan, gana el tono pedido."
     )
 
 
@@ -61,7 +72,9 @@ def _brand_dna_block(dna: BrandDNA) -> str:
     length_line = f"Longitud típica: {dna.avg_length_words} palabras"
     samples = "\n".join(f"  · {s}" for s in dna.top_post_excerpts) or "  (sin samples)"
     guidance = (
-        "DNA confiable: imitá explícitamente el estilo de los samples." if dna.is_strong()
+        "DNA confiable: usá los samples como referencia de VOZ y vocabulario · "
+        "el TONO lo manda la directiva, NO copies el tono de los samples si "
+        "difiere del pedido." if dna.is_strong()
         else "DNA débil: cliente nuevo, no fuerces imitación." if dna.is_weak()
         else "DNA emergente: usá con cautela, mezclá con defaults."
     )
