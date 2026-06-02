@@ -1,4 +1,4 @@
-import { X, Check } from "lucide-react";
+import { X, ClipboardCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,7 +54,7 @@ export function PostsList({ day, posts }: PostsListProps) {
                 <div className="flex items-center gap-1">
                   <Button size="sm" variant="default" className="h-7 flex-1 gap-1 text-[11px]" disabled={update.isPending}
                     onClick={() => update.mutate({ id: p.id, status: "published_manual" })}>
-                    <Check className="h-3.5 w-3.5" />Publicar Manual
+                    <ClipboardCheck className="h-3.5 w-3.5" />Marcar como publicado
                   </Button>
                   <span className="flex-1">
                     <AutoPublishButton postId={p.id} />

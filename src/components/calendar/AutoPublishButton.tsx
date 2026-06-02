@@ -10,7 +10,7 @@ interface AutoPublishButtonProps {
 // Botón "Publicar Auto" autocontenido: dispara la auto-publicación real del post
 // ya aprobado (status 'pending') vía el hook useAutoPublish. Publica contra el negocio
 // ACTIVO del switcher (DEBT-LIMIT1: el backend valida ownership de ese client_id).
-// Mismo estilo que el botón "Publicar Manual" hermano (size sm · h-7 · flex-1).
+// Mismo estilo que el botón "Marcar como publicado" hermano (size sm · h-7 · flex-1).
 export function AutoPublishButton({ postId }: AutoPublishButtonProps) {
   const autoPublish = useAutoPublish();
   const { activeBusinessId } = useActiveBusiness();
