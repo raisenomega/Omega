@@ -33,6 +33,10 @@ export function useGenerateImage() {
     mutationFn: async ({ form, selectedLabels }) => {
       const data = await apiPost<ImageSyncResponse | ImageJobStart>(`/content-lab/generate-image`, {
         prompt: form.topic,
+        // Decisión de producto (2-jun-2026): style fijo en "realistic" INTENCIONAL. Otros estilos
+        // (cartoon/minimal) se piden vía el prompt de texto del usuario, no vía selector UI. NO es
+        // violación G9 — es default consciente. El backend soporta los otros valores; exponerlos si
+        // se construye la UI de estilo (DEBT-IMAGE-STYLE-SELECTOR · plan listo en chat 2-jun).
         style: "realistic",
         aspect_ratio: form.aspect,
         reference_image_b64: form.reference_image_b64,
