@@ -25,6 +25,9 @@ interface GenerateTextResponse {
 const LABEL_TO_FRONTEND: Record<string, VariationLabel> = {
   A: "Conservadora", B: "Balanceada", C: "Atrevida",
 };
+const FRONTEND_TO_LABEL: Record<VariationLabel, string> = {
+  Conservadora: "A", Balanceada: "B", Atrevida: "C",
+};
 
 export interface GenerateInput {
   form: FormState;
@@ -34,21 +37,19 @@ export interface GenerateInput {
 export function useGenerateText() {
   return useMutation<ResultV2[], Error, GenerateInput>({
     mutationFn: async ({ form, selectedLabels }) => {
-      const variationsCount = selectedLabels.length > 1 ? 3 : 1;
+      const variation_labels = selectedLabels.map(l => FRONTEND_TO_LABEL[l]);  // Opción A
       const data = await apiPost<GenerateTextResponse>(`/content-lab/generate`, {
         platform: form.platform,
         content_type: form.type,
         topic: form.topic,
         tone: form.tone,
-        variations: variationsCount,
+        variation_labels,                        // backend genera SOLO estas
         client_id: form.clientId || undefined,  // DEBT-CL-005 · multi-client reseller
         reference_attachment_b64: form.reference_attachment_b64,  // DEBT-CL-020
         reference_mime_type: form.reference_mime_type,
       });
-      const items = variationsCount === 3
-        ? data.variations.filter(v => selectedLabels.includes(LABEL_TO_FRONTEND[v.label]))
-        : data.variations;
-      return items.map(v => ({
+      // el backend ya devuelve solo las pedidas → sin filtro
+      return data.variations.map(v => ({
         id: v.id,
         generated_text: v.generated_text,
         content_type: form.type,

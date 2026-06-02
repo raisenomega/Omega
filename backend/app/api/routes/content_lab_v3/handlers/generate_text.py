@@ -17,7 +17,7 @@ from app.api.routes.content_lab_v3._prompt_vault_selector import (
     SafeDict, select_optimal_prompt,
 )
 from app.api.routes.content_lab_v3.handlers._system_builder import build_rafa_system
-from app.api.routes.content_lab_v3.handlers._variations import generate_variations
+from app.api.routes.content_lab_v3.handlers._variations import generate_variations, resolve_triples
 from app.bc_billing.application.credits_service import check_budget
 from app.api.routes.content_lab_v3.models.content_lab_models import (
     GenerateTextRequest, GenerateTextResponse,
@@ -58,7 +58,8 @@ async def generate_text(
         raise HTTPException(status_code=400, detail="unsafe_input:topic")
     request.topic = st.clean_text
 
-    if request.variations > 1 and repo.find_client_plan(client_id) not in _PRO_PLANS:
+    effective = len(request.variation_labels) if request.variation_labels else request.variations
+    if effective > 1 and repo.find_client_plan(client_id) not in _PRO_PLANS:
         raise HTTPException(status_code=403, detail="variations_require_pro_plan")
 
     ctx = repo.find_client_context(client_id)
@@ -88,8 +89,8 @@ async def generate_text(
         niche=client.get("niche", ""), region=client.get("region", ""),
         brand_voice=", ".join(dna.tone) if dna.tone else "profesional",
     )) if vault_prompt else f"Tema: {request.topic}"
-    n = 3 if request.variations > 1 else 1
-    variations = await generate_variations(system, request, dna, client_id, n, user_message)
+    triples = resolve_triples(request.variation_labels, request.variations)
+    variations = await generate_variations(system, request, dna, client_id, triples, user_message)
     if not variations:
         raise HTTPException(status_code=503, detail="all_variations_failed")
 

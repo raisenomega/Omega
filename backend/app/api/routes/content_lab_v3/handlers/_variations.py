@@ -34,14 +34,22 @@ _DIR_C = ("TONO DE ESTA VERSIÓN: audaz, provocador, con opinión definida y "
 # (temperatura, label, directiva_de_tono)
 _TEMP_TRIPLE = [(0.4, "A", _DIR_A), (0.7, "B", _DIR_B), (0.9, "C", _DIR_C)]
 _TEMP_SINGLE = [(0.7, "A", "")]  # n=1: sin directiva · comportamiento actual intacto
+_BY_LABEL = {lbl: (t, d) for t, lbl, d in _TEMP_TRIPLE}  # A/B/C → (temp, directiva)
 _UI_TO_DB_TYPE = {"caption": "text", "hashtags": "text", "video_script": "video"}
+
+
+def resolve_triples(variation_labels, variations):
+    """Opción A: labels explícitos → cada uno con su directiva (single incluido).
+    Sin labels → path viejo por count (n=1 sin directiva · n=3 con directivas)."""
+    if variation_labels:
+        return [(_BY_LABEL[lbl][0], lbl, _BY_LABEL[lbl][1]) for lbl in variation_labels]
+    return _TEMP_TRIPLE if variations > 1 else _TEMP_SINGLE
 
 
 async def generate_variations(
     system: str, request: GenerateTextRequest, dna: BrandDNA,
-    client_id: str, n: int, user_message: str,
+    client_id: str, triples: list, user_message: str,
 ) -> list[VariationItem]:
-    triples = _TEMP_TRIPLE if n == 3 else _TEMP_SINGLE
     coros = [
         generate(agent_code="content_creator", system=system,
                  messages=[{"role": "user", "content": _with_tone(user_message, directive)}],

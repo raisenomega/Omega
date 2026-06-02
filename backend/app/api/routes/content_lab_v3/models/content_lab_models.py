@@ -1,6 +1,6 @@
 """Pydantic models · POST /content-lab/generate + /generate-image + /generate-video."""
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class GenerateTextRequest(BaseModel):
@@ -8,10 +8,26 @@ class GenerateTextRequest(BaseModel):
     content_type: str = Field(..., max_length=32)  # caption|hashtags|video_script
     topic: str = Field(..., min_length=1, max_length=2000)
     tone: str = Field(..., max_length=32)
-    variations: int = Field(default=1, ge=1, le=3)  # PRO/enterprise desbloquea >1
+    variations: int = Field(default=1, ge=1, le=3)  # legacy · usado si variation_labels ausente
+    variation_labels: Optional[list[str]] = Field(default=None)  # Opción A · subset de A/B/C · MANDA sobre `variations`
     client_id: Optional[str] = Field(default=None)  # DEBT-CL-005 · si presente, usar este (multi-client reseller)
     reference_attachment_b64: Optional[str] = Field(default=None)  # DEBT-CL-020 · PDF/docx/md/txt base64
     reference_mime_type: Optional[str] = Field(default=None)       # MIME del attachment para branch extractor
+
+    @field_validator("variation_labels")
+    @classmethod
+    def _check_labels(cls, v: Optional[list[str]]) -> Optional[list[str]]:
+        if v is None:
+            return v
+        if not v:
+            raise ValueError("variation_labels no puede ser lista vacía")
+        if len(v) > 3:
+            raise ValueError("variation_labels admite máximo 3 items")
+        if any(x not in ("A", "B", "C") for x in v):
+            raise ValueError("variation_labels solo admite 'A', 'B', 'C'")
+        if len(set(v)) != len(v):
+            raise ValueError("variation_labels no admite duplicados")
+        return v
 
 
 class VariationItem(BaseModel):
