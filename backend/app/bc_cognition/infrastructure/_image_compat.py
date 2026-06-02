@@ -11,6 +11,8 @@ refs · cierra DEBT-022).
 from __future__ import annotations
 
 import base64
+import logging
+import time
 from typing import List, Optional
 
 from app.bc_cognition.infrastructure._nano_banana_types import ImageRoute
@@ -31,6 +33,8 @@ _QUALITY_TO_ROUTE: dict[str, ImageRoute] = {
     "hd": "premium",
 }
 _DEFAULT_ROUTE: ImageRoute = "default"
+
+logger = logging.getLogger(__name__)
 
 
 async def generate_image_compat(
@@ -71,6 +75,12 @@ async def generate_image_compat(
                 f"Nano Banana generation failed: {code} · {message}"
             )
         image_bytes = base64.b64decode(response.image_b64)
+        _t_up = time.monotonic()
         url = await upload_image_bytes(image_bytes, response.mime_type, client_id=client_id)  # DEBT-068
+        # DEBT-IMAGE-ASYNC · observabilidad: split del tiempo (Gemini vs nuestro upload) · sin cambiar lógica
+        logger.info(
+            f"image_gen timing · gemini={response.latency_ms}ms upload="
+            f"{int((time.monotonic() - _t_up) * 1000)}ms route={route} model={response.model_used} client={client_id or 'shared'}"
+        )
         data_uris.append(url)
     return data_uris
