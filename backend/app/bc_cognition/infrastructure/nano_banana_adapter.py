@@ -84,7 +84,9 @@ async def generate(
             return None, ImageError("rate_limited" if kind == "rate_limited" else "api_error", str(e))
 
         latency_ms = int((time.monotonic() - start) * 1000)
-        for part in resp.candidates[0].content.parts:
+        cands = resp.candidates or []
+        parts = (cands[0].content.parts if cands and cands[0].content else None) or []
+        for part in parts:
             if part.inline_data and part.inline_data.data:
                 record_mcp_use("nano_banana", ok=True)  # HERMES f1.5
                 return ImageResponse(
