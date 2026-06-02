@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useMyClients } from "@/hooks/useMyClients";
 import { useGenerateText } from "@/hooks/useGenerateText";
 import { useGenerateImage } from "@/hooks/useGenerateImage";
 import { useVideoJobPolling } from "@/hooks/useVideoJobPolling";
@@ -62,7 +61,6 @@ export function useContentLabState() {
   const [scheduledAt, setScheduledAt] = useState("");
   const [expandedResult, setExpandedResult] = useState<ResultV2 | null>(null);
 
-  const { data: clientList } = useMyClients();
   const generateText = useGenerateText();
   const generateImage = useGenerateImage();
   const generateVideo = useVideoJobPolling();
@@ -112,6 +110,7 @@ export function useContentLabState() {
     catch (e) { toast({ title: "Error al descargar", description: e instanceof Error ? e.message : "", variant: "destructive" }); }
   };
   const handleConfirm = async () => {
+    // clientId siempre = activeBusinessId (Switcher V1 · sync en ContentLabPageV2) · guard defensivo
     if (!form.clientId) { toast({ title: "Falta seleccionar cliente", variant: "destructive" }); return; }
     try {
       await scheduleBlock.mutateAsync({ block, clientId: form.clientId, platform: form.platform, scheduledAt, accountId: form.accountId });
@@ -165,7 +164,7 @@ export function useContentLabState() {
 
   const isPending = generateText.isPending || generateImage.isPending || generateVideo.isPending;
   return {
-    form, setForm, variations, setVariations, results, setResults, clientList,
+    form, setForm, variations, setVariations, results, setResults,
     block, modalState, setModalState, scheduledAt, setScheduledAt,
     expandedResult, setExpandedResult, slots: Math.max(4, results.length), isPending,
     handleGenerate, handleAgendar, handleRemoveItem, handleSave, handleDownload, handleConfirm, handleResearch, handleCancelVideo,

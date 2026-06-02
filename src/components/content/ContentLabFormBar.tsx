@@ -8,7 +8,6 @@ import { useMyAccounts } from "@/hooks/useMyAccounts";
 import type { FormState } from "./ContentLabFormV2";
 
 interface Props {
-  clientList: Array<{ id: string; name: string }>;
   form: FormState;
   setForm: React.Dispatch<React.SetStateAction<FormState>>;
   onResearch: () => void;
@@ -23,17 +22,12 @@ function Sel({ value, onChange, options, labels }: { value: string; onChange: (v
   );
 }
 
-export function ContentLabFormBar({ clientList, form, setForm, onResearch }: Props) {
+export function ContentLabFormBar({ form, setForm, onResearch }: Props) {
   const navigate = useNavigate();
   const update = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm(prev => ({ ...prev, [k]: v }));
   const { data: accounts = [] } = useMyAccounts(form.clientId, form.platform);
   return (
     <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-2 border-green-500 rounded-lg bg-card/80 backdrop-blur-sm">
-      <select value={form.clientId} onChange={(e) => update("clientId", e.target.value)}
-        className="px-2 py-1 text-sm rounded-md border bg-background min-w-0 w-[110px] flex-none">
-        <option value="">— Cliente —</option>
-        {clientList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-      </select>
       <Sel value={form.platform} onChange={(v) => update("platform", v)} options={PLATFORMS} labels={PLATFORM_LABELS} />
       {accounts.length > 1 && (
         <select value={form.accountId} onChange={(e) => update("accountId", e.target.value)}

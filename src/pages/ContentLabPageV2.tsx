@@ -30,7 +30,7 @@ export default function ContentLabPageV2() {
           <h1 className="text-2xl font-display font-bold tracking-tight">Content Lab</h1>
         </div>
         <div className="flex-1 min-w-[420px]">
-          <ContentLabFormBar clientList={s.clientList ?? []} form={s.form} setForm={s.setForm}
+          <ContentLabFormBar form={s.form} setForm={s.setForm}
             onResearch={s.handleResearch} />
         </div>
       </div>
