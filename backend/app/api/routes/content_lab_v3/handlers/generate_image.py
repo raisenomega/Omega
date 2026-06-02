@@ -7,7 +7,7 @@ Error semantics: 502 si falla upload a Storage · 503 si falla Nano Banana.
 """
 import asyncio
 import logging
-from typing import Optional
+from typing import Optional, Union
 from fastapi import APIRouter, Header, HTTPException
 from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.content_lab_v3 import _content_lab_repository as repo
@@ -16,13 +16,17 @@ from app.api.routes.content_lab_v3._attachment_extractor import (
 )
 from app.api.routes.content_lab_v3._client_resolver import resolve_client_or_403
 from app.api.routes.content_lab_v3.models.content_lab_models import (
-    GenerateImageRequest, GenerateImageResponse,
+    GenerateImageRequest, GenerateImageResponse, ImageJobStartResponse, ImageJobStatusResponse,
 )
+from app.api.routes.clients_v3 import _clients_reader as clients_reader
+from app.api.routes.clients_v3._access_control import user_owns_client
 from app.bc_cognition.infrastructure._image_compat import generate_image_compat
 from app.bc_cognition.infrastructure._storage_uploader import StorageUploadError, upload_image_bytes
 from app.bc_cognition.infrastructure._logo_overlay import overlay_logo
+from app.bc_cognition.application.use_image_job import create_image_job, get_image_job
 from app.bc_billing.application.credits_service import check_budget, debit
 from app.bc_billing.domain.credit_costs import cost_for_image
+from app.feature_flags import get_feature_flags
 
 _IMAGE_PROMPT_MAX = 6000  # truncate attachment context · Nano Banana cap 8000 total
 
@@ -47,11 +51,11 @@ def _enhance_prompt(prompt: str, style: str) -> str:
     return enhanced[:8000] if len(enhanced) > 8000 else enhanced
 
 
-@router.post("/generate-image", response_model=GenerateImageResponse)
+@router.post("/generate-image", response_model=Union[GenerateImageResponse, ImageJobStartResponse])
 async def generate_image(
     request: GenerateImageRequest,
     authorization: Optional[str] = Header(None),
-) -> GenerateImageResponse:
+) -> Union[GenerateImageResponse, ImageJobStartResponse]:
     user = await get_current_user(authorization)
     client = resolve_client_or_403(user["id"], request.client_id)  # DEBT-CL-005
     client_id = str(client["id"])
@@ -72,6 +76,14 @@ async def generate_image(
             enhanced = f"{enhanced}\n\nCONTEXT FROM USER ATTACHMENT:\n{truncated}"
     size = _ASPECT_TO_SIZE.get(request.aspect_ratio, "1024x1024")
     refs = [request.reference_image_b64] if request.reference_image_b64 else None  # UX-6
+
+    # DEBT-IMAGE-ASYNC F3 · flag ON → job async (worker debita en 'completed') · return ANTES del
+    # débito síncrono (doble cobro imposible). Flag OFF (default) → sigue el path síncrono de abajo INTACTO.
+    if get_feature_flags().image_async_enabled:
+        job_id = await create_image_job(client_id, enhanced, size, "standard",
+                                        request.style, request.apply_logo, refs)
+        return ImageJobStartResponse(job_id=job_id, status="pending")
+
     try:
         urls = await generate_image_compat(
             prompt=enhanced, n=1, size=size,
@@ -116,4 +128,24 @@ async def generate_image(
         await debit(client_id, "content_creator", cost_for_image("default"), "nano-banana", content_id)
     return GenerateImageResponse(
         id=content_id or "", content_type="image", generated_text=image_url,
+    )
+
+
+@router.get("/generate-image/{job_id}", response_model=ImageJobStatusResponse)
+async def get_image_job_status(
+    job_id: str,
+    authorization: Optional[str] = Header(None),
+) -> ImageJobStatusResponse:
+    """DEBT-IMAGE-ASYNC F3 · estado del job async. 404-no-leak (patrón video · P2):
+    job inexistente O de otro cliente → 404 (no revela existencia de jobs ajenos)."""
+    user = await get_current_user(authorization)
+    job = get_image_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="job_not_found")
+    job_client = clients_reader.get_client(str(job.get("client_id") or ""))
+    if not job_client or not user_owns_client(user["id"], job_client):
+        raise HTTPException(status_code=404, detail="job_not_found")  # no leak (P2)
+    return ImageJobStatusResponse(
+        job_id=job_id, status=job["status"],
+        image_url=job.get("image_url"), error=job.get("error"),
     )

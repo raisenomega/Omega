@@ -50,6 +50,19 @@ class GenerateImageResponse(BaseModel):
     generated_text: str  # URL pública generated-images/{client_id}/{uuid}.{ext}
 
 
+# DEBT-IMAGE-ASYNC F3 · respuestas del modo async (flag IMAGE_ASYNC_ENABLED ON)
+class ImageJobStartResponse(BaseModel):
+    job_id: str
+    status: str  # 'pending'
+
+
+class ImageJobStatusResponse(BaseModel):
+    job_id: str
+    status: str  # pending|running|completed|failed|cancelled
+    image_url: Optional[str] = None
+    error: Optional[str] = None
+
+
 class GenerateVideoRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=2000)
     ratio: str = Field(default="1280:768", max_length=32)  # legacy raw resolution
