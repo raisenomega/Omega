@@ -45,9 +45,10 @@ def test_label_A_injects_prudente(monkeypatch):            # Test 1
     assert len(triples) == 1 and "prudente" in cap[0.4]
 
 
-def test_label_C_injects_audaz(monkeypatch):               # Test 2 (preserva ddeb779)
+def test_label_C_injects_audaz(monkeypatch):               # Test 2 (preserva ddeb779 + Filosofía A)
     _, cap = _run(monkeypatch, ["C"], 1)
     assert "audaz" in cap[0.9] and "provocador" in cap[0.9]
+    assert "SOSTENIDO DE PRINCIPIO A FIN" in cap[0.9]      # Filosofía A · audaz sostenido
 
 
 def test_three_labels_all_directives(monkeypatch):         # Test 3
@@ -81,10 +82,13 @@ def test_duplicate_labels_422():                           # Test 8
         _req(variation_labels=["A", "A"])
 
 
-def test_system_hierarchy_and_rewritten_dna():             # ddeb779 · sin cambios
+def test_system_hierarchy_reinforced():                    # Filosofía A · jerarquía 4 puntos + DNA v2
     system = sb.build_rafa_system(
         client={"name": "Acme", "industry": "retail"}, ctx={}, dna=_dna(0.8),
         platform="instagram", content_type="caption", tone="profesional")
     assert "Jerarquía:" in system
-    assert "el TONO lo manda la directiva, NO copies el tono" in system
+    assert "(4)" in system
+    assert "NO suavices ni 'balancees'" in system
+    assert "SOLO vocabulario, expresiones características" in system
+    assert "el cliente en su versión audaz" in system
     assert "imitá explícitamente el estilo de los samples" not in system

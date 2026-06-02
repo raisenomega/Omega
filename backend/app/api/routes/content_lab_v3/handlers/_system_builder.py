@@ -54,9 +54,11 @@ def _tone_hierarchy_block(tone: str) -> str:
         "# TONO SOLICITADO (PRIORIDAD MÁXIMA)\n"
         f"Tono base solicitado: {tone}\n"
         "Jerarquía:\n"
-        "(1) el tono de esta versión manda.\n"
+        "(1) el tono de esta versión manda — de principio a fin, no solo al inicio.\n"
         "(2) el Brand DNA modula contenido/vocabulario/voz, NO el tono.\n"
-        "(3) si chocan, gana el tono pedido."
+        "(3) si chocan, gana el tono pedido.\n"
+        "(4) IMPORTANTE: NO suavices ni 'balancees' el tono para 'caber' en la voz "
+        "del cliente. La voz del cliente se EXPRESA en el tono pedido, no lo modera."
     )
 
 
@@ -72,9 +74,12 @@ def _brand_dna_block(dna: BrandDNA) -> str:
     length_line = f"Longitud típica: {dna.avg_length_words} palabras"
     samples = "\n".join(f"  · {s}" for s in dna.top_post_excerpts) or "  (sin samples)"
     guidance = (
-        "DNA confiable: usá los samples como referencia de VOZ y vocabulario · "
-        "el TONO lo manda la directiva, NO copies el tono de los samples si "
-        "difiere del pedido." if dna.is_strong()
+        "DNA confiable: extraé de los samples SOLO vocabulario, expresiones "
+        "características y referencias culturales del cliente. El TONO (intensidad, "
+        "audacia, energía) lo manda la directiva de esta versión — NUNCA copies el "
+        "nivel de atrevimiento de los samples. Si los samples son mesurados y la "
+        "directiva pide audaz, el resultado es 'el cliente en su versión audaz', "
+        "no 'el cliente como siempre'." if dna.is_strong()
         else "DNA débil: cliente nuevo, no fuerces imitación." if dna.is_weak()
         else "DNA emergente: usá con cautela, mezclá con defaults."
     )

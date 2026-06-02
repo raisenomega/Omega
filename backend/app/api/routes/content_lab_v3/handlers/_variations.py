@@ -30,7 +30,11 @@ _DIR_A = ("TONO DE ESTA VERSIÓN: prudente, mesurado, profesional. "
 _DIR_B = ("TONO DE ESTA VERSIÓN: equilibrado — expresivo donde el tema lo "
           "permite, mesurado donde conviene. Ni tímido ni extremo.")
 _DIR_C = ("TONO DE ESTA VERSIÓN: audaz, provocador, con opinión definida y "
-          "ganchos fuertes. Empujá los límites SIN perder la voz de marca.")
+          "ganchos fuertes — SOSTENIDO DE PRINCIPIO A FIN, no solo en la primera "
+          "frase. Empujá los límites del Brand DNA: usá su vocabulario y sus "
+          "referencias, pero NO suavices el atrevimiento para 'caber' en su tono "
+          "habitual. Si la marca habitual es mesurada, tu trabajo es mostrar cómo "
+          "suena su voz cuando se anima a romper.")
 # (temperatura, label, directiva_de_tono)
 _TEMP_TRIPLE = [(0.4, "A", _DIR_A), (0.7, "B", _DIR_B), (0.9, "C", _DIR_C)]
 _TEMP_SINGLE = [(0.7, "A", "")]  # n=1: sin directiva · comportamiento actual intacto
