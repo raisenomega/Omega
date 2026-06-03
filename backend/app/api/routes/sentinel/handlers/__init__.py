@@ -8,6 +8,11 @@ from .get_history import handle_get_history
 from .deploy_check import handle_deploy_check
 from .ignore_issue import handle_ignore_issue, IssueActionRequest
 from .dispatch_fix import handle_dispatch_fix, DispatchFixRequest
+from .security_scan_report import (
+    handle_security_scan_report,
+    handle_get_latest_dependency_scan,
+    SecurityScanReport,
+)
 
 __all__ = [
     "handle_get_status",
@@ -19,4 +24,7 @@ __all__ = [
     "IssueActionRequest",
     "handle_dispatch_fix",
     "DispatchFixRequest",
+    "handle_security_scan_report",
+    "handle_get_latest_dependency_scan",
+    "SecurityScanReport",
 ]

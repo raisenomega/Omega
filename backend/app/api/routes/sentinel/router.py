@@ -15,6 +15,9 @@ from .handlers import (
     IssueActionRequest,
     handle_dispatch_fix,
     DispatchFixRequest,
+    handle_security_scan_report,
+    handle_get_latest_dependency_scan,
+    SecurityScanReport,
 )
 
 router = APIRouter(prefix="/sentinel", tags=["SENTINEL 🛡️"])
@@ -58,3 +61,15 @@ async def ignore_issue(request: IssueActionRequest, authorization: Optional[str]
 async def dispatch_fix(request: DispatchFixRequest, authorization: Optional[str] = Header(None)):
     """Despachar Fix de un issue (registra + devuelve prompt para Dev Chat) · solo superadmin."""
     return await handle_dispatch_fix(request, authorization)
+
+
+@router.post("/security-scan-report")
+async def security_scan_report(request: SecurityScanReport, x_sentinel_token: Optional[str] = Header(None)):
+    """Receptor del GitHub Action (Capa 4) · auth X-Sentinel-Token (machine-to-machine)."""
+    return await handle_security_scan_report(request, x_sentinel_token)
+
+
+@router.get("/dependency-scans/latest")
+async def dependency_scans_latest(authorization: Optional[str] = Header(None)):
+    """Último dependency scan para el panel · solo superadmin."""
+    return await handle_get_latest_dependency_scan(authorization)

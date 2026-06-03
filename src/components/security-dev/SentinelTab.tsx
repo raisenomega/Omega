@@ -6,6 +6,7 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { useSentinelData, type SentinelScore } from "@/hooks/useSecurityDevData";
 import { useSentinelScan } from "@/hooks/useSentinelScan";
 import { SentinelComponentsHeader } from "./SentinelComponentsHeader";
+import { SentinelDependencyCard } from "./SentinelDependencyCard";
 import { SentinelRunsDetail } from "./SentinelRunsDetail";
 import { SentinelIssueModal } from "./SentinelIssueModal";
 import { scoreColor, fmtDateTime } from "./parts";
@@ -67,6 +68,7 @@ export function SentinelTab() {
       </Card>
 
       <SentinelComponentsHeader />
+      <SentinelDependencyCard />
       <SentinelRunsDetail onOpenAgentIssues={(agentCode) => setModal({ scope: "agent", agentCode })} />
 
       {modal && (

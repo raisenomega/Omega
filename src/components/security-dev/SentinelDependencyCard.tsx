@@ -1,0 +1,47 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ExternalLink } from "lucide-react";
+import { useDependencyScans } from "@/hooks/useSecurityDevData";
+import { fmtDateTime } from "./parts";
+
+const STATUS_CLS: Record<string, string> = {
+  passed: "bg-green-500/15 text-green-500 border-green-500/40",
+  failed: "bg-red-500/15 text-red-500 border-red-500/40",
+};
+const GH_ACTIONS = "https://github.com/raisenomega/Omega/actions";
+
+export function SentinelDependencyCard() {
+  const { data, isLoading } = useDependencyScans();
+  const latest = data?.latest ?? null;
+  return (
+    <Card>
+      <CardHeader><CardTitle className="text-sm">Dependencias y CVEs</CardTitle></CardHeader>
+      <CardContent className="space-y-2">
+        {isLoading ? (
+          <Skeleton className="h-16 w-full" />
+        ) : !latest ? (
+          <p className="text-xs text-muted-foreground">
+            Sin scans aún. Corré "SENTINEL Dependency Scan" en GitHub Actions.
+          </p>
+        ) : (
+          <>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-medium">{latest.scan_type}</span>
+              <Badge variant="outline" className={STATUS_CLS[latest.status] ?? "bg-muted/40 text-muted-foreground border-border/40"}>
+                {latest.status}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {fmtDateTime(latest.created_at)}{latest.github_run_id ? ` · run ${latest.github_run_id}` : ""}
+            </p>
+          </>
+        )}
+        <a href={GH_ACTIONS} target="_blank" rel="noopener noreferrer"
+           className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+          Ver en GitHub Actions <ExternalLink className="h-3 w-3" />
+        </a>
+      </CardContent>
+    </Card>
+  );
+}

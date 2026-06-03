@@ -1,0 +1,88 @@
+name: SENTINEL Dependency Scan
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'          # lunes 5am UTC
+  push:
+    branches: [main]
+    paths:
+      - 'backend/requirements*.txt'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch: {}
+
+jobs:
+  python-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install scanners
+        run: pip install safety bandit
+      - name: Safety (falla solo en CVE crítico CVSS>=9.0)
+        run: |
+          safety check -r backend/requirements.txt --json > safety.json || true
+          python - <<'PY'
+          import json, os, sys
+          data = json.load(open('safety.json')) if os.path.exists('safety.json') else {}
+          vulns = data.get('vulnerabilities', data if isinstance(data, list) else [])
+          def cvss(v):
+              try: return float((v.get('severity') or {}).get('cvssv3', {}).get('base_score', 0) or 0)
+              except Exception: return 0.0
+          crit = [v for v in vulns if cvss(v) >= 9.0] if isinstance(vulns, list) else []
+          n = len(vulns) if isinstance(vulns, list) else '?'
+          print(f"Safety: {n} vulns, {len(crit)} críticas (CVSS>=9.0)")
+          sys.exit(1 if crit else 0)
+          PY
+      - name: Bandit (medium+ severity & confidence)
+        run: bandit -ll -ii -s B101 -r backend/app
+      - name: TruffleHog (secrets verificados en git)
+        continue-on-error: true
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          extra_args: --only-verified
+      - name: service_role NUNCA en frontend
+        run: |
+          if grep -rn "SUPABASE_SERVICE_ROLE" src/ 2>/dev/null; then
+            echo "::error::service_role key detectada en frontend"; exit 1
+          fi
+
+  javascript-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps
+        run: npm ci || npm install
+      - name: npm audit (falla en HIGH o CRITICAL)
+        run: npm audit --audit-level=high
+      - name: Semgrep (best-effort · no bloquea)
+        continue-on-error: true
+        run: |
+          pip install semgrep
+          semgrep --config p/typescript --config p/react --config p/owasp-top-ten --config p/xss --error src/ || true
+
+  report:
+    runs-on: ubuntu-latest
+    needs: [python-security, javascript-security]
+    if: always()
+    steps:
+      - name: Compute aggregate status
+        id: st
+        run: |
+          if [ "${{ needs.python-security.result }}" = "success" ] && [ "${{ needs.javascript-security.result }}" = "success" ]; then
+            echo "status=passed" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=failed" >> "$GITHUB_OUTPUT"
+          fi
+      - name: POST report al endpoint SENTINEL
+        run: |
+          curl -sf -X POST "${{ secrets.RAILWAY_URL }}/api/v1/sentinel/security-scan-report" \
+            -H "X-Sentinel-Token: ${{ secrets.SENTINEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"scan_type\":\"dependency\",\"status\":\"${{ steps.st.outputs.status }}\",\"run_id\":\"${{ github.run_id }}\",\"summary\":{\"python\":\"${{ needs.python-security.result }}\",\"javascript\":\"${{ needs.javascript-security.result }}\"}}"

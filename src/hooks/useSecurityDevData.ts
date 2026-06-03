@@ -67,6 +67,16 @@ export interface GuardianData { logs: GuardianLog[]; incidents: GuardianIncident
 export interface HermesIntegration { integration: string; status: string; last_use: string | null; checked_at: string; created_at: string; }
 export interface HermesData { integrations: HermesIntegration[]; count: number; error?: string; }
 
+// Capa 4 · reportes del GitHub Action de dependency scan (sentinel_dependency_scans).
+export interface DependencyScan {
+  id: string;
+  scan_type: string;
+  status: string;
+  summary: Record<string, unknown>;
+  github_run_id: string | null;
+  created_at: string;
+}
+
 const STALE = 30 * 1000;
 
 export const useHermesData = () =>
@@ -80,6 +90,9 @@ export const useSentinelData = () =>
 
 export const useSentinelHistory = () =>
   useQuery({ queryKey: ["sentinel-history"], queryFn: () => apiGet<SentinelHistoryData>("/sentinel/history/"), staleTime: STALE });
+
+export const useDependencyScans = () =>
+  useQuery({ queryKey: ["dependency-scans"], queryFn: () => apiGet<{ latest: DependencyScan | null }>("/sentinel/dependency-scans/latest"), staleTime: STALE });
 
 export const useGuardianData = () =>
   useQuery({ queryKey: ["guardian-data"], queryFn: () => apiGet<GuardianData>("/security-dev/guardian"), staleTime: STALE });
