@@ -35,8 +35,13 @@ export function SentinelRuntimeCard() {
               <Badge variant="outline" className="border-border/40">recurrentes: {recurring.length}</Badge>
             </div>
             <p className="text-[10px] text-muted-foreground">
-              error_rate%: pendiente request_timing_log (Capa 10) · Railway 5xx:{" "}
-              {data?.coverage.railway_api_active ? scan.railway_5xx_count : "no integrado (V1)"}
+              error_rate:{" "}
+              {scan.backend_error_rate_pct != null ? (
+                <span className={scan.backend_error_rate_pct > 1.5 ? "text-red-500" : scan.backend_error_rate_pct > 0.5 ? "text-amber-500" : "text-green-500"}>
+                  {scan.backend_error_rate_pct}%
+                </span>
+              ) : "sin tráfico en ventana"}
+              {" · "}Railway 5xx: {data?.coverage.railway_api_active ? scan.railway_5xx_count : "no integrado (V1)"}
             </p>
             <p className="text-[10px] text-muted-foreground">
               24h: {data?.last_24h.total_errors_backend} backend · {data?.last_24h.total_errors_frontend} frontend

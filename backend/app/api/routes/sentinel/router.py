@@ -27,6 +27,9 @@ from .handlers import (
     handle_frontend_error,
     FrontendError,
     handle_runtime_status,
+    handle_performance_status,
+    handle_build_stats,
+    BuildStats,
 )
 
 router = APIRouter(prefix="/sentinel", tags=["SENTINEL 🛡️"])
@@ -124,3 +127,15 @@ async def runtime_frontend_error(request: FrontendError, http_request: Request):
 async def runtime_status(authorization: Optional[str] = Header(None)):
     """Estado de observabilidad runtime (último scan + 24h) · solo superadmin."""
     return await handle_runtime_status(authorization)
+
+
+@router.get("/performance/status")
+async def performance_status(authorization: Optional[str] = Header(None)):
+    """Estado de performance/APM (p95, slow queries, bundle) · solo superadmin."""
+    return await handle_performance_status(authorization)
+
+
+@router.post("/performance/build-stats")
+async def performance_build_stats(request: BuildStats, x_sentinel_token: Optional[str] = Header(None)):
+    """Receptor de build stats del GitHub Action · auth X-Sentinel-Token (machine-to-machine)."""
+    return await handle_build_stats(request, x_sentinel_token)

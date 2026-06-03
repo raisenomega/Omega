@@ -20,6 +20,8 @@ from .rls_audit_trigger import handle_rls_audit_trigger
 from .ai_providers_status import handle_ai_providers_status
 from .frontend_error_receive import handle_frontend_error, FrontendError
 from .runtime_status import handle_runtime_status
+from .performance_status import handle_performance_status
+from .build_stats_register import handle_build_stats, BuildStats
 
 __all__ = [
     "handle_get_status",
@@ -43,4 +45,7 @@ __all__ = [
     "handle_frontend_error",
     "FrontendError",
     "handle_runtime_status",
+    "handle_performance_status",
+    "handle_build_stats",
+    "BuildStats",
 ]

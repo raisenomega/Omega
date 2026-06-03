@@ -1,0 +1,43 @@
+name: SENTINEL Build Stats
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.*'
+  workflow_dispatch: {}
+
+jobs:
+  build-stats:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps
+        run: npm ci || npm install
+      - name: Build (mide duración + bundle)
+        run: |
+          START=$(date +%s)
+          npm run build
+          END=$(date +%s)
+          DUR=$((END - START))
+          # Tamaño total de los JS de dist/assets (KB) + chunk principal + count.
+          TOTAL_KB=$(du -sk dist/assets 2>/dev/null | cut -f1)
+          MAIN_KB=$(du -k dist/assets/index-*.js 2>/dev/null | sort -rn | head -1 | cut -f1)
+          CHUNKS=$(ls dist/assets/*.js 2>/dev/null | wc -l)
+          echo "TOTAL_KB=$TOTAL_KB MAIN_KB=$MAIN_KB CHUNKS=$CHUNKS DUR=$DUR"
+          echo "TOTAL_KB=$TOTAL_KB" >> "$GITHUB_ENV"
+          echo "MAIN_KB=${MAIN_KB:-0}" >> "$GITHUB_ENV"
+          echo "CHUNKS=$CHUNKS" >> "$GITHUB_ENV"
+          echo "DUR=$DUR" >> "$GITHUB_ENV"
+      - name: POST build stats al endpoint SENTINEL
+        run: |
+          curl -sf -X POST "${{ secrets.RAILWAY_URL }}/api/v1/sentinel/performance/build-stats" \
+            -H "X-Sentinel-Token: ${{ secrets.SENTINEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"git_sha\":\"${{ github.sha }}\",\"bundle_size_kb\":${TOTAL_KB:-0},\"main_chunk_kb\":${MAIN_KB:-0},\"total_chunks\":${CHUNKS:-0},\"build_duration_s\":${DUR:-0},\"github_run_id\":\"${{ github.run_id }}\"}"

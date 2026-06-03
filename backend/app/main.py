@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.api.rate_limit_middleware import RateLimitMiddleware
 from app.api.error_capture_middleware import SentinelErrorCaptureMiddleware  # Capa 9
+from app.api.request_timing_middleware import RequestTimingMiddleware  # Capa 10
 from app.config import settings
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -93,8 +94,12 @@ app = FastAPI(
     docs_url="/docs", redoc_url="/redoc",
 )
 
-# Capa 9 · captura de errores backend (5xx + exceptions) · se monta PRIMERO → innermost →
-# envuelve a los routers, ve sus excepciones/status. Best-effort, no bloquea el request.
+# Capa 10 · timing por request · se monta PRIMERO → innermost → mide el handler puro.
+# Fire-and-forget threaded · cero latencia añadida. try/finally registra aún en excepción.
+app.add_middleware(RequestTimingMiddleware)
+
+# Capa 9 · captura de errores backend (5xx + exceptions) · envuelve a los routers (outer que
+# timing), ve sus excepciones/status. Best-effort, no bloquea el request.
 app.add_middleware(SentinelErrorCaptureMiddleware)
 
 # DEBT-070: rate limiting por IP · cablea settings.rate_limit_per_minute (antes config
@@ -177,8 +182,11 @@ async def startup_event():
     # SENTINEL Capa 9 — observabilidad runtime · cada 5 min · 19vo cron job
     from app.workers.sentinel_runtime_worker import run_runtime_observability_scan
     scheduler.add_job(run_runtime_observability_scan, 'cron', minute='*/5', id='runtime_observability_5min', max_instances=1, replace_existing=True)
+    # SENTINEL Capa 10 — performance/APM · cada 5 min · 20vo cron job
+    from app.workers.sentinel_performance_worker import run_performance_scan
+    scheduler.add_job(run_performance_scan, 'cron', minute='*/5', id='performance_5min', max_instances=1, replace_existing=True)
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION + RLS_AUDIT + RUNTIME_OBS workers activos — 19 jobs (jobstore persistente DEBT-047)")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION + RLS_AUDIT + RUNTIME_OBS + PERF workers activos — 20 jobs (jobstore persistente DEBT-047)")
 
 @app.on_event("shutdown")
 async def shutdown_event():

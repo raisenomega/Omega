@@ -29,6 +29,21 @@ async def run_runtime_observability_scan() -> Dict[str, Any]:
         logger.warning(f"runtime scan read skip: {e}")
         be, fe = [], []
 
+    # CHECK 9.1 · error_rate desde request_timing_log (Capa 10 cerró el loop) · null si sin tráfico.
+    error_rate = None
+    try:
+        total = sb.table("request_timing_log").select("id", count="exact").gte("created_at", since).execute().count or 0
+        if total > 0:
+            errs = (sb.table("request_timing_log").select("id", count="exact")
+                    .gte("created_at", since).gte("status_code", 500).execute().count) or 0
+            error_rate = round(errs / total * 100, 2)
+            if error_rate > 1.0:
+                issues.append({"severity": "HIGH", "check": "BACKEND_ERROR_RATE",
+                               "detail": f"error_rate {error_rate}% (de {total} requests en {WINDOW_MIN}min)"})
+                score -= 10
+    except Exception as e:
+        logger.warning(f"error_rate calc skip: {e}")
+
     backend_count, frontend_count = len(be), len(fe)
     if backend_count > 10:
         issues.append({"severity": "HIGH", "check": "BACKEND_ERRORS_SPIKE",
@@ -60,7 +75,7 @@ async def run_runtime_observability_scan() -> Dict[str, Any]:
     row = {
         "scanned_at": datetime.now(timezone.utc).isoformat(),
         "window_minutes": WINDOW_MIN,
-        "backend_error_rate_pct": None,    # pendiente request_timing_log (Capa 10)
+        "backend_error_rate_pct": error_rate,    # Capa 10 cerró el loop (null si sin tráfico)
         "backend_exception_count": backend_count,
         "frontend_error_count": frontend_count,
         "recurring_patterns": recurring,
