@@ -34,7 +34,9 @@ export function SentinelIssueModal({ open, onClose, sourceType, sourceId, severi
         {isLoading ? (
           <Skeleton className="h-32 w-full" />
         ) : rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin issues para esta selección.</p>
+          <p className="text-sm text-muted-foreground">
+            {scopeLabel ? `${scopeLabel} · sin issues abiertos` : "Sin issues abiertos para esta selección"} · componente sano, nada que accionar.
+          </p>
         ) : (
           <div className="max-h-[60vh] space-y-2 overflow-y-auto">
             {rows.map((i) => {

@@ -2,8 +2,7 @@
 // Reusa endpoints existentes (history/latest/status · cero backend de lectura nuevo).
 // El dispatcher rutea por source_type → loader específico (P1: shape real por fuente).
 import { apiGet } from "@/lib/api-client";
-import { groupSentinelRuns } from "@/components/security-dev/parts";
-import type { SentinelHistoryData, DependencyScan } from "@/hooks/useSecurityDevData";
+import type { SentinelHistoryData, DependencyScan, SentinelScan } from "@/hooks/useSecurityDevData";
 import type { RLSAudit } from "@/hooks/useRLSAudit";
 import type { SecretRotation } from "@/hooks/useSecretsRotation";
 import { loadRuntime, loadPerformance, loadAgentsHealth, loadAIProvider } from "./sentinel_issue_loaders_status";
@@ -25,15 +24,20 @@ export interface OpenIssuesParams extends LoadParams { scopeLabel?: string; }
 
 async function loadScan(severity?: string, agentCode?: string): Promise<NormalizedIssue[]> {
   const data = await apiGet<SentinelHistoryData>("/sentinel/history/");
-  const latest = groupSentinelRuns(data.scans ?? [])[0]?.scans ?? [];
-  const issues = latest
-    .filter((s) => !agentCode || s.agent_code === agentCode)
-    .flatMap((s) =>
-      s.issues.map((it) => ({
-        key: `scan|${s.agent_code}|${it.severity}|${it.type}`, severity: it.severity, type: it.type, message: it.message,
-        agentCode: s.agent_code, sourceType: "sentinel_scan", sourceId: s.id, previousActions: it.previous_actions ?? [],
-      })),
-    );
+  // Último scan POR agente (no el último run global · cadencias distintas — PULSE 5min vs VAULT 2 AM —
+  // no deben ocultar issues de un agente que no esté en el bucket más reciente).
+  const sorted = [...(data.scans ?? [])].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  const latestByAgent = new Map<string, SentinelScan>();
+  for (const s of sorted) if (!latestByAgent.has(s.agent_code)) latestByAgent.set(s.agent_code, s);
+  const selected = agentCode
+    ? (latestByAgent.has(agentCode) ? [latestByAgent.get(agentCode) as SentinelScan] : [])
+    : [...latestByAgent.values()];
+  const issues = selected.flatMap((s) =>
+    s.issues.map((it) => ({
+      key: `scan|${s.agent_code}|${it.severity}|${it.type}`, severity: it.severity, type: it.type, message: it.message,
+      agentCode: s.agent_code, sourceType: "sentinel_scan", sourceId: s.id, previousActions: it.previous_actions ?? [],
+    })),
+  );
   return severity ? issues.filter((i) => i.severity === severity) : issues;
 }
 
