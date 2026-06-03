@@ -200,8 +200,11 @@ async def startup_event():
     # SENTINEL Sprint 2 Capa 11 — Integraciones (Stripe webhooks/Connect + OAuth) · cada hora minute=25 · 23vo cron job
     from app.workers.sentinel_integrations_worker import run_integrations_scan
     scheduler.add_job(run_integrations_scan, 'cron', minute=25, id='integrations_hourly', max_instances=1, replace_existing=True)
+    # SENTINEL Sprint 2 Capa 8 — Chaos engineering (5 escenarios controlled) · 1er lunes/mes 3AM AST · 24vo cron job
+    from app.workers.sentinel_chaos_worker import run_chaos_scan
+    scheduler.add_job(run_chaos_scan, 'cron', day_of_week='mon', day='1-7', hour=3, minute=0, id='chaos_monthly', max_instances=1, replace_existing=True)
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION + RLS_AUDIT + RUNTIME_OBS + PERF + AGENTS_HEALTH + NETWORK_HTTP + INTEGRATIONS workers activos — 23 jobs (jobstore persistente DEBT-047)")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION + RLS_AUDIT + RUNTIME_OBS + PERF + AGENTS_HEALTH + NETWORK_HTTP + INTEGRATIONS + CHAOS workers activos — 24 jobs (jobstore persistente DEBT-047)")
 
 @app.on_event("shutdown")
 async def shutdown_event():

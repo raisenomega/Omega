@@ -28,6 +28,8 @@ from .network_http_status import handle_network_http_status
 from .network_http_trigger import handle_network_http_trigger
 from .integrations_status import handle_integrations_status
 from .integrations_trigger import handle_integrations_trigger
+from .chaos_status import handle_chaos_status
+from .chaos_trigger import handle_chaos_trigger, ChaosTriggerRequest
 
 __all__ = [
     "handle_get_status",
@@ -60,4 +62,7 @@ __all__ = [
     "handle_network_http_trigger",
     "handle_integrations_status",
     "handle_integrations_trigger",
+    "handle_chaos_status",
+    "handle_chaos_trigger",
+    "ChaosTriggerRequest",
 ]

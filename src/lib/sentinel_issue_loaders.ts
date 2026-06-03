@@ -5,7 +5,7 @@ import { apiGet } from "@/lib/api-client";
 import type { SentinelHistoryData, DependencyScan, SentinelScan } from "@/hooks/useSecurityDevData";
 import type { RLSAudit } from "@/hooks/useRLSAudit";
 import type { SecretRotation } from "@/hooks/useSecretsRotation";
-import { loadRuntime, loadPerformance, loadAgentsHealth, loadAIProvider, loadNetworkHttp, loadIntegrations } from "./sentinel_issue_loaders_status";
+import { loadRuntime, loadPerformance, loadAgentsHealth, loadAIProvider, loadNetworkHttp, loadIntegrations, loadChaos } from "./sentinel_issue_loaders_status";
 
 export interface IssueAction { action: string; created_at: string; reason: string | null; }
 export interface NormalizedIssue {
@@ -83,6 +83,7 @@ export async function loadIssuesBySource(p: LoadParams): Promise<NormalizedIssue
     case "ai_provider_router": return loadAIProvider();
     case "network_http": return loadNetworkHttp(p.severity);
     case "integrations": return loadIntegrations(p.severity);
+    case "chaos": return loadChaos(p.severity);
     default: return [];
   }
 }

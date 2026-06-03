@@ -36,6 +36,9 @@ from .handlers import (
     handle_network_http_trigger,
     handle_integrations_status,
     handle_integrations_trigger,
+    handle_chaos_status,
+    handle_chaos_trigger,
+    ChaosTriggerRequest,
 )
 
 router = APIRouter(prefix="/sentinel", tags=["SENTINEL 🛡️"])
@@ -181,3 +184,15 @@ async def integrations_status(authorization: Optional[str] = Header(None)):
 async def integrations_trigger(authorization: Optional[str] = Header(None)):
     """Disparar el scan de integraciones ahora · solo superadmin."""
     return await handle_integrations_trigger(authorization)
+
+
+@router.get("/chaos/status")
+async def chaos_status(authorization: Optional[str] = Header(None)):
+    """Estado de chaos engineering (5 escenarios controlled) · solo superadmin."""
+    return await handle_chaos_status(authorization)
+
+
+@router.post("/chaos/trigger")
+async def chaos_trigger(request: ChaosTriggerRequest, authorization: Optional[str] = Header(None)):
+    """Disparar chaos test ahora (subset opcional de escenarios) · solo superadmin."""
+    return await handle_chaos_trigger(request, authorization)

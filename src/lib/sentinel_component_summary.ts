@@ -1,6 +1,5 @@
-// Deriva un resumen uniforme {tone,label,score,lastRun} por componente desde la data
-// de sus hooks existentes. Lógica PURA (sin React) · alimenta los headers colapsados de
-// "Estado por componente". Cero fetch nuevo: los datos llegan ya resueltos.
+// Deriva un resumen uniforme {tone,label,score,lastRun} por componente desde la data de sus
+// hooks (lógica PURA · alimenta los headers colapsados de "Estado por componente" · cero fetch nuevo).
 import type { SentinelScan, DependencyScan } from "@/hooks/useSecurityDevData";
 import type { SecretRotation } from "@/hooks/useSecretsRotation";
 import type { RLSAudit } from "@/hooks/useRLSAudit";
@@ -10,6 +9,7 @@ import type { PerformanceScan } from "@/hooks/usePerformanceStatus";
 import type { AgentsHealthScan } from "@/hooks/useAgentsHealthStatus";
 import type { NetworkHTTPStatus } from "@/hooks/useNetworkHTTPStatus";
 import type { IntegrationsStatus } from "@/hooks/useIntegrationsStatus";
+import type { ChaosStatus } from "@/hooks/useChaosStatus";
 
 export type Tone = "ok" | "warn" | "bad" | "none";
 export interface ComponentSummary { tone: Tone; label: string; score: number | null; lastRun: string | null; }
@@ -25,6 +25,7 @@ export interface SummaryInput {
   agentsHealth: AgentsHealthScan | null;
   network: NetworkHTTPStatus | undefined;
   integrations: IntegrationsStatus | undefined;
+  chaos: ChaosStatus | undefined;
 }
 
 const NONE: ComponentSummary = { tone: "none", label: "sin corridas", score: null, lastRun: null };
@@ -92,5 +93,8 @@ export function buildSummaries(input: SummaryInput): Record<string, ComponentSum
     AGENTS_HEALTH: scoreScanSummary(input.agentsHealth),
     NETWORK_HTTP: networkSummary(input.network),
     INTEGRATIONS: scoreScanSummary(input.integrations?.last_scan ?? null),
+    CHAOS_ENGINEERING: input.chaos?.score != null
+      ? scoreScanSummary({ score: input.chaos.score, scanned_at: input.chaos.last_scanned_at })
+      : NONE,
   };
 }

@@ -59,4 +59,8 @@ export const SENTINEL_COMPONENTS: readonly SentinelComponentMeta[] = [
     code: "INTEGRATIONS", name: "Integraciones", frequency: "cron horario", sourceTable: "sentinel_integrations_scans",
     whatItChecks: "Salud de integraciones externas: Stripe webhooks (idempotencia X4 + liveness), Stripe Connect y tokens OAuth por plataforma.",
   },
+  {
+    code: "CHAOS_ENGINEERING", name: "Chaos Engineering", frequency: "mensual + on-demand", sourceTable: "sentinel_chaos_scans",
+    whatItChecks: "Resiliencia ante fallas (5 escenarios controlled): anthropic graceful, db error-handling, idempotencia X4, RLS, rate-limit. Pentest profesional = externo (ver checklist).",
+  },
 ] as const;
