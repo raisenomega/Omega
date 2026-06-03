@@ -34,6 +34,8 @@ from .handlers import (
     handle_agents_health_trigger,
     handle_network_http_status,
     handle_network_http_trigger,
+    handle_integrations_status,
+    handle_integrations_trigger,
 )
 
 router = APIRouter(prefix="/sentinel", tags=["SENTINEL 🛡️"])
@@ -167,3 +169,15 @@ async def network_http_status(authorization: Optional[str] = Header(None)):
 async def network_http_trigger(authorization: Optional[str] = Header(None)):
     """Disparar el scan Red/HTTP ahora · solo superadmin."""
     return await handle_network_http_trigger(authorization)
+
+
+@router.get("/integrations/status")
+async def integrations_status(authorization: Optional[str] = Header(None)):
+    """Estado de integraciones (Stripe webhooks/Connect + OAuth) · solo superadmin."""
+    return await handle_integrations_status(authorization)
+
+
+@router.post("/integrations/trigger")
+async def integrations_trigger(authorization: Optional[str] = Header(None)):
+    """Disparar el scan de integraciones ahora · solo superadmin."""
+    return await handle_integrations_trigger(authorization)

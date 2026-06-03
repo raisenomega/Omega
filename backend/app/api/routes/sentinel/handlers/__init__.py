@@ -26,6 +26,8 @@ from .agents_health_status import handle_agents_health_status
 from .agents_health_trigger import handle_agents_health_trigger
 from .network_http_status import handle_network_http_status
 from .network_http_trigger import handle_network_http_trigger
+from .integrations_status import handle_integrations_status
+from .integrations_trigger import handle_integrations_trigger
 
 __all__ = [
     "handle_get_status",
@@ -56,4 +58,6 @@ __all__ = [
     "handle_agents_health_trigger",
     "handle_network_http_status",
     "handle_network_http_trigger",
+    "handle_integrations_status",
+    "handle_integrations_trigger",
 ]

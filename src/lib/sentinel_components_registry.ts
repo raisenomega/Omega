@@ -55,4 +55,8 @@ export const SENTINEL_COMPONENTS: readonly SentinelComponentMeta[] = [
     code: "NETWORK_HTTP", name: "Red y HTTP", frequency: "cada 2h", sourceTable: "sentinel_network_http_scans",
     whatItChecks: "Seguridad de red en prod: security headers HTTP, TLS (cert + expiry), rate-limit configurado y CORS hardening.",
   },
+  {
+    code: "INTEGRATIONS", name: "Integraciones", frequency: "cron horario", sourceTable: "sentinel_integrations_scans",
+    whatItChecks: "Salud de integraciones externas: Stripe webhooks (idempotencia X4 + liveness), Stripe Connect y tokens OAuth por plataforma.",
+  },
 ] as const;

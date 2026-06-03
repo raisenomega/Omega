@@ -17,6 +17,7 @@ const BUILDERS: Record<string, Builder> = {
   secrets_rotation: (i) => `Rotación de secret pendiente: ${i.message} · urgency=${i.severity}. Rotar el secret y registrar la rotación en SENTINEL.`,
   ai_provider_router: (i) => `Falla del proveedor IA ${i.agentCode}: type=${i.type} · "${i.message}" · severity=${i.severity}. Revisar credenciales/circuit breaker/failover.`,
   network_http: (i) => `Issue de Red/HTTP: type=${i.type} · "${i.message}" · severity=${i.severity}. Proponer fix (header faltante en middleware/vercel.json · renovar cert TLS · endurecer CORS).`,
+  integrations: (i) => `Issue de integraciones: type=${i.type} · "${i.message}" · severity=${i.severity}. Revisar (idempotencia X4 webhook_events.event_id UNIQUE · liveness Stripe · refresh de token OAuth en social_accounts).`,
 };
 
 export function buildFixPrompt(issue: NormalizedIssue): string {

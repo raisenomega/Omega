@@ -7,6 +7,7 @@ import type { PerformanceStatus } from "@/hooks/usePerformanceStatus";
 import type { AgentsHealthStatus } from "@/hooks/useAgentsHealthStatus";
 import type { AIProvidersStatus } from "@/hooks/useAIProvidersStatus";
 import type { NetworkHTTPStatus } from "@/hooks/useNetworkHTTPStatus";
+import type { IntegrationsStatus } from "@/hooks/useIntegrationsStatus";
 import type { NormalizedIssue } from "./sentinel_issue_loaders";
 
 const bySeverity = (issues: NormalizedIssue[], severity?: string) =>
@@ -48,6 +49,16 @@ export async function loadNetworkHttp(severity?: string): Promise<NormalizedIssu
     })),
   );
   return severity ? issues.filter((i) => i.severity === severity) : issues;
+}
+
+export async function loadIntegrations(severity?: string): Promise<NormalizedIssue[]> {
+  const scan = (await apiGet<IntegrationsStatus>("/sentinel/integrations/status")).last_scan;
+  if (!scan) return [];
+  const issues = scan.issues.map((it, i) => ({
+    key: `int|${i}|${it.check}`, severity: it.severity, type: it.check, message: it.detail,
+    sourceType: "integrations", sourceId: scan.id, previousActions: [],
+  }));
+  return severity ? issues.filter((x) => x.severity === severity) : issues;
 }
 
 export async function loadAIProvider(): Promise<NormalizedIssue[]> {
