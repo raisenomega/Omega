@@ -12,6 +12,7 @@ import { SentinelRLSCard } from "./SentinelRLSCard";
 import { SentinelAIProvidersCard } from "./SentinelAIProvidersCard";
 import { SentinelRuntimeCard } from "./SentinelRuntimeCard";
 import { SentinelPerformanceCard } from "./SentinelPerformanceCard";
+import { SentinelAgentsHealthCard } from "./SentinelAgentsHealthCard";
 import { SentinelRunsDetail } from "./SentinelRunsDetail";
 import { SentinelIssueModal } from "./SentinelIssueModal";
 import { scoreColor, fmtDateTime } from "./parts";
@@ -79,6 +80,7 @@ export function SentinelTab() {
       <SentinelAIProvidersCard />
       <SentinelRuntimeCard />
       <SentinelPerformanceCard />
+      <SentinelAgentsHealthCard />
       <SentinelRunsDetail onOpenAgentIssues={(agentCode) => setModal({ scope: "agent", agentCode })} />
 
       {modal && (

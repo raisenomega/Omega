@@ -22,6 +22,8 @@ from .frontend_error_receive import handle_frontend_error, FrontendError
 from .runtime_status import handle_runtime_status
 from .performance_status import handle_performance_status
 from .build_stats_register import handle_build_stats, BuildStats
+from .agents_health_status import handle_agents_health_status
+from .agents_health_trigger import handle_agents_health_trigger
 
 __all__ = [
     "handle_get_status",
@@ -48,4 +50,6 @@ __all__ = [
     "handle_performance_status",
     "handle_build_stats",
     "BuildStats",
+    "handle_agents_health_status",
+    "handle_agents_health_trigger",
 ]

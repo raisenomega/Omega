@@ -30,6 +30,8 @@ from .handlers import (
     handle_performance_status,
     handle_build_stats,
     BuildStats,
+    handle_agents_health_status,
+    handle_agents_health_trigger,
 )
 
 router = APIRouter(prefix="/sentinel", tags=["SENTINEL 🛡️"])
@@ -139,3 +141,15 @@ async def performance_status(authorization: Optional[str] = Header(None)):
 async def performance_build_stats(request: BuildStats, x_sentinel_token: Optional[str] = Header(None)):
     """Receptor de build stats del GitHub Action · auth X-Sentinel-Token (machine-to-machine)."""
     return await handle_build_stats(request, x_sentinel_token)
+
+
+@router.get("/agents-health/status")
+async def agents_health_status(authorization: Optional[str] = Header(None)):
+    """Salud de agentes IA (success_rate, accuracy, costo) · solo superadmin."""
+    return await handle_agents_health_status(authorization)
+
+
+@router.post("/agents-health/trigger")
+async def agents_health_trigger(authorization: Optional[str] = Header(None)):
+    """Disparar el scan de salud de agentes ahora ("Escanear ahora") · solo superadmin."""
+    return await handle_agents_health_trigger(authorization)

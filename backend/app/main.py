@@ -185,8 +185,11 @@ async def startup_event():
     # SENTINEL Capa 10 — performance/APM · cada 5 min · 20vo cron job
     from app.workers.sentinel_performance_worker import run_performance_scan
     scheduler.add_job(run_performance_scan, 'cron', minute='*/5', id='performance_5min', max_instances=1, replace_existing=True)
+    # SENTINEL Capa 12 — salud de agentes IA · cada hora minute=15 (evita overlap con RLS :00 y perf/runtime */5) · 21vo cron job
+    from app.workers.sentinel_agents_health_worker import run_agents_health_scan
+    scheduler.add_job(run_agents_health_scan, 'cron', minute=15, id='agents_health_hourly', max_instances=1, replace_existing=True)
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION + RLS_AUDIT + RUNTIME_OBS + PERF workers activos — 20 jobs (jobstore persistente DEBT-047)")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION + RLS_AUDIT + RUNTIME_OBS + PERF + AGENTS_HEALTH workers activos — 21 jobs (jobstore persistente DEBT-047)")
 
 @app.on_event("shutdown")
 async def shutdown_event():
