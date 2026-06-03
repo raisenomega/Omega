@@ -10,7 +10,11 @@ from .handlers import (
     handle_run_scan,
     handle_get_history,
     handle_deploy_check,
-    ScanRequest
+    ScanRequest,
+    handle_ignore_issue,
+    IssueActionRequest,
+    handle_dispatch_fix,
+    DispatchFixRequest,
 )
 
 router = APIRouter(prefix="/sentinel", tags=["SENTINEL 🛡️"])
@@ -42,3 +46,15 @@ async def get_history(
 async def deploy_check(authorization: Optional[str] = Header(None)):
     """Check if it's safe to deploy now · solo superadmin (4B-5)."""
     return await handle_deploy_check(authorization)
+
+
+@router.post("/issues/ignore")
+async def ignore_issue(request: IssueActionRequest, authorization: Optional[str] = Header(None)):
+    """Marcar un issue como ignorado · solo superadmin."""
+    return await handle_ignore_issue(request, authorization)
+
+
+@router.post("/issues/dispatch-fix")
+async def dispatch_fix(request: DispatchFixRequest, authorization: Optional[str] = Header(None)):
+    """Despachar Fix de un issue (registra + devuelve prompt para Dev Chat) · solo superadmin."""
+    return await handle_dispatch_fix(request, authorization)

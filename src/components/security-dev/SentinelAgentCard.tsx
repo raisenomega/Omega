@@ -12,7 +12,7 @@ const STATUS_CLS: Record<string, string> = {
 
 const fmtMs = (ms: number | null) => (ms == null ? "—" : ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`);
 
-export function SentinelAgentCard({ scan }: { scan: SentinelScan }) {
+export function SentinelAgentCard({ scan, onOpenIssues }: { scan: SentinelScan; onOpenIssues: () => void }) {
   const cls = STATUS_CLS[scan.status] ?? "bg-muted/40 text-muted-foreground border-border/40";
   return (
     <div className="space-y-1 rounded-lg border border-border/40 p-3 text-sm">
@@ -25,15 +25,17 @@ export function SentinelAgentCard({ scan }: { scan: SentinelScan }) {
         Score: {scan.security_score ?? "—"} · Decisión: {scan.deploy_decision ?? "—"} · Duración: {fmtMs(scan.scan_duration_ms)}
       </p>
       <p className="text-xs text-muted-foreground">{fmtDateTime(scan.created_at)} · origen: {scan.triggered_by ?? "—"}</p>
-      {scan.issues.length === 0 ? (
-        <p className="text-xs text-green-500">Sin issues encontrados ✅</p>
-      ) : (
-        <ul className="list-disc space-y-0.5 pl-4 text-xs text-muted-foreground">
-          {scan.issues.map((it, i) => (
-            <li key={i}><span className="font-medium">{it.severity}</span> · {it.type} · {it.message}</li>
-          ))}
-        </ul>
-      )}
+      <button onClick={onOpenIssues} className="w-full rounded text-left hover:bg-muted/40">
+        {scan.issues.length === 0 ? (
+          <span className="text-xs text-green-500">Sin issues encontrados ✅ · gestionar</span>
+        ) : (
+          <ul className="list-disc space-y-0.5 pl-4 text-xs text-muted-foreground">
+            {scan.issues.map((it, i) => (
+              <li key={i}><span className="font-medium">{it.severity}</span> · {it.type} · {it.message}</li>
+            ))}
+          </ul>
+        )}
+      </button>
     </div>
   );
 }

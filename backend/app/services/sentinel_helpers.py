@@ -3,6 +3,16 @@ SENTINEL Helpers — Shared scoring utilities
 Importado por sentinel_vault, sentinel_pulse, sentinel_db.
 MAX 200L — R-LINES-001
 """
+import hashlib
+
+
+def issue_hash(severity: str, type_: str, message: str) -> str:
+    """Identidad estable de un issue cross-scan · sha256(severity|type|message).
+
+    Una sola fuente de verdad: ignore_issue, dispatch_fix y el join de get_history
+    DEBEN usar este mismo hash o el join se rompe.
+    """
+    return hashlib.sha256(f"{severity}|{type_}|{message}".encode()).hexdigest()
 
 
 def _calculate_score(issues: list) -> int:

@@ -38,7 +38,13 @@ export interface SentinelData {
 }
 
 // Per-agente (tabla sentinel_scans · /sentinel/history) · distinto del agregado sentinel_risk_scores.
-export interface SentinelIssue { severity: string; type: string; message: string; }
+export interface SentinelIssueAction { action: string; created_at: string; reason: string | null; }
+export interface SentinelIssue {
+  severity: string;
+  type: string;
+  message: string;
+  previous_actions?: SentinelIssueAction[];
+}
 export interface SentinelScan {
   id: string;
   agent_code: string;
