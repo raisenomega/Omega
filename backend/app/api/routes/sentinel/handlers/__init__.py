@@ -13,6 +13,8 @@ from .security_scan_report import (
     handle_get_latest_dependency_scan,
     SecurityScanReport,
 )
+from .secrets_rotation_status import handle_secrets_rotation_status
+from .secrets_rotation_register import handle_register_rotation, RegisterRotationRequest
 
 __all__ = [
     "handle_get_status",
@@ -27,4 +29,7 @@ __all__ = [
     "handle_security_scan_report",
     "handle_get_latest_dependency_scan",
     "SecurityScanReport",
+    "handle_secrets_rotation_status",
+    "handle_register_rotation",
+    "RegisterRotationRequest",
 ]

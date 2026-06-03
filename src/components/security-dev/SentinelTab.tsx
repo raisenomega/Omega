@@ -7,6 +7,7 @@ import { useSentinelData, type SentinelScore } from "@/hooks/useSecurityDevData"
 import { useSentinelScan } from "@/hooks/useSentinelScan";
 import { SentinelComponentsHeader } from "./SentinelComponentsHeader";
 import { SentinelDependencyCard } from "./SentinelDependencyCard";
+import { SentinelSecretsCard } from "./SentinelSecretsCard";
 import { SentinelRunsDetail } from "./SentinelRunsDetail";
 import { SentinelIssueModal } from "./SentinelIssueModal";
 import { scoreColor, fmtDateTime } from "./parts";
@@ -69,6 +70,7 @@ export function SentinelTab() {
 
       <SentinelComponentsHeader />
       <SentinelDependencyCard />
+      <SentinelSecretsCard />
       <SentinelRunsDetail onOpenAgentIssues={(agentCode) => setModal({ scope: "agent", agentCode })} />
 
       {modal && (

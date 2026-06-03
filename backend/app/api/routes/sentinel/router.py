@@ -18,6 +18,9 @@ from .handlers import (
     handle_security_scan_report,
     handle_get_latest_dependency_scan,
     SecurityScanReport,
+    handle_secrets_rotation_status,
+    handle_register_rotation,
+    RegisterRotationRequest,
 )
 
 router = APIRouter(prefix="/sentinel", tags=["SENTINEL 🛡️"])
@@ -73,3 +76,15 @@ async def security_scan_report(request: SecurityScanReport, x_sentinel_token: Op
 async def dependency_scans_latest(authorization: Optional[str] = Header(None)):
     """Último dependency scan para el panel · solo superadmin."""
     return await handle_get_latest_dependency_scan(authorization)
+
+
+@router.get("/secrets-rotation/status")
+async def secrets_rotation_status(authorization: Optional[str] = Header(None)):
+    """Estado de rotación de secrets (solo nombres · NUNCA valores) · solo superadmin."""
+    return await handle_secrets_rotation_status(authorization)
+
+
+@router.post("/secrets-rotation/register")
+async def secrets_rotation_register(request: RegisterRotationRequest, authorization: Optional[str] = Header(None)):
+    """Registrar rotación manual de un secret · solo superadmin."""
+    return await handle_register_rotation(request, authorization)

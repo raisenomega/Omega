@@ -163,8 +163,11 @@ async def startup_event():
     # HERMES Capa 1 — ping liviano salud integraciones · cada 5 min · 16vo cron job (DEBT-HERMES-CORE f1)
     from app.bc_cognition.infrastructure.hermes_checks import run_hermes_ping
     scheduler.add_job(run_hermes_ping, 'interval', minutes=5, id='hermes_ping', max_instances=1, replace_existing=True)
+    # SENTINEL Capa 5 — rotación de secrets · primer lunes del mes 3am AST (day 1-7 ∩ lunes) · 17vo cron job
+    from app.workers.sentinel_secrets_monitor import run_secrets_rotation_check
+    scheduler.add_job(run_secrets_rotation_check, 'cron', day='1-7', day_of_week='mon', hour=3, minute=0, id='secrets_rotation_monthly', max_instances=1, replace_existing=True)
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES workers activos — 16 jobs (jobstore persistente DEBT-047)")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION workers activos — 17 jobs (jobstore persistente DEBT-047)")
 
 @app.on_event("shutdown")
 async def shutdown_event():
