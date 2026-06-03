@@ -6,14 +6,7 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { useSentinelData, type SentinelScore } from "@/hooks/useSecurityDevData";
 import { useSentinelScan } from "@/hooks/useSentinelScan";
 import { SentinelComponentsHeader } from "./SentinelComponentsHeader";
-import { SentinelDependencyCard } from "./SentinelDependencyCard";
-import { SentinelSecretsCard } from "./SentinelSecretsCard";
-import { SentinelRLSCard } from "./SentinelRLSCard";
-import { SentinelAIProvidersCard } from "./SentinelAIProvidersCard";
-import { SentinelRuntimeCard } from "./SentinelRuntimeCard";
-import { SentinelPerformanceCard } from "./SentinelPerformanceCard";
-import { SentinelAgentsHealthCard } from "./SentinelAgentsHealthCard";
-import { SentinelRunsDetail } from "./SentinelRunsDetail";
+import { SentinelComponentStatus } from "./SentinelComponentStatus";
 import { SentinelIssueModal } from "./SentinelIssueModal";
 import { scoreColor, fmtDateTime } from "./parts";
 
@@ -74,14 +67,7 @@ export function SentinelTab() {
       </Card>
 
       <SentinelComponentsHeader />
-      <SentinelDependencyCard />
-      <SentinelSecretsCard />
-      <SentinelRLSCard />
-      <SentinelAIProvidersCard />
-      <SentinelRuntimeCard />
-      <SentinelPerformanceCard />
-      <SentinelAgentsHealthCard />
-      <SentinelRunsDetail onOpenAgentIssues={(agentCode) => setModal({ scope: "agent", agentCode })} />
+      <SentinelComponentStatus onOpenAgentIssues={(agentCode) => setModal({ scope: "agent", agentCode })} />
 
       {modal && (
         <SentinelIssueModal open onClose={() => setModal(null)} scope={modal.scope} severity={modal.severity} agentCode={modal.agentCode} />

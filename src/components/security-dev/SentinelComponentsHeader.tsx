@@ -1,24 +1,23 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SENTINEL_COMPONENTS } from "@/lib/sentinel_components_registry";
+import { SentinelComponentCard } from "./SentinelComponentCard";
 
-// Qué chequea cada agente SENTINEL · texto VERIFICADO contra backend/app/services/sentinel_*.py (P1).
-// VAULT: solo env vars (NO código ni commits). DB_GUARDIAN: solo accesibilidad+conteos (NO RLS/migraciones).
-export const AGENT_CHECKS: Record<string, string> = {
-  VAULT: "Verifica variables de entorno críticas: que estén presentes, con formato válido y longitud mínima (secrets fuertes).",
-  PULSE_MONITOR: "Verifica endpoints críticos: detecta caídas (5xx), latencia alta y regresión de auth (un endpoint protegido que responde 200 sin token).",
-  DB_GUARDIAN: "Verifica que las tablas críticas (agents, clients, resellers, etc.) sean accesibles y tengan los datos mínimos esperados.",
-};
+// Catálogo "Componentes monitoreados" · los 10 componentes del registry como cards (qué vigila + frecuencia).
+// AGENT_CHECKS se deriva del registry (fuente única) · lo consume SentinelAgentCard para el detalle per-agente.
+export const AGENT_CHECKS: Record<string, string> = Object.fromEntries(
+  SENTINEL_COMPONENTS.filter((c) => c.sourceTable === "sentinel_scans").map((c) => [c.code, c.whatItChecks]),
+);
 
 export function SentinelComponentsHeader() {
   return (
     <Card>
       <CardHeader><CardTitle className="text-sm">Componentes monitoreados</CardTitle></CardHeader>
-      <CardContent className="space-y-2">
-        {Object.entries(AGENT_CHECKS).map(([agent, desc]) => (
-          <div key={agent} className="text-sm">
-            <span className="font-medium">{agent}</span>
-            <p className="text-xs text-muted-foreground">{desc}</p>
-          </div>
-        ))}
+      <CardContent>
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+          {SENTINEL_COMPONENTS.map((c) => (
+            <SentinelComponentCard key={c.code} meta={c} />
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
