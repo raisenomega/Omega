@@ -15,6 +15,8 @@ from .security_scan_report import (
 )
 from .secrets_rotation_status import handle_secrets_rotation_status
 from .secrets_rotation_register import handle_register_rotation, RegisterRotationRequest
+from .rls_audit_status import handle_rls_audit_status
+from .rls_audit_trigger import handle_rls_audit_trigger
 
 __all__ = [
     "handle_get_status",
@@ -32,4 +34,6 @@ __all__ = [
     "handle_secrets_rotation_status",
     "handle_register_rotation",
     "RegisterRotationRequest",
+    "handle_rls_audit_status",
+    "handle_rls_audit_trigger",
 ]

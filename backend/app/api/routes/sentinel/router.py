@@ -21,6 +21,8 @@ from .handlers import (
     handle_secrets_rotation_status,
     handle_register_rotation,
     RegisterRotationRequest,
+    handle_rls_audit_status,
+    handle_rls_audit_trigger,
 )
 
 router = APIRouter(prefix="/sentinel", tags=["SENTINEL 🛡️"])
@@ -88,3 +90,15 @@ async def secrets_rotation_status(authorization: Optional[str] = Header(None)):
 async def secrets_rotation_register(request: RegisterRotationRequest, authorization: Optional[str] = Header(None)):
     """Registrar rotación manual de un secret · solo superadmin."""
     return await handle_register_rotation(request, authorization)
+
+
+@router.get("/rls-audit/latest")
+async def rls_audit_latest(authorization: Optional[str] = Header(None)):
+    """Última auditoría RLS · solo superadmin."""
+    return await handle_rls_audit_status(authorization)
+
+
+@router.post("/rls-audit/trigger")
+async def rls_audit_trigger(authorization: Optional[str] = Header(None)):
+    """Disparar auditoría RLS ahora ("Auditar ahora") · solo superadmin."""
+    return await handle_rls_audit_trigger(authorization)
