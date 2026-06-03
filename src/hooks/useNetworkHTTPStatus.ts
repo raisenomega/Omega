@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api-client";
 
 export interface NetIssue { severity: string; check: string; detail: string; }
-export interface HeadersCheck { final_url: string; present: Record<string, string>; missing: string[]; }
+export interface HeadersCheck { final_url: string; present: Record<string, string>; missing: string[]; csp_mode?: string | null; }
 export interface TLSCheck {
   version?: string;
   cert_subject?: string | null;

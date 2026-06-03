@@ -18,7 +18,11 @@ EXPECTED_HEADERS = {
 
 
 async def check_headers(url: str, want_csp: bool) -> Dict[str, Any]:
-    """GET (sigue redirects) · compara headers presentes vs esperados."""
+    """GET (sigue redirects) · compara headers presentes vs esperados.
+
+    CSP: acepta enforced O Report-Only como 'presente' · tag csp_mode distingue el modo
+    (report-only NO es issue · es el estado deliberado V1 hasta promover a enforced · DEBT-CSP-STRICT).
+    """
     async with httpx.AsyncClient(follow_redirects=True, timeout=15.0) as c:
         r = await c.get(url)
     hdr = {k.lower(): v for k, v in r.headers.items()}
@@ -26,10 +30,16 @@ async def check_headers(url: str, want_csp: bool) -> Dict[str, Any]:
     missing = []
     for key, label in EXPECTED_HEADERS.items():
         (present.__setitem__(label, hdr[key]) if key in hdr else missing.append(label))
+    csp_mode = None
     if want_csp:
-        csp = hdr.get("content-security-policy") or hdr.get("content-security-policy-report-only")
-        (present.__setitem__("Content-Security-Policy", csp[:120]) if csp else missing.append("Content-Security-Policy"))
-    return {"final_url": str(r.url), "present": present, "missing": missing}
+        enforced = hdr.get("content-security-policy")
+        report_only = hdr.get("content-security-policy-report-only")
+        csp_mode = "enforced" if enforced else "report-only" if report_only else "missing"
+        if csp_mode == "missing":
+            missing.append("Content-Security-Policy")
+        else:
+            present["Content-Security-Policy"] = (enforced or report_only)[:120]
+    return {"final_url": str(r.url), "present": present, "missing": missing, "csp_mode": csp_mode}
 
 
 def _tls_sync(host: str, port: int = 443) -> Dict[str, Any]:

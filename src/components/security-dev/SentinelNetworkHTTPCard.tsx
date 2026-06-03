@@ -27,6 +27,7 @@ function TargetBlock({ t, onOpenIssues }: { t: NetworkTarget; onOpenIssues?: (p:
       </div>
       <p className="text-[10px] text-muted-foreground">
         Headers: {present.length} ok{missing.length ? ` · faltan: ${missing.join(", ")}` : " · completos"}
+        {s.headers_check.csp_mode ? ` · CSP: ${s.headers_check.csp_mode}` : ""}
       </p>
       <p className="text-[10px] text-muted-foreground">
         TLS: {tls.error ? `error (${tls.error})` : `${tls.version} · vence en ${tls.days_until_expiry}d (${tls.cert_issuer ?? "?"})`}
