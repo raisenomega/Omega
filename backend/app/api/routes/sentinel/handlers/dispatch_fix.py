@@ -21,10 +21,17 @@ class DispatchFixRequest(BaseModel):
     message: str
     scan_id: Optional[str] = None
     reason: Optional[str] = None
+    source_type: str = "sentinel_scan"      # default retro-compat
+    source_id: Optional[str] = None         # scan/audit de la tabla origen
+    dispatch_prompt: Optional[str] = None   # prompt ya formateado por el frontend (single source)
 
 
 async def handle_dispatch_fix(request: DispatchFixRequest, authorization: Optional[str]) -> Dict[str, Any]:
-    """Registra fix_dispatched + devuelve dispatch_prompt para precargar en Dev Chat."""
+    """Registra fix_dispatched + devuelve dispatch_prompt para precargar en Dev Chat.
+
+    El prompt lo arma el frontend (sentinel_fix_prompt_builders · single source). Si no llega,
+    fallback retro-compat para el path legacy sentinel_scan.
+    """
     await require_superadmin(authorization)
     h = issue_hash(request.severity, request.type, request.message)
     supabase = get_supabase_service()
@@ -34,11 +41,13 @@ async def handle_dispatch_fix(request: DispatchFixRequest, authorization: Option
         "issue_hash": h,
         "action": "fix_dispatched",
         "reason": request.reason,
+        "source_type": request.source_type,
+        "source_id": request.source_id,
     }).execute()
     action_id = (resp.data or [{}])[0].get("id")
-    dispatch_prompt = (
+    dispatch_prompt = request.dispatch_prompt or (
         f"Fix needed: agent={request.agent_code}, severity={request.severity}, "
         f"type={request.type}, message={request.message}, scan_id={request.scan_id or 'n/a'}"
     )
-    logger.info(f"sentinel fix dispatched: {request.agent_code} {h[:12]}")
+    logger.info(f"sentinel fix dispatched: {request.source_type}/{request.agent_code} {h[:12]}")
     return {"action_id": action_id, "issue_hash": h, "dispatch_prompt": dispatch_prompt}

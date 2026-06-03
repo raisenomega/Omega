@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, Bot } from "lucide-react";
 import { useAgentsHealthStatus, useTriggerAgentsHealth, type AgentHealth } from "@/hooks/useAgentsHealthStatus";
-import { scoreColor } from "./parts";
+import { scoreColor, IssueChip } from "./parts";
+import type { OpenIssuesParams } from "@/lib/sentinel_issue_loaders";
 
 const pct = (v: number | null) => (v == null ? "—" : `${Math.round(v * 100)}%`);
 
@@ -13,7 +14,9 @@ function rateColor(v: number | null): string {
   return v >= 0.95 ? "text-green-500" : v >= 0.8 ? "text-amber-500" : "text-red-500";
 }
 
-export function SentinelAgentsHealthCard() {
+const hasIssue = (a: AgentHealth) => a.success_rate != null && a.success_rate < 0.95;
+
+export function SentinelAgentsHealthCard({ onOpenIssues }: { onOpenIssues?: (p: OpenIssuesParams) => void }) {
   const { data, isLoading } = useAgentsHealthStatus();
   const trigger = useTriggerAgentsHealth();
   const scan = data?.last_scan ?? null;
@@ -42,7 +45,13 @@ export function SentinelAgentsHealthCard() {
               </span>
             </div>
             {scan.model_drift_alerts.length > 0 && (
-              <Badge variant="outline" className="border-red-500/40 bg-red-500/15 text-red-500">model drift</Badge>
+              onOpenIssues ? (
+                <IssueChip onClick={() => onOpenIssues({ sourceType: "agents_health", scopeLabel: "Agentes · model drift" })}>
+                  <Badge variant="outline" className="border-red-500/40 bg-red-500/15 text-red-500">model drift</Badge>
+                </IssueChip>
+              ) : (
+                <Badge variant="outline" className="border-red-500/40 bg-red-500/15 text-red-500">model drift</Badge>
+              )
             )}
             <div className="space-y-1">
               {agents.length === 0 && (
@@ -57,6 +66,11 @@ export function SentinelAgentsHealthCard() {
                     {a.avg_latency_ms != null && <span>{a.avg_latency_ms}ms</span>}
                     <span>null30d {pct(a.was_correct_null_pct_30d)}</span>
                     <span>acc {pct(a.accuracy_30d)}</span>
+                    {hasIssue(a) && onOpenIssues && (
+                      <IssueChip onClick={() => onOpenIssues({ sourceType: "agents_health", agentCode: a.agent_code, scopeLabel: a.agent_code })}>
+                        <Badge variant="outline" className="border-amber-500/40 bg-amber-500/15 text-amber-500">revisar</Badge>
+                      </IssueChip>
+                    )}
                   </span>
                 </div>
               ))}

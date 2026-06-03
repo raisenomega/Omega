@@ -39,6 +39,16 @@ export const LIST_CLS: Record<string, string> = {
   allow: "bg-green-500/15 text-green-500 border-green-500/40",
 };
 
+// Wrapper minimalista para volver un chip clickable SIN tocar el styling del Badge interno
+// (cláusula de preservación visual · Sub-bloque B). Solo cursor + transición de opacidad.
+export function IssueChip({ onClick, children }: { onClick: () => void; children: ReactNode }) {
+  return (
+    <button type="button" onClick={onClick} className="cursor-pointer transition-opacity hover:opacity-80">
+      {children}
+    </button>
+  );
+}
+
 export function Section(props: { title: string; empty: boolean; emptyText: string; children: ReactNode }) {
   return (
     <Card>

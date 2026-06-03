@@ -1,31 +1,27 @@
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSentinelHistory } from "@/hooks/useSecurityDevData";
 import { useSentinelIssueAction, type IssueActionPayload } from "@/hooks/useSentinelIssueAction";
-import { groupSentinelRuns } from "./parts";
+import { loadIssuesBySource, type NormalizedIssue, type OpenIssuesParams } from "@/lib/sentinel_issue_loaders";
+import { buildFixPrompt } from "@/lib/sentinel_fix_prompt_builders";
 
-interface Props {
-  open: boolean;
-  onClose: () => void;
-  scope: "aggregate" | "agent";
-  severity?: string;   // CRITICAL/HIGH/MEDIUM (scope aggregate)
-  agentCode?: string;  // scope agent
-}
+interface Props extends OpenIssuesParams { open: boolean; onClose: () => void; }
 
-// Lista issues del último run (/sentinel/history per-agente · el agregado no tiene detalle).
-export function SentinelIssueModal({ open, onClose, scope, severity, agentCode }: Props) {
-  const { data, isLoading } = useSentinelHistory();
+// Modal universal · lee issues de cualquier source_type vía loadIssuesBySource (mismo render UI).
+// sentinel_scan = comportamiento legacy idéntico (incluye badge "ignorado previamente").
+export function SentinelIssueModal({ open, onClose, sourceType, sourceId, severity, agentCode, scopeLabel }: Props) {
   const { ignoreMutation, fixMutation } = useSentinelIssueAction();
-  const latest = groupSentinelRuns(data?.scans ?? [])[0]?.scans ?? [];
-  const rows = latest
-    .filter((s) => (scope === "agent" ? s.agent_code === agentCode : true))
-    .flatMap((s) => s.issues.map((it) => ({ it, agent_code: s.agent_code, scan_id: s.id })))
-    .filter(({ it }) => (scope === "aggregate" && severity ? it.severity === severity : true));
-
-  const payload = (r: (typeof rows)[number]): IssueActionPayload => ({
-    agent_code: r.agent_code, severity: r.it.severity, type: r.it.type, message: r.it.message, scan_id: r.scan_id,
+  const { data, isLoading } = useQuery({
+    queryKey: ["sentinel-issues", sourceType, sourceId ?? null, severity ?? null, agentCode ?? null],
+    queryFn: () => loadIssuesBySource({ sourceType, sourceId, severity, agentCode }),
+  });
+  const rows = data ?? [];
+  const payload = (i: NormalizedIssue, withPrompt: boolean): IssueActionPayload => ({
+    agent_code: i.agentCode ?? "global", severity: i.severity, type: i.type, message: i.message,
+    scan_id: i.sourceId, source_type: i.sourceType, source_id: i.sourceId,
+    ...(withPrompt ? { dispatch_prompt: buildFixPrompt(i) } : {}),
   });
   const busy = ignoreMutation.isPending || fixMutation.isPending;
 
@@ -33,31 +29,29 @@ export function SentinelIssueModal({ open, onClose, scope, severity, agentCode }
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-sm">
-            Issues {scope === "agent" ? `· ${agentCode}` : severity ? `· ${severity}` : ""}
-          </DialogTitle>
+          <DialogTitle className="text-sm">Issues{scopeLabel ? ` · ${scopeLabel}` : ""}</DialogTitle>
         </DialogHeader>
         {isLoading ? (
           <Skeleton className="h-32 w-full" />
         ) : rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin issues de esta severidad.</p>
+          <p className="text-sm text-muted-foreground">Sin issues para esta selección.</p>
         ) : (
           <div className="max-h-[60vh] space-y-2 overflow-y-auto">
-            {rows.map((r, i) => {
-              const ignored = (r.it.previous_actions ?? []).some((a) => a.action === "ignored");
+            {rows.map((i) => {
+              const ignored = i.previousActions.some((a) => a.action === "ignored");
               return (
-                <div key={i} className="space-y-1 rounded-lg border border-border/40 p-3 text-sm">
+                <div key={i.key} className="space-y-1 rounded-lg border border-border/40 p-3 text-sm">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium">{r.it.severity} · {r.it.type}</span>
+                    <span className="font-medium">{i.severity} · {i.type}</span>
                     {ignored && (
                       <Badge variant="outline" className="border-border/40 text-muted-foreground">ignorado previamente</Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">{r.it.message}</p>
-                  <p className="text-[10px] text-muted-foreground">{r.agent_code}</p>
+                  <p className="text-xs text-muted-foreground">{i.message}</p>
+                  {i.agentCode && <p className="text-[10px] text-muted-foreground">{i.agentCode}</p>}
                   <div className="flex gap-2 pt-1">
-                    <Button size="sm" variant="outline" disabled={busy} onClick={() => ignoreMutation.mutate(payload(r))}>Ignorar</Button>
-                    <Button size="sm" disabled={busy} onClick={() => fixMutation.mutate(payload(r))}>Fix</Button>
+                    <Button size="sm" variant="outline" disabled={busy} onClick={() => ignoreMutation.mutate(payload(i, false))}>Ignorar</Button>
+                    <Button size="sm" disabled={busy} onClick={() => fixMutation.mutate(payload(i, true))}>Fix</Button>
                   </div>
                 </div>
               );

@@ -3,14 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePerformanceStatus } from "@/hooks/usePerformanceStatus";
-import { scoreColor } from "./parts";
+import { scoreColor, IssueChip } from "./parts";
+import type { OpenIssuesParams } from "@/lib/sentinel_issue_loaders";
 
-export function SentinelPerformanceCard() {
+export function SentinelPerformanceCard({ onOpenIssues }: { onOpenIssues?: (p: OpenIssuesParams) => void }) {
   const { data, isLoading } = usePerformanceStatus();
   const [expanded, setExpanded] = useState(false);
   const scan = data?.last_scan ?? null;
   const endpoints = scan?.p95_per_endpoint ?? [];
   const slow = scan?.slow_queries ?? [];
+  const issues = scan?.issues ?? [];
   const builds = data?.last_24h.bundle_size_trend ?? [];
 
   return (
@@ -30,6 +32,20 @@ export function SentinelPerformanceCard() {
                 <Badge variant="outline" className="bg-amber-500/15 text-amber-500 border-amber-500/40">Atención</Badge>
               )}
             </div>
+            {(issues.length > 0 || slow.length > 0) && onOpenIssues && (
+              <div className="flex flex-wrap gap-2">
+                {issues.length > 0 && (
+                  <IssueChip onClick={() => onOpenIssues({ sourceType: "performance", scopeLabel: "Performance" })}>
+                    <Badge variant="outline" className="border-amber-500/40 bg-amber-500/15 text-amber-500">{issues.length} issues</Badge>
+                  </IssueChip>
+                )}
+                {slow.length > 0 && (
+                  <IssueChip onClick={() => onOpenIssues({ sourceType: "performance", scopeLabel: "Performance · slow queries" })}>
+                    <Badge variant="outline" className="border-amber-500/40 bg-amber-500/15 text-amber-500">{slow.length} slow queries</Badge>
+                  </IssueChip>
+                )}
+              </div>
+            )}
             <p className="text-[10px] text-muted-foreground">
               bundle: {scan.bundle_size_kb != null ? `${scan.bundle_size_kb}kb` : "sin build aún"} · recursos backend:{" "}
               {data?.coverage.railway_metrics_active ? `${scan.memory_pct}% mem` : "Railway no integrado (V1)"}

@@ -8,14 +8,13 @@ import { useSentinelScan } from "@/hooks/useSentinelScan";
 import { SentinelComponentsHeader } from "./SentinelComponentsHeader";
 import { SentinelComponentStatus } from "./SentinelComponentStatus";
 import { SentinelIssueModal } from "./SentinelIssueModal";
+import type { OpenIssuesParams } from "@/lib/sentinel_issue_loaders";
 import { scoreColor, fmtDateTime } from "./parts";
-
-type ModalState = { scope: "aggregate" | "agent"; severity?: string; agentCode?: string };
 
 export function SentinelTab() {
   const { data, isLoading, error } = useSentinelData();
   const { runScan, isScanning } = useSentinelScan();
-  const [modal, setModal] = useState<ModalState | null>(null);
+  const [modal, setModal] = useState<OpenIssuesParams | null>(null);
 
   if (isLoading) return <Skeleton className="h-64 w-full" />;
   const err = (error as Error)?.message ?? data?.error;
@@ -46,7 +45,7 @@ export function SentinelTab() {
           </div>
           <div className="flex flex-wrap gap-2">
             {chips.map((c) => (
-              <button key={c.sev} onClick={() => setModal({ scope: "aggregate", severity: c.sev })}
+              <button key={c.sev} onClick={() => setModal({ sourceType: "sentinel_scan", severity: c.sev, scopeLabel: c.label })}
                 className={`rounded border px-2 py-0.5 text-xs ${c.cls}`}>{c.label} {c.n}</button>
             ))}
           </div>
@@ -67,10 +66,10 @@ export function SentinelTab() {
       </Card>
 
       <SentinelComponentsHeader />
-      <SentinelComponentStatus onOpenAgentIssues={(agentCode) => setModal({ scope: "agent", agentCode })} />
+      <SentinelComponentStatus onOpenIssues={setModal} />
 
       {modal && (
-        <SentinelIssueModal open onClose={() => setModal(null)} scope={modal.scope} severity={modal.severity} agentCode={modal.agentCode} />
+        <SentinelIssueModal open onClose={() => setModal(null)} {...modal} />
       )}
     </div>
   );

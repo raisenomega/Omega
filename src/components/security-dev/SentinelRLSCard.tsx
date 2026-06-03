@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { useRLSAuditLatest, useTriggerRLSAudit } from "@/hooks/useRLSAudit";
+import { IssueChip } from "./parts";
+import type { OpenIssuesParams } from "@/lib/sentinel_issue_loaders";
 
 const SEV_CLS: Record<string, string> = {
   CRITICAL: "bg-red-500/15 text-red-500 border-red-500/40",
@@ -12,12 +14,14 @@ const SEV_CLS: Record<string, string> = {
   MEDIUM: "bg-amber-500/15 text-amber-500 border-amber-500/40",
 };
 
-export function SentinelRLSCard() {
+export function SentinelRLSCard({ onOpenIssues }: { onOpenIssues?: (p: OpenIssuesParams) => void }) {
   const { data, isLoading } = useRLSAuditLatest();
   const trigger = useTriggerRLSAudit();
   const [expanded, setExpanded] = useState(false);
   const latest = data?.latest ?? null;
   const issues = latest?.issues ?? [];
+  const open = (severity: string, label: string) =>
+    onOpenIssues?.({ sourceType: "rls_audit", severity, scopeLabel: `RLS · ${label}` });
 
   return (
     <Card>
@@ -41,9 +45,15 @@ export function SentinelRLSCard() {
                 <Badge variant="outline" className={SEV_CLS.CRITICAL.replace("red", "green")}>RLS limpio ✅</Badge>
               ) : (
                 <>
-                  <Badge variant="outline" className={SEV_CLS.CRITICAL}>críticos {latest.severity_critical}</Badge>
-                  <Badge variant="outline" className={SEV_CLS.HIGH}>altos {latest.severity_high}</Badge>
-                  <Badge variant="outline" className={SEV_CLS.MEDIUM}>medios {latest.severity_medium}</Badge>
+                  <IssueChip onClick={() => open("CRITICAL", "críticos")}>
+                    <Badge variant="outline" className={SEV_CLS.CRITICAL}>críticos {latest.severity_critical}</Badge>
+                  </IssueChip>
+                  <IssueChip onClick={() => open("HIGH", "altos")}>
+                    <Badge variant="outline" className={SEV_CLS.HIGH}>altos {latest.severity_high}</Badge>
+                  </IssueChip>
+                  <IssueChip onClick={() => open("MEDIUM", "medios")}>
+                    <Badge variant="outline" className={SEV_CLS.MEDIUM}>medios {latest.severity_medium}</Badge>
+                  </IssueChip>
                 </>
               )}
             </div>

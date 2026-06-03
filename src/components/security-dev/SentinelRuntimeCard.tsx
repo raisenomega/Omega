@@ -3,14 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRuntimeStatus } from "@/hooks/useRuntimeStatus";
-import { scoreColor } from "./parts";
+import { scoreColor, IssueChip } from "./parts";
+import type { OpenIssuesParams } from "@/lib/sentinel_issue_loaders";
 
-export function SentinelRuntimeCard() {
+export function SentinelRuntimeCard({ onOpenIssues }: { onOpenIssues?: (p: OpenIssuesParams) => void }) {
   const { data, isLoading } = useRuntimeStatus();
   const [expanded, setExpanded] = useState(false);
   const scan = data?.last_scan ?? null;
   const recurring = scan?.recurring_patterns ?? [];
   const top = data?.last_24h.top_signatures ?? [];
+  const open = () => onOpenIssues?.({ sourceType: "runtime_observability", scopeLabel: "Observabilidad Runtime" });
 
   return (
     <Card>
@@ -30,9 +32,9 @@ export function SentinelRuntimeCard() {
               )}
             </div>
             <div className="flex flex-wrap gap-2 text-xs">
-              <Badge variant="outline" className="border-border/40">backend: {scan.backend_exception_count}</Badge>
-              <Badge variant="outline" className="border-border/40">frontend: {scan.frontend_error_count}</Badge>
-              <Badge variant="outline" className="border-border/40">recurrentes: {recurring.length}</Badge>
+              <IssueChip onClick={open}><Badge variant="outline" className="border-border/40">backend: {scan.backend_exception_count}</Badge></IssueChip>
+              <IssueChip onClick={open}><Badge variant="outline" className="border-border/40">frontend: {scan.frontend_error_count}</Badge></IssueChip>
+              <IssueChip onClick={open}><Badge variant="outline" className="border-border/40">recurrentes: {recurring.length}</Badge></IssueChip>
             </div>
             <p className="text-[10px] text-muted-foreground">
               error_rate:{" "}

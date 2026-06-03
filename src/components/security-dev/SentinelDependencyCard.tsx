@@ -3,7 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExternalLink } from "lucide-react";
 import { useDependencyScans } from "@/hooks/useSecurityDevData";
-import { fmtDateTime } from "./parts";
+import { fmtDateTime, IssueChip } from "./parts";
+import type { OpenIssuesParams } from "@/lib/sentinel_issue_loaders";
 
 const STATUS_CLS: Record<string, string> = {
   passed: "bg-green-500/15 text-green-500 border-green-500/40",
@@ -11,9 +12,14 @@ const STATUS_CLS: Record<string, string> = {
 };
 const GH_ACTIONS = "https://github.com/raisenomega/Omega/actions";
 
-export function SentinelDependencyCard() {
+export function SentinelDependencyCard({ onOpenIssues }: { onOpenIssues?: (p: OpenIssuesParams) => void }) {
   const { data, isLoading } = useDependencyScans();
   const latest = data?.latest ?? null;
+  const statusBadge = latest && (
+    <Badge variant="outline" className={STATUS_CLS[latest.status] ?? "bg-muted/40 text-muted-foreground border-border/40"}>
+      {latest.status}
+    </Badge>
+  );
   return (
     <Card>
       <CardHeader><CardTitle className="text-sm">Dependencias y CVEs</CardTitle></CardHeader>
@@ -28,9 +34,13 @@ export function SentinelDependencyCard() {
           <>
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-medium">{latest.scan_type}</span>
-              <Badge variant="outline" className={STATUS_CLS[latest.status] ?? "bg-muted/40 text-muted-foreground border-border/40"}>
-                {latest.status}
-              </Badge>
+              {latest.status === "failed" && onOpenIssues ? (
+                <IssueChip onClick={() => onOpenIssues({ sourceType: "dependency_scan", scopeLabel: "Dependencias y CVEs" })}>
+                  {statusBadge}
+                </IssueChip>
+              ) : (
+                statusBadge
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
               {fmtDateTime(latest.created_at)}{latest.github_run_id ? ` · run ${latest.github_run_id}` : ""}

@@ -2,19 +2,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAIProvidersStatus, type AIProvider } from "@/hooks/useAIProvidersStatus";
+import { IssueChip } from "./parts";
+import type { OpenIssuesParams } from "@/lib/sentinel_issue_loaders";
 
-function ProviderRow({ p }: { p: AIProvider }) {
+function ProviderRow({ p, onOpenIssues }: { p: AIProvider; onOpenIssues?: (q: OpenIssuesParams) => void }) {
   const cls = p.configured
     ? "bg-green-500/15 text-green-500 border-green-500/40"
     : "bg-muted/40 text-muted-foreground border-border/40";
   const s = p.last_24h;
+  const open = () => onOpenIssues?.({ sourceType: "ai_provider_router", scopeLabel: "AI Providers" });
   return (
     <div className="space-y-0.5 border-b border-border/40 py-1.5 text-sm">
       <div className="flex items-center justify-between gap-2">
         <span className="font-medium">{p.name}</span>
         <div className="flex items-center gap-2">
           {p.circuit_state === "open" && (
-            <Badge variant="outline" className="border-red-500/40 bg-red-500/15 text-red-500">circuito abierto</Badge>
+            <IssueChip onClick={open}>
+              <Badge variant="outline" className="border-red-500/40 bg-red-500/15 text-red-500">circuito abierto</Badge>
+            </IssueChip>
+          )}
+          {s.failed > 0 && onOpenIssues && (
+            <IssueChip onClick={open}>
+              <Badge variant="outline" className="border-red-500/40 bg-red-500/15 text-red-500">{s.failed} failed</Badge>
+            </IssueChip>
           )}
           <Badge variant="outline" className={cls} title={p.reason_not_configured ?? ""}>
             {p.configured ? "configurado" : "no configurado"}
@@ -34,7 +44,7 @@ function ProviderRow({ p }: { p: AIProvider }) {
   );
 }
 
-export function SentinelAIProvidersCard() {
+export function SentinelAIProvidersCard({ onOpenIssues }: { onOpenIssues?: (p: OpenIssuesParams) => void }) {
   const { data, isLoading } = useAIProvidersStatus();
   return (
     <Card>
@@ -44,7 +54,7 @@ export function SentinelAIProvidersCard() {
           <Skeleton className="h-24 w-full" />
         ) : (
           <>
-            {data.providers.map((p) => <ProviderRow key={p.name} p={p} />)}
+            {data.providers.map((p) => <ProviderRow key={p.name} p={p} onOpenIssues={onOpenIssues} />)}
             <div className="space-y-1 pt-1">
               <span className="text-xs font-medium">Cobertura</span>
               <Badge variant="outline" className="ml-2 border-amber-500/40 bg-amber-500/15 text-amber-500">

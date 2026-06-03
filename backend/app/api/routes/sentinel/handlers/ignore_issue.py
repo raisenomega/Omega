@@ -17,6 +17,8 @@ class IssueActionRequest(BaseModel):
     message: str
     scan_id: Optional[str] = None
     reason: Optional[str] = None
+    source_type: str = "sentinel_scan"  # default retro-compat (filas existentes)
+    source_id: Optional[str] = None     # apunta al scan/audit de la tabla origen
 
 
 async def handle_ignore_issue(request: IssueActionRequest, authorization: Optional[str]) -> Dict[str, Any]:
@@ -30,6 +32,8 @@ async def handle_ignore_issue(request: IssueActionRequest, authorization: Option
         "issue_hash": h,
         "action": "ignored",
         "reason": request.reason,
+        "source_type": request.source_type,
+        "source_id": request.source_id,
     }).execute()
     action_id = (resp.data or [{}])[0].get("id")
     logger.info(f"sentinel issue ignored: {request.agent_code} {h[:12]}")

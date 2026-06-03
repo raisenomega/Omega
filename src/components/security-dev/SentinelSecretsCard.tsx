@@ -7,7 +7,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ChevronDown } from "lucide-react";
 import { useSecretsRotationStatus, useRegisterRotation, type RotationUrgency } from "@/hooks/useSecretsRotation";
-import { fmtDateTime } from "./parts";
+import { fmtDateTime, IssueChip } from "./parts";
+import type { OpenIssuesParams } from "@/lib/sentinel_issue_loaders";
 
 const URGENCY_CLS: Record<RotationUrgency, string> = {
   ok: "bg-green-500/15 text-green-500 border-green-500/40",
@@ -19,25 +20,36 @@ const URGENCY_LABEL: Record<RotationUrgency, string> = {
   ok: "ok", warn: "rotar pronto", urgent: "rotar ya", baseline_unknown: "baseline desconocido",
 };
 
-export function SentinelSecretsCard() {
+export function SentinelSecretsCard({ onOpenIssues }: { onOpenIssues?: (p: OpenIssuesParams) => void }) {
   const { data, isLoading } = useSecretsRotationStatus();
   const register = useRegisterRotation();
   const [confirm, setConfirm] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const secrets = data?.secrets ?? [];
   const n = (u: RotationUrgency) => secrets.filter((s) => s.urgency === u).length;
+  const openModal = (severity: string, label: string) =>
+    onOpenIssues?.({ sourceType: "secrets_rotation", severity, scopeLabel: `Secrets · ${label}` });
 
   return (
     <Card>
       <Collapsible open={open} onOpenChange={setOpen}>
-        <CollapsibleTrigger asChild>
-          <CardHeader className="flex cursor-pointer flex-row items-center justify-between gap-2 py-3 text-sm hover:bg-muted/30">
-            <span className="font-medium">
-              Rotación de secrets · {secrets.length} monitoreados · {n("urgent")} urgentes · {n("warn")} warning · {n("ok")} ok
-            </span>
-            <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${open ? "" : "-rotate-90"}`} />
-          </CardHeader>
-        </CollapsibleTrigger>
+        <CardHeader className="flex flex-row items-center justify-between gap-2 py-3">
+          <CollapsibleTrigger asChild>
+            <button type="button" className="flex flex-1 items-center gap-2 text-sm hover:opacity-80">
+              <span className="font-medium">Rotación de secrets · {secrets.length} monitoreados</span>
+              <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${open ? "" : "-rotate-90"}`} />
+            </button>
+          </CollapsibleTrigger>
+          <div className="flex flex-wrap items-center gap-2">
+            <IssueChip onClick={() => openModal("urgent", "urgentes")}>
+              <Badge variant="outline" className={URGENCY_CLS.urgent}>{n("urgent")} urgentes</Badge>
+            </IssueChip>
+            <IssueChip onClick={() => openModal("warn", "warning")}>
+              <Badge variant="outline" className={URGENCY_CLS.warn}>{n("warn")} warning</Badge>
+            </IssueChip>
+            <Badge variant="outline" className={URGENCY_CLS.ok}>{n("ok")} ok</Badge>
+          </div>
+        </CardHeader>
         <CollapsibleContent>
           <CardContent className="space-y-2">
             {isLoading && <Skeleton className="h-24 w-full" />}
