@@ -37,7 +37,7 @@ export function NovaChat() {
         <span className="text-xs text-muted-foreground">CEO Agent · solo operador OMEGA</span>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
         {messages.length === 0 && !isSending ? (
           <div className="flex h-full items-center justify-center text-center text-sm text-muted-foreground">
             NOVA — CEO Agent. Empezá la conversación.
@@ -51,7 +51,7 @@ export function NovaChat() {
                 </div>
               </div>
             ) : (
-              <div key={i} className="w-full whitespace-pre-wrap px-4 py-3 text-sm text-foreground">
+              <div key={i} className="w-full whitespace-pre-wrap py-3 text-sm text-foreground">
                 {m.content}
               </div>
             ),
@@ -68,7 +68,7 @@ export function NovaChat() {
         <div ref={bottomRef} />
       </div>
 
-      <div className="flex items-end gap-2 border-t border-border p-3">
+      <div className="flex w-full items-end gap-2 border-t border-border px-6 py-3">
         <Textarea
           value={value}
           onChange={(e) => setValue(e.target.value)}
