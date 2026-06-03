@@ -1,6 +1,14 @@
 // Primitivas compartidas de Security Dev (mantiene cada tab ≤75L · DDD C4).
 import { ReactNode } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { SentinelScan } from "@/hooks/useSecurityDevData";
+
+// Agrupa filas per-agente (sentinel_scans) en corridas, bucket por minuto de created_at.
+export function groupSentinelRuns(scans: SentinelScan[]): { key: string; scans: SentinelScan[] }[] {
+  const buckets: Record<string, SentinelScan[]> = {};
+  for (const s of scans) (buckets[s.created_at.slice(0, 16)] ??= []).push(s);
+  return Object.entries(buckets).sort((a, b) => (a[0] < b[0] ? 1 : -1)).map(([key, group]) => ({ key, scans: group }));
+}
 
 export const scoreColor = (s: number) =>
   s >= 95 ? "text-green-500" : s >= 80 ? "text-amber-500" : "text-red-500";

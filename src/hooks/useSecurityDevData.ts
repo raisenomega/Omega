@@ -37,6 +37,22 @@ export interface SentinelData {
   error?: string;
 }
 
+// Per-agente (tabla sentinel_scans · /sentinel/history) · distinto del agregado sentinel_risk_scores.
+export interface SentinelIssue { severity: string; type: string; message: string; }
+export interface SentinelScan {
+  id: string;
+  agent_code: string;
+  scan_type: string;
+  status: string;
+  security_score: number | null;
+  issues: SentinelIssue[];
+  deploy_decision: string | null;
+  scan_duration_ms: number | null;
+  triggered_by: string | null;
+  created_at: string;
+}
+export interface SentinelHistoryData { total: number; scans: SentinelScan[]; }
+
 export interface GuardianLog { id: string; event_type: string; ip_address: string | null; user_agent: string | null; risk_score: number; created_at: string; }
 export interface GuardianIncident { id: string; incident_type: string; severity: string; status: string; detected_at: string; }
 export interface GuardianWatch { id: string; ip_address: string; list_type: string; reason: string | null; created_at: string; }
@@ -55,6 +71,9 @@ export const useDevHealth = () =>
 
 export const useSentinelData = () =>
   useQuery({ queryKey: ["sentinel-data"], queryFn: () => apiGet<SentinelData>("/security-dev/sentinel"), staleTime: STALE });
+
+export const useSentinelHistory = () =>
+  useQuery({ queryKey: ["sentinel-history"], queryFn: () => apiGet<SentinelHistoryData>("/sentinel/history/"), staleTime: STALE });
 
 export const useGuardianData = () =>
   useQuery({ queryKey: ["guardian-data"], queryFn: () => apiGet<GuardianData>("/security-dev/guardian"), staleTime: STALE });
