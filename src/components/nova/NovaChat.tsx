@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, KeyboardEvent } from "react";
 import { Loader2, Send, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 import { useNovaChat } from "@/hooks/useNovaChat";
 
 // Edge-to-edge: -m-6 anula el p-6 del AppLayout · h-[calc(100%+3rem)] recupera
@@ -44,18 +43,19 @@ export function NovaChat() {
             NOVA — CEO Agent. Empezá la conversación.
           </div>
         ) : (
-          messages.map((m, i) => (
-            <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
-              <div
-                className={cn(
-                  "max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm",
-                  m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
-                )}
-              >
+          messages.map((m, i) =>
+            m.role === "user" ? (
+              <div key={i} className="flex justify-end">
+                <div className="max-w-2xl whitespace-pre-wrap rounded-2xl bg-primary px-4 py-2 text-sm text-primary-foreground">
+                  {m.content}
+                </div>
+              </div>
+            ) : (
+              <div key={i} className="w-full whitespace-pre-wrap px-4 py-3 text-sm text-foreground">
                 {m.content}
               </div>
-            </div>
-          ))
+            ),
+          )
         )}
         {isSending && (
           <div className="flex justify-start">

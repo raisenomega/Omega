@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiPost } from "@/lib/api-client";
@@ -15,9 +15,29 @@ interface NovaChatResponse {
   content: string;
 }
 
+const STORAGE_KEY = "nova_chat_history";
+
 export function useNovaChat() {
   const { toast } = useToast();
-  const [messages, setMessages] = useState<NovaMessage[]>([]);
+  const [messages, setMessages] = useState<NovaMessage[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const parsed: unknown = JSON.parse(raw);
+      return Array.isArray(parsed) ? (parsed as NovaMessage[]) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Persiste los últimos 50 · silently fail si localStorage lleno/bloqueado.
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-50)));
+    } catch {
+      // noop
+    }
+  }, [messages]);
 
   const sendMutation = useMutation({
     mutationFn: (history: NovaMessage[]): Promise<NovaChatResponse> =>
