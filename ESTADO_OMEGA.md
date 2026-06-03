@@ -55,6 +55,43 @@
 
 ## 3 · DEBTs ABIERTAS · ~1,127h (consolidado owner · 27 may sesión 2 · ver SOT §6 Total + §17 roadmap)
 
+═══════════════════════════════════════════════════════════════
+## 🛡️ CIERRE SESIÓN 2 · TOTAL (3 jun 2026)
+
+**Commits clave Sesión 2:** `4787b63` rework UX A · `ea9b533` rework UX B · `6ed7337` fix modal · `bbf0da4` Capa 3 Red/HTTP · `805aa42` CSP fix · `d54b5f1` Capa 11 Integraciones · `2d63acb` Capa 8 Chaos · `07b6ebf` cierre docs · `3f86c38` fix RLS prompt_vault · `12b4644` Capa 4 workflow · `46fdbef` Supabase Linter (12 issues) · **este commit** = cierre docs TOTAL.
+
+**Estado SENTINEL final:** 13 componentes en `/security-dev` · 24 crons APScheduler · migraciones 00050→00064 · **~9.8/10 desde código** (máx alcanzable sin externos). GUARDIAN: **0/8 capas** (próximo Sprint).
+
+**Score por capa:** Capa 1-2 (infra/code-audit) ✅ pre-Sprint1 · 3 (Red/HTTP) 100 ✅ · 4 (CVEs) 100 ✅ workflow verde · 5 (Secrets) 100 ✅ · 6 (RLS) 100 ✅ post prompt_vault · 7-A (AI router Anthropic) 100 ✅ · **7-B (Bedrock/Vertex) 🔴 BLOQUEADO (creds AWS+GCP owner)** · 8 (Chaos sin pentest) 100 ✅ · 9 (Observ) 100 ✅ · 10 (Perf) 100 ✅ · 11 (Integraciones) 100 ✅ · 12 (Agents Health) 100 ✅ · Hardening DB: 12/23 linter issues cerrados.
+
+**Falta para 10/10 puro (NO depende de código):** 7-B (creds AWS+GCP) · pentest externo ($5-15k · DEBT-PENTEST-PROFESSIONAL) · Leaked Password Protection (upgrade Pro · DEBT abajo) · GUARDIAN 8 capas (~78h) · BRIDGE SENTINEL+GUARDIAN (~12h).
+
+### 📋 DEBTs consolidados post-Sesión 2 (~28 OPEN)
+
+**SENTINEL/Security-Dev (Sesión 2):** DEBT-024 (claude_service 48 callers · 12h 🟠) · DEBT-025 (ai_providers/dispatcher · 8h 🟠) · DEBT-070 (rate-limit→Redis · 6h 🟡) · DEBT-PREVIOUSLY-IGNORED-BADGE-V2 (3h 🟢) · DEBT-RATE-LIMIT-SYNTHETIC-TEST (3h 🟡) · DEBT-CSP-REPORT-RECEIVER (2h 🟢) · DEBT-CSP-STRICT (4h 🟡) · DEBT-STRIPE-WEBHOOK-E2E-TEST (3h 🟢) · DEBT-RESELLER-CONNECT-STATUS-COLUMN (2h 🟢) · DEBT-PENTEST-PROFESSIONAL ($5-15k 🟠 BLOCKED owner) · DEBT-CHAOS-FULL-COVERAGE (30h 🟢) · DEBT-WORKFLOW-ACTIONS-UPGRADE (30min 🟢) · DEBT-BANDIT-CONFIG-NOISE-EXCLUSIONS (30min 🟢) · DEBT-PROVISION-FUNCTIONS-REVIEW (3 trigger funcs · 30min 🟡) · DEBT-VECTOR-EXTENSION-SCHEMA-MOVE (2h 🟢) · DEBT-SENTINEL-LINTER-INTEGRATION (3h 🟠) · **DEBT-LEAKED-PASSWORD-PROTECTION-FREE-PLAN (🟡 ~5min · BLOCKED Free Plan)**.
+**Heredados pre-Sprint1:** DEBT-002 (Math.random analytics 🟡) · DEBT-004 (202 archivos >75L 🟢) · DEBT-008 (frontend→Supabase directo 🟡) · DEBT-OWNERSHIP-TRIAGE 🟢 · DEBT-RESELLER-PATH-DEAD 🟡 · DEBT-ORPHANED-TABLES 🟢 · DEBT-ANTIFRAUD-WIRE 🟡 · DEBT-ENTERPRISE-PRICE-GUARD 🟢 · **DEBT-SCHEMA-DRIFT-RESELLER 🔴 BLOCKER** · DEBT-ROTAR-KEYS-PRELAUNCH 🟠 · DEBT-106A/B/C/D (Claude DEV ~40h 🟢) · DEBT-2FA-SUPERADMIN (4h 🟠 sugerido).
+
+**DEBT-LEAKED-PASSWORD-PROTECTION-FREE-PLAN** 🟡 (~5min cuando upgrade) · Linter `auth_leaked_password_protection` (WARN) · **NO accionable en Free Plan** (requiere Pro ~$25/mes) · activar toggle Auth→Policies "Prevent use of leaked passwords" al upgrade pre-launch B2B · NO bloqueante MVP.
+
+**RESOLVED Sesión 1+2:** DEBT-023 (model bump 18 may) · prompt_vault PERMISSIVE_TRUE+ASYMMETRIC (`3f86c38`) · Capa 4 workflow (`12b4644`) · 3 funcs SENTINEL exposed + 4 buckets + 5 search_path (`46fdbef`).
+**Total OPEN: ~28 · ~70-90h pendientes (sin GUARDIAN/pentest) · ~158h + pentest + AWS/GCP para 10/10 completo.**
+
+### 🎯 SESIÓN 3 · ARRANQUE GUARDIAN (0/8 capas · ~78h)
+**Trilogía mínima (~22h · 1-2 sesiones · mayor valor):**
+1. **Capa 1 · Zero Trust Identity por request** (~8h) · doc líneas 1292-1402 · `bc_cognition/application/guardian_identity.py` · re-valida identidad+permisos en CADA request · mapa endpoint→roles · default DENY.
+2. **Capa 5 · Threat Score continuo** (~8h) · doc 1711-1806 · `guardian_threat_scorer.py` · score 0-100/user recalculado por acción · eficiente (no lookup costoso).
+3. **Capa 6 · Respuesta proporcional** (~6h) · doc 1807-1876 · `guardian_response.py` · fricciones progresivas (rate-limit→email→bloqueo temporal→permanente) · NO romper flow legítimo.
+**Complementaria (~56h):** Capa 2 behavior profiling 16h · Capa 3 Semantic Firewall 12h · Capa 4 Cross-Client Intel 12h · Capa 7 permanent memory 8h · Capa 8 forensic 8h + BRIDGE SENTINEL+GUARDIAN 12h.
+**Migraciones estimadas:** 00065 guardian_identity_audit · 00066 guardian_threat_state · 00067 guardian_response_log · 00068+.
+**PRIMERA ACCIÓN:** leer doc 1292-1402 → Plan Mode Capa 1 → checkpoint owner → aplicar.
+
+### 📋 PENDIENTES MANUALES OWNER
+✅ Sesión 2: SENTINEL Build Stats disparado · Dependency Scan verde post-fix.
+🟡 No urgentes: marcar rotaciones base 10 secrets (Capa 5 baseline) · upgrade Free→Pro Supabase (Leaked Password Protection) · decisión pentest externo pre-launch.
+🔴 Bloqueante Sesión 5+: credenciales AWS+GCP para Capa 7-B failover.
+═══════════════════════════════════════════════════════════════
+
+
 > **Audit cliente E2E (25 may):** +10 DEBTs nuevas (057-066) · **DEBT-057/058/059/061 ya CERRADAS** (Tab AI Anthropic-only · logo wizard · crisis P4 · ver §2). % real cliente: core ~83% · superficie completa ~68%.
 > **Audit rendimiento imagen (26 may):** +4 DEBTs (068-071) · **TODAS CERRADAS** (uploads async · timeout Nano Banana · rate-limit cableado · retry+backoff · ver §2). La generación de imagen ya no bloquea el event loop, no cuelga, está rate-limitada y reintenta transitorios.
 > **Sesión 27 may (marathon):** cerradas DEBT-052/091/048/047/038/060/075/085/086/095 (–51.5h) · DEBT-040 OAuth con SKELETON + RONDA E en progreso · DEBT-088/092/093/094 + 089/090 registradas (Sprint 7-8). Ver §2.
