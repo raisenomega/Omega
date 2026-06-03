@@ -51,6 +51,10 @@ EXCEPCIONES    Google Nano Banana (imágenes) · Google Veo 3.1 (video)
 | Migración `00041` signup trigger idempotente | ✅ aplicada prod 28 may | `6bab6a0` · cierra conflicto `client_plans` 00006↔00039 |
 | Migración `00042` `clients.user_id` ON DELETE CASCADE | ✅ aplicada prod 28 may | `2960000` · desbloquea borrar users del auth |
 | Toggle Eye/EyeOff revelar password (login + signup) | ✅ (28 may) | `c357dfe` |
+| SENTINEL · 13 componentes (Sprint 1+2) | ✅ (3 jun) | panel `/security-dev` data-real · migraciones `00048`→`00060` · **24 cron jobs** (supersede la fila histórica "8 cron workers") · capas: vault/pulse/db + dependency/secrets/RLS/AI-router/runtime/perf/agents-health + red-HTTP/integraciones/chaos |
+| SENTINEL · X4 idempotencia Stripe monitoreada | ✅ (3 jun) | función `sentinel_webhook_idempotency_enforced()` (00059) · `webhook_events.event_id UNIQUE` verificado en vivo cada scan integraciones + chaos |
+| SENTINEL · security headers + CSP Report-Only | ✅ (3 jun) | `SecurityHeadersMiddleware` backend (5 headers) + `vercel.json` CSP-Report-Only · scan Red-HTTP 100/100 |
+| Modal universal de issues SENTINEL (cross-component) | ✅ (3 jun) | `loadIssuesBySource` por `source_type` · ignore/fix persisten en `sentinel_issue_actions` (+source_type/+source_id) |
 
 ## SECCIÓN 2 — LO QUE NO EXISTE (aunque se diga)
 
@@ -348,6 +352,8 @@ SENTINEL global score ≥ 95/100 sostenido 7 días
 **Hitos 19 may 2026 (Sesión ARIA Fase 1):** Backend ARIA bc_billing fase 1 desplegado (migración 00008 + bc_cognition.persona_aria + api/routes/aria_v1/ con message/history/track endpoints). Frontend ARIA fase 1 desplegado (ARIAContext + useARIAChat + useBehavioralTracking + ARIAButton header + ARIADrawer 380px shadcn Sheet). Behavioral tracking activo en Dashboard mount + ARIA opened. 224→227 routes uvicorn (3 ARIA endpoints registrados). DEBT-037 nueva (ARIA Premium Stripe products pending). Total deuda: 642h → 650h.
 
 **Hitos 18 may 2026:** Backend uvicorn local arranca limpio. `/health` → 200, `/docs` → 200, `/openapi.json` → 200, 223 routes registrados. Bundle de 5 DEBTs cerradas + 2 nuevas registradas (DEBT-029/030) para Fase 3. Próximo paso: smoke E2E con frontend Vite + dashboard preview.
+
+**Hitos 3 jun 2026 (Cierre Sesión 2 · SENTINEL Sprint 1+2):** **13 componentes SENTINEL · 24 cron jobs** · panel `/security-dev` data-real. Sprint 1 capas 4/5/6/7-A/9/10/12 (migraciones 00048→00056). Sprint 2 capas 3 (Red-HTTP `100/100`)/11 (Integraciones `100/100` · cierra **X4** monitoreo)/8 (Chaos `75/100` · 1 fail honesto = RLS HIGH `prompt_vault` preexistente) + rework UX A/B (registry 13 comp + modal universal cross-component + chips clickables + ignore/fix con `source_type`). Migraciones 00057→00060 a prod. **8 DEBTs nuevas (+~47h · PENTEST = externo $):** DEBT-PREVIOUSLY-IGNORED-BADGE-V2 +3h · DEBT-RATE-LIMIT-SYNTHETIC-TEST +3h · DEBT-CSP-REPORT-RECEIVER +2h · DEBT-CSP-STRICT +4h · DEBT-STRIPE-WEBHOOK-E2E-TEST +3h · DEBT-RESELLER-CONNECT-STATUS-COLUMN +2h · DEBT-CHAOS-FULL-COVERAGE +30h · DEBT-PENTEST-PROFESSIONAL ($5-15k externo semestral · no automatizable · `PENTEST_CHECKLIST_OMEGA.md`). **Reconciliación:** DEBT-023 ✅CERRADA (no dup con 024); DEBT-024 (12h) y DEBT-025 (8h) distintas, ambas OPEN Fase 3; DEBT-070(impl)↔RATE-LIMIT-SYNTHETIC-TEST(test) y CSP-REPORT-RECEIVER↔CSP-STRICT = complementarios; cero duplicados nuevos. Tabla consolidada Área A → `ESTADO_OMEGA.md §3` (cierre Sesión 2). Total deuda: ~1,127h → **~1,174h** (+47h follow-ups SENTINEL · PENTEST externo no suma horas).
 
 ## SECCIÓN 7 — STACK CONFIRMADO
 

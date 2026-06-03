@@ -78,6 +78,42 @@
 
 > Detalle/contexto de cada una: `SOURCE_OF_TRUTH.md §6`. Aquí: ID · 1-línea · horas · dependencia · sprint.
 
+═══════════════════════════════════════════════════════════════
+### 🛡️ CIERRE SESIÓN 2 (3 jun 2026) · SENTINEL Sprint 1 + Sprint 2 consolidado
+
+**Estado SENTINEL: 13 componentes · 24 cron jobs · panel `/security-dev` data-real.**
+- **Sprint 1** (capas 4/5/6/7-A/9/10/12): dependency-scan · secrets-rotation · RLS-audit · AI-provider-router (Anthropic-only, Bedrock/Vertex pending creds) · runtime-observability · performance-APM · agents-IA-health.
+- **Sprint 2** (capas 3/11/8 + rework UX A/B): Red-y-HTTP (headers+TLS+rate-limit+CORS · **100/100 en vivo**) · Integraciones (Stripe webhooks/Connect + OAuth · **100/100** · **cierra X4 monitoreo**) · Chaos-Engineering (5 escenarios controlled · **75/100**, 1 fail honesto = RLS HIGH `prompt_vault` preexistente). Rework UX: registry 13 componentes + modal universal + chips clickables cross-component (ignore/fix con `source_type`) + secrets collapsible.
+- Migraciones a prod Sprint 2: **00057** (issue_actions +source_type/+source_id) · **00058** (network_http) · **00059** (integrations + función X4) · **00060** (chaos).
+
+**Reconciliación de duplicados/obsoletos (auditoría exhaustiva):**
+- `DEBT-023` ✅ **CERRADA** (18 may, model bump) — el label "DEBT-023/024" del card AIProviders es impreciso (023 cerrada); el legacy claude_service vivo = **024**.
+- `DEBT-024` (12h, 48 callers claude_service) y `DEBT-025` (8h, ai_providers/router/dispatcher) son **distintas, ambas OPEN, Fase 3** · NO duplican (paths distintos).
+- `DEBT-070` ✅ (impl rate-limit) ↔ `DEBT-RATE-LIMIT-SYNTHETIC-TEST` (test e2e) = **complementarios**, no dup.
+- `DEBT-CSP-REPORT-RECEIVER` (recibir violaciones) ↔ `DEBT-CSP-STRICT` (promover a enforced) = **complementarios**.
+- Los 8 DEBTs nuevos de esta sesión son todos OPEN, ninguno duplica preexistentes.
+
+**Tabla consolidada · DEBTs SENTINEL / Security-Dev (Área A):**
+
+| DEBT | Estado | 1-línea | Horas | Sprint |
+|---|---|---|---|---|
+| DEBT-023 | ✅ RESOLVED | claude_service model bump (`18 may`) | — | — |
+| DEBT-024 | 🟠 OPEN | 48 callers `claude_service` → `anthropic_adapter` único entry | 12h | Fase 3 |
+| DEBT-025 | 🟠 OPEN | `ai_providers`/router/dispatcher → consolidar en routing_table+adapter | 8h | Fase 3 |
+| DEBT-070 | ✅ RESOLVED | RateLimitMiddleware in-memory (`26 may`) | — | — |
+| DEBT-PREVIOUSLY-IGNORED-BADGE-V2 | 🟡 OPEN | badge "ignorado" en las 7 fuentes nuevas (endpoint GET-actions + hash front) | 3h | 8+ |
+| DEBT-RATE-LIMIT-SYNTHETIC-TEST | 🟡 OPEN | test e2e efectividad desde IP externa (post Redis multi-instance) | 3h | futuro |
+| DEBT-CSP-REPORT-RECEIVER | 🟡 OPEN | endpoint CSP violations → `sentinel_csp_violations` | 2h | futuro |
+| DEBT-CSP-STRICT | 🟡 OPEN | remover `unsafe-*` → CSP enforced (tras 2 sem report-only) | 4h | futuro |
+| DEBT-STRIPE-WEBHOOK-E2E-TEST | 🟡 OPEN | test idempotencia duplicado intencional (Stripe simulator) | 3h | 8+ |
+| DEBT-RESELLER-CONNECT-STATUS-COLUMN | 🟢 OPEN | `connect_status`+payout a `resellers` para Connect profundo | 2h | 8+ |
+| DEBT-PENTEST-PROFESSIONAL | 🟠 OPEN | pentest externo semestral (no automatizable · `PENTEST_CHECKLIST_OMEGA.md`) | $5-15k ext | — |
+| DEBT-CHAOS-FULL-COVERAGE | 🟢 OPEN | ampliar chaos (pod restart/CDN/Redis/multi-region/cascading) | 30h | futuro |
+| SENTINEL-CAPA-7B-BEDROCK-VERTEX | 🔵 BLOCKED | failover Bedrock/Vertex · requiere creds AWS+GCP del owner | 6h | bloqueado-ext |
+
+Subtotal Área A abierto: **~70h** + pentest externo ($) + 6h bloqueado. Áreas B (heredados pre-Sprint1), C (GUARDIAN ~78h, sistema aparte) y D (7-B bloqueado) → ver `SOURCE_OF_TRUTH.md §6` (ledger vivo) + `GUARDIAN_SECURITY_AGENT.md`.
+═══════════════════════════════════════════════════════════════
+
 ### 🔴 CRÍTICAS (~80h)
 | DEBT | Descripción | Horas | Dep. | Sprint |
 |---|---|---|---|---|
