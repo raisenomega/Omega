@@ -2,12 +2,14 @@
 Analytics API Routes
 Endpoints for data analysis and insights
 """
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Header
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from app.agents.analytics_agent import analytics_agent
 from app.api.routes.analytics.handlers.get_dashboard import handle_get_dashboard
+from app.api.routes.auth.auth_utils import get_current_user, require_superadmin
+from app.api.routes.calendar_v3._access import resolve_client_or_403
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
@@ -47,7 +49,10 @@ class AnalyticsResponse(BaseModel):
 
 
 @router.post("/analyze-metrics", response_model=AnalyticsResponse)
-async def analyze_metrics(request: AnalyzeMetricsRequest) -> AnalyticsResponse:
+async def analyze_metrics(
+    request: AnalyzeMetricsRequest,
+    authorization: Optional[str] = Header(None),
+) -> AnalyticsResponse:
     """
     Analyze social media metrics
     
@@ -55,6 +60,7 @@ async def analyze_metrics(request: AnalyzeMetricsRequest) -> AnalyticsResponse:
     
     Returns engagement rate, reach percentage, and AI-generated insights
     """
+    await get_current_user(authorization)  # IDOR fix · auth requerida (anti-abuso de cómputo)
     try:
         result = await analytics_agent.execute({
             "type": "analyze",
@@ -71,7 +77,10 @@ async def analyze_metrics(request: AnalyzeMetricsRequest) -> AnalyticsResponse:
 
 
 @router.post("/detect-patterns", response_model=AnalyticsResponse)
-async def detect_patterns(request: DetectPatternsRequest) -> AnalyticsResponse:
+async def detect_patterns(
+    request: DetectPatternsRequest,
+    authorization: Optional[str] = Header(None),
+) -> AnalyticsResponse:
     """
     Detect patterns in historical data
     
@@ -79,6 +88,7 @@ async def detect_patterns(request: DetectPatternsRequest) -> AnalyticsResponse:
     
     Returns moving averages, anomalies, growth trends, and AI analysis
     """
+    await get_current_user(authorization)  # IDOR fix · auth requerida (anti-abuso de cómputo)
     try:
         result = await analytics_agent.execute({
             "type": "patterns",
@@ -95,7 +105,10 @@ async def detect_patterns(request: DetectPatternsRequest) -> AnalyticsResponse:
 
 
 @router.post("/generate-insights", response_model=AnalyticsResponse)
-async def generate_insights(request: GenerateInsightsRequest) -> AnalyticsResponse:
+async def generate_insights(
+    request: GenerateInsightsRequest,
+    authorization: Optional[str] = Header(None),
+) -> AnalyticsResponse:
     """
     Generate actionable insights from metrics
     
@@ -103,6 +116,7 @@ async def generate_insights(request: GenerateInsightsRequest) -> AnalyticsRespon
     
     Returns AI-generated insights with observations and action items
     """
+    await get_current_user(authorization)  # IDOR fix · auth requerida (anti-abuso de cómputo)
     try:
         result = await analytics_agent.execute({
             "type": "insights",
@@ -119,7 +133,10 @@ async def generate_insights(request: GenerateInsightsRequest) -> AnalyticsRespon
 
 
 @router.post("/forecast", response_model=AnalyticsResponse)
-async def forecast_performance(request: ForecastRequest) -> AnalyticsResponse:
+async def forecast_performance(
+    request: ForecastRequest,
+    authorization: Optional[str] = Header(None),
+) -> AnalyticsResponse:
     """
     Forecast future performance
     
@@ -128,6 +145,7 @@ async def forecast_performance(request: ForecastRequest) -> AnalyticsResponse:
     
     Returns predicted values and growth rate
     """
+    await get_current_user(authorization)  # IDOR fix · auth requerida (anti-abuso de cómputo)
     try:
         result = await analytics_agent.execute({
             "type": "forecast",
@@ -145,7 +163,10 @@ async def forecast_performance(request: ForecastRequest) -> AnalyticsResponse:
 
 
 @router.post("/dashboard-data", response_model=AnalyticsResponse)
-async def get_dashboard_data(request: DashboardRequest) -> AnalyticsResponse:
+async def get_dashboard_data(
+    request: DashboardRequest,
+    authorization: Optional[str] = Header(None),
+) -> AnalyticsResponse:
     """
     Get comprehensive dashboard data
     
@@ -153,6 +174,7 @@ async def get_dashboard_data(request: DashboardRequest) -> AnalyticsResponse:
     
     Returns overview, recent performance, and top posts
     """
+    await get_current_user(authorization)  # IDOR fix · auth requerida (anti-abuso de cómputo)
     try:
         result = await analytics_agent.execute({
             "type": "dashboard",
@@ -169,15 +191,19 @@ async def get_dashboard_data(request: DashboardRequest) -> AnalyticsResponse:
 
 
 @router.get("/agent-status")
-async def get_agent_status() -> dict:
+async def get_agent_status(
+    authorization: Optional[str] = Header(None),
+) -> dict:
     """Get Analytics Agent status"""
+    await get_current_user(authorization)  # IDOR fix · auth requerida
     return analytics_agent.get_status()
 
 
 @router.get("/dashboard/", response_model=AnalyticsResponse)
 async def get_dashboard(
-    client_id: Optional[str] = Query(None, description="Optional client UUID (aggregate all if None)"),
-    date_range: str = Query(default="7d", description="Time range: 7d, 30d, 90d")
+    client_id: Optional[str] = Query(None, description="Client UUID · None = aggregate-all (solo owner)"),
+    date_range: str = Query(default="7d", description="Time range: 7d, 30d, 90d"),
+    authorization: Optional[str] = Header(None),
 ) -> AnalyticsResponse:
     """
     Get analytics dashboard with real Supabase data
@@ -187,7 +213,16 @@ async def get_dashboard(
 
     Returns content_generated, scheduled_posts, client_context stats
     """
-    result = await handle_get_dashboard(client_id, date_range)
+    # IDOR fix: None → aggregate-all gated a owner (require_superadmin) · con client_id → ownership
+    # vía resolve_client_or_403 (variante A · calendar_v3._access · sin fallback · molde 5727dda).
+    if client_id is None:
+        await require_superadmin(authorization)
+        validated_client_id: Optional[str] = None
+    else:
+        user = await get_current_user(authorization)
+        client = resolve_client_or_403(user["id"], client_id)
+        validated_client_id = str(client["id"])
+    result = await handle_get_dashboard(client_id=validated_client_id, date_range=date_range)
     return AnalyticsResponse(
         success=True,
         data=result,
