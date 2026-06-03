@@ -13,6 +13,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.api.rate_limit_middleware import RateLimitMiddleware
+from app.api.error_capture_middleware import SentinelErrorCaptureMiddleware  # Capa 9
 from app.config import settings
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -92,6 +93,10 @@ app = FastAPI(
     docs_url="/docs", redoc_url="/redoc",
 )
 
+# Capa 9 · captura de errores backend (5xx + exceptions) · se monta PRIMERO → innermost →
+# envuelve a los routers, ve sus excepciones/status. Best-effort, no bloquea el request.
+app.add_middleware(SentinelErrorCaptureMiddleware)
+
 # DEBT-070: rate limiting por IP · cablea settings.rate_limit_per_minute (antes config
 # muerta). Se monta ANTES de CORS → CORS queda outermost (Starlette: último add = outer) →
 # el 429 pasa por CORS y lleva los headers al browser.
@@ -169,8 +174,11 @@ async def startup_event():
     # SENTINEL Capa 6 — auditoría RLS · cada hora exacta · 18vo cron job
     from app.workers.sentinel_rls_worker import run_rls_audit_scan
     scheduler.add_job(run_rls_audit_scan, 'cron', minute=0, id='rls_audit_hourly', max_instances=1, replace_existing=True)
+    # SENTINEL Capa 9 — observabilidad runtime · cada 5 min · 19vo cron job
+    from app.workers.sentinel_runtime_worker import run_runtime_observability_scan
+    scheduler.add_job(run_runtime_observability_scan, 'cron', minute='*/5', id='runtime_observability_5min', max_instances=1, replace_existing=True)
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION + RLS_AUDIT workers activos — 18 jobs (jobstore persistente DEBT-047)")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION + RLS_AUDIT + RUNTIME_OBS workers activos — 19 jobs (jobstore persistente DEBT-047)")
 
 @app.on_event("shutdown")
 async def shutdown_event():

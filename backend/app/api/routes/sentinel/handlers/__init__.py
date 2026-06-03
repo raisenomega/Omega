@@ -18,6 +18,8 @@ from .secrets_rotation_register import handle_register_rotation, RegisterRotatio
 from .rls_audit_status import handle_rls_audit_status
 from .rls_audit_trigger import handle_rls_audit_trigger
 from .ai_providers_status import handle_ai_providers_status
+from .frontend_error_receive import handle_frontend_error, FrontendError
+from .runtime_status import handle_runtime_status
 
 __all__ = [
     "handle_get_status",
@@ -38,4 +40,7 @@ __all__ = [
     "handle_rls_audit_status",
     "handle_rls_audit_trigger",
     "handle_ai_providers_status",
+    "handle_frontend_error",
+    "FrontendError",
+    "handle_runtime_status",
 ]

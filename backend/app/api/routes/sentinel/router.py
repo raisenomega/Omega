@@ -2,7 +2,7 @@
 Sentinel Router - Security & Monitoring
 Filosofía: No velocity, only precision 🐢💎
 """
-from fastapi import APIRouter, Query, Header
+from fastapi import APIRouter, Query, Header, Request
 from typing import Optional
 
 from .handlers import (
@@ -24,6 +24,9 @@ from .handlers import (
     handle_rls_audit_status,
     handle_rls_audit_trigger,
     handle_ai_providers_status,
+    handle_frontend_error,
+    FrontendError,
+    handle_runtime_status,
 )
 
 router = APIRouter(prefix="/sentinel", tags=["SENTINEL 🛡️"])
@@ -109,3 +112,15 @@ async def rls_audit_trigger(authorization: Optional[str] = Header(None)):
 async def ai_providers_status(authorization: Optional[str] = Header(None)):
     """Estado de AI providers (Anthropic/Bedrock/Vertex) + cobertura · solo superadmin."""
     return await handle_ai_providers_status(authorization)
+
+
+@router.post("/runtime/frontend-error")
+async def runtime_frontend_error(request: FrontendError, http_request: Request):
+    """Receptor PÚBLICO de errores frontend (window.onerror/ErrorBoundary) · rate-limited por IP."""
+    return await handle_frontend_error(request, http_request)
+
+
+@router.get("/runtime/status")
+async def runtime_status(authorization: Optional[str] = Header(None)):
+    """Estado de observabilidad runtime (último scan + 24h) · solo superadmin."""
+    return await handle_runtime_status(authorization)
