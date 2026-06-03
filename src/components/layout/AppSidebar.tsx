@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Lock,
   ShieldCheck,
+  Crown,
   type LucideIcon,
 } from "lucide-react";
 import { RaisenLogo } from "@/components/brand/RaisenLogo";
@@ -206,6 +207,29 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* NOVA · solo is_super_owner (CEO Agent · módulo owner-only · DEBT-IDOR-NOVA) */}
+        {isSuperOwner && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="NOVA">
+                    <NavLink
+                      to="/nova"
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    >
+                      <Crown className="h-4 w-4" />
+                      <span>NOVA</span>
+                      <span className="ml-auto h-2 w-2 rounded-full bg-amber-500 group-data-[collapsible=icon]:hidden" />
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {/* SECURITY DEV · solo is_super_owner (Ibrain · operador OMEGA) */}
         {isSuperOwner && (
