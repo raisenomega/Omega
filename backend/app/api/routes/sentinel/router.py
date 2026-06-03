@@ -23,6 +23,7 @@ from .handlers import (
     RegisterRotationRequest,
     handle_rls_audit_status,
     handle_rls_audit_trigger,
+    handle_ai_providers_status,
 )
 
 router = APIRouter(prefix="/sentinel", tags=["SENTINEL 🛡️"])
@@ -102,3 +103,9 @@ async def rls_audit_latest(authorization: Optional[str] = Header(None)):
 async def rls_audit_trigger(authorization: Optional[str] = Header(None)):
     """Disparar auditoría RLS ahora ("Auditar ahora") · solo superadmin."""
     return await handle_rls_audit_trigger(authorization)
+
+
+@router.get("/ai-providers/status")
+async def ai_providers_status(authorization: Optional[str] = Header(None)):
+    """Estado de AI providers (Anthropic/Bedrock/Vertex) + cobertura · solo superadmin."""
+    return await handle_ai_providers_status(authorization)

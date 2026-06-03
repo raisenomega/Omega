@@ -80,3 +80,9 @@ pytest-cov>=4.1.0
 # fal-client            ← reemplazado por google-genai Veo 3.1
 # tavily-python         ← reemplazado por Brave Search (commit 1e2ed99)
 # ═══════════════════════════════════════════════════════════════════
+# Capa 7 · failover providers · SDKs OPCIONALES (Bedrock/Vertex sirven el MISMO Claude · I1 ok).
+# Comentados en 7-A (deploy Anthropic-only · evita conflicto de versión con anthropic pinned).
+# El código los importa con try/except → si faltan, provider = not_configured "sdk_missing".
+# Descomentar en 7-B junto con env vars (AWS_* / GOOGLE_VERTEX_*) para activar failover real.
+# boto3>=1.34.0          ← AWS Bedrock (Capa 7-B)
+# anthropic[vertex]      ← Google Vertex AI (Capa 7-B)

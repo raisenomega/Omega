@@ -12,30 +12,18 @@ Tipos y pricing: _anthropic_types.py
 from __future__ import annotations
 
 import asyncio
-import os
 import time
 from typing import Any
 
-from anthropic import AsyncAnthropic, APIError, APITimeoutError
+from anthropic import APIError, APITimeoutError
 
 from app.bc_cognition.domain.limits_omega import LIMITS_OMEGA
 from app.bc_cognition.domain.routing_table import resolve_model
 from app.bc_cognition.infrastructure.hermes_usage import record_mcp_use  # HERMES f1.5 · usage-tracking
+from app.bc_cognition.infrastructure.ai_provider_router import execute as ai_provider_execute  # Capa 7-A
 from app.bc_cognition.infrastructure._anthropic_types import (
     ClaudeResponse, ClaudeError, estimate_cost,
 )
-
-_client: AsyncAnthropic | None = None
-
-
-def _get_client() -> AsyncAnthropic:
-    global _client
-    if _client is None:
-        key = os.environ.get("ANTHROPIC_API_KEY")
-        if not key:
-            raise RuntimeError("ANTHROPIC_API_KEY no configurada")
-        _client = AsyncAnthropic(api_key=key)
-    return _client
 
 
 async def generate(
@@ -63,7 +51,9 @@ async def generate(
     if tools is not None:
         create_kwargs["tools"] = tools   # solo si hay tools · sin esto = llamada idéntica a hoy
     try:
-        resp = await asyncio.wait_for(_get_client().messages.create(**create_kwargs), timeout=timeout_s)
+        # Capa 7-A · el router aplica el timeout (wait_for) y el failover · re-lanza estos mismos
+        # tipos de excepción en fallo total → los except de abajo siguen funcionando igual.
+        resp = await ai_provider_execute(create_kwargs, timeout_s, agent_code)
     except asyncio.TimeoutError:
         record_mcp_use("anthropic", ok=False, detail=f"timeout {timeout_s}s")  # HERMES f1.5
         return None, ClaudeError("timeout", f"Excedió {timeout_s}s")
