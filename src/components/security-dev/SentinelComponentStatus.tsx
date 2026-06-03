@@ -7,6 +7,7 @@ import { useAIProvidersStatus } from "@/hooks/useAIProvidersStatus";
 import { useRuntimeStatus } from "@/hooks/useRuntimeStatus";
 import { usePerformanceStatus } from "@/hooks/usePerformanceStatus";
 import { useAgentsHealthStatus } from "@/hooks/useAgentsHealthStatus";
+import { useNetworkHTTPStatus } from "@/hooks/useNetworkHTTPStatus";
 import { SENTINEL_COMPONENTS } from "@/lib/sentinel_components_registry";
 import { buildSummaries, latestScanFor } from "@/lib/sentinel_component_summary";
 import type { OpenIssuesParams } from "@/lib/sentinel_issue_loaders";
@@ -19,6 +20,7 @@ import { SentinelAIProvidersCard } from "./SentinelAIProvidersCard";
 import { SentinelRuntimeCard } from "./SentinelRuntimeCard";
 import { SentinelPerformanceCard } from "./SentinelPerformanceCard";
 import { SentinelAgentsHealthCard } from "./SentinelAgentsHealthCard";
+import { SentinelNetworkHTTPCard } from "./SentinelNetworkHTTPCard";
 
 // "Estado por componente" · 10 filas colapsables. Header = resumen (status/score/última corrida);
 // cuerpo = el card de detalle YA existente (reuso · React Query dedupea el fetch). Cero backend nuevo.
@@ -33,6 +35,7 @@ export function SentinelComponentStatus({ onOpenIssues }: { onOpenIssues: (p: Op
     runtime: useRuntimeStatus().data?.last_scan ?? null,
     performance: usePerformanceStatus().data?.last_scan ?? null,
     agentsHealth: useAgentsHealthStatus().data?.last_scan ?? null,
+    network: useNetworkHTTPStatus().data,
   });
 
   const agentBody = (codes: string[]): ReactNode => {
@@ -52,6 +55,7 @@ export function SentinelComponentStatus({ onOpenIssues }: { onOpenIssues: (p: Op
     RUNTIME_OBSERVABILITY: <SentinelRuntimeCard onOpenIssues={onOpenIssues} />,
     PERFORMANCE_APM: <SentinelPerformanceCard onOpenIssues={onOpenIssues} />,
     AGENTS_HEALTH: <SentinelAgentsHealthCard onOpenIssues={onOpenIssues} />,
+    NETWORK_HTTP: <SentinelNetworkHTTPCard onOpenIssues={onOpenIssues} />,
   };
 
   return (

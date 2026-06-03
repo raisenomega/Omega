@@ -51,4 +51,8 @@ export const SENTINEL_COMPONENTS: readonly SentinelComponentMeta[] = [
     code: "AGENTS_HEALTH", name: "Agentes IA · Health", frequency: "cron horario", sourceTable: "sentinel_agents_health_scans",
     whatItChecks: "Salud de los agentes IA: success_rate, accuracy, costo diario y detección de model drift.",
   },
+  {
+    code: "NETWORK_HTTP", name: "Red y HTTP", frequency: "cada 2h", sourceTable: "sentinel_network_http_scans",
+    whatItChecks: "Seguridad de red en prod: security headers HTTP, TLS (cert + expiry), rate-limit configurado y CORS hardening.",
+  },
 ] as const;

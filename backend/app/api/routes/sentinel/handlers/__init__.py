@@ -24,6 +24,8 @@ from .performance_status import handle_performance_status
 from .build_stats_register import handle_build_stats, BuildStats
 from .agents_health_status import handle_agents_health_status
 from .agents_health_trigger import handle_agents_health_trigger
+from .network_http_status import handle_network_http_status
+from .network_http_trigger import handle_network_http_trigger
 
 __all__ = [
     "handle_get_status",
@@ -52,4 +54,6 @@ __all__ = [
     "BuildStats",
     "handle_agents_health_status",
     "handle_agents_health_trigger",
+    "handle_network_http_status",
+    "handle_network_http_trigger",
 ]

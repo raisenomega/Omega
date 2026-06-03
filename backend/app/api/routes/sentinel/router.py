@@ -32,6 +32,8 @@ from .handlers import (
     BuildStats,
     handle_agents_health_status,
     handle_agents_health_trigger,
+    handle_network_http_status,
+    handle_network_http_trigger,
 )
 
 router = APIRouter(prefix="/sentinel", tags=["SENTINEL 🛡️"])
@@ -153,3 +155,15 @@ async def agents_health_status(authorization: Optional[str] = Header(None)):
 async def agents_health_trigger(authorization: Optional[str] = Header(None)):
     """Disparar el scan de salud de agentes ahora ("Escanear ahora") · solo superadmin."""
     return await handle_agents_health_trigger(authorization)
+
+
+@router.get("/network-http/status")
+async def network_http_status(authorization: Optional[str] = Header(None)):
+    """Estado Red/HTTP (security headers + TLS + rate-limit + CORS) por target · solo superadmin."""
+    return await handle_network_http_status(authorization)
+
+
+@router.post("/network-http/trigger")
+async def network_http_trigger(authorization: Optional[str] = Header(None)):
+    """Disparar el scan Red/HTTP ahora · solo superadmin."""
+    return await handle_network_http_trigger(authorization)

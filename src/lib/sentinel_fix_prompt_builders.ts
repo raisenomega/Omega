@@ -16,6 +16,7 @@ const BUILDERS: Record<string, Builder> = {
   agents_health: (i) => `Issue de salud del agente ${i.agentCode}: type=${i.type} · "${i.message}" · severity=${i.severity}. Revisar prompt/routing/datos del agente.`,
   secrets_rotation: (i) => `Rotación de secret pendiente: ${i.message} · urgency=${i.severity}. Rotar el secret y registrar la rotación en SENTINEL.`,
   ai_provider_router: (i) => `Falla del proveedor IA ${i.agentCode}: type=${i.type} · "${i.message}" · severity=${i.severity}. Revisar credenciales/circuit breaker/failover.`,
+  network_http: (i) => `Issue de Red/HTTP: type=${i.type} · "${i.message}" · severity=${i.severity}. Proponer fix (header faltante en middleware/vercel.json · renovar cert TLS · endurecer CORS).`,
 };
 
 export function buildFixPrompt(issue: NormalizedIssue): string {

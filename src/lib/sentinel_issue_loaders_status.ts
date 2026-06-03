@@ -6,6 +6,7 @@ import type { RuntimeStatus } from "@/hooks/useRuntimeStatus";
 import type { PerformanceStatus } from "@/hooks/usePerformanceStatus";
 import type { AgentsHealthStatus } from "@/hooks/useAgentsHealthStatus";
 import type { AIProvidersStatus } from "@/hooks/useAIProvidersStatus";
+import type { NetworkHTTPStatus } from "@/hooks/useNetworkHTTPStatus";
 import type { NormalizedIssue } from "./sentinel_issue_loaders";
 
 const bySeverity = (issues: NormalizedIssue[], severity?: string) =>
@@ -36,6 +37,17 @@ export async function loadAgentsHealth(agentCode?: string): Promise<NormalizedIs
     .map((a) => ({ severity: "MEDIUM", type: "low_success_rate", message: `${a.agent_code}: success_rate ${Math.round((a.success_rate ?? 0) * 100)}% en ${a.calls_24h} calls`, agentCode: a.agent_code }));
   const all = [...drift, ...low].map((x, i) => ({ key: `ah|${i}|${x.agentCode}`, ...x, sourceType: "agents_health", sourceId: null, previousActions: [] }));
   return agentCode ? all.filter((i) => i.agentCode === agentCode) : all;
+}
+
+export async function loadNetworkHttp(severity?: string): Promise<NormalizedIssue[]> {
+  const data = await apiGet<NetworkHTTPStatus>("/sentinel/network-http/status");
+  const issues = (data.targets ?? []).flatMap((t) =>
+    (t.last_scan?.issues ?? []).map((it, i) => ({
+      key: `net|${t.url}|${i}|${it.check}`, severity: it.severity, type: it.check, message: it.detail,
+      sourceType: "network_http", sourceId: t.last_scan?.id ?? null, previousActions: [],
+    })),
+  );
+  return severity ? issues.filter((i) => i.severity === severity) : issues;
 }
 
 export async function loadAIProvider(): Promise<NormalizedIssue[]> {

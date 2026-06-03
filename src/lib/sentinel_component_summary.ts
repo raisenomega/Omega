@@ -9,6 +9,7 @@ import type { AIProvidersStatus } from "@/hooks/useAIProvidersStatus";
 import type { RuntimeScan } from "@/hooks/useRuntimeStatus";
 import type { PerformanceScan } from "@/hooks/usePerformanceStatus";
 import type { AgentsHealthScan } from "@/hooks/useAgentsHealthStatus";
+import type { NetworkHTTPStatus } from "@/hooks/useNetworkHTTPStatus";
 
 export type Tone = "ok" | "warn" | "bad" | "none";
 export interface ComponentSummary { tone: Tone; label: string; score: number | null; lastRun: string | null; }
@@ -22,6 +23,7 @@ export interface SummaryInput {
   runtime: RuntimeScan | null;
   performance: PerformanceScan | null;
   agentsHealth: AgentsHealthScan | null;
+  network: NetworkHTTPStatus | undefined;
 }
 
 const NONE: ComponentSummary = { tone: "none", label: "sin corridas", score: null, lastRun: null };
@@ -60,6 +62,12 @@ function rlsSummary(rls: RLSAudit | null): ComponentSummary {
   return { tone, label: rls.total_issues === 0 ? "RLS limpio" : `${rls.total_issues} issues`, score: null, lastRun: rls.scanned_at ?? rls.created_at };
 }
 
+function networkSummary(net: NetworkHTTPStatus | undefined): ComponentSummary {
+  if (!net || net.overall_score == null) return NONE;
+  const lastRun = net.targets.find((t) => t.last_scan)?.last_scan?.scanned_at ?? null;
+  return { tone: scoreTone(net.overall_score), label: `score ${net.overall_score}`, score: net.overall_score, lastRun };
+}
+
 function aiSummary(ai: AIProvidersStatus | undefined): ComponentSummary {
   if (!ai) return NONE;
   const open = ai.providers.some((p) => p.circuit_state === "open");
@@ -81,5 +89,6 @@ export function buildSummaries(input: SummaryInput): Record<string, ComponentSum
     RUNTIME_OBSERVABILITY: scoreScanSummary(input.runtime),
     PERFORMANCE_APM: scoreScanSummary(input.performance),
     AGENTS_HEALTH: scoreScanSummary(input.agentsHealth),
+    NETWORK_HTTP: networkSummary(input.network),
   };
 }

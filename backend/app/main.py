@@ -13,6 +13,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.api.rate_limit_middleware import RateLimitMiddleware
+from app.api.security_headers_middleware import SecurityHeadersMiddleware  # Capa 3 (Red y HTTP)
 from app.api.error_capture_middleware import SentinelErrorCaptureMiddleware  # Capa 9
 from app.api.request_timing_middleware import RequestTimingMiddleware  # Capa 10
 from app.config import settings
@@ -120,6 +121,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Capa 3 (Red y HTTP) · security headers en TODA response. Se monta DESPUÉS de CORS →
+# outermost → cubre también respuestas de error. NO incluye CSP (rompería Swagger /docs;
+# la CSP del producto va en vercel.json · Report-Only).
+app.add_middleware(SecurityHeadersMiddleware)
+
 # Startup event
 @app.on_event("startup")
 async def startup_event():
@@ -188,8 +194,11 @@ async def startup_event():
     # SENTINEL Capa 12 — salud de agentes IA · cada hora minute=15 (evita overlap con RLS :00 y perf/runtime */5) · 21vo cron job
     from app.workers.sentinel_agents_health_worker import run_agents_health_scan
     scheduler.add_job(run_agents_health_scan, 'cron', minute=15, id='agents_health_hourly', max_instances=1, replace_existing=True)
+    # SENTINEL Sprint 2 Capa 3 — Red y HTTP (headers + TLS + rate-limit config + CORS) · cada 2h minute=20 (evita :00/:05/:15) · 22vo cron job
+    from app.workers.sentinel_network_http_worker import run_network_http_scan
+    scheduler.add_job(run_network_http_scan, 'cron', minute=20, hour='*/2', id='network_http_2h', max_instances=1, replace_existing=True)
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION + RLS_AUDIT + RUNTIME_OBS + PERF + AGENTS_HEALTH workers activos — 21 jobs (jobstore persistente DEBT-047)")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION + RLS_AUDIT + RUNTIME_OBS + PERF + AGENTS_HEALTH + NETWORK_HTTP workers activos — 22 jobs (jobstore persistente DEBT-047)")
 
 @app.on_event("shutdown")
 async def shutdown_event():
