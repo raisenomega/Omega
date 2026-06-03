@@ -49,40 +49,51 @@ async def handle_get_briefing() -> Dict[str, Any]:
     except Exception as e:
         logger.warning(f"Failed to fetch nova_memory: {e}")
 
-    # 2. System Status (security, clients, MRR, agents)
+    # 2. System Status (security, clients, agents) · 3 queries INDEPENDIENTES.
+    # Antes: 1 solo try → el SELECT a clients pedía health_score/mrr (inexistentes)
+    # → PostgREST error → tumbaba el bloque entero → system_status quedaba null
+    # (security_score real de SENTINEL nunca se exponía). Ahora cada query aislada.
+    security_score = None
+    security_status = None
     try:
-        # Security score from SENTINEL
         scan = supabase.client.table("sentinel_scans")\
             .select("security_score,status")\
             .order("created_at", desc=True)\
             .limit(1).execute()
-
-        # Clients health
-        clients = supabase.client.table("clients")\
-            .select("id,health_score,mrr")\
-            .execute()
-
-        client_list = clients.data or []
-
-        # Agents count
-        agents_count = supabase.client.table("omega_agents")\
-            .select("id", count="exact").execute()
-
-        result["system_status"] = {
-            "security_score": scan.data[0].get("security_score") if scan.data else None,
-            "security_status": scan.data[0].get("status") if scan.data else "unknown",
-            "deploy_allowed": (scan.data[0].get("security_score", 0) >= 70) if scan.data else True,
-            "total_clients": len(client_list),
-            "healthy_clients": len([c for c in client_list if (c.get("health_score") or 0) >= 80]),
-            "at_risk_clients": len([c for c in client_list if 50 <= (c.get("health_score") or 0) < 80]),
-            "churn_risk_clients": len([c for c in client_list if (c.get("health_score") or 0) < 50]),
-            "mrr_current": round(sum(float(c.get("mrr") or 0) for c in client_list), 2),
-            "agents_registered": agents_count.count or 0
-        }
-        logger.info(f"System status: {result['system_status']['total_clients']} clients, "
-                   f"security={result['system_status']['security_score']}")
+        if scan.data:
+            security_score = scan.data[0].get("security_score")
+            security_status = scan.data[0].get("status")
     except Exception as e:
-        logger.warning(f"Failed to fetch system_status: {e}")
+        logger.warning(f"briefing: sentinel_scans query failed: {e}")
+
+    total_clients = None
+    active_clients = None
+    try:
+        # Columnas reales de clients (id/status/plan) · NO health_score/mrr (no existen · P1 honesto).
+        clients = supabase.client.table("clients").select("id,status,plan").execute()
+        client_list = clients.data or []
+        total_clients = len(client_list)
+        active_clients = len([c for c in client_list if c.get("status") == "active"])
+    except Exception as e:
+        logger.warning(f"briefing: clients query failed: {e}")
+
+    agents_registered = None
+    try:
+        agents_count = supabase.client.table("omega_agents").select("id", count="exact").execute()
+        agents_registered = agents_count.count or 0
+    except Exception as e:
+        logger.warning(f"briefing: omega_agents count failed: {e}")
+
+    # Dict siempre poblado con lo resuelto · null en lo que falló (NO null global como antes).
+    result["system_status"] = {
+        "security_score": security_score,
+        "security_status": security_status if security_status is not None else "unknown",
+        "deploy_allowed": (security_score >= 70) if isinstance(security_score, (int, float)) else True,
+        "total_clients": total_clients,
+        "active_clients": active_clients,
+        "agents_registered": agents_registered,
+    }
+    logger.info(f"briefing system_status: clients={total_clients} security={security_score}")
 
     # 3. Active Agents
     try:
