@@ -1,6 +1,5 @@
-// Carga universal de issues de cualquier fuente SENTINEL, normalizados a NormalizedIssue.
-// Reusa endpoints existentes (history/latest/status · cero backend de lectura nuevo).
-// El dispatcher rutea por source_type → loader específico (P1: shape real por fuente).
+// Carga universal de issues SENTINEL → NormalizedIssue. Reusa endpoints existentes (cero backend
+// de lectura nuevo) · dispatcher rutea por source_type → loader específico (P1: shape real por fuente).
 import { apiGet } from "@/lib/api-client";
 import type { SentinelHistoryData, DependencyScan, SentinelScan } from "@/hooks/useSecurityDevData";
 import type { RLSAudit } from "@/hooks/useRLSAudit";
@@ -24,8 +23,7 @@ export interface OpenIssuesParams extends LoadParams { scopeLabel?: string; }
 
 async function loadScan(severity?: string, agentCode?: string): Promise<NormalizedIssue[]> {
   const data = await apiGet<SentinelHistoryData>("/sentinel/history/");
-  // Último scan POR agente (no el último run global · cadencias distintas — PULSE 5min vs VAULT 2 AM —
-  // no deben ocultar issues de un agente que no esté en el bucket más reciente).
+  // Último scan POR agente (no el último run global · cadencias distintas no deben ocultar issues).
   const sorted = [...(data.scans ?? [])].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
   const latestByAgent = new Map<string, SentinelScan>();
   for (const s of sorted) if (!latestByAgent.has(s.agent_code)) latestByAgent.set(s.agent_code, s);
@@ -41,13 +39,26 @@ async function loadScan(severity?: string, agentCode?: string): Promise<Normaliz
   return severity ? issues.filter((i) => i.severity === severity) : issues;
 }
 
-async function loadDependency(): Promise<NormalizedIssue[]> {
+interface DepJsVuln { name: string; severity: string; range?: string; title?: string; direct?: boolean; cvss?: number | null; fix?: string; }
+interface DepPyFinding { id: string; severity: string; file?: string; line?: number; text?: string; noise?: boolean; }
+const JS_SEV: Record<string, string> = { critical: "CRITICAL", high: "HIGH", moderate: "MEDIUM", low: "LOW" };
+
+async function loadDependency(severity?: string): Promise<NormalizedIssue[]> {
   const latest = (await apiGet<{ latest: DependencyScan | null }>("/sentinel/dependency-scans/latest")).latest;
-  if (!latest || latest.status === "passed") return [];
-  return [{
-    key: `dep|${latest.id}`, severity: "HIGH", type: "dependency_scan", sourceType: "dependency_scan", sourceId: latest.id, previousActions: [],
-    message: `Scan ${latest.scan_type} falló${latest.github_run_id ? ` · run ${latest.github_run_id}` : ""}. Revisar el reporte en GitHub Actions.`,
-  }];
+  if (!latest) return [];
+  const s = (latest.summary ?? {}) as { js?: { vulns?: DepJsVuln[] }; python?: { findings?: DepPyFinding[] } };
+  const base = { sourceType: "dependency_scan", sourceId: latest.id, previousActions: [] } as const;
+  const issues: NormalizedIssue[] = (s.js?.vulns ?? []).map((v) => ({
+    ...base, key: `dep|js|${v.name}`, severity: JS_SEV[v.severity] ?? (v.severity || "MEDIUM").toUpperCase(), type: `npm:${v.name}`,
+    message: `${v.title || "vuln"} · range ${v.range ?? "?"} · fix → ${v.fix ?? "?"}${v.direct ? " · directa" : " · transitiva"}${v.cvss ? ` · CVSS ${v.cvss}` : ""}`,
+  }));
+  for (const f of s.python?.findings ?? []) issues.push({
+    ...base, key: `dep|py|${f.id}|${f.line}`, severity: f.severity || "MEDIUM", type: `bandit:${f.id}`,
+    message: `${f.file ?? "?"}:${f.line ?? "?"} · ${f.text ?? ""}${f.noise ? " · low-noise (test/standard · accepted)" : ""}`,
+  });
+  if (!issues.length && latest.status && latest.status !== "passed")
+    issues.push({ ...base, key: `dep|${latest.id}`, severity: "HIGH", type: "dependency_scan", message: `Scan ${latest.scan_type} status=${latest.status} (sin desglose · re-correr workflow).` });
+  return severity ? issues.filter((i) => i.severity === severity) : issues;
 }
 
 async function loadRLS(severity?: string): Promise<NormalizedIssue[]> {
@@ -74,7 +85,7 @@ async function loadSecrets(severity?: string): Promise<NormalizedIssue[]> {
 export async function loadIssuesBySource(p: LoadParams): Promise<NormalizedIssue[]> {
   switch (p.sourceType) {
     case "sentinel_scan": return loadScan(p.severity, p.agentCode);
-    case "dependency_scan": return loadDependency();
+    case "dependency_scan": return loadDependency(p.severity);
     case "rls_audit": return loadRLS(p.severity);
     case "secrets_rotation": return loadSecrets(p.severity);
     case "runtime_observability": return loadRuntime(p.severity);

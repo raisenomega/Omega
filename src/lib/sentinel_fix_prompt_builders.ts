@@ -9,7 +9,13 @@ type Builder = (i: NormalizedIssue) => string;
 
 const BUILDERS: Record<string, Builder> = {
   sentinel_scan: (i) => `Fix needed en ${i.agentCode}: severity=${i.severity}, type=${i.type}, message="${i.message}", scan_id=${i.sourceId ?? "n/a"}.`,
-  dependency_scan: (i) => `Alerta de dependencias (CVE): ${i.message} · severity=${i.severity}. Revisar el run del GitHub Action y proponer bump/patch.`,
+  dependency_scan: (i) => {
+    const pkg = i.type.replace(/^(npm|bandit):/, "");
+    const cmd = i.type.startsWith("npm:")
+      ? `npm install ${pkg}@<versión-fix> (o npm audit fix · ojo bumps semver-major)`
+      : `revisar finding bandit ${pkg} (si es benigno: # nosec con justificación · o .banditrc)`;
+    return `Vulnerabilidad de dependencia: ${i.type} · severity=${i.severity} · ${i.message}. Fix sugerido: ${cmd}.`;
+  },
   rls_audit: (i) => `Issue de RLS: ${i.message} · severity=${i.severity}${ref(i)}. Proponer la política RLS correcta para esa tabla.`,
   runtime_observability: (i) => `Issue de runtime: type=${i.type} · severity=${i.severity} · contexto="${i.message}". Diagnosticar causa raíz del error recurrente.`,
   performance: (i) => `Issue de performance: type=${i.type} · "${i.message}". Proponer optimización (query/índice/bundle) y medir el impacto.`,

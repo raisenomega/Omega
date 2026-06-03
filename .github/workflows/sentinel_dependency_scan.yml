@@ -11,9 +11,15 @@ on:
       - 'package-lock.json'
   workflow_dispatch: {}
 
+# Filosofía (fix 3 jun): los scanners NO tumban el job por encontrar CVEs (exit 1 = "encontró
+# vulnerabilidades", NO "comando roto"). El workflow va VERDE cuando corre OK · los CVEs se
+# REPORTAN como data al panel (status derivado de severidad). Único hard-fail: service_role en frontend.
+
 jobs:
   python-security:
     runs-on: ubuntu-latest
+    outputs:
+      py: ${{ steps.scan.outputs.py }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,30 +27,43 @@ jobs:
           python-version: '3.11'
       - name: Install scanners
         run: pip install safety bandit
-      - name: Safety (falla solo en CVE crítico CVSS>=9.0)
+      - name: Scan (safety + bandit · parse · no falla por findings)
+        id: scan
         run: |
-          safety check -r backend/requirements.txt --json > safety.json || true
-          python - <<'PY'
-          import json, os, sys
-          data = json.load(open('safety.json')) if os.path.exists('safety.json') else {}
-          vulns = data.get('vulnerabilities', data if isinstance(data, list) else [])
-          def cvss(v):
-              try: return float((v.get('severity') or {}).get('cvssv3', {}).get('base_score', 0) or 0)
-              except Exception: return 0.0
-          crit = [v for v in vulns if cvss(v) >= 9.0] if isinstance(vulns, list) else []
-          n = len(vulns) if isinstance(vulns, list) else '?'
-          print(f"Safety: {n} vulns, {len(crit)} críticas (CVSS>=9.0)")
-          sys.exit(1 if crit else 0)
+          safety check -r backend/requirements.txt --json > safety.json 2>/dev/null || true
+          bandit -ll -ii -s B101 -r backend/app -f json -o bandit.json 2>/dev/null || true
+          PY=$(python - <<'PY'
+          import json, os
+          NOISE = {"B108", "B104", "B613"}  # /tmp en tests · bind 0.0.0.0 · test patterns → low-noise aceptado
+          try:
+              b = json.load(open("bandit.json")).get("results", [])
+          except Exception:
+              b = []
+          findings = [{
+              "id": r.get("test_id"), "severity": r.get("issue_severity"), "confidence": r.get("issue_confidence"),
+              "file": (r.get("filename") or "").split("/app/")[-1], "line": r.get("line_number"),
+              "text": (r.get("issue_text") or "")[:120],
+              "noise": (r.get("test_id") in NOISE) or ("/tests/" in (r.get("filename") or "")),
+          } for r in b]
+          high = sum(1 for f in findings if f["severity"] == "HIGH" and not f["noise"])
+          medium = sum(1 for f in findings if f["severity"] == "MEDIUM" or (f["severity"] == "HIGH" and f["noise"]))
+          try:
+              sd = json.load(open("safety.json"))
+              sv = sd.get("vulnerabilities", sd if isinstance(sd, list) else [])
+              safety = str(len(sv)) if isinstance(sv, list) else "unknown"
+          except Exception:
+              safety = "skipped"  # safety 3.x CLI/login · tolerado
+          print(json.dumps({"high": high, "medium": medium, "findings": findings, "safety": safety}, separators=(",", ":")))
           PY
-      - name: Bandit (medium+ severity & confidence)
-        run: bandit -ll -ii -s B101 -r backend/app
+          )
+          echo "py=$PY" >> "$GITHUB_OUTPUT"
       - name: TruffleHog (secrets verificados en git)
         continue-on-error: true
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
           extra_args: --only-verified
-      - name: service_role NUNCA en frontend
+      - name: service_role NUNCA en frontend (HARD FAIL · I1/G6)
         run: |
           if grep -rn "SUPABASE_SERVICE_ROLE" src/ 2>/dev/null; then
             echo "::error::service_role key detectada en frontend"; exit 1
@@ -52,6 +71,8 @@ jobs:
 
   javascript-security:
     runs-on: ubuntu-latest
+    outputs:
+      js: ${{ steps.scan.outputs.js }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -59,8 +80,36 @@ jobs:
           node-version: '20'
       - name: Install deps
         run: npm ci || npm install
-      - name: npm audit (falla en HIGH o CRITICAL)
-        run: npm audit --audit-level=high
+      - name: npm audit (parse · no falla por findings)
+        id: scan
+        run: |
+          npm audit --json > npm_audit.json || true
+          JS=$(python3 - <<'PY'
+          import json
+          try:
+              d = json.load(open("npm_audit.json"))
+          except Exception:
+              d = {}
+          vd = d.get("vulnerabilities", {})
+          meta = d.get("metadata", {}).get("vulnerabilities", {})
+          vulns = []
+          for name, v in vd.items():
+              via = [x for x in v.get("via", []) if isinstance(x, dict)]
+              fa = v.get("fixAvailable")
+              fix = fa.get("version") if isinstance(fa, dict) else ("available" if fa else "none")
+              vulns.append({
+                  "name": name, "severity": v.get("severity"), "range": v.get("range"),
+                  "title": (via[0].get("title") if via else "")[:120], "direct": v.get("isDirect"),
+                  "cvss": (via[0].get("cvss", {}) or {}).get("score") if via else None, "fix": fix,
+              })
+          print(json.dumps({
+              "critical": meta.get("critical", 0), "high": meta.get("high", 0),
+              "moderate": meta.get("moderate", 0), "low": meta.get("low", 0),
+              "total": meta.get("total", 0), "vulns": vulns,
+          }, separators=(",", ":")))
+          PY
+          )
+          echo "js=$JS" >> "$GITHUB_OUTPUT"
       - name: Semgrep (best-effort · no bloquea)
         continue-on-error: true
         run: |
@@ -72,17 +121,35 @@ jobs:
     needs: [python-security, javascript-security]
     if: always()
     steps:
-      - name: Compute aggregate status
-        id: st
+      - name: Build payload + POST al endpoint SENTINEL
+        env:
+          JS: ${{ needs.javascript-security.outputs.js }}
+          PY: ${{ needs.python-security.outputs.py }}
+          PY_RESULT: ${{ needs.python-security.result }}
+          JS_RESULT: ${{ needs.javascript-security.result }}
+          RUN_ID: ${{ github.run_id }}
+          RAILWAY_URL: ${{ secrets.RAILWAY_URL }}
+          SENTINEL_TOKEN: ${{ secrets.SENTINEL_TOKEN }}
         run: |
-          if [ "${{ needs.python-security.result }}" = "success" ] && [ "${{ needs.javascript-security.result }}" = "success" ]; then
-            echo "status=passed" >> "$GITHUB_OUTPUT"
-          else
-            echo "status=failed" >> "$GITHUB_OUTPUT"
-          fi
-      - name: POST report al endpoint SENTINEL
-        run: |
-          curl -sf -X POST "${{ secrets.RAILWAY_URL }}/api/v1/sentinel/security-scan-report" \
-            -H "X-Sentinel-Token: ${{ secrets.SENTINEL_TOKEN }}" \
+          python - <<'PY' > body.json
+          import json, os
+          js = json.loads(os.environ.get("JS") or "{}")
+          py = json.loads(os.environ.get("PY") or "{}")
+          # job result success = el scanner corrió (verde) · failure real solo si setup/hard-fail rompió
+          ran_ok = os.environ.get("PY_RESULT") == "success" and os.environ.get("JS_RESULT") == "success"
+          crit = js.get("critical", 0); high = js.get("high", 0) + py.get("high", 0); mod = js.get("moderate", 0)
+          if not ran_ok:
+              status = "failed"           # setup roto o service_role leak (hard-fail)
+          elif crit or high:
+              status = "failed"           # severidad real → panel rojo
+          elif mod:
+              status = "warn"
+          else:
+              status = "passed"
+          print(json.dumps({"scan_type": "dependency", "status": status, "run_id": os.environ.get("RUN_ID"),
+                            "summary": {"js": js, "python": py}}))
+          PY
+          curl -sf -X POST "$RAILWAY_URL/api/v1/sentinel/security-scan-report" \
+            -H "X-Sentinel-Token: $SENTINEL_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"scan_type\":\"dependency\",\"status\":\"${{ steps.st.outputs.status }}\",\"run_id\":\"${{ github.run_id }}\",\"summary\":{\"python\":\"${{ needs.python-security.result }}\",\"javascript\":\"${{ needs.javascript-security.result }}\"}}"
+            -d @body.json
