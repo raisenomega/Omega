@@ -83,7 +83,8 @@
 
 **Estado SENTINEL: 13 componentes · 24 cron jobs · panel `/security-dev` data-real.**
 - **Sprint 1** (capas 4/5/6/7-A/9/10/12): dependency-scan · secrets-rotation · RLS-audit · AI-provider-router (Anthropic-only, Bedrock/Vertex pending creds) · runtime-observability · performance-APM · agents-IA-health.
-- **Sprint 2** (capas 3/11/8 + rework UX A/B): Red-y-HTTP (headers+TLS+rate-limit+CORS · **100/100 en vivo**) · Integraciones (Stripe webhooks/Connect + OAuth · **100/100** · **cierra X4 monitoreo**) · Chaos-Engineering (5 escenarios controlled · **75/100**, 1 fail honesto = RLS HIGH `prompt_vault` preexistente). Rework UX: registry 13 componentes + modal universal + chips clickables cross-component (ignore/fix con `source_type`) + secrets collapsible.
+- **Sprint 2** (capas 3/11/8 + rework UX A/B): Red-y-HTTP (headers+TLS+rate-limit+CORS · **100/100 en vivo**) · Integraciones (Stripe webhooks/Connect + OAuth · **100/100** · **cierra X4 monitoreo**) · Chaos-Engineering (5 escenarios controlled · **100/100 · 5/5 passed**). Rework UX: registry 13 componentes + modal universal + chips clickables cross-component (ignore/fix con `source_type`) + secrets collapsible.
+- **Fix focal post-cierre (3 jun · migración 00061):** ✅ **CERRADO** el único HIGH+MEDIUM de Capa 6 — `prompt_vault` (tabla sistema, 36 prompts RAFA, sin tenant) tenía policy `authenticated USING(true)` que exponía la IP de prompts a todo user logueado. Hardened a **service_role-only** (DROP policy authenticated + CREATE service_role ALL · backend usa service_role/bypassa RLS · frontend no accede directo · cero-impacto funcional). Verificado en vivo: **Capa 6 → 0 issues** (0/0/0) · **Capa 8 chaos rls_isolation → passed · score 75→100**.
 - Migraciones a prod Sprint 2: **00057** (issue_actions +source_type/+source_id) · **00058** (network_http) · **00059** (integrations + función X4) · **00060** (chaos).
 
 **Reconciliación de duplicados/obsoletos (auditoría exhaustiva):**
