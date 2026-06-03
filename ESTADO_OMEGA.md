@@ -1,4 +1,4 @@
-# ESTADO OMEGA · Documento Vivo · Última actualización: 1 jun 2026 PM (HEAD `a7a4d2d` · **HERMES v1.5 CERRADA** + **publicación Zernio construida F0→F3.6 y VERIFICADA EN VIVO** FB/IG/TikTok · DEBT-040 supersedida · DEBT-LIMIT1 `/publish/auto` cerrado · DEBT-IMAGE-ASYNC confirmada en vivo "se cae" · pendiente Zernio F4 rename + F5 wizard multi-negocio) · 1 jun 2026 AM (HEAD `cb585b6` · Switcher V1 CERRADO 100% + reconciliación censo · 4 deudas técnicas migradas a SOT §6 · regla de cierre de sesión añadida §7) · 29 may 2026 (Sprint 7 · DEBT-097 CERRADA · Modo Supervisado acotado: máquina estados P2/P3 + panel cola por-negocio + toggle · cron auto → DEBT-096 · DEBT-102 CERRADA widget "Qué aprendió ARIA" · cross-client → DEBT-033 · sync MCP v2.0 Zernio · DEBT-MCP-ZERNIO/ANALYTICS + 3 HERMES registradas · orden Sprint 8 re-locked) · 28 may 2026 (sesión 6 · DEBT-099+v2 CERRADAS · plan bar 7 estados · modelo reseller LOCKED · E2E prod ✅)
+# ESTADO OMEGA · Documento Vivo · Última actualización: 3 jun 2026 (HEAD `36afac6` · CIERRE IDORs · #3 plan general · analytics `8b2da5e` + nova backend `715aab3` + página NOVA frontend `8262925` + iteraciones UX `6a0ce24`+`36afac6` · DEBT-IDOR-ANALYTICS + DEBT-IDOR-NOVA CERRADAS · auditoría 2-jun pusheada · 3 DEBTs nuevas registradas) · 1 jun 2026 PM (HEAD `a7a4d2d` · **HERMES v1.5 CERRADA** + **publicación Zernio construida F0→F3.6 y VERIFICADA EN VIVO** FB/IG/TikTok · DEBT-040 supersedida · DEBT-LIMIT1 `/publish/auto` cerrado · DEBT-IMAGE-ASYNC confirmada en vivo "se cae" · pendiente Zernio F4 rename + F5 wizard multi-negocio) · 1 jun 2026 AM (HEAD `cb585b6` · Switcher V1 CERRADO 100% + reconciliación censo · 4 deudas técnicas migradas a SOT §6 · regla de cierre de sesión añadida §7) · 29 may 2026 (Sprint 7 · DEBT-097 CERRADA · Modo Supervisado acotado: máquina estados P2/P3 + panel cola por-negocio + toggle · cron auto → DEBT-096 · DEBT-102 CERRADA widget "Qué aprendió ARIA" · cross-client → DEBT-033 · sync MCP v2.0 Zernio · DEBT-MCP-ZERNIO/ANALYTICS + 3 HERMES registradas · orden Sprint 8 re-locked) · 28 may 2026 (sesión 6 · DEBT-099+v2 CERRADAS · plan bar 7 estados · modelo reseller LOCKED · E2E prod ✅)
 
 > **Fuente de verdad OPERACIONAL** (qué está hecho, qué falta, en qué orden).
 > Fuente de verdad TÉCNICA (contratos DDD, arquitectura, detalle de DEBTs): `SOURCE_OF_TRUTH.md`.
@@ -256,3 +256,203 @@ cruda descuida su imagen del producto (P2).
 ---
 
 🐢💎 No velocity. Only precision.
+
+---
+---
+
+# AUDITORÍA INTEGRAL OMEGA — 2026-06-02
+
+> Auditoría read-only de reconstrucción de confianza. Método: workflow multi-agente (38 agentes · 1.9M tokens · 689 tool-uses · ~18 min) sobre 9 dominios + verificación adversarial de cada hallazgo MISSING/EXTRA + crítico de completitud. Repo `D:\Omega Master redes`, branch `master`, HEAD `17e513a`.
+> **Regla seguida:** no asumir, verificar contra código (file:line / commit). Reportar con dureza honesta, sin defender.
+> **Decisión owner (2 jun):** `ESTADO_OMEGA.md` es el ÚNICO documento operativo. SOT (`SOURCE_OF_TRUTH.md`) queda por compat histórica; en conflicto → gana ESTADO_OMEGA. Por eso esta auditoría vive acá, no en archivo separado.
+
+## A0 · RESUMEN EJECUTIVO
+
+**Veredicto de launch (del crítico adversarial):** **NO listo para el camino RESELLER. Condicionalmente listo para el camino CLIENTE-PYME-DIRECTO.**
+- 1 cliente PYME directo ($29/$65 + adopción $0/7d): **probablemente funciona** — núcleo coherente doc↔código↔seeder.
+- 1 reseller (modelo que el PRD declara primario): **rompe al crearlo y en cada vista de billing.**
+
+**% construido (estimado):** PYME directo ~85-90% · Reseller economía ~10% · Visión (marketplace/regenerativo/WhatsApp/TikTok-nativo) ~5-15% · ARIA loops ~50%.
+
+**Lo bueno (confirmado):** gate 11 checks real · 80/80 commit-hashes de §6 existen · 15/15 cierres muestreados tienen el fix · cero mocks reales en prod · `input_sanitizer` y OAuth Meta/Google reales.
+
+**Lo crítico (bugs runtime confirmados):**
+1. 🔴 **IDOR / cross-tenant:** `GET /analytics/dashboard/` (+ hermanos) sin auth, sin ownership, service_role → leak de datos de cualquier/todos los clientes.
+2. 🔴 **Endpoints reseller billing/stats/detail/dashboard → 500** contra columnas inexistentes (`omega_commission_rate`, `monthly_revenue_reported`) en **5 handlers**.
+3. 🔴 **Crear reseller falla** (INSERT a `clients` de `password_hash/role/subscription_status/trial_active` inexistentes, tragado por try/except → reseller sin login).
+4. 🟠 **SENTINEL ciego** (tabla fantasma `sentinel_scans`) · **anti-fraude no cableado** (tabla sin código).
+5. 🟠 **Schema drift prod-vs-migraciones SIN RESOLVER** — incógnita raíz; bloquea launch en ambas ramas.
+
+## A · INVENTARIO
+- **42 `.md` en raíz** (~26k líneas) · clusters duplicados (6 seguridad, 5 agentes, 2 identidad-git, 3 content-lab, 3 ARIA).
+- **5 archivos pedidos inexistentes** (❌): `SOURCE_OF_TRUTH_MR.md`, `PENDIENTES_Y_PROGRESOS_20260524.md` (local-only), `OMEGA_VISION_10_ANOS_20260315.md`, `OMEGA_MODELO_COMERCIAL_20260315.md`, `OMEGA_Company_Precios_v3.docx`.
+- **.claude/:** 8 agents, 4 skills, 3 hooks, settings×2 · `.claude/logs/` vacío en repo.
+- **Código:** 659 `.py` backend · 316 `.ts/.tsx` (182 comp · 64 hooks · 18 pages) · 46 migraciones (00001→00047) · **141 tests backend vs 7 frontend** · 14 scripts.
+- **Deudas:** 165 filas DEBT- en SOT §6 · 100 DEBT-refs en código · 3 TODO reales (1 accionable).
+
+## B · RECONCILIACIÓN DOCS vs CÓDIGO (✅MATCH 🟡PARTIAL ❌MISSING 🔴EXTRA)
+
+**B.1 Negocio/Pricing/Reseller:** ✅ 4 planes, $29/$65, adopción $0/7d, video packs, ARIA $12. 🟡 ENTERPRISE $199 (delegado a Stripe env, sin guard). 🔴 ARIA Premium Reseller $25 + Credit Packs (en código, no en doc). ❌ add-ons §4.2 (Crisis/CompIntel/SEO), packs volumen, split 30/70, split 60/40, mora reseller, marketplace B2B2B, columnas clients role/password_hash. **Conflicto visión:** PRD (factura solo a resellers) vs billing real (factura PYME directo).
+
+**B.2 Arquitectura/DDD:** ✅ gate 11 checks, I1, G2/X2 SHA1, 16 crons. 🟡 A2 frontend sin enforce (glob `src/bc-*` vacío), C1/C4 grace-periods ~178 archivos, G9 mock=warning. ❌ A4 archivos inexistentes (`conviction.py`/`use_agent.py`/`memory_repository.py`), README muestra `src/bc-*` inexistente, `verify-on-stop.sh` NO verifica identidad (docs dicen que sí).
+
+**B.3 Seguridad:** ✅ `input_sanitizer`, GUARDIAN login, RLS ~48 tablas. 🟡 PROTOCOLO 11 capas (rate-limit/lockout/token-revoke/GDPR ausentes), SENTINEL_ENTERPRISE 8 capas→3 agentes. ❌ SECURITY_SHIELD (DEBT-111..116, ~105h) 0%, SENTINEL SHIELD EASM 0%.
+
+**B.4 ARIA/NOVA:** ✅ personas SHA1, 4 niveles, NOVA Opus, Loop 1, Context Builder pgvector, Brand DNA. 🔴 Fases 1-2 ya construidas (Plan Maestro dice "pendiente firma"). ❌ NBA Engine, cross_client_benchmarks, training_pairs writes, learning_events, Loop 2/3, nova_system_updater (tablas huérfanas / schema sin lógica).
+
+**B.5 Content Lab/Publicación:** ✅ texto, A/B, vault 30 seeds, imagen+storage, imagen async F1-F4, video Veo3, Zernio FB/IG/TikTok, virality V1, RAFA. 🔴 Brave Research vivo (docs dicen mock). 🟡 TikTok solo proxy-Zernio, Brand DNA Score mide salud-corpus (no fidelidad-output). ❌ WhatsApp (0 código), TikTok nativo/analytics/Ads, Repurpose, get_suggestions/get_vault_prompts, columna ab_variant.
+
+**B.6 Agentes/MCP/HERMES:** ✅ HERMES Capa 1, Brave, Meta+Google OAuth real, Zernio, GA4/GSC, SENTINEL crons, providers eliminados. 🟡 HERMES (doc 6 capas/8 crons → real 1 cron presencia-env), "8 agentes+SOPHIA" (real 37 legacy), oauth_tokens CHECK bloquea tiktok. ❌ SOPHIA meta-agente, Regenerativo/Agent Factory, MCPs Firecrawl/Exa/Tavily/Apify, MCPs Ads (LUAN), TikTok/WhatsApp OAuth, campaign_budgets/kill-switches, brave_adapter.py.
+
+**B.7 BCs/Crons/Stripe:** ✅ bc-01/03/05/06/07, Stripe webhook idempotente (billing_v3), Email Resend live, Telegram preparado, Brand Voice+DNA. 🟡 crons=16 real, bc-04-analytics (actividad propia NO engagement de redes). ❌ endpoint `/system/cron-status`, "Stripe Connect" (mislabel — es Stripe estándar).
+
+**B.8 Deudas:** ✅ 80 hashes existen, 15/15 cierres con fix, 13 migraciones citadas existen. 🟡 DEBT-047 cierre optimista (código sí, prod cae a in-memory), ~37 cierres sin hash (verificados). 🔴 silenciosas: CL-019/021/022, UPSERT-CLIENT-CLEANUP.
+
+**B.9 Deuda silenciosa:** ✅ stubs honestos (DEBT-030/039/012), endpoints diagnóstico (DEBT-055/089), cero mocks reales, cero código-muerto. 🔴 `get_reseller_clients.py:61` `reseller_plan="agency_starter"` capa resellers a 5 clientes silenciosamente.
+
+## C · DEUDAS RECONCILIADAS
+Trazabilidad **sólida** (80/80 hashes, 15/15 fixes, 13/13 migraciones). Patrón de riesgo: **"fix commiteado" ≠ "fix en prod"** (testigo DEBT-047). Política de evidencia inconsistente (~80 con hash vs ~37 sin). 4 deudas silenciosas → inventario subcontado. No se verificaron las 165 una por una (alcance).
+
+## D · DEUDA SILENCIOSA
+TODO reales: **3** (no ~13; el resto = palabra española "todo"), 1 accionable (`agency_starter` cap-5). Mocks reales en prod: **0** (G9 = falsos positivos de comentarios "cero-mocks"). Código comentado muerto: **0**.
+
+## E · CONTRADICCIONES ENTRE DOCS
+1. **Crons: SOT=8, ESTADO=15, DDD/real=16.** ESTADO stale (off-by-one), SOT muy stale.
+2. PRD (factura solo a resellers) vs MODELO_NEGOCIO+billing (factura PYME directo).
+3. Add-ons §4.2 (Crisis/CompIntel/SEO) vs código (Rex/Rafa/Maya).
+4. Temps A/B/C: MASTER §7.1 (0.7/1.0/0.4) vs §9.1 (1.0/0.4/1.2) vs código (0.4/0.7/0.9).
+5. Brave: UI_V2/PLAN_100 "mock/diferido" vs código vivo.
+6. ARIA Plan Maestro subestima (Fases 1-2 hechas) vs Learning Loop sobreestima (Loops 2/3/4).
+7. "Stripe Connect" (SOT §1) mislabel.
+8. A4/README listan archivos/`src/bc-*` inexistentes.
+9. MCP_MASTER vs MCP_ARSENAL info contradictoria, sin índice de cuál supersede.
+
+### E.1 · Contradicciones SOT vs ESTADO_OMEGA (qué migrar)
+| # | SOT dice | ESTADO_OMEGA dice | Real | Migrar |
+|---|---|---|---|---|
+| 1 | §1 "8 cron workers" (apunta a main.py:72-85 inexistente) | §1 "15/15" | **16** | Corregir AMBOS a 16 + fix numeración inline main.py |
+| 2 | §1 "Stripe Connect billing" → `billing/webhook.py` (desregistrado) | (no repite "Connect") | Stripe estándar (billing_v3 idempotente) | Quitar etiqueta "Connect" del SOT |
+| 3 | §1 "Content Lab → `content_lab/handlers`" (legacy desmontado) | (fresco) | `content_lab_v3` | SOT §1 apunta a módulo muerto |
+| 4 | §1 censo histórico stale (Stripe/crons/content-lab) | §1 más fresco (migraciones ya a 00047) | — | ESTADO ya es más confiable salvo crons |
+| 5 | Interno SOT: DEBT-047 CERRADA **vs** DEBT-JOBSTORE-PERSISTENCE abierta | — | jobstore cae a in-memory en prod | Contradicción interna del SOT |
+**Conclusión:** SOURCE §1 es censo histórico stale; ESTADO es más fresco salvo el conteo de crons. La consolidación SOT→ESTADO (Rec. #11) resuelve esto.
+
+## F · RIESGOS DE SEGURIDAD
+1. 🔴 **IDOR (CRÍTICO):** `analytics/router.py:177` + hermanos sin auth/ownership, service_role → leak cross-tenant.
+2. 🟠 Sin defensa-en-profundidad (service_role bypassa RLS; aislamiento depende del guard por handler; analytics lo olvidó).
+3. 🟠 Controles doc no implementados: rate-limit, account-lockout, token-revocation, failover LLM, GitHub Actions (`.github/` no existe), SHA1 worker.
+4. 🟠 Anti-fraude NO cableado (tabla 00004 sin código) — superficie del trial $0/7d.
+5. 🟠 SENTINEL ciego (tabla fantasma).
+6. ✅ Secretos hardcoded: 0 (aparte de las 3 keys en historial → DEBT-SECURITY-KEYS-ROTATION, rotar pre-launch).
+
+## G · EVALUACIÓN HONESTA
+**¿Rompe si entra 1 cliente mañana?** PYME directo: probablemente OK. Reseller: rompe al crearlo + cada vista billing. **Primer quiebre, en orden:** (1) cualquier flujo reseller → 500/silent; (2) status warning/terminated → CHECK constraint; (3) Enterprise cobra lo que tenga el env; (4) abuso trial (sin detección activa); (5) rebuild desde migraciones → schema que el código reseller no corre = DR roto.
+
+## RECOMENDACIONES PRIORIZADAS (TOP 11)
+| # | Prio | Acción |
+|---|---|---|
+| 1 | 🔴 BLOCKER | Resolver schema drift prod-vs-migraciones (Supabase CLI linkeado a `rwlnihoqhxwpbehibgxu`; el MCP apunta al proyecto equivocado). |
+| 2 | 🔴 HOY | Tapar IDOR analytics (auth + ownership en dashboard/analyze-metrics/dashboard-data/agent-status). |
+| 3 | 🔴 | Arreglar o desactivar camino reseller (creación + billing/stats/detail/dashboard) hasta reconciliar schema. |
+| 4 | 🟠 | Verificar `STRIPE_PRICE_ENTERPRISE`=$199 en Railway + guard que falle si vacío. |
+| 5 | 🟠 | Cablear anti-fraude activo antes de abrir trial $0/7d a externos. |
+| 6 | 🟠 | Arreglar SENTINEL `sentinel_scans`→`sentinel_risk_scores` (panel ciego). |
+| 7 | 🟡 | Alinear doc de negocio con lo facturable (sacar/construir Crisis/CompIntel/SEO; agregar Rex/Rafa/Maya). |
+| 8 | 🟡 | Hacer honestos docs aspiracionales (separar construido vs roadmap en HERMES/ARIA_LEARNING/SENTINEL_ENTERPRISE/AGENT_SYSTEM; marcar tablas huérfanas). |
+| 9 | 🟡 | Corregir drift de tooling (crons→16, claim `verify-on-stop`, A4/README, borrar `billing/webhook.py` legacy). |
+| 10 | 🟢 | Registrar deudas silenciosas (CL-019/021/022, UPSERT-CLEANUP, cap-5, DEBT-047 optimista) + regla "todo cierre lleva hash". |
+| **11** | 🟡 | **Consolidar SOT → ESTADO_OMEGA: migrar toda info operativa de SOT que NO esté en ESTADO_OMEGA (ver §E.1). Eventualmente marcar SOT como ARCHIVADO.** (Decisión owner 2 jun · ESTADO_OMEGA = único doc operativo.) |
+
+## NOTA DE HONESTIDAD SOBRE LA AUDITORÍA
+La verificación adversarial **refutó la evidencia (no la conclusión)** de 2 hallazgos: `omega_commission_rate` SÍ existe en migración *legacy* (no en la canónica → el síntoma 500 se mantiene); `learning_events` aparece como cache-key en un hook (la tabla sigue sin construirse). El crítico subcontó el blast radius: las columnas fantasma se SELECTean en **5 handlers**, no 2. **Gaps no resueltos:** schema real de prod (no consultable read-only), dashboard reseller frontend, ausencia exhaustiva del marketplace.
+
+## APÉNDICE — file:line de hallazgos críticos
+- **IDOR analytics:** `analytics/router.py:177` + `analytics/handlers/get_dashboard.py`.
+- **Reseller billing 500:** `get_reseller_billing.py:20`, `get_reseller_stats.py:19`, `get_reseller_detail.py:62`, `resellers/dashboard.py:54-55`.
+- **Reseller creation:** `resellers/admin.py:85-91`, `:103-105`, try/except `:73-116`; `reseller_models.py:47-50`.
+- **Reseller status CHECK:** `admin.py:194-213` vs `00001_initial_consolidated.sql:45`.
+- **SENTINEL fantasma:** `sentinel_service.py:63` + `get_status.py:27`/`get_history.py:28`/`omega/_dept_report_security.py:13,29` (`sentinel_scans`; real `sentinel_risk_scores` 00029).
+- **Cron cap reseller:** `get_reseller_clients.py:61-62`.
+- **A4 inexistentes:** `DDD_REGLAS_OMEGA.md:114-128`; `README.md:106-119` (`src/bc-*`).
+- **verify-on-stop:** `.claude/hooks/verify-on-stop.sh` (no valida identidad).
+- **Tablas huérfanas ARIA:** `aria_nba_log`/`cross_client_benchmarks` (00008), `training_pairs` (00002, solo SELECT).
+
+*Auditoría multi-agente · 2026-06-02 · embebida en ESTADO_OMEGA por decisión owner · NO pusheada (esperando lectura).*
+
+---
+---
+
+# DIAGNÓSTICOS COMPLEMENTARIOS — 2026-06-02 (post-auditoría · read-only)
+
+## Diagnóstico 1 — Scope real del IDOR
+
+### 🔴 IDOR explotable SIN login (crítico)
+**`/nova` (11 endpoints) — el peor:**
+- `GET/POST /nova/context/{client_id}` (lee + **escribe** contexto del CEO Agent)
+- `PATCH /nova/context/{client_id}/learning`
+- `POST /nova/chat`, `/nova/execute-action`, `/nova/save-memory`
+- **Sin auth en TODO el módulo** (cero `get_current_user`/`require_*`).
+- Severidad: cualquiera **lee, modifica y ejecuta** acciones del CEO Agent de cualquier cliente, sin login.
+
+**`/analytics` (7 endpoints):**
+- `GET /dashboard/` agrega **TODOS** los clientes si no pasás `client_id`.
+- `analyze-metrics`, `detect-patterns`, `generate-insights`, `forecast`, `dashboard-data`, `agent-status` — todos sin auth.
+- Solo lectura — menos grave que nova, pero crítico igual.
+
+### 🟠 Autenticados sin ownership explícito (triage pendiente)
+`billing` · `brand_files` · `clients`(legacy) · `content_v3` · `context` · `oauth` · `omega` · `reseller` · `resellers` · `social_accounts` · `sub_brands`
+- Requieren login pero NO verifican ownership del `client_id`.
+- Posible cross-tenant para usuarios autenticados.
+- ~11 módulos a triagear: algunos legítimos (super-admin, reseller-scope), otros IDOR-autenticado real.
+
+### ✅ Falsos positivos descartados
+- `agents` (stubs 501, DEBT-030) · `sentinel` (`require_superadmin` en cada handler) · `content_lab` legacy (no montado, DEBT-064).
+
+## Diagnóstico 2 — Schema drift contra prod REAL
+
+### Conclusión de fondo
+**Prod COINCIDE con las migraciones canónicas. NO hay drift manual oculto.** Sistema reproducible desde migraciones · disaster-recovery OK.
+
+### Drift identificado (acotado)
+🔴 **`resellers` — 6 columnas que el código SELECTea pero FALTAN en prod:** `omega_commission_rate`, `monthly_revenue_reported`, `days_overdue`, `suspend_switch`, `clients_migrated`, `payment_due_date` → endpoints reseller billing/stats/detail/dashboard **rotos (500)**.
+
+🔴 **`clients` — 5 columnas que `admin.py` INSERTa pero FALTAN en prod:** `password_hash`, `role`, `subscription_status`, `trial_active`, `email` → crear reseller **falla en runtime** (try/except traga el error → reseller sin login).
+
+🔴 **`sentinel_scans` — tabla fantasma:** el código escribe/lee a `sentinel_scans` (no existe); la real es `sentinel_risk_scores` (existe pero no se usa) → **SENTINEL ciego** (panel muestra "todo OK" porque no hay datos).
+
+✅ **Tablas huérfanas (existen en prod, 0 código las usa):** `anti_fraud_signals`, `aria_nba_log`, `cross_client_benchmarks`, `training_pairs` → decisión pendiente: borrar o usar.
+
+✅ **`learning_events` — nunca se creó** (sospecha confirmada por la auditoría).
+
+### Decisión de producto pendiente (NO de hoy)
+Para arreglar reseller (#3/#4) + SENTINEL, hay 2 caminos:
+- **CAMINO A — Construir economía reseller (semanas):** migración con las 6+5 columnas + lógica completa de billing/comisiones/stats + UI panel reseller funcional.
+- **CAMINO B — Código honesto (días):** quitar referencias a columnas fantasma · desactivar/ocultar el camino reseller en UI hasta sprint dedicada · SENTINEL: cambiar `sentinel_scans`→`sentinel_risk_scores` en código.
+
+CAMINO A = roadmap completo · CAMINO B = mitigación honesta. **Decisión del owner con cabeza fresca.**
+
+---
+
+## DEUDAS NUEVAS REGISTRADAS — 2026-06-02
+
+✅ **DEBT-IDOR-NOVA** · ~~CERRADA 3-jun · `715aab3` backend (require_superadmin en los 11 endpoints) + página NOVA frontend `8262925` (super_owner-only) full-width + localStorage (últimos 50) + borde a borde (`6a0ce24`/`36afac6`)~~. (original) módulo `/nova` (11 endpoints) sin auth ni ownership. Lectura + escritura + ejecución de acciones del CEO Agent de cualquier cliente, sin login.
+
+✅ **DEBT-IDOR-ANALYTICS** · ~~CERRADA 3-jun · `8b2da5e` (auth + ownership en los 7 endpoints + `GET /dashboard/` agg gated por require_superadmin)~~. (original) módulo `/analytics` (7 endpoints) sin auth. Lectura cross-tenant sin login; `GET /dashboard/` agrega TODOS los clientes si no pasás `client_id`.
+
+🟠 **DEBT-OWNERSHIP-TRIAGE:** 11 módulos autenticados sin verificación explícita de ownership del `client_id`. Triage: separar legítimos (super-admin, reseller-scope) de IDOR-autenticado real. Lista en Diagnóstico 1. Trigger: después de los 2 críticos sin auth.
+
+🔴 **DEBT-RESELLER-PATH-DEAD:** camino reseller roto en runtime (6 columnas faltantes en `resellers`, 5 en `clients`). Endpoints billing/stats/detail/dashboard → 500. Crear reseller falla silenciosamente. Decisión de producto pendiente: CAMINO A (construir, semanas) vs CAMINO B (código honesto, días).
+
+🔴 **DEBT-SENTINEL-BLIND:** SENTINEL escribe/lee a `sentinel_scans` (no existe). Tabla real `sentinel_risk_scores`. Panel ciego (siempre "todo OK"). Fix simple (cambiar nombre de tabla en código), pero verificar antes que no haya otros componentes que dependan del nombre viejo.
+
+🟢 **DEBT-ORPHANED-TABLES:** 4 tablas en prod sin uso de código: `anti_fraud_signals`, `aria_nba_log`, `cross_client_benchmarks`, `training_pairs`. Decisión: borrarlas (limpieza) o documentar por qué existen. No urgente.
+
+### DEUDAS NUEVAS REGISTRADAS — 2026-06-03 (cierre IDORs)
+
+🟠 **DEBT-ANTIFRAUD-WIRE** (~8h · pre-launch externo): la tabla `anti_fraud_signals` existe en prod (00004) pero 0 código la usa (confirmado auditoría 2-jun). El trial $0/7d sin detección de abuso es superficie de fraude (multi-cuenta · device fingerprint · patrones anómalos). Cablear: detectar signals típicas, INSERT en `anti_fraud_signals`, gate de creación de nuevos clientes flagged → require_superadmin manual. Trigger: antes del primer onboarding externo real.
+
+🟢 **DEBT-ENTERPRISE-PRICE-GUARD** (~1h · pre-launch externo): hoy checkout Enterprise usa `STRIPE_PRICE_ENTERPRISE` del env. Si vacío/ausente Stripe cobra lo que tenga el env o devuelve error opaco. Falta guard explícito en startup que falle si no hay price ID Enterprise. Patrón ya usado en otros price IDs del repo. 1 línea defensive.
+
+🔴 **DEBT-SCHEMA-DRIFT-RESELLER** (~4h · BLOCKER decisión reseller CAMINO A vs B): Rec #1 BLOCKER del auditor 2-jun. La MCP Supabase apunta al proyecto equivocado · schema real de prod (`rwlnihoqhxwpbehibgxu`) no consultable. Las 6 cols faltantes en `resellers` + 5 en `clients` la auditoría las dedujo del código (SELECT/INSERT), no del schema real. Acción: `supabase link --project-ref rwlnihoqhxwpbehibgxu` · `supabase db dump --schema public` · diff vs migraciones canónicas. SIN este step la decisión CAMINO A (construir, semanas) vs CAMINO B (código honesto, días) se toma a ciegas. Precondición de DEBT-RESELLER-PATH-DEAD.
+
+*Diagnósticos read-only · 2026-06-02 · embebidos en ESTADO_OMEGA · NO pusheados (owner decide).*
