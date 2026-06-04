@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 from datetime import datetime
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
-from app.infrastructure.ai.claude_service import claude_service
+from app.infrastructure.ai._text_compat import generate_text
 from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.report_builder import (
     report_builder,
@@ -209,11 +209,11 @@ class ReportGeneratorAgent(BaseAgent):
             f"and providing strategic context. Tone: professional, data-driven."
         )
 
-        summary = await claude_service.generate_text(
+        summary = await generate_text(
+            agent_code="report_generator",
             prompt=prompt,
             max_tokens=250,
             temperature=0.7,
-            model=self.model,
         )
 
         return summary.strip()
