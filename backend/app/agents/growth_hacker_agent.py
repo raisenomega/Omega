@@ -5,7 +5,7 @@ Identifies growth opportunities and designs experiments
 from typing import Dict, Any, List
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
-from app.infrastructure.ai.claude_service import claude_service
+from app.infrastructure.ai._text_compat import generate_text
 from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.growth_analyzer import (
     growth_analyzer,
@@ -98,11 +98,11 @@ class GrowthHackerAgent(BaseAgent):
             f"5. Estimated ROI multiplier"
         )
 
-        analysis = await claude_service.generate_text(
+        analysis = await generate_text(
+            agent_code="growth_hacker",
             prompt=prompt,
             max_tokens=500,
             temperature=0.7,
-            model=self.model,
         )
 
         # Generate sample opportunities
@@ -208,11 +208,11 @@ class GrowthHackerAgent(BaseAgent):
             f"Focus on immediate impact actions."
         )
 
-        wins_text = await claude_service.generate_text(
+        wins_text = await generate_text(
+            agent_code="growth_hacker",
             prompt=prompt,
             max_tokens=200,
             temperature=0.7,
-            model=self.model,
         )
 
         wins = [
