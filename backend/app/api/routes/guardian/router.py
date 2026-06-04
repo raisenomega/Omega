@@ -4,10 +4,11 @@ POST /guardian/login-event   · trigger del analyzer post-login (el frontend lo 
 GET  /guardian/session-report · resumen de la cuenta para SecurityKPICard
 """
 from typing import Optional
-from fastapi import APIRouter, Header, Request
+from fastapi import APIRouter, Header, Query, Request
 from app.api.routes.guardian.handlers import (
     handle_login_event, handle_session_report,
     handle_block_ip, handle_force_logout, handle_resolve_incident, handle_trigger_password_reset,
+    handle_list_events, handle_list_incidents, handle_list_watchlist, handle_user_detail,
 )
 from app.api.routes.guardian.models import (
     LoginEventRequest, LoginEventResponse, SessionReportResponse,
@@ -27,6 +28,30 @@ async def login_event(
 @router.get("/session-report", response_model=SessionReportResponse)
 async def session_report(authorization: Optional[str] = Header(None)) -> SessionReportResponse:
     return await handle_session_report(authorization)
+
+
+# ── GET filtrados para el panel (4B-4 · owner-only) ──
+@router.get("/events")
+async def list_events(event_type: Optional[str] = Query(None), limit: int = Query(50),
+                      authorization: Optional[str] = Header(None)):
+    return await handle_list_events(authorization, event_type, limit)
+
+
+@router.get("/incidents")
+async def list_incidents(status: Optional[str] = Query(None), severity: Optional[str] = Query(None),
+                         limit: int = Query(50), authorization: Optional[str] = Header(None)):
+    return await handle_list_incidents(authorization, status, severity, limit)
+
+
+@router.get("/watchlist")
+async def list_watchlist(list_type: Optional[str] = Query(None), active_only: bool = Query(False),
+                         authorization: Optional[str] = Header(None)):
+    return await handle_list_watchlist(authorization, list_type, active_only)
+
+
+@router.get("/user-detail/{user_id}")
+async def user_detail(user_id: str, authorization: Optional[str] = Header(None)):
+    return await handle_user_detail(user_id, authorization)
 
 
 # ── Acciones owner end-to-end (4B-1 · gated require_superadmin) ──
