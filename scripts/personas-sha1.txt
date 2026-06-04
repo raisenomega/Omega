@@ -1,3 +1,3 @@
-0c74ea658cb7d4d81075515fb421edc8ab04bca3  backend/app/bc_cognition/domain/persona_nova.py
+bef773c9b87bd2d743b75a58c11325a301ff0782  backend/app/bc_cognition/domain/persona_nova.py
 054a17f39ad3da68bdb29b975af570d5211db269  backend/app/bc_cognition/domain/persona_aria.py
 ed8c01d98263a43278365e9a5aeedc73fba24e31  backend/app/bc_cognition/domain/persona_guardian_consultor.py
