@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGuardianUserDetail } from "@/hooks/useGuardian";
 import { fmtDateTime, relativeAgo, SEV_CLS } from "../parts";
+import { GuardianActionFooter } from "./GuardianActionFooter";
 import type { OpenGuardianDetail } from "@/types/guardian";
 
 const tzOf = (geo: Record<string, unknown> | null): string => {
@@ -64,6 +65,7 @@ export function GuardianDetailModal({ detail, onClose }: { detail: OpenGuardianD
             </div>
           </div>
         )}
+        <GuardianActionFooter detail={detail} userDetail={data ?? undefined} onClose={onClose} />
       </DialogContent>
     </Dialog>
   );
