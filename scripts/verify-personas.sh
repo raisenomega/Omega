@@ -21,6 +21,7 @@ cd "$ROOT_DIR"
 PERSONA_FILES=(
   "backend/app/bc_cognition/domain/persona_nova.py"
   "backend/app/bc_cognition/domain/persona_aria.py"
+  "backend/app/bc_cognition/domain/persona_guardian_consultor.py"
 )
 BASELINE_FILE="scripts/personas-sha1.txt"
 
