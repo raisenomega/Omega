@@ -9,10 +9,11 @@ from app.api.routes.guardian.handlers import (
     handle_login_event, handle_session_report,
     handle_block_ip, handle_force_logout, handle_resolve_incident, handle_trigger_password_reset,
     handle_list_events, handle_list_incidents, handle_list_watchlist, handle_user_detail,
+    handle_consult_incident,
 )
 from app.api.routes.guardian.models import (
     LoginEventRequest, LoginEventResponse, SessionReportResponse,
-    BlockIpRequest, ForceLogoutRequest, ResolveIncidentRequest, PasswordResetRequest,
+    BlockIpRequest, ForceLogoutRequest, ResolveIncidentRequest, PasswordResetRequest, ConsultRequest,
 )
 
 router = APIRouter(prefix="/guardian", tags=["GUARDIAN 🛡️"])
@@ -73,3 +74,8 @@ async def resolve_incident(body: ResolveIncidentRequest, authorization: Optional
 @router.post("/actions/trigger-password-reset")
 async def trigger_password_reset(body: PasswordResetRequest, authorization: Optional[str] = Header(None)):
     return await handle_trigger_password_reset(body, authorization)
+
+
+@router.post("/consult/incident")
+async def consult_incident(body: ConsultRequest, authorization: Optional[str] = Header(None)):
+    return await handle_consult_incident(body, authorization)

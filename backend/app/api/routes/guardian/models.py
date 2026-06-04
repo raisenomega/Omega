@@ -60,3 +60,9 @@ class PasswordResetRequest(BaseModel):
     user_id: str
     reason: Optional[str] = None
     incident_id: Optional[str] = None
+
+
+class ConsultRequest(BaseModel):
+    entity_type: str  # "incident" | "event" | "watchlist"
+    entity_id: str
+    owner_question: Optional[str] = None

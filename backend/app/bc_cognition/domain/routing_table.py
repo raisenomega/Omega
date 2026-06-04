@@ -6,8 +6,7 @@ fuente de verdad. Modificación requiere aprobación + test (X2).
 
 Uso:
     from app.bc_cognition.domain.routing_table import resolve_model
-    model_id = resolve_model("content_creator")
-    # → "claude-sonnet-4-6"
+    model_id = resolve_model("content_creator")  # → "claude-sonnet-4-6"
 """
 
 from types import MappingProxyType
@@ -56,6 +55,7 @@ _AGENT_TIER_RAW: dict[str, ModelTier] = {
     "news_monitor":               "sonnet",
     "competitor_tracker":         "sonnet",
     "intelligence":               "sonnet",
+    "guardian_consultor":         "sonnet",   # GUARDIAN consultor de seguridad (4B-5 · análisis incidents)
 
     # ARIA — proyección de NOVA · 4 niveles · spec ARIA_NOVA_INTELLIGENCE §6
     "aria_1":                     "haiku",

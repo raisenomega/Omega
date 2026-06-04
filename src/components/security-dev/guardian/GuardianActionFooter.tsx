@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { resolveIncident } from "@/lib/guardian/actions";
 import { GuardianActionPanel } from "./GuardianActionPanel";
+import { GuardianClaudeConsultPanel } from "./GuardianClaudeConsultPanel";
 import type { GuardianUserDetail, OpenGuardianDetail } from "@/types/guardian";
 
 // Footer del modal (Sub-B) · 3 botones tipo SENTINEL. [Consultar Claude] = preview hasta Sub-E.
@@ -12,6 +13,7 @@ export function GuardianActionFooter({ detail, userDetail, onClose }: { detail: 
   const { toast } = useToast();
   const qc = useQueryClient();
   const [showActions, setShowActions] = useState(false);
+  const [showConsult, setShowConsult] = useState(false);
   const [fpBusy, setFpBusy] = useState(false);
 
   const markFalsePositive = async () => {
@@ -38,12 +40,12 @@ export function GuardianActionFooter({ detail, userDetail, onClose }: { detail: 
         <Button size="sm" variant={showActions ? "default" : "outline"} onClick={() => setShowActions((v) => !v)}>
           <Wrench className="h-3 w-3" /><span className="ml-1">Tomar acción</span>
         </Button>
-        <Button size="sm" variant="ghost" className="text-muted-foreground" title="Consultor IA · se activa en Sub-E"
-          onClick={() => toast({ title: "Consultor de IA", description: "Disponible próximamente (Sub-E)." })}>
+        <Button size="sm" variant={showConsult ? "default" : "ghost"} onClick={() => setShowConsult((v) => !v)}>
           <Bot className="h-3 w-3" /><span className="ml-1">Consultar con Claude</span>
         </Button>
       </div>
       {showActions && <GuardianActionPanel detail={detail} userDetail={userDetail} onDone={onClose} />}
+      {showConsult && <GuardianClaudeConsultPanel detail={detail} />}
     </div>
   );
 }

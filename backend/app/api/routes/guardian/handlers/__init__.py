@@ -9,10 +9,12 @@ from .list_events import handle_list_events
 from .list_incidents import handle_list_incidents
 from .list_watchlist import handle_list_watchlist
 from .user_detail import handle_user_detail
+from .consult_incident import handle_consult_incident
 
 __all__ = [
     "handle_login_event", "handle_session_report",
     "handle_block_ip", "handle_force_logout",
     "handle_resolve_incident", "handle_trigger_password_reset",
     "handle_list_events", "handle_list_incidents", "handle_list_watchlist", "handle_user_detail",
+    "handle_consult_incident",
 ]
