@@ -12,7 +12,7 @@ from app.api.routes.context.models import (
 )
 from app.api.routes.auth.jwt_utils import get_current_user_id
 from app.infrastructure.repositories.context_repository import context_repository
-from app.infrastructure.ai.claude_service import claude_service
+from app.infrastructure.ai._text_compat import generate_text
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +97,8 @@ Crea un brief conciso (200-300 palabras) que los generadores de contenido AI pue
 
         # 4. Call Claude to generate brief
         logger.info(f"Generating brief for client {client_id} using Claude")
-        brief = await claude_service.generate_text(
+        brief = await generate_text(
+            agent_code="content_creator",
             prompt=prompt,
             system_message=system_message,
             temperature=0.5,  # Consistent, not creative
