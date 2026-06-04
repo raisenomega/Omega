@@ -44,10 +44,13 @@ async def generate(
     start = time.monotonic()
     create_kwargs: dict[str, Any] = {
         "model": model, "max_tokens": max_tokens, "temperature": temperature,
-        "system": [{"type": "text", "text": system,
-                    "cache_control": {"type": "ephemeral"}}],     # I3
         "messages": messages,
     }
+    if system and system.strip():
+        # I3: cache_control ephemeral · SOLO en system no-vacío
+        # (Anthropic rechaza cache_control en text block vacío → 400)
+        create_kwargs["system"] = [{"type": "text", "text": system,
+                                    "cache_control": {"type": "ephemeral"}}]
     if tools is not None:
         create_kwargs["tools"] = tools   # solo si hay tools · sin esto = llamada idéntica a hoy
     try:
