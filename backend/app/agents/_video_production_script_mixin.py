@@ -1,7 +1,6 @@
 """Video Production script writing and adaptation mixin"""
 import logging
-from app.infrastructure.ai.claude_service import claude_service
-from app.infrastructure.ai.claude_service import claude_service
+from app.infrastructure.ai._text_compat import generate_text
 from app.services.video_pipeline import (
     VideoSpec,
     VideoScript,
@@ -29,7 +28,7 @@ class VideoProductionScriptMixin:
             f"Style: {spec.style}\n\n"
             f"The hook must grab attention INSTANTLY. Return ONLY the hook text (15-20 words max)."
         )
-        hook = await claude_service.generate_text(prompt=hook_prompt, max_tokens=50, temperature=0.9)
+        hook = await generate_text(agent_code="video_prompt_writer", prompt=hook_prompt, max_tokens=50, temperature=0.9)
 
         scene_count = calculate_scene_count(spec.duration_seconds)
         word_count = estimate_word_count(spec.duration_seconds)
@@ -49,8 +48,8 @@ class VideoProductionScriptMixin:
             f"SCENE X (Xs): [narration] | Visual: [description] | Overlay: [text or 'none'] | Transition: [cut/fade/slide]"
         )
 
-        script_content = await claude_service.generate_text(
-            prompt=script_prompt, max_tokens=800, temperature=0.7
+        script_content = await generate_text(
+            agent_code="video_prompt_writer", prompt=script_prompt, max_tokens=800, temperature=0.7
         )
 
         scenes = []
@@ -78,7 +77,7 @@ class VideoProductionScriptMixin:
             )]
 
         cta_prompt = f"Create a compelling call-to-action for a {spec.platform} video about: {spec.title}"
-        cta = await claude_service.generate_text(prompt=cta_prompt, max_tokens=30, temperature=0.8)
+        cta = await generate_text(agent_code="video_prompt_writer", prompt=cta_prompt, max_tokens=30, temperature=0.8)
 
         return VideoScript(
             hook=hook.strip(),
@@ -103,7 +102,7 @@ class VideoProductionScriptMixin:
             f"Maintain core message but optimize for {target_platform} audience."
         )
 
-        await claude_service.generate_text(prompt=prompt, max_tokens=400, temperature=0.7)
+        await generate_text(agent_code="video_prompt_writer", prompt=prompt, max_tokens=400, temperature=0.7)
 
         adapted_scenes = [
             VideoScene(
