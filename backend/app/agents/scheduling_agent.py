@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 from datetime import datetime, timedelta
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
-from app.infrastructure.ai.claude_service import claude_service
+from app.infrastructure.ai._text_compat import generate_text
 from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.queue_manager import (
     ScheduledPost,
@@ -228,11 +228,11 @@ class SchedulingAgent(BaseAgent):
             f"3. Expected engagement boost vs bad timing (as percentage)"
         )
 
-        analysis = await claude_service.generate_text(
+        analysis = await generate_text(
+            agent_code="scheduling",
             prompt=prompt,
             max_tokens=200,
             temperature=0.6,
-            model=self.model,
         )
 
         # Parse time slots (simplified - in production use regex/structured output)
