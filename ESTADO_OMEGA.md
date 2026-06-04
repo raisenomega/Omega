@@ -121,6 +121,27 @@
 
 > **GUARDIAN 4B-1 expandido (Sesión 3 · 3 jun · spec GUARDIAN_SECURITY_AGENT):** hallazgo = GUARDIAN ya ~90% construido (Sprint 4B · migr **00022** 3 tablas+RLS+is_owner=1 · `guardian_session_analyzer`/`guardian_threats` · `login_event`/`session_report` · `GuardianTab.tsx` básico funcional). **No recree nada.** Migración **00065** = ALTER (no duplica): +`session_id` +`device_fingerprint` (user_security_log) +`resolution_notes` (security_incidents) + indexes. **Geo ACTIVO** (owner pidió ahora · `geo_lookup_adapter.py` httpx directo a IPinfo · sin SDK · token-opcional · **smoke 8.8.8.8→US/California/Mountain View** · IP privada→None fail-open · skip privadas/loopback) cableado en `analyze_login`→`insert_security_log` (country+geo) + `session_report` muestra country. **5 acciones owner end-to-end** (4 endpoints `/guardian/actions/*` · gated `require_superadmin`): block-ip (ip_watchlist+resolve incidente) · force-logout (GoTrue admin REST `/logout` + fallback ban 24h) · resolve-incident (resolved/false_positive en 1 endpoint con flag · DRY) · trigger-password-reset (`reset_password_for_email`). Gate 11/11 (cacé config.py 101→100L · crónico). **DEBTs cerradas:** GUARDIAN-GEO-INTEGRATION (geo activo) · IPINFO-TOKEN (owner agrega). **DEBTs nuevas:** `DEBT-GUARDIAN-DEVICE-FINGERPRINTING` (🟢 ~4h) · `DEBT-GUARDIAN-LEARNING-LOOP` (🟢 ~4h · false_positive realimenta el analyzer) · `DEBT-GUARDIAN-PASSWORD-RESET-CUSTOM-TEMPLATE` (🟢 ~1h) · `DEBT-GUARDIAN-FORCE-LOGOUT-FALLBACK` (🟢 · si GoTrue REST /logout no responde, usa ban — ya implementado como fallback). **PRÓXIMO TURNO 4B-4/4B-5:** UI GuardianTab SENTINEL-style (Estado por componente + chips clickables + modal universal con las 5 acciones cableadas + ver IP/país/hora/email/session/UA/device). Backend de acciones LISTO; falta cablear UI + testear acciones con JWT owner en vivo.
 
+═══════════════════════════════════════════════════════════════
+## 🛡️ CIERRE SESIÓN 3 · TOTAL (3 jun 2026) · Input Sanitizer + GUARDIAN end-to-end
+
+**Commits clave:** `4b9aa9d` Input Sanitizer gaps · `b2389ad` GUARDIAN 4B-1 (geo+acciones backend) · `602d593` UI 4B-4 base · `7461999` modal acciones · `1437dff` smoke real · `8d9fe79` pulido · `c4d9180` Claude Consultor.
+
+**Input Sanitizer:** spec PROTOCOLO firmada · **6/6 consumidores** (ARIA/content/image/video/research/upload/brand_corpus + agent_memory PII §8.2). Cerrado.
+
+**GUARDIAN end-to-end (camino C · specs firmadas primero):**
+- Backend (00022 + **00065** ALTER session_id/device_fingerprint/resolution_notes): 3 tablas+RLS+is_owner · analyzer heurística · login/session.
+- **Geo ACTIVO** (IPinfo · `geo_lookup_adapter` httpx · fail-open · smoke 8.8.8.8=US/California) — extensión owner (§7.6 era fase-posterior).
+- **UI estilo SENTINEL** (`/security-dev`→GUARDIAN): header+3 KPIs · 3 cards expandibles (chips filtran) · `GuardianDetailModal` (detalle real: email/IP/país/session/UA/historial/incidents/watchlist) — supersede las 2 cards básicas §8 (extensión owner).
+- **5 acciones owner e2e** (`/guardian/actions/*` · require_superadmin · **smoke real 200**: block-ip, resolve, false-positive, password-reset [email enviado]; force-logout omitido [protege sesión] · verificado code-path).
+- **Claude Consultor** (extensión owner · §7.2 era fase-posterior): `guardian_consultor`→Sonnet 4.6 · `/guardian/consult/incident` · contexto ≤2k · agent_memory audit · smoke local OK (recommended_action + confianza + cita evidencia · P1).
+
+**Compliance:** GUARDIAN_SECURITY_AGENT v1 cubierta + 3 extensiones owner-aprobadas (geo/Consultor/panel) · PROTOCOLO compliant · **cero gaps**.
+
+**DEBTs nuevas (Sub-E):** `DEBT-GUARDIAN-CONSULTOR-FULL-CHAT` (🟢 ~3h · multi-turno vía Claude Dev page) · `DEBT-GUARDIAN-CONSULTOR-LEARNING` (🟢 ~3h · was_correct realimenta prompts) · `DEBT-GUARDIAN-CONSULTOR-EXECUTE-SHORTCUT` (🟢 ~1h · botón "ejecutar acción recomendada"). Previas 4B-1 siguen: DEVICE-FINGERPRINTING · LEARNING-LOOP · PASSWORD-RESET-CUSTOM-TEMPLATE · FORCE-LOGOUT-FALLBACK.
+
+**Pendiente owner:** validación visual del tab GUARDIAN tras deploy Vercel · agregar `IPINFO_TOKEN` a Railway (geo funciona tokenless mientras tanto). **Próxima Sesión 4 = decisión owner:** 4A cerrar DEBTs heredados (024/025/provision) · 4B GUARDIAN enterprise (behavior profiling/threat-score/forensic · con tráfico real) · 4C Tier-1 a 10/10 (AWS+GCP failover + pentest).
+═══════════════════════════════════════════════════════════════
+
 > Detalle/contexto de cada una: `SOURCE_OF_TRUTH.md §6`. Aquí: ID · 1-línea · horas · dependencia · sprint.
 
 ═══════════════════════════════════════════════════════════════
