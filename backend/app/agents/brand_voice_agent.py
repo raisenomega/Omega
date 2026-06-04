@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 from datetime import datetime
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
-from app.infrastructure.ai.claude_service import claude_service
+from app.infrastructure.ai._text_compat import generate_text
 from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.brand_analyzer import (
     brand_analyzer,
@@ -135,11 +135,11 @@ class BrandVoiceAgent(BaseAgent):
                 f"Provide 3 specific suggestions to fix these violations:"
             )
             
-            ai_suggestions = await claude_service.generate_text(
+            ai_suggestions = await generate_text(
+                agent_code="brand_voice",
                 prompt=prompt,
                 max_tokens=200,
                 temperature=0.6,
-                model=self.model,
             )
             
             suggestions = [
@@ -172,11 +172,11 @@ class BrandVoiceAgent(BaseAgent):
             f"Rewrite maintaining the core message but aligning with brand voice:"
         )
         
-        improved = await claude_service.generate_text(
+        improved = await generate_text(
+            agent_code="brand_voice",
             prompt=prompt,
             max_tokens=300,
             temperature=0.7,
-            model=self.model,
         )
         
         # Identify changes
@@ -222,11 +222,11 @@ class BrandVoiceAgent(BaseAgent):
             "4. Emoji usage (never/minimal/moderate/heavy)\n"
         )
         
-        analysis = await claude_service.generate_text(
+        analysis = await generate_text(
+            agent_code="brand_voice",
             prompt=prompt,
             max_tokens=250,
             temperature=0.5,
-            model=self.model,
         )
         
         # Parse AI response (simplified)
@@ -267,11 +267,11 @@ class BrandVoiceAgent(BaseAgent):
             f"Adapt while maintaining brand voice:"
         )
         
-        adapted = await claude_service.generate_text(
+        adapted = await generate_text(
+            agent_code="brand_voice",
             prompt=prompt,
             max_tokens=200,
             temperature=0.7,
-            model=self.model,
         )
         
         adapted = adapted.strip()[:char_limit]
