@@ -50,14 +50,15 @@ def test_apply_check_primera_vez_inserta():
 
 
 def test_run_ping_usa_insert_on_change(monkeypatch):
-    """run_hermes_ping aplica _apply_check a las 7 · estado conocido coincide → UPDATE (no INSERT)."""
+    """run_hermes_ping aplica _apply_check a cada integración registrada · estado conocido coincide → UPDATE (no INSERT)."""
     for env in set(hc._INTEGRATIONS.values()):
-        monkeypatch.setenv(env, "x")  # 7 configuradas → 7 'ok'
+        monkeypatch.setenv(env, "x")  # todas configuradas → 'ok'
     sb = _FakeClient(last_status="ok")
     monkeypatch.setattr(hc, "get_supabase_service", lambda: type("S", (), {"client": sb})())
     out = asyncio.run(hc.run_hermes_ping())
-    assert out["checked"] == 7 and out["inserted"] == 0  # estado igual → updates, no inserts
-    assert len(sb.store["updates"]) == 7 and len(sb.store["inserts"]) == 0
+    n = len(hc._INTEGRATIONS)  # conteo dinámico del registro real (cero hardcode)
+    assert out["checked"] == n and out["inserted"] == 0  # estado igual → updates, no inserts
+    assert len(sb.store["updates"]) == n and len(sb.store["inserts"]) == 0
 
 
 def test_apply_check_no_tapa_last_use_failed():
