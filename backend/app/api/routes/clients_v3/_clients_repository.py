@@ -3,7 +3,8 @@ import asyncio
 import logging
 from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import get_supabase_service
-from app.bc_cognition.domain.input_threats import redact_pii
+from app.bc_cognition.domain.input_threats import redact_pii, InputContext, SanitizerAction
+from app.bc_cognition.application.input_sanitizer import sanitize_input
 
 logger = logging.getLogger(__name__)
 P = ParamSpec("P"); T = TypeVar("T")
@@ -78,7 +79,16 @@ def upsert_brand_assets(client_id: str, assets: dict[str, Any]) -> None:
 
 
 def insert_brand_voice_samples(client_id: str, samples: list[str]) -> None:
-    rows = [{"client_id": client_id, "text": s, "source": "manual_upload", "tone_tags": []} for s in samples if s.strip()]
+    # Input Sanitizer (BRAND_CORPUS · spec §6) · descarta samples con injection (T1/T2), usa clean_text.
+    rows = []
+    for s in samples:
+        if not s.strip():
+            continue
+        si, serr = sanitize_input(s, InputContext.BRAND_CORPUS)
+        if serr is not None or si is None or si.action in (SanitizerAction.BLOCK, SanitizerAction.HOLD_FOR_HUMAN_REVIEW):
+            logger.warning(f"brand_voice manual_upload descartado (unsafe · {serr.code if serr else si.action.value})")
+            continue
+        rows.append({"client_id": client_id, "text": si.clean_text, "source": "manual_upload", "tone_tags": []})
     if rows:
         _sb().table("brand_voice_corpus").insert(rows).execute()
 

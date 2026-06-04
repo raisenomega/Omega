@@ -3,7 +3,8 @@ import asyncio
 import logging
 from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import get_supabase_service
-from app.bc_cognition.domain.input_threats import redact_pii
+from app.bc_cognition.domain.input_threats import redact_pii, InputContext, SanitizerAction
+from app.bc_cognition.application.input_sanitizer import sanitize_input
 
 logger = logging.getLogger(__name__)
 P = ParamSpec("P"); T = TypeVar("T")
@@ -35,8 +36,13 @@ def set_requires_approval(client_id: str, value: bool) -> None:
 def insert_brand_voice_corpus_approved(client_id: str, text: str, platform: Optional[str]) -> None:
     if not text.strip():
         return
+    # Input Sanitizer (BRAND_CORPUS · spec §6) · defensa en profundidad incluso en approved_draft.
+    si, serr = sanitize_input(text, InputContext.BRAND_CORPUS)
+    if serr is not None or si is None or si.action in (SanitizerAction.BLOCK, SanitizerAction.HOLD_FOR_HUMAN_REVIEW):
+        logger.warning(f"brand_voice approved_draft descartado (unsafe · {serr.code if serr else si.action.value})")
+        return
     _sb().table("brand_voice_corpus").insert({
-        "client_id": client_id, "text": text, "source": "approved_draft",
+        "client_id": client_id, "text": si.clean_text, "source": "approved_draft",
         "tone_tags": [], "platform": platform,
     }).execute()
 

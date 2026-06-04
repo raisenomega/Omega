@@ -21,6 +21,8 @@ from app.api.routes.content_lab_v3.models.content_lab_models import (
 from app.api.routes.clients_v3 import _clients_reader as clients_reader
 from app.api.routes.clients_v3._access_control import user_owns_client
 from app.bc_cognition.infrastructure._image_compat import generate_image_compat
+from app.bc_cognition.application.input_sanitizer import sanitize_input
+from app.bc_cognition.domain.input_threats import InputContext, SanitizerAction
 from app.bc_cognition.infrastructure._storage_uploader import StorageUploadError, upload_image_bytes
 from app.bc_cognition.infrastructure._logo_overlay import overlay_logo
 from app.bc_cognition.application.use_image_job import create_image_job, get_image_job
@@ -63,6 +65,12 @@ async def generate_image(
     # DEBT-052: hard block si el budget prepagado está agotado (402)
     if not await check_budget(client_id):
         raise HTTPException(status_code=402, detail="credits_exhausted")
+
+    # Input Sanitizer (T1/T3 · CONTENT_PROMPT · spec PROTOCOLO_SEGURIDAD_INPUT_OMEGA §6)
+    si, serr = sanitize_input(request.prompt, InputContext.CONTENT_PROMPT)
+    if serr is not None or si is None or si.action in (SanitizerAction.BLOCK, SanitizerAction.HOLD_FOR_HUMAN_REVIEW):
+        raise HTTPException(status_code=400, detail="unsafe_input:prompt")
+    request.prompt = si.clean_text
 
     enhanced = _enhance_prompt(request.prompt, request.style)
     # DEBT-CL-020: si attachment text → append al prompt como contexto adicional

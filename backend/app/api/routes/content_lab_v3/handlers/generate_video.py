@@ -24,6 +24,8 @@ from app.api.routes.content_lab_v3.models.content_lab_models import (
 from app.api.routes.clients_v3 import _clients_reader as clients_reader
 from app.api.routes.clients_v3._access_control import user_owns_client
 from app.bc_cognition.application.use_video_job import create_video_job, get_video_job
+from app.bc_cognition.application.input_sanitizer import sanitize_input
+from app.bc_cognition.domain.input_threats import InputContext, SanitizerAction
 from app.bc_cognition.infrastructure import video_job_repository as job_repo
 
 router = APIRouter()
@@ -44,8 +46,12 @@ async def start_video_generation(
     client = resolve_client_or_403(user["id"], request.client_id)  # DEBT-CL-005
     client_id = str(client["id"])
     ratio = _ASPECT_TO_RATIO.get(request.aspect_ratio, request.ratio) if request.aspect_ratio else request.ratio
+    # Input Sanitizer (T1/T3 · CONTENT_PROMPT · spec PROTOCOLO_SEGURIDAD_INPUT_OMEGA §6)
+    sv, serr = sanitize_input(request.prompt, InputContext.CONTENT_PROMPT)
+    if serr is not None or sv is None or sv.action in (SanitizerAction.BLOCK, SanitizerAction.HOLD_FOR_HUMAN_REVIEW):
+        raise HTTPException(status_code=400, detail="unsafe_input:prompt")
     # DEBT-CL-020: append attachment text al prompt (truncate · Veo cap 4000)
-    prompt = request.prompt
+    prompt = sv.clean_text
     if request.reference_attachment_b64 and request.reference_mime_type:
         try:
             extracted = extract_text(request.reference_attachment_b64, request.reference_mime_type)
