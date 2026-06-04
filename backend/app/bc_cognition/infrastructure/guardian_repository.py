@@ -31,10 +31,13 @@ def lookup_ip(supabase: SupabaseService, ip: str) -> Optional[str]:
 
 
 def insert_security_log(supabase: SupabaseService, user_id: str, ip: str, user_agent: str,
-                        event_type: str, risk_score: int, signals: List[str]) -> None:
+                        event_type: str, risk_score: int, signals: List[str],
+                        country: Optional[str] = None, geo: Optional[dict] = None,
+                        session_id: Optional[str] = None) -> None:
     supabase.client.table("user_security_log").insert({
         "user_id": user_id, "ip_address": ip, "user_agent": user_agent,
         "event_type": event_type, "risk_score": risk_score, "metadata": {"signals": signals},
+        "country": country, "geo": geo or {}, "session_id": session_id,
     }).execute()
 
 
@@ -49,20 +52,20 @@ def insert_incident(supabase: SupabaseService, user_id: str, incident_type: str,
 def fetch_session_summary(supabase: SupabaseService, user_id: str, limit: int = 10) -> dict:
     """Resumen para SecurityKPICard (4B-3): último login, eventos recientes, incidentes abiertos."""
     logs = supabase.client.table("user_security_log").select(
-        "event_type, ip_address, created_at, risk_score, metadata"
+        "event_type, ip_address, country, created_at, risk_score, metadata"
     ).eq("user_id", user_id).order("created_at", desc=True).limit(limit).execute()
     rows = logs.data or []
     inc = supabase.client.table("security_incidents").select(
         "id", count="exact").eq("user_id", user_id).eq("status", "open").execute()
     open_count = inc.count or 0
-    last = next(({"at": r["created_at"], "ip": r.get("ip_address") or ""}
+    last = next(({"at": r["created_at"], "ip": r.get("ip_address") or "", "country": r.get("country")}
                  for r in rows if r["event_type"] == "login_success"), None)
     signals = sorted({s for r in rows for s in (r.get("metadata") or {}).get("signals", [])})
     return {
         "status": "revisar" if open_count else "protegida",
         "last_login": last,
         "recent_events": [{"event_type": r["event_type"], "ip": r.get("ip_address") or "",
-                           "at": r["created_at"], "risk_score": r.get("risk_score") or 0} for r in rows],
+                           "country": r.get("country"), "at": r["created_at"], "risk_score": r.get("risk_score") or 0} for r in rows],
         "open_incidents": open_count,
         "active_signals": signals,
     }

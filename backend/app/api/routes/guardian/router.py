@@ -5,9 +5,13 @@ GET  /guardian/session-report · resumen de la cuenta para SecurityKPICard
 """
 from typing import Optional
 from fastapi import APIRouter, Header, Request
-from app.api.routes.guardian.handlers import handle_login_event, handle_session_report
+from app.api.routes.guardian.handlers import (
+    handle_login_event, handle_session_report,
+    handle_block_ip, handle_force_logout, handle_resolve_incident, handle_trigger_password_reset,
+)
 from app.api.routes.guardian.models import (
     LoginEventRequest, LoginEventResponse, SessionReportResponse,
+    BlockIpRequest, ForceLogoutRequest, ResolveIncidentRequest, PasswordResetRequest,
 )
 
 router = APIRouter(prefix="/guardian", tags=["GUARDIAN 🛡️"])
@@ -23,3 +27,24 @@ async def login_event(
 @router.get("/session-report", response_model=SessionReportResponse)
 async def session_report(authorization: Optional[str] = Header(None)) -> SessionReportResponse:
     return await handle_session_report(authorization)
+
+
+# ── Acciones owner end-to-end (4B-1 · gated require_superadmin) ──
+@router.post("/actions/block-ip")
+async def block_ip(body: BlockIpRequest, authorization: Optional[str] = Header(None)):
+    return await handle_block_ip(body, authorization)
+
+
+@router.post("/actions/force-logout")
+async def force_logout(body: ForceLogoutRequest, authorization: Optional[str] = Header(None)):
+    return await handle_force_logout(body, authorization)
+
+
+@router.post("/actions/resolve-incident")
+async def resolve_incident(body: ResolveIncidentRequest, authorization: Optional[str] = Header(None)):
+    return await handle_resolve_incident(body, authorization)
+
+
+@router.post("/actions/trigger-password-reset")
+async def trigger_password_reset(body: PasswordResetRequest, authorization: Optional[str] = Header(None)):
+    return await handle_trigger_password_reset(body, authorization)

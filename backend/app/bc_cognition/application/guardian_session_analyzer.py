@@ -11,6 +11,7 @@ from app.bc_cognition.domain.guardian_threats import (
     LoginContext, SessionAction, SessionAssessment, analyze,
 )
 from app.bc_cognition.infrastructure import guardian_repository as repo
+from app.bc_cognition.infrastructure.geo_lookup_adapter import lookup_ip_geo
 from app.infrastructure.supabase_service import get_supabase_service
 
 logger = logging.getLogger(__name__)
@@ -43,9 +44,12 @@ def analyze_login(
         watchlist = repo.lookup_ip(supabase, ip)
         a = analyze(ctx, recent, watchlist)
         signals = [s.value for s in a.signals]
+        geo, _ = lookup_ip_geo(ip)  # fail-open · None si privada/falla (P4 · no bloquea login)
         repo.insert_security_log(
             supabase, user_id, ip, user_agent,
             "login_success" if success else "login_failed", a.risk_score, signals,
+            country=(geo.country if geo else None),
+            geo=({"region": geo.region, "city": geo.city, "timezone": geo.timezone, "loc": geo.loc, "org": geo.org} if geo else None),
         )
         if a.action != SessionAction.ALLOW and a.incident_type:
             repo.insert_incident(supabase, user_id, a.incident_type, _severity_for(a.risk_score), signals)
