@@ -12,7 +12,7 @@ const LIST_TYPES = ["block", "watch", "allow"];
 export function GuardianWatchlistCard({ onOpenDetail }: { onOpenDetail?: (d: OpenGuardianDetail) => void }) {
   const [lt, setLt] = useState<string | undefined>();
   const [open, setOpen] = useState(false);
-  const { data, isLoading } = useGuardianWatchlist(lt);
+  const { data, isLoading, isError } = useGuardianWatchlist(lt);
   const rows = data?.watchlist ?? [];
   const blocks = rows.filter((w) => w.list_type === "block").length;
   return (
@@ -38,6 +38,8 @@ export function GuardianWatchlistCard({ onOpenDetail }: { onOpenDetail?: (d: Ope
           </div>
           {isLoading ? (
             <Skeleton className="h-20 w-full" />
+          ) : isError ? (
+            <p className="text-xs text-red-500">Error al cargar watchlist · reintentá.</p>
           ) : rows.length === 0 ? (
             <p className="text-xs text-muted-foreground">IP Watchlist vacía{lt ? ` (${lt})` : ""} · se llena al detectar abuso.</p>
           ) : (

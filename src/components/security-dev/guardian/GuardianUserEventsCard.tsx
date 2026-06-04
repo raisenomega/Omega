@@ -12,7 +12,7 @@ const TYPES = ["login_success", "login_failed", "suspicious_activity", "new_devi
 export function GuardianUserEventsCard({ onOpenDetail }: { onOpenDetail?: (d: OpenGuardianDetail) => void }) {
   const [filter, setFilter] = useState<string | undefined>();
   const [open, setOpen] = useState(false);
-  const { data, isLoading } = useGuardianEvents(filter);
+  const { data, isLoading, isError } = useGuardianEvents(filter);
   const events = data?.events ?? [];
   const failed = events.filter((e) => e.event_type === "login_failed").length;
   return (
@@ -38,6 +38,8 @@ export function GuardianUserEventsCard({ onOpenDetail }: { onOpenDetail?: (d: Op
           </div>
           {isLoading ? (
             <Skeleton className="h-24 w-full" />
+          ) : isError ? (
+            <p className="text-xs text-red-500">Error al cargar eventos · reintentá.</p>
           ) : events.length === 0 ? (
             <p className="text-xs text-muted-foreground">Sin eventos{filter ? ` de tipo ${filter}` : " en la ventana"}.</p>
           ) : (

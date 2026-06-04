@@ -12,7 +12,7 @@ const SEVERITIES = ["critical", "high", "medium", "low"];
 export function GuardianIncidentsCard({ onOpenDetail }: { onOpenDetail?: (d: OpenGuardianDetail) => void }) {
   const [sev, setSev] = useState<string | undefined>();
   const [open, setOpen] = useState(false);
-  const { data, isLoading } = useGuardianIncidents(undefined, sev);
+  const { data, isLoading, isError } = useGuardianIncidents(undefined, sev);
   const incidents = data?.incidents ?? [];
   const openCount = incidents.filter((i) => i.status === "open").length;
   return (
@@ -38,6 +38,8 @@ export function GuardianIncidentsCard({ onOpenDetail }: { onOpenDetail?: (d: Ope
           </div>
           {isLoading ? (
             <Skeleton className="h-20 w-full" />
+          ) : isError ? (
+            <p className="text-xs text-red-500">Error al cargar incidentes · reintentá.</p>
           ) : incidents.length === 0 ? (
             <p className="text-xs text-muted-foreground">Sin incidentes{sev ? ` ${sev}` : " abiertos"} · todo en orden.</p>
           ) : (
