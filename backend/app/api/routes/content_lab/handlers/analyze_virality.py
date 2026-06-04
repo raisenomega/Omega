@@ -6,7 +6,7 @@ from typing import Dict, Any
 from fastapi import HTTPException
 import logging
 
-from app.infrastructure.ai.claude_service import claude_service
+from app.infrastructure.ai._text_compat import generate_text
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,8 @@ async def handle_predict_virality(
         )
 
         # Generar análisis con Claude
-        virality_analysis = await claude_service.generate_text(
+        virality_analysis = await generate_text(
+            agent_code="analytics",
             prompt=prompt,
             max_tokens=250,
             temperature=0.7
