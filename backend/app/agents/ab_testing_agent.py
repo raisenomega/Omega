@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 from datetime import datetime
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
-from app.infrastructure.ai.claude_service import claude_service
+from app.infrastructure.ai._text_compat import generate_text
 from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.experiment_engine import (
     Experiment,
@@ -92,8 +92,8 @@ class ABTestingAgent(ABTestingAnalysisMixin, BaseAgent):
             f"3. Expected effect size"
         )
 
-        await claude_service.generate_text(
-            prompt=prompt, max_tokens=300, temperature=0.6, model=self.model
+        await generate_text(
+            agent_code="ab_testing_analysis", prompt=prompt, max_tokens=300, temperature=0.6
         )
 
         effect_size = 0.1
@@ -132,8 +132,8 @@ class ABTestingAgent(ABTestingAnalysisMixin, BaseAgent):
             f"Make the change significant but focused on ONE variable only."
         )
 
-        variants_text = await claude_service.generate_text(
-            prompt=prompt, max_tokens=400, temperature=0.7, model=self.model
+        variants_text = await generate_text(
+            agent_code="ab_testing_analysis", prompt=prompt, max_tokens=400, temperature=0.7
         )
 
         variant_a = ABVariant(
