@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 from datetime import datetime, timedelta
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
-from app.infrastructure.ai.claude_service import claude_service
+from app.infrastructure.ai._text_compat import generate_text
 from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.trend_processor import (
     trend_processor,
@@ -105,11 +105,11 @@ class TrendHunterAgent(BaseAgent):
                     f"4. Audience alignment (0-1)\n"
                 )
                 
-                analysis = await claude_service.generate_text(
+                analysis = await generate_text(
+                    agent_code="trend_hunter",
                     prompt=prompt,
                     max_tokens=150,
                     temperature=0.6,
-                    model=self.model,
                 )
                 
                 # Calculate trend score
@@ -159,11 +159,11 @@ class TrendHunterAgent(BaseAgent):
             f"4. Best timing\n"
         )
         
-        prediction_text = await claude_service.generate_text(
+        prediction_text = await generate_text(
+            agent_code="trend_hunter",
             prompt=prompt,
             max_tokens=200,
             temperature=0.6,
-            model=self.model,
         )
         
         # Calculate virality score
@@ -225,11 +225,11 @@ class TrendHunterAgent(BaseAgent):
                 f"Brand tone: {brand_profile.get('tone', 'professional')}\n"
             )
             
-            ideas_text = await claude_service.generate_text(
+            ideas_text = await generate_text(
+                agent_code="trend_hunter",
                 prompt=prompt,
                 max_tokens=150,
                 temperature=0.8,
-                model=self.model,
             )
             
             content_ideas = [
@@ -301,11 +301,11 @@ class TrendHunterAgent(BaseAgent):
             f"3. Call-to-action\n"
         )
         
-        content = await claude_service.generate_text(
+        content = await generate_text(
+            agent_code="trend_hunter",
             prompt=prompt,
             max_tokens=250,
             temperature=0.8,
-            model=self.model,
         )
         
         return {
