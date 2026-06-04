@@ -28,7 +28,7 @@ def _post(status="pending", sa="sa1", media=None):
             "social_account_id": sa, "content_id": "ct1", "media_url": media}
 
 
-async def _resolve_ok(platform): return "acc1"
+async def _resolve_ok(platform, mapped): return "acc1"
 async def _create_ok(**kw): return "zpost_1"
 
 
@@ -36,6 +36,8 @@ def _wire(monkeypatch, repo, resolve=_resolve_ok, create=_create_ok):
     monkeypatch.setattr(ps, "repo", repo)
     monkeypatch.setattr(ps, "resolve_account_id", resolve)
     monkeypatch.setattr(ps, "create_post", create)
+    # F5/2b · get_zernio_account_id consulta Supabase · se aísla (None = sin mapeo per-negocio)
+    monkeypatch.setattr(ps, "get_zernio_account_id", lambda *a, **k: None)
 
 
 def test_happy_path_publica_y_marca_published(monkeypatch):
@@ -57,7 +59,7 @@ def test_create_post_falla_va_a_failed(monkeypatch):
 
 def test_sin_cuenta_queda_pending_reintentable(monkeypatch):
     repo = _Repo(_post())
-    async def _sin(platform): raise ZernioAccountResolutionError("zernio_sin_cuenta:facebook")
+    async def _sin(platform, mapped): raise ZernioAccountResolutionError("zernio_sin_cuenta:facebook")
     _wire(monkeypatch, repo, resolve=_sin)
     with pytest.raises(ps.PublishGateError) as ei:
         asyncio.run(ps.publish_scheduled_post("p1", "c1"))
@@ -67,7 +69,7 @@ def test_sin_cuenta_queda_pending_reintentable(monkeypatch):
 
 def test_cuenta_ambigua_queda_pending(monkeypatch):
     repo = _Repo(_post())
-    async def _amb(platform): raise ZernioAccountResolutionError("zernio_cuenta_ambigua:facebook:2")
+    async def _amb(platform, mapped): raise ZernioAccountResolutionError("zernio_cuenta_ambigua:facebook:2")
     _wire(monkeypatch, repo, resolve=_amb)
     with pytest.raises(ps.PublishGateError):
         asyncio.run(ps.publish_scheduled_post("p1", "c1"))
