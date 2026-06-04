@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 from datetime import datetime
 import logging
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
-from app.infrastructure.ai.claude_service import claude_service
+from app.infrastructure.ai._text_compat import generate_text
 from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.competitor_analyzer import (
     competitor_analyzer,
@@ -100,11 +100,11 @@ class CompetitiveIntelligenceAgent(BaseAgent):
             f"3. Top 5 hashtags\n"
         )
         
-        analysis = await claude_service.generate_text(
+        analysis = await generate_text(
+            agent_code="competitive_intelligence",
             prompt=prompt,
             max_tokens=200,
             temperature=0.6,
-            model=self.model,
         )
         
         return CompetitorProfile(
@@ -152,11 +152,11 @@ class CompetitiveIntelligenceAgent(BaseAgent):
             f"3. Opportunities (3 items)\n"
         )
         
-        insights = await claude_service.generate_text(
+        insights = await generate_text(
+            agent_code="competitive_intelligence",
             prompt=prompt,
             max_tokens=250,
             temperature=0.7,
-            model=self.model,
         )
         
         return BenchmarkReport(
@@ -195,11 +195,11 @@ class CompetitiveIntelligenceAgent(BaseAgent):
             f"2. 3 content pillars to develop\n"
         )
         
-        recommendations = await claude_service.generate_text(
+        recommendations = await generate_text(
+            agent_code="competitive_intelligence",
             prompt=prompt,
             max_tokens=200,
             temperature=0.7,
-            model=self.model,
         )
         
         opportunity_size = competitor_analyzer.estimate_opportunity_size(
@@ -229,11 +229,11 @@ class CompetitiveIntelligenceAgent(BaseAgent):
             f"Provide 5 specific, actionable recommendations:\n"
         )
         
-        recommendations_text = await claude_service.generate_text(
+        recommendations_text = await generate_text(
+            agent_code="competitive_intelligence",
             prompt=prompt,
             max_tokens=300,
             temperature=0.7,
-            model=self.model,
         )
         
         recommendations = [
