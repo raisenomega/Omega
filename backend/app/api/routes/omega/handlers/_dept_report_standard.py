@@ -2,7 +2,7 @@
 from typing import Dict, Any
 from datetime import datetime
 import logging
-from app.infrastructure.ai.claude_service import claude_service
+from app.infrastructure.ai._text_compat import generate_text
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +53,8 @@ Focus on: performance trends, team health, and recommendations.
 Keep it under 150 words."""
 
     try:
-        ai_summary = await claude_service.generate_text(
-            prompt=prompt, max_tokens=300, temperature=0.7
+        ai_summary = await generate_text(
+            agent_code="analytics", prompt=prompt, max_tokens=300, temperature=0.7
         )
     except Exception as e:
         logger.warning(f"Claude analysis failed: {e}")
