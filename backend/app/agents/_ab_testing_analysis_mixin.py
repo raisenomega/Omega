@@ -1,7 +1,7 @@
 """A/B Testing analysis methods mixin: analyze, insights, recommendations"""
 from typing import List
 import logging
-from app.infrastructure.ai.claude_service import claude_service
+from app.infrastructure.ai._text_compat import generate_text
 from app.services.experiment_engine import (
     ABVariant,
     ABTestResult,
@@ -50,8 +50,8 @@ class ABTestingAnalysisMixin:
             f"Provide 3 key insights about these results."
         )
 
-        insights_text = await claude_service.generate_text(
-            prompt=prompt, max_tokens=250, temperature=0.6, model=self.model
+        insights_text = await generate_text(
+            agent_code="ab_testing_analysis", prompt=prompt, max_tokens=250, temperature=0.6
         )
 
         insights = [
@@ -103,8 +103,8 @@ class ABTestingAnalysisMixin:
             "5. Next optimization opportunity"
         )
 
-        insights_text = await claude_service.generate_text(
-            prompt=prompt, max_tokens=400, temperature=0.6, model=self.model
+        insights_text = await generate_text(
+            agent_code="ab_testing_analysis", prompt=prompt, max_tokens=400, temperature=0.6
         )
 
         return [
@@ -130,8 +130,8 @@ class ABTestingAnalysisMixin:
             f"4. Expected impact"
         )
 
-        recommendation_text = await claude_service.generate_text(
-            prompt=prompt, max_tokens=300, temperature=0.7, model=self.model
+        recommendation_text = await generate_text(
+            agent_code="ab_testing_analysis", prompt=prompt, max_tokens=300, temperature=0.7
         )
 
         untested_variables = ["cta", "hook", "image", "posting_time", "hashtags", "caption"]
