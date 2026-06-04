@@ -7,7 +7,7 @@ from datetime import datetime
 import logging
 from pydantic import BaseModel
 from app.agents.base_agent import BaseAgent, AgentRole, AgentState
-from app.infrastructure.ai.claude_service import claude_service
+from app.infrastructure.ai._text_compat import generate_text
 from app.bc_cognition.domain.routing_table import resolve_model
 from app.services.sentiment_processor import (
     sentiment_processor,
@@ -109,20 +109,20 @@ class EngagementAgent(BaseAgent):
             comment, analysis, platform, brand_voice, context
         )
         
-        response_text = await claude_service.generate_text(
+        response_text = await generate_text(
+            agent_code="engagement",
             prompt=prompt,
             max_tokens=150,
             temperature=0.7,
-            model=self.model,
         )
 
         # Generate alternatives
         alt_prompt = f"{prompt}\n\nProvide 2 alternative responses (one line each):"
-        alternatives_text = await claude_service.generate_text(
+        alternatives_text = await generate_text(
+            agent_code="engagement",
             prompt=alt_prompt,
             max_tokens=100,
             temperature=0.8,
-            model=self.model,
         )
         
         alternatives = [
@@ -164,11 +164,11 @@ class EngagementAgent(BaseAgent):
             f"Provide a helpful, professional response:"
         )
         
-        response_text = await claude_service.generate_text(
+        response_text = await generate_text(
+            agent_code="engagement",
             prompt=prompt,
             max_tokens=200,
             temperature=0.6,
-            model=self.model,
         )
 
         response = EngagementResponse(
@@ -229,11 +229,11 @@ class EngagementAgent(BaseAgent):
                 f"Generate a professional crisis response statement:"
             )
             
-            suggested_response = await claude_service.generate_text(
+            suggested_response = await generate_text(
+                agent_code="engagement",
                 prompt=prompt,
                 max_tokens=150,
                 temperature=0.5,
-                model=self.model,
             )
         else:
             suggested_response = ""
