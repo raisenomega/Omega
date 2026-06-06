@@ -26,8 +26,11 @@ def insert_agent_memory(
     client_id: Optional[str], reseller_id: Optional[str],
     user_message: str, assistant_response: str, level: int,
     source_event_id: Optional[str], was_correct: Optional[bool] = None,
+    content_id: Optional[str] = None,
 ) -> None:
-    """INSERT agent_memory schema M1 · was_correct=None → cron evalúa 72h."""
+    """INSERT agent_memory schema M1 · was_correct=None → cron evalúa 72h.
+    Punto 0: content_id (del draft que generó esta interacción) → aria_nba_id (col existente, sin
+    migración) para que evaluate_decisions cierre was_correct. None=Q&A sin contenido (no-signal · fwd-only)."""
     context = redact_pii(user_message)[0]
     decision = redact_pii(assistant_response)[0]
     supabase.client.table("agent_memory").insert({
@@ -35,6 +38,7 @@ def insert_agent_memory(
         "agent_code": "aria", "memory_type": "episodic",
         "context": context, "decision": decision, "confidence": 7,
         "was_correct": was_correct, "source_event_id": source_event_id,
+        "aria_nba_id": content_id,
         "embedding": _embed_memory(f"{context}\n{decision}"),
         "metadata": {"aria_level": level},
     }).execute()
@@ -53,12 +57,8 @@ def fetch_recent_for_owner(
     supabase: SupabaseService, client_id: Optional[str] = None,
     reseller_id: Optional[str] = None, limit: int = 10,
 ) -> list[dict]:
-    """Últimas `limit` filas ARIA en agent_memory para client_id o reseller_id.
-
-    Filtro: agent_code IN aria/aria_1..4 AND owner match. Best-effort:
-    si Supabase falla → log + [] (no romper la conversación · P5 mejor débil
-    que crash). Llamado desde application._aria_memory_context.
-    """
+    """Últimas `limit` filas ARIA (agent_code IN aria/aria_1..4) para client_id/reseller_id ·
+    best-effort: Supabase falla → log + [] (P5 · no rompe la conversación)."""
     if not (client_id or reseller_id):
         return []
     try:
