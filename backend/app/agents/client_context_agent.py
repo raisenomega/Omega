@@ -178,21 +178,30 @@ Be concise and data-driven."""
             "avoided_topics": []
         }
 
+    @staticmethod
+    def _fill_if_empty(current, new):
+        """GAP-3 merge no-destructivo: solo rellena si el curado está vacío Y el LLM trae valor
+        real. NUNCA pisa un valor curado · NUNCA NULLea (None/vacío del LLM → conserva el curado)."""
+        empty = (None, "", [], {})
+        if current not in empty:        # ya hay valor curado → conservar
+            return current
+        return new if new not in empty else current
+
     async def _save_context(self, client_id: str, analysis: dict) -> ClientContext:
-        """Save analysis to client_context table"""
+        """Save analysis · merge NO-destructivo: cero clobber del contexto curado (GAP-3 · P1/P2)."""
         context = self.context_repo.find_by_client_id(client_id)
 
         if not context:
             context = ClientContext(client_id=client_id)
 
-        # Update fields
-        context.niche = analysis.get("niche")
-        context.tone = analysis.get("tone")
-        context.brand_voice = analysis.get("brand_voice", {})
-        context.target_audience = analysis.get("target_audience")
-        context.content_themes = analysis.get("content_themes", [])
-        context.preferred_formats = analysis.get("preferred_formats", [])
-        context.avoided_topics = analysis.get("avoided_topics", [])
+        # Solo rellena campos VACÍOS del contexto curado (nunca pisa, nunca NULLea).
+        context.niche = self._fill_if_empty(context.niche, analysis.get("niche"))
+        context.tone = self._fill_if_empty(context.tone, analysis.get("tone"))
+        context.brand_voice = self._fill_if_empty(context.brand_voice, analysis.get("brand_voice"))
+        context.target_audience = self._fill_if_empty(context.target_audience, analysis.get("target_audience"))
+        context.content_themes = self._fill_if_empty(context.content_themes, analysis.get("content_themes"))
+        context.preferred_formats = self._fill_if_empty(context.preferred_formats, analysis.get("preferred_formats"))
+        context.avoided_topics = self._fill_if_empty(context.avoided_topics, analysis.get("avoided_topics"))
         context.last_updated_by = "client_context"
 
         return self.context_repo.upsert(context)

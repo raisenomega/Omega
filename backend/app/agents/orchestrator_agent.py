@@ -86,10 +86,19 @@ class OrchestratorAgent:
         for agent_id in chain:
             logger.info(f"Orchestrator: Executing {agent_id}")
 
-            # Special handling for client_context agent
+            # GAP-3 · nodo client_context READ-ONLY: lee el contexto curado del cliente y lo
+            # pasa a los nodos siguientes. NO ejecuta LLM ni escribe (cero clobber · P1/P2).
             if agent_id == "client_context":
-                context_data = await self.client_context_agent.execute(client_id)
-                outputs[agent_id] = context_data
+                ctx = self.context_repo.find_by_client_id(client_id)
+                outputs[agent_id] = {
+                    "client_id": client_id,
+                    "context": {
+                        "niche": ctx.niche, "tone": ctx.tone, "brand_voice": ctx.brand_voice,
+                        "target_audience": ctx.target_audience,
+                        "content_themes": ctx.content_themes,
+                        "preferred_formats": ctx.preferred_formats,
+                    } if ctx else None,
+                }
                 continue
 
             # Load context for subsequent agents
