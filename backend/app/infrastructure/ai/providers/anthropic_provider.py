@@ -89,7 +89,6 @@ class AnthropicProvider(BaseAIProvider):
             response = await self._client.messages.create(
                 model=self._model_name,
                 max_tokens=max_tokens,
-                temperature=temperature,
                 system=system_prompt or "",
                 messages=api_messages  # type: ignore
             )
