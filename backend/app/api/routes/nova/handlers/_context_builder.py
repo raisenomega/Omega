@@ -124,9 +124,11 @@ async def build_nova_system_prompt(
 
     client_context_text = ""
     if active_client:
-        actual_name, client_id, client_ctx = await get_client_context(active_client)
+        # ctx_client_id NO debe pisar el parámetro client_id (eslabón 3 · bug Commit 3): el explícito
+        # de 2.0 tiene que sobrevivir a este bloque para que el bloque ARIA se inyecte en el chat real.
+        actual_name, ctx_client_id, client_ctx = await get_client_context(active_client)
         if client_ctx:
-            client_context_text = f"\n\nCLIENTE ACTIVO: {actual_name}\nCLIENT_ID: {client_id}\n{client_ctx}"
+            client_context_text = f"\n\nCLIENTE ACTIVO: {actual_name}\nCLIENT_ID: {ctx_client_id}\n{client_ctx}"
 
     agent_memory_context = ""
     if mentioned_agents:

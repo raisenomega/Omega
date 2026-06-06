@@ -15,13 +15,15 @@ _LEARN = {"client_id": "afb9f578", "counts": {"total": 88, "with_real_verdict": 
 _EMPTY = {"client_id": "c1", "interactions": [], "counts": {"total": 0, "with_real_verdict": 0, "no_signal": 0}}
 
 
-def _build(client_id=None, learning=_LEARN):
+def _build(client_id=None, learning=_LEARN, active_client=""):
     cb._agents_cache = None; cb._agents_cache_time = None
     with patch.object(cb, "ContextService") as CS, \
          patch.object(cb, "aria_learning_for_client", return_value=learning), \
+         patch.object(cb, "get_client_context", AsyncMock(return_value=("", "", ""))), \
          patch.object(cb, "get_supabase_service", return_value=MagicMock()):
         CS.return_value.get_global_context = AsyncMock(return_value="")
-        return asyncio.run(cb.build_nova_system_prompt("", [], active_client="", client_id=client_id))
+        return asyncio.run(cb.build_nova_system_prompt(
+            "", [], active_client=active_client, client_id=client_id))
 
 
 def test_block_present_with_client_id():
@@ -49,6 +51,15 @@ def test_persona_and_roster_intact():
     sys = _build("afb9f578")
     assert sys.startswith(NOVA_SYSTEM_PROMPT)   # persona Fase 1 intacta, como prefijo
     assert "nova_chat" in sys                   # roster canónico presente
+
+
+def test_block_present_with_active_client_set():
+    """Commit 3.1 · path REAL del handler: active_client presente (nombre del negocio de 2.0) +
+    get_client_context devuelve vacío (context_library falta). Antes: el unpacking pisaba client_id →
+    bloque ausente. Ahora: client_id explícito sobrevive → bloque presente."""
+    sys = _build("afb9f578", active_client="Zafacones Ramos")
+    assert "APRENDIZAJE DE ARIA" in sys
+    assert "Mantenimiento de zafacones." in sys
 
 
 def test_token_budget_truncates_aria_first():
