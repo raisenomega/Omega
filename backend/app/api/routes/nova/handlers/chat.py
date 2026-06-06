@@ -122,7 +122,6 @@ async def handle_chat(request: ChatRequest) -> Dict[str, Any]:
                     json={
                         "model": "claude-sonnet-4-6",
                         "max_tokens": 8192,
-                        "temperature": 0.7,
                         "system": enhanced_system,
                         "messages": messages,
                     },
