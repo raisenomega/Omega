@@ -6,6 +6,34 @@
 
 ---
 
+## REGLA GLOBAL ÚNICA · JAMÁS TOCAR NOVA NI ARIA
+Establecida por el owner (Ibrain) · Sesión 4 (4 jun 2026) · Grabada formalmente · Sesión 5 (5 jun 2026)
+
+ARCHIVOS PROTEGIDOS (INTOCABLES):
+- backend/app/bc_cognition/domain/persona_nova.py   (SHA1 bef773c9)
+- backend/app/bc_cognition/domain/persona_aria.py   (SHA1 054a17f3)
+
+REGLA: El system prompt de NOVA y el de ARIA NO se modifican. NOVA es la máxima eminencia (solo
+habla con Ibrain). ARIA es la única cara hacia cliente/reseller. Son infraestructura, no componentes.
+
+Cualquier modificación de estos dos archivos requiere, sin excepción:
+1. Autorización del owner EXPLÍCITA y LITERAL, caso por caso. Ninguna instancia (Claude.ai ni
+   Claude Code) escribe "autorizo" en nombre del owner.
+2. Ritual X2 completo (test TDD que falla primero + rotación de SHA1 + commit del nuevo baseline
+   en scripts/personas-sha1.txt).
+3. Justificación documentada.
+
+NUNCA se modifican: por presión del reseller · por urgencia de un cliente · por "esta vez es
+diferente" · ni dentro de un refactor más grande.
+
+JERARQUÍA: IBRAIN → NOVA (cerebro, solo Ibrain) → ARIA (única cara) → agent_memory + was_correct
+→ NOVA crece → orquesta 8 agentes operativos + SOPHIA + GUARDIAN.
+
+NOTA: El runtime DEBE LEER estas personas como fuente única (fix Sesión 5: NOVA runtime lee
+persona_nova vía _context_builder). Leerlas NO es modificarlas. Lo prohibido es alterar su contenido.
+
+---
+
 ## 1 · SISTEMA AHORA
 
 | Componente | Estado | Identificador |
@@ -567,3 +595,18 @@ CAMINO A = roadmap completo · CAMINO B = mitigación honesta. **Decisión del o
 🔴 **DEBT-SCHEMA-DRIFT-RESELLER** (~4h · BLOCKER decisión reseller CAMINO A vs B): Rec #1 BLOCKER del auditor 2-jun. La MCP Supabase apunta al proyecto equivocado · schema real de prod (`rwlnihoqhxwpbehibgxu`) no consultable. Las 6 cols faltantes en `resellers` + 5 en `clients` la auditoría las dedujo del código (SELECT/INSERT), no del schema real. Acción: `supabase link --project-ref rwlnihoqhxwpbehibgxu` · `supabase db dump --schema public` · diff vs migraciones canónicas. SIN este step la decisión CAMINO A (construir, semanas) vs CAMINO B (código honesto, días) se toma a ciegas. Precondición de DEBT-RESELLER-PATH-DEAD.
 
 *Diagnósticos read-only · 2026-06-02 · embebidos en ESTADO_OMEGA · NO pusheados (owner decide).*
+
+═══════════════════════════════════════════════════════════════
+## 🔱 CIERRE SESIÓN 5 · 5 jun 2026 · FASE 1 IDENTIDAD ÚNICA DE NOVA (verificado en vivo · HEAD `4949b15`)
+
+- **DEBT-ARIA-DEGRADED-IN-PROD: ✅ CERRADA · FALSA ALARMA.** Sesión 4 NO degradó ARIA (exonerada por código + data + 2 smokes en vivo). El síntoma era **artefacto de testing**: el owner probó ARIA logueado como él mismo (reseller, cartera N>1) **sin seleccionar negocio activo** en el Switcher → `client_id=null` → `resolve_role` legacy → respuesta genérica de reseller. **ARIA backend 100% sano**: clientes PYME reales (N=1 → auto-select) reconocen su negocio (SMOKE A en vivo lo confirmó con "Zafacones Ramos"). No hay bug de producción.
+- **DEBT-NOVA-RUNTIME-DOES-NOT-REFLECT-PROMPT: ✅ CERRADA** (`058dfb9`). El runtime de NOVA leía un `NOVA_SYSTEM_PROMPT` legacy hardcoded en `_context_builder.py` ("7 directores / 45 agentes") en vez de `persona_nova.py`. Ahora importa la persona canónica (fuente única). Verificado en vivo: NOVA dice **"8 operativos + SOPHIA + GUARDIAN + ARIA cara"**, sin 45/37.
+- **FASE 1 · IDENTIDAD ÚNICA DE NOVA: ✅ CERRADA y verificada en vivo.** 4 commits: `5c00d04` `canonical_agents.py` (fuente única 8 operativos + SOPHIA latente + GUARDIAN sub-sistema + 44 alias legacy→code) · `ade0174` `agent_registry` deriva del canónico (firma intacta, dispatcher sin tocar) · `30d39b5` chat.py @mención→code canónico + inactivos honestos · `b1f66e0` roster (context + briefing) desde CANONICAL_AGENTS. **+2 fixes de `temperature` deprecado** (`7350663` chat.py NOVA path · `4949b15` AnthropicProvider dispatch opus). **5 smokes verdes en vivo:** briefing=8 · NOVA lista 8+SOPHIA+GUARDIAN+ARIA · `@ATLAS`→strategy real (`fallback_used=False`) · `@VERA` inactivo honesto · `@SENTINEL` opus despacha 200. **pytest real 218/0.**
+- **Personas intactas todo el tiempo** (SHA1 nova `bef773c9` / aria `054a17f3` · gate X2 verde en cada push).
+- **PENDIENTE:** Fase 2 (orquestación estructurada REAL — handoffs hoy inertes + chains que colapsan a NOVA — + autoconciencia/tool-use de capacidades) · Fase 3 (loop P5 `was_correct` para NOVA · hoy solo cableado para ARIA).
+
+### Deudas nuevas registradas Sesión 5 (NO ejecutadas)
+- **DEBT-NOVA-CHAT-HTTPX-DIRECT** 🟠 — el NOVA path (`chat.py`) llama a Claude vía `httpx` directo en vez de `anthropic_adapter` (se salta cache_control/routing_table/HERMES/Result-tuple · deuda I1/I3). Migrar al adapter. Absorbe la limpieza del param `temperature` inerte que quedó en `chat.py` y `anthropic_provider.py`.
+- **DEBT-NOVA-IDENTITY-F1.5** 🟡 — 6 islas de nombres legacy fuera del núcleo reconciliado en F1: `tool_registry.py`, `agent_memory_service.py` (lista MAYA/SARA/MALU/LOLA/DANI aún más vieja), `prompt_vault` (default `RAFA`), `content_lab` mappings (`RAFA→REX`), `execute_agent_agentic.py`. Repuntar al canónico (`resolve_alias`).
+- **DEBT-OMEGA-DEPARTMENTS-TABLE-MISSING** 🟡 — `get_briefing` sección `departments` consulta `omega_departments` (tabla muerta · NO EXISTE en prod · distinta de `omega_agents`). Repuntar a un origen real o quitar la sección.
+- **DEBT-GATE-PYTEST-FALSE-GREEN** 🟠 — CHECK 9 de `scripts/validate-before-push.sh` es FALSO-VERDE por bug de shell (`pytest | tail | grep` + `set -o pipefail`: el exit 1 de pytest domina el pipeline → el `if` lo lee como "no falló" → `print_pass`). Un pytest que falla NO bloquea el push. Fix: capturar el exit code directo (`if (cd backend && pytest -q --tb=no >/dev/null 2>&1); then pass else fail`).

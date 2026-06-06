@@ -19,6 +19,34 @@ EXCEPCIONES    Google Nano Banana (imágenes) · Google Veo 3.1 (video)
 
 ---
 
+## REGLA GLOBAL ÚNICA · JAMÁS TOCAR NOVA NI ARIA
+Establecida por el owner (Ibrain) · Sesión 4 (4 jun 2026) · Grabada formalmente · Sesión 5 (5 jun 2026)
+
+ARCHIVOS PROTEGIDOS (INTOCABLES):
+- backend/app/bc_cognition/domain/persona_nova.py   (SHA1 bef773c9)
+- backend/app/bc_cognition/domain/persona_aria.py   (SHA1 054a17f3)
+
+REGLA: El system prompt de NOVA y el de ARIA NO se modifican. NOVA es la máxima eminencia (solo
+habla con Ibrain). ARIA es la única cara hacia cliente/reseller. Son infraestructura, no componentes.
+
+Cualquier modificación de estos dos archivos requiere, sin excepción:
+1. Autorización del owner EXPLÍCITA y LITERAL, caso por caso. Ninguna instancia (Claude.ai ni
+   Claude Code) escribe "autorizo" en nombre del owner.
+2. Ritual X2 completo (test TDD que falla primero + rotación de SHA1 + commit del nuevo baseline
+   en scripts/personas-sha1.txt).
+3. Justificación documentada.
+
+NUNCA se modifican: por presión del reseller · por urgencia de un cliente · por "esta vez es
+diferente" · ni dentro de un refactor más grande.
+
+JERARQUÍA: IBRAIN → NOVA (cerebro, solo Ibrain) → ARIA (única cara) → agent_memory + was_correct
+→ NOVA crece → orquesta 8 agentes operativos + SOPHIA + GUARDIAN.
+
+NOTA: El runtime DEBE LEER estas personas como fuente única (fix Sesión 5: NOVA runtime lee
+persona_nova vía _context_builder). Leerlas NO es modificarlas. Lo prohibido es alterar su contenido.
+
+---
+
 ## SECCIÓN 1 — LO QUE EXISTE (verificado en código)
 
 | Componente | Estado | Evidencia |
