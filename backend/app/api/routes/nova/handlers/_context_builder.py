@@ -13,6 +13,7 @@ from app.infrastructure.supabase_service import get_supabase_service
 # El runtime DEBE leer la persona protegida, no un string local divergente.
 from app.bc_cognition.domain.persona_nova import NOVA_SYSTEM_PROMPT
 from app.bc_cognition.domain.canonical_agents import CANONICAL_AGENTS
+from app.bc_cognition.application.nova_aria_learning import aria_learning_for_client
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,26 @@ CACHE_TTL_HOURS = 24
 
 # [R-BUILD-001 equivalent] Anthropic API limit protection
 MAX_CONTEXT_CHARS = 60_000
+_ARIA_BLOCK_MAX = 3000  # eslabón 3 · cota del bloque "Aprendizaje de ARIA" (~5-8 interacciones)
+
+
+def _format_aria_learning_block(learning: dict) -> str:
+    """Bloque 'APRENDIZAJE DE ARIA (este negocio)' · conteos HONESTOS, cero accuracy %. '' si vacío."""
+    interactions = learning.get("interactions") or []
+    if not interactions:
+        return ""
+    c = learning.get("counts") or {}
+    lines = [
+        "\n\nAPRENDIZAJE DE ARIA (este negocio · lo que ARIA conversó · sin suposiciones):",
+        f"{c.get('total', 0)} interacciones · {c.get('with_real_verdict', 0)} con veredicto real · "
+        f"{c.get('no_signal', 0)} sin señal de calidad aún.",
+    ]
+    for it in interactions:
+        ctx = (it.get("context_snippet") or "").strip()
+        dec = (it.get("decision_snippet") or "").strip()
+        if ctx or dec:
+            lines.append(f"  • Cliente: {ctx} → ARIA: {dec}")
+    return "\n".join(lines)[:_ARIA_BLOCK_MAX]
 
 
 async def get_agents_context() -> str:
@@ -87,7 +108,8 @@ async def get_client_context(client_name: str) -> tuple[str, str, str]:
 async def build_nova_system_prompt(
     context_text: str,
     mentioned_agents: list,
-    active_client: str = ""
+    active_client: str = "",
+    client_id: Optional[str] = None,
 ) -> str:
     """
     Build enhanced system prompt for NOVA with full context.
@@ -127,5 +149,15 @@ async def build_nova_system_prompt(
         client_context_text +
         agent_memory_context
     )
+
+    # Eslabón 3 · APRENDIZAJE DE ARIA (este negocio) · prioridad MÁS BAJA: se SUMA al final y se
+    # trunca PRIMERO si no entra (persona + roster + global + cliente nunca se tocan). Cero suposiciones.
+    if client_id:
+        aria_block = _format_aria_learning_block(
+            aria_learning_for_client(get_supabase_service(), client_id, limit=8)
+        )
+        room = MAX_CONTEXT_CHARS - len(enhanced_system)
+        if aria_block and room > 0:
+            enhanced_system += aria_block[:room]
 
     return enhanced_system

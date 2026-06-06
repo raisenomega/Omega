@@ -116,7 +116,8 @@ async def handle_chat(request: ChatRequest, user: Optional[dict] = None) -> Dict
 
         mentioned_agents = extract_mentioned_agents(messages)
         enhanced_system = await build_nova_system_prompt(
-            context_text, mentioned_agents, active_client=active_client_name or ""
+            context_text, mentioned_agents, active_client=active_client_name or "",
+            client_id=explicit_client_id,  # eslabón 3: ARIA learning de ESE negocio (client_id de 2.0)
         )
 
         api_key = os.getenv("ANTHROPIC_API_KEY")
