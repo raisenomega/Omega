@@ -15,15 +15,28 @@ _LEARN = {"client_id": "afb9f578", "counts": {"total": 88, "with_real_verdict": 
 _EMPTY = {"client_id": "c1", "interactions": [], "counts": {"total": 0, "with_real_verdict": 0, "no_signal": 0}}
 
 
-def _build(client_id=None, learning=_LEARN, active_client=""):
+_CAP = "\n\n=== INVENTARIO DE CAPACIDADES (mock) ==="
+
+
+def _build(client_id=None, learning=_LEARN, active_client="", global_text=""):
     cb._agents_cache = None; cb._agents_cache_time = None
     with patch.object(cb, "ContextService") as CS, \
          patch.object(cb, "aria_learning_for_client", return_value=learning), \
          patch.object(cb, "get_client_context", AsyncMock(return_value=("", "", ""))), \
+         patch.object(cb, "build_capabilities_block", return_value=_CAP), \
          patch.object(cb, "get_supabase_service", return_value=MagicMock()):
-        CS.return_value.get_global_context = AsyncMock(return_value="")
+        CS.return_value.get_global_context = AsyncMock(return_value=global_text)
         return asyncio.run(cb.build_nova_system_prompt(
             "", [], active_client=active_client, client_id=client_id))
+
+
+def test_capabilities_block_injected_high_priority():
+    """Punto 6 Commit B: el inventario se inyecta · persona sigue de prefijo · va ANTES del global
+    (alta prioridad en `reserved`, no se trunca)."""
+    sys = _build(global_text="GLOBALMARK")
+    assert _CAP in sys                                   # inventario presente
+    assert sys.startswith(NOVA_SYSTEM_PROMPT)            # persona Fase 1 intacta (prefijo)
+    assert sys.index(_CAP) < sys.index("GLOBALMARK")     # antes del global → alta prioridad
 
 
 def test_block_present_with_client_id():

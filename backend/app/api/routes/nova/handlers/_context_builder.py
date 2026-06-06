@@ -14,6 +14,7 @@ from app.infrastructure.supabase_service import get_supabase_service
 from app.bc_cognition.domain.persona_nova import NOVA_SYSTEM_PROMPT
 from app.bc_cognition.domain.canonical_agents import CANONICAL_AGENTS
 from app.bc_cognition.application.nova_aria_learning import aria_learning_for_client
+from ._capabilities import build_capabilities_block
 
 logger = logging.getLogger(__name__)
 
@@ -136,8 +137,13 @@ async def build_nova_system_prompt(
         if agent_context:
             agent_memory_context = f"\n\nMEMORIA RECIENTE DE {mentioned_agents[0]}:\n{agent_context}"
 
-    # Truncate global_context to prevent 400 — priority kept for base + agents + client
-    reserved = len(NOVA_SYSTEM_PROMPT) + len(agents_context) + len(client_context_text) + len(agent_memory_context)
+    # Autoconciencia (Punto 6): inventario de capacidades reales · ALTA prioridad (en `reserved`, no
+    # se trunca) · va después de persona+roster, antes de global. Persona (NOVA_SYSTEM_PROMPT) intacta.
+    capabilities_block = build_capabilities_block()
+
+    # Truncate global_context to prevent 400 — priority kept for base + agents + capabilities + client
+    reserved = (len(NOVA_SYSTEM_PROMPT) + len(agents_context) + len(capabilities_block)
+                + len(client_context_text) + len(agent_memory_context))
     available = MAX_CONTEXT_CHARS - reserved
     if available > 0 and len(global_context) > available:
         global_context = global_context[:available]
@@ -146,6 +152,7 @@ async def build_nova_system_prompt(
     enhanced_system = (
         NOVA_SYSTEM_PROMPT +
         agents_context +
+        capabilities_block +
         global_context +
         context_text +
         client_context_text +
