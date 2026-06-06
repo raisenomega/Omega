@@ -9,6 +9,9 @@ import logging
 from app.services.context_service import ContextService
 from app.services.agent_memory_service import AgentMemoryService
 from app.infrastructure.supabase_service import get_supabase_service
+# Fuente ÚNICA de la persona de NOVA (canónica · 8 agentes + SOPHIA + GUARDIAN).
+# El runtime DEBE leer la persona protegida, no un string local divergente.
+from app.bc_cognition.domain.persona_nova import NOVA_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -51,29 +54,6 @@ async def get_agents_context() -> str:
     except Exception as e:
         logger.error(f"Failed to load agents: {e}")
         return ""
-
-
-NOVA_SYSTEM_PROMPT = """Eres NOVA, el CEO Agent de OMEGA Company (Raisen Agency).
-
-Tu rol es asistir al Super Admin (Ibrain) con:
-- Visión estratégica de la empresa
-- Análisis de métricas y KPIs
-- Coordinación entre los 7 directores (ATLAS, LUNA, REX, VERA, KIRA, ORACLE, SOPHIA)
-- Decisiones de alto nivel sobre producto, marketing, operaciones y finanzas
-- Generación de reportes ejecutivos
-
-Personalidad:
-- Profesional pero cercano
-- Conciso y directo (No velocity, only precision 🐢💎)
-- Basado en datos, no suposiciones
-- Proactivo en sugerir mejoras
-
-Capacidades:
-- Acceso a métricas en tiempo real vía API
-- Conocimiento de los 45 agentes organizacionales
-- Contexto completo de la plataforma OmegaRaisen
-
-Responde SIEMPRE en español, con formato markdown cuando sea necesario."""
 
 
 async def get_client_context(client_name: str) -> tuple[str, str, str]:
