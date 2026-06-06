@@ -12,6 +12,7 @@ from app.infrastructure.supabase_service import get_supabase_service
 # Fuente ÚNICA de la persona de NOVA (canónica · 8 agentes + SOPHIA + GUARDIAN).
 # El runtime DEBE leer la persona protegida, no un string local divergente.
 from app.bc_cognition.domain.persona_nova import NOVA_SYSTEM_PROMPT
+from app.bc_cognition.domain.canonical_agents import CANONICAL_AGENTS
 
 logger = logging.getLogger(__name__)
 
@@ -25,35 +26,30 @@ MAX_CONTEXT_CHARS = 60_000
 
 
 async def get_agents_context() -> str:
-    """Get agents context from DB with 24h caching."""
+    """Roster canónico de NOVA (8 operativos + SOPHIA + GUARDIAN) · cache 24h.
+    Fuente única: CANONICAL_AGENTS (data en memoria · no una tabla de DB muerta)."""
     global _agents_cache, _agents_cache_time
     now = datetime.utcnow()
     if _agents_cache and _agents_cache_time:
         if (now - _agents_cache_time).total_seconds() / 3600 < CACHE_TTL_HOURS:
             return _agents_cache
-    try:
-        supabase = get_supabase_service()
-        agents_resp = supabase.client.table("omega_agents")\
-            .select("agent_code, name, role, department")\
-            .order("department, role.desc, agent_code")\
-            .execute()
-        if not agents_resp.data:
-            return ""
-        ctx = "\n\nAGENTES DEL SISTEMA OMEGA:\n"
-        current_dept = None
-        for agent in agents_resp.data:
-            dept = agent.get('department', 'Unknown')
-            if dept != current_dept:
-                ctx += f"\n{dept}:\n"
-                current_dept = dept
-            ctx += f"  • {agent['agent_code']} ({agent.get('role', 'Agent')}): {agent.get('name', agent['agent_code'])}\n"
-        _agents_cache = ctx
-        _agents_cache_time = now
-        logger.info(f"Agents context refreshed: {len(agents_resp.data)} agents")
-        return ctx
-    except Exception as e:
-        logger.error(f"Failed to load agents: {e}")
-        return ""
+    lines = [
+        "\n\nAGENTES DEL SISTEMA OMEGA (arquitectura canónica · 8 operativos + SOPHIA + GUARDIAN):",
+        "\nOPERATIVOS:",
+    ]
+    for code, a in CANONICAL_AGENTS.items():
+        if a["status"] == "operational":
+            lines.append(f"  • {code} ({a['name']}): {a['role']}")
+    for a in CANONICAL_AGENTS.values():
+        if a["status"] == "latent":
+            lines.append(f"{a['name']} (meta-agente latente · no corre todavía · se activa con evidencia)")
+        elif a["status"] == "subsystem":
+            lines.append(f"{a['name']} (sub-sistema de seguridad de comportamiento)")
+    lines.append("ARIA es la cara pública (proyección de NOVA hacia clientes/resellers · NO agente adicional).")
+    ctx = "\n".join(lines)
+    _agents_cache = ctx
+    _agents_cache_time = now
+    return ctx
 
 
 async def get_client_context(client_name: str) -> tuple[str, str, str]:

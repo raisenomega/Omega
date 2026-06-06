@@ -7,6 +7,7 @@ DDD: Application layer - read operations. Strict <200L.
 from typing import Dict, Any
 from datetime import datetime
 from app.infrastructure.supabase_service import get_supabase_service
+from app.bc_cognition.domain.canonical_agents import CANONICAL_AGENTS, operational_count
 import logging
 
 logger = logging.getLogger(__name__)
@@ -77,12 +78,8 @@ async def handle_get_briefing() -> Dict[str, Any]:
     except Exception as e:
         logger.warning(f"briefing: clients query failed: {e}")
 
-    agents_registered = None
-    try:
-        agents_count = supabase.client.table("omega_agents").select("id", count="exact").execute()
-        agents_registered = agents_count.count or 0
-    except Exception as e:
-        logger.warning(f"briefing: omega_agents count failed: {e}")
+    # Identidad única (Fase 1): roster canónico en memoria, no una tabla de DB muerta.
+    agents_registered = operational_count()  # = 8 operativos canónicos
 
     # Dict siempre poblado con lo resuelto · null en lo que falló (NO null global como antes).
     result["system_status"] = {
@@ -95,15 +92,12 @@ async def handle_get_briefing() -> Dict[str, Any]:
     }
     logger.info(f"briefing system_status: clients={total_clients} security={security_score}")
 
-    # 3. Active Agents
-    try:
-        agents = supabase.client.table("omega_agents")\
-            .select("code,name,role,status,seed_memory_loaded,department")\
-            .order("code").execute()
-        result["active_agents"] = agents.data if agents.data else []
-        logger.info(f"Active agents: {len(result['active_agents'])}")
-    except Exception as e:
-        logger.warning(f"Failed to fetch active_agents: {e}")
+    # 3. Active Agents · roster canónico (8 operativos · Fase 1, en memoria · no una tabla de DB)
+    result["active_agents"] = [
+        {"code": code, "name": a["name"], "role": a["role"]}
+        for code, a in CANONICAL_AGENTS.items() if a["status"] == "operational"
+    ]
+    logger.info(f"Active agents (canonico): {len(result['active_agents'])}")
 
     # 4. Departments
     try:
