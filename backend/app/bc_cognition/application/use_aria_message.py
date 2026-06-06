@@ -71,12 +71,14 @@ async def use_aria_message(
     history = repo.load_recent_history(supabase, user_id, get_history_window(level), client_id)
     user_content = await build_user_content(user_message, ctx.get("_logo_url") if ctx else None)
     # FASE 1 PASO 2: loop agéntico (tool prepare_supervised_draft) · sin tool_use/sin client_id = texto normal.
-    reply, err = await run_tool_loop(
+    reply, err, content_ids = await run_tool_loop(
         get_agent_code_for_level(level), system,
         history + [{"role": "user", "content": user_content}], client_id, timezone=tz,
     )
+    # Punto 0: enlace al content generado (multi-draft → el 1º · aria_nba_id es 1 uuid). None = Q&A.
+    content_id = content_ids[0] if content_ids else None
 
-    # Failure path · failure signal + agent_memory was_correct=False
+    # Failure path · failure signal + agent_memory was_correct=False (con enlace si hubo draft)
     if err or reply is None:
         code = err.code if err else "unknown"
         await repo.safe_insert("behavioral_failed", repo.insert_behavioral_event,
@@ -85,7 +87,7 @@ async def use_aria_message(
         await repo.safe_insert("agent_memory_failed", mem.insert_agent_memory,
                          supabase, user_id, client_id, reseller_id,
                          user_message=user_message, assistant_response=f"[failed:{code}]",
-                         level=level, source_event_id=event_id, was_correct=False)
+                         level=level, source_event_id=event_id, was_correct=False, content_id=content_id)
         return None, err or ClaudeError("unknown", "ARIA generate returned None")
 
     # Happy path · assistant message + agent_memory was_correct=None (cron 72h)
@@ -94,5 +96,5 @@ async def use_aria_message(
     await repo.safe_insert("agent_memory_ok", mem.insert_agent_memory,
                      supabase, user_id, client_id, reseller_id,
                      user_message=user_message, assistant_response=reply,
-                     level=level, source_event_id=event_id, was_correct=None)
+                     level=level, source_event_id=event_id, was_correct=None, content_id=content_id)
     return ARIAResult(content=reply, aria_level=level), None

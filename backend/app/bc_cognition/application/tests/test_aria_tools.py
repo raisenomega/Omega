@@ -33,9 +33,10 @@ def _run(client_id, gen_side_effect, insert_mock):
 
 def test_no_tool_use_is_plain_conversation():
     captured = MagicMock(return_value="cid")
-    text, err = _run("client-A", [(_resp(text="hola"), None)], captured)
+    text, err, content_ids = _run("client-A", [(_resp(text="hola"), None)], captured)
     assert err is None and text == "hola"
-    captured.assert_not_called()  # sin tool_use → NO crea draft (idéntico a hoy)
+    assert content_ids == []          # Punto 0: sin tool → sin enlace de contenido
+    captured.assert_not_called()      # sin tool_use → NO crea draft (idéntico a hoy)
 
 
 def test_tool_use_creates_supervised_draft():
@@ -44,10 +45,11 @@ def test_tool_use_creates_supervised_draft():
         captured["client_id"] = client_id; captured["payload"] = payload
         return "new-cid"
     block = _tool_block({"texto": "Post de prueba", "fecha_sugerida": "2026-06-01T15:00"})
-    text, err = _run("client-A",
+    text, err, content_ids = _run("client-A",
                      [(_resp(tool_calls=[block]), None), (_resp(text="lo dejé en Supervisado"), None)],
                      _insert)
     assert err is None and text == "lo dejé en Supervisado"
+    assert content_ids == ["new-cid"]   # Punto 0: el content_id del draft burbujea
     assert captured["client_id"] == "client-A"
     md = captured["payload"]["metadata"]
     assert md["supervisado"] is True and md["fecha_sugerida"] == "2026-06-01T15:00:00-04:00"  # offset-aware

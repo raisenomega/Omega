@@ -31,19 +31,25 @@ SCHEDULE_DEF: dict[str, Any] = {
 
 async def run_tool_loop(agent_code: str, system: str, messages: list[dict[str, Any]],
                         client_id: Optional[str], timezone: Optional[str] = None,
-                        ) -> tuple[Optional[str], Optional[object]]:
-    """1 iteración de tool. Sin tool_use → texto normal (idéntico a hoy). Devuelve (text, err)."""
+                        ) -> tuple[Optional[str], Optional[object], list[str]]:
+    """1 iteración de tool. Sin tool_use → texto normal (idéntico a hoy).
+    Devuelve (text, err, content_ids): content_ids = ids de content_lab_generated creados por la tool
+    en este turno (Punto 0 · loop de verdad · vacío si no hubo draft)."""
     system = f"{system}\n\n{_RESPONSE_RULES}"  # reglas de respuesta · cierre del system (recency · P1)
     resp, err = await generate(agent_code=agent_code, system=system, messages=messages,
                                max_tokens=1024, tools=[SCHEDULE_DEF])
     if err or resp is None:
-        return None, err
+        return None, err, []
     if not resp.tool_calls or not client_id:
-        return resp.text, None  # conversación normal · cero cambio vs hoy
+        return resp.text, None, []  # conversación normal · cero cambio vs hoy
 
     tool_results = []
+    content_ids: list[str] = []
     for block in resp.tool_calls:
         out = await execute_prepare_draft(client_id, getattr(block, "input", {}) or {}, timezone)
+        cid = out.get("content_id")
+        if cid:
+            content_ids.append(cid)
         tool_results.append({"type": "tool_result", "tool_use_id": block.id,
                              "content": str(out.get("mensaje") or out)})
     followup = messages + [
@@ -54,8 +60,8 @@ async def run_tool_loop(agent_code: str, system: str, messages: list[dict[str, A
     narration = (system + "\n\n" + _NARRATION_RULE)
     resp2, err2 = await generate(agent_code=agent_code, system=narration, messages=followup, max_tokens=1024)
     if err2 or resp2 is None:
-        return None, err2
-    return resp2.text, None
+        return None, err2, content_ids  # el draft SÍ se creó · linkear aunque la narración falle
+    return resp2.text, None, content_ids
 
 
 _NARRATION_RULE = (
