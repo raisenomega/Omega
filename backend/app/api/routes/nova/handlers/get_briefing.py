@@ -8,6 +8,7 @@ from typing import Dict, Any
 from datetime import datetime
 from app.infrastructure.supabase_service import get_supabase_service
 from app.bc_cognition.domain.canonical_agents import CANONICAL_AGENTS, operational_count
+from app.bc_cognition.application.nova_aria_learning import aria_learning_global
 import logging
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,8 @@ async def handle_get_briefing() -> Dict[str, Any]:
         "departments": None,
         "context_documents": None,
         "pending_alerts": None,
-        "prompt_vault_stats": None
+        "prompt_vault_stats": None,
+        "aria_learning": None
     }
 
     # 1. NOVA Memory (last 20 entries by priority)
@@ -166,6 +168,14 @@ async def handle_get_briefing() -> Dict[str, Any]:
         logger.info(f"Prompt vault: {result['prompt_vault_stats']['total_prompts']} prompts")
     except Exception as e:
         logger.warning(f"Failed to fetch prompt_vault_stats: {e}")
+
+    # 8. Aprendizaje de ARIA (eslabón 3 · DEBT-ARIA-NOVA-BRIDGE) · conteos honestos por negocio,
+    # vía la fachada (no query directa aquí). NOVA por fin "ve" el stream que ARIA captura.
+    try:
+        result["aria_learning"] = aria_learning_global(supabase)
+        logger.info(f"ARIA learning: {result['aria_learning'].get('grand_total')} interacciones")
+    except Exception as e:
+        logger.warning(f"Failed to fetch aria_learning: {e}")
 
     logger.info("NOVA briefing completed successfully")
     return result
