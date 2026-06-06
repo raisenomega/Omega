@@ -1,14 +1,20 @@
 """
-Agent Registry - Maps 45 OMEGA agents to AI providers and models.
-DDD: Infrastructure layer - Agent-to-Provider mapping.
-Max 200L strict. Type-safe, no `any`.
+Agent Registry - Resuelve agent codes/alias a config (provider/model/department).
+Fuente única de identidad: bc_cognition/domain/canonical_agents (8 + SOPHIA + GUARDIAN).
+Los nombres legacy (ATLAS, RAFA...) son alias→code canónico. Type-safe, no `any`.
+DDD: Infrastructure layer.
 """
 from typing import Dict, TypedDict, Literal
 from enum import Enum
 
+from app.bc_cognition.domain.canonical_agents import (
+    resolve_alias, CANONICAL_AGENTS, operational_count,
+)
+from app.bc_cognition.domain.routing_table import resolve_model
+
 
 class Department(str, Enum):
-    """Department enum for organizational structure."""
+    """Department enum for organizational structure (metadata · sin consumidores runtime)."""
     EXECUTIVE = "EXECUTIVE"
     MARKETING = "MARKETING"
     PRODUCT = "PRODUCT"
@@ -20,141 +26,82 @@ class Department(str, Enum):
     SECURITY = "SECURITY"
 
 
-# Type-safe provider literals (Fase 2 §2.6: solo anthropic permitido · I1)
+# Type-safe provider literals (Fase 2 §2.6: solo anthropic · I1)
 ProviderName = Literal["anthropic"]
 
 
 class AgentConfig(TypedDict):
-    """
-    Type-safe agent configuration.
-    Zero `any` types - complete type safety.
-    """
+    """Type-safe agent configuration. Zero `any`."""
     provider: ProviderName
     model: str
     department: Department
 
 
-# Complete OMEGA Agent Registry - 45 Agents
-AGENT_REGISTRY: Dict[str, AgentConfig] = {
-    # EXECUTIVE (1 agent)
-    "NOVA": {
-        "provider": "anthropic",
-        "model": "claude-sonnet-4-6",
-        "department": Department.EXECUTIVE
-    },
-
-    # MARKETING (6 agents) · Haiku 4.5
-    "ATLAS": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
-    "RAFA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
-    "DUDA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
-    "ECHO": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
-    "LUAN": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
-    "PIXEL": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.MARKETING},
-
-    # PRODUCT & TECHNOLOGY (5 agents) · Haiku 4.5
-    "LUNA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PRODUCT},
-    "SHIELD": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PRODUCT},
-    "FORGE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PRODUCT},
-    "DEBUG": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PRODUCT},
-    "SCOPE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PRODUCT},
-
-    # OPERATIONS (5 agents) · Haiku 4.5
-    "REX": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.OPERATIONS},
-    "ANCHOR": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.OPERATIONS},
-    "BRIDGE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.OPERATIONS},
-    "FLOW": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.OPERATIONS},
-    "SCOUT": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.OPERATIONS},
-
-    # FINANCE (5 agents) · Haiku 4.5
-    "VERA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.FINANCE},
-    "LEDGER": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.FINANCE},
-    "PULSE_FIN": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.FINANCE},
-    "QUOTA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.FINANCE},
-    "MARGIN": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.FINANCE},
-
-    # COMMUNITY (5 agents) · Haiku 4.5
-    "KIRA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.COMMUNITY},
-    "REVIEW": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.COMMUNITY},
-    "NURTURE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.COMMUNITY},
-    "TRIBE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.COMMUNITY},
-    "VOICE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.COMMUNITY},
-
-    # INTELLIGENCE (5 agents) · Opus 4.7
-    "ORACLE": {"provider": "anthropic", "model": "claude-opus-4-7", "department": Department.INTELLIGENCE},
-    "TREND": {"provider": "anthropic", "model": "claude-opus-4-7", "department": Department.INTELLIGENCE},
-    "SIGNAL": {"provider": "anthropic", "model": "claude-opus-4-7", "department": Department.INTELLIGENCE},
-    "MAP": {"provider": "anthropic", "model": "claude-opus-4-7", "department": Department.INTELLIGENCE},
-    "LENS": {"provider": "anthropic", "model": "claude-opus-4-7", "department": Department.INTELLIGENCE},
-
-    # PEOPLE (5 agents) · Haiku 4.5
-    "SOPHIA": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PEOPLE},
-    "HIRE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PEOPLE},
-    "TRAIN": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PEOPLE},
-    "CULTURE": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PEOPLE},
-    "COMPASS": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "department": Department.PEOPLE},
-
-    # SECURITY (13 agents) · Sonnet 4.6
-    "SENTINEL": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
-    "VAULT": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
-    "PULSE_MON": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
-    "GUARD": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
-    "WATCH": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
-    "LOCK": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
-    "TRACE": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
-    "AUDIT": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
-    "SHIELD_SEC": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
-    "CIPHER": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
-    "PERIMETER": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
-    "RESPONSE": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
-    "SCAN": {"provider": "anthropic", "model": "claude-sonnet-4-6", "department": Department.SECURITY},
+# Department por code (metadata no-crítica · default EXECUTIVE).
+_DEPARTMENT: Dict[str, Department] = {
+    "nova_chat": Department.EXECUTIVE,
+    "orchestrator": Department.EXECUTIVE,
+    "sophia": Department.EXECUTIVE,
+    "content_creator": Department.MARKETING,
+    "strategy": Department.MARKETING,
+    "brand_voice": Department.MARKETING,
+    "engagement": Department.COMMUNITY,
+    "analytics": Department.INTELLIGENCE,
+    "crisis_manager": Department.OPERATIONS,
+    "sentinel_security": Department.SECURITY,
+    "guardian": Department.SECURITY,
 }
 
 
 def get_agent_config(agent_code: str) -> AgentConfig:
     """
-    Get agent configuration by code.
+    Resuelve alias/code → AgentConfig (provider/model/department).
 
     Args:
-        agent_code: Agent code (e.g., "NOVA", "ATLAS")
+        agent_code: code canónico o nombre legacy (e.g. "ATLAS", "@RAFA", "nova_chat").
 
     Returns:
-        AgentConfig with provider, model, department
+        AgentConfig con provider="anthropic", model resuelto, department metadata.
 
     Raises:
-        KeyError: If agent not found in registry
+        KeyError: si el code/alias no resuelve a un agente operativo (inactive/desconocido).
     """
-    agent_upper = agent_code.upper().strip()
-    if agent_upper not in AGENT_REGISTRY:
-        raise KeyError(
-            f"Agent '{agent_code}' not found in registry. "
-            f"Valid agents: {', '.join(sorted(AGENT_REGISTRY.keys()))}"
-        )
-    return AGENT_REGISTRY[agent_upper]
+    target = resolve_alias(agent_code)
+    if target is None:
+        raise KeyError(f"Agent '{agent_code}' not operational/registered")
+    model = (
+        CANONICAL_AGENTS[target]["model"]
+        if target in CANONICAL_AGENTS
+        else resolve_model(target)
+    )
+    return AgentConfig(
+        provider="anthropic",
+        model=model,
+        department=_DEPARTMENT.get(target, Department.EXECUTIVE),
+    )
 
 
 def is_agent_registered(agent_code: str) -> bool:
-    """Check if agent exists in registry."""
-    return agent_code.upper().strip() in AGENT_REGISTRY
+    """True si el code/alias resuelve a un agente operativo (False para INACTIVE/desconocido)."""
+    return resolve_alias(agent_code) is not None
 
 
 def get_agents_by_department(department: Department) -> Dict[str, AgentConfig]:
-    """Get all agents in a department."""
+    """Agentes canónicos en un departamento (metadata · sin consumidores runtime)."""
     return {
-        code: config
-        for code, config in AGENT_REGISTRY.items()
-        if config["department"] == department
+        code: get_agent_config(code)
+        for code in CANONICAL_AGENTS
+        if _DEPARTMENT.get(code, Department.EXECUTIVE) == department
     }
 
 
 def get_agents_by_provider(provider: ProviderName) -> Dict[str, AgentConfig]:
-    """Get all agents using a specific provider."""
-    return {
-        code: config
-        for code, config in AGENT_REGISTRY.items()
-        if config["provider"] == provider
-    }
+    """Agentes canónicos por provider (todos anthropic · I1)."""
+    if provider != "anthropic":
+        return {}
+    return {code: get_agent_config(code) for code in CANONICAL_AGENTS}
 
 
 def get_total_agent_count() -> int:
-    """Get total number of registered agents."""
-    return len(AGENT_REGISTRY)
+    """Número de agentes operativos canónicos (= 8)."""
+    return operational_count()
