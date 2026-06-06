@@ -37,7 +37,7 @@ def _evaluate_pending() -> dict[str, int]:
     now = datetime.now(timezone.utc)
     cutoff = (now - timedelta(hours=_MIN_AGE_HOURS)).isoformat()
     try:
-        r = sb.table("agent_memory").select("id, source_event_id, created_at") \
+        r = sb.table("agent_memory").select("id, source_event_id, aria_nba_id, created_at") \
             .is_("was_correct", "null").is_("evaluated_at", "null") \
             .lt("created_at", cutoff).order("created_at", desc=False).limit(_BATCH).execute()
     except Exception as e:
@@ -67,17 +67,23 @@ def _evaluate_pending() -> dict[str, int]:
 
 
 def _decide(sb, row: dict, now: datetime) -> Optional[dict]:
-    """Dict de UPDATE según la señal · None si todavía no hay señal y no pasaron 72h."""
+    """Dict de UPDATE según la señal · None si todavía no hay señal y no pasaron 72h.
+
+    Punto 0 (loop de verdad): la key del veredicto es `aria_nba_id` = id del content_lab_generated que
+    ESTA interacción generó (Commit 2). ANTES se usaba `source_event_id`, que apunta a behavioral_events
+    → nunca matcheaba un content_lab_generated → 0 cierres. `source_event_id` SE CONSERVA en la fila
+    (sigue siendo el enlace al behavioral), solo deja de ser la key del join. `aria_nba_id` null (Q&A o
+    fila vieja · forward-only) → sin contenido → cae al path 72h 'Sin señal' (no rompe, no inventa)."""
     iso = now.isoformat()
-    sid = row.get("source_event_id")
-    if sid:
-        c = sb.table("content_lab_generated").select("status").eq("id", sid).limit(1).execute()
+    content_id = row.get("aria_nba_id")
+    if content_id:
+        c = sb.table("content_lab_generated").select("status").eq("id", content_id).limit(1).execute()
         status = c.data[0]["status"] if c.data else None
         if status in _POSITIVE:
             return {"was_correct": True, "outcome": f"Cliente acepto el contenido (status={status})", "evaluated_at": iso}
         if status in _NEGATIVE:
             return {"was_correct": False, "outcome": f"Cliente rechazo el contenido (status={status})", "evaluated_at": iso}
-        # status='draft' o source_event_id sin contenido asociado → sin señal aún (fail-open)
+        # status='draft' o content_id sin fila → sin señal aún (fail-open)
     age_h = (now - datetime.fromisoformat(row["created_at"])).total_seconds() / 3600
     if age_h >= _STALE_HOURS:
         return {"was_correct": None, "outcome": "Sin señal 72h", "evaluated_at": iso}
