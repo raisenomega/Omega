@@ -39,3 +39,16 @@ def test_chain_client_context_node_is_readonly():
     orch.context_repo.find_by_client_id.assert_called_with("client-123")  # LEE el curado
     orch.client_context_agent.execute.assert_not_called()                 # NO ejecuta LLM
     orch.context_repo.upsert.assert_not_called()                          # NO escribe
+
+
+# ── GAP-1 · toda CHAIN despacha a codes canónicos REALES (ningún nodo cae a fallback NOVA) ──
+def test_all_chains_dispatch_to_registered_agents():
+    from app.infrastructure.ai.agent_registry import is_agent_registered
+
+    for trigger, chain in OrchestratorAgent.CHAINS.items():
+        for node in chain:
+            if node == "client_context":   # nodo read-only (GAP-3), no se despacha
+                continue
+            assert is_agent_registered(node), (
+                f"CHAIN '{trigger}' despacha '{node}' que NO es code canónico (caería a fallback NOVA)"
+            )

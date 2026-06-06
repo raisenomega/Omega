@@ -20,9 +20,12 @@ class OrchestratorAgent:
 
     CHAINS = {
         "content_generation": ["client_context", "content_creator"],
-        "hashtag_generation": ["client_context", "hashtag_generator"],
+        # GAP-1: hashtags = capacidad de content_creator (hashtag_generator no es code canónico).
+        "hashtag_generation": ["client_context", "content_creator"],
         "brand_analysis": ["client_context", "brand_voice"],
-        "full_analysis": ["client_context", "competitive_intelligence", "trend_hunter"],
+        # GAP-1: competencia/tendencias = roles canónicos strategy/analytics
+        # (competitive_intelligence/trend_hunter no registrados → caían a fallback NOVA).
+        "full_analysis": ["client_context", "strategy", "analytics"],
     }
 
     def __init__(self, lazy: bool = False):
