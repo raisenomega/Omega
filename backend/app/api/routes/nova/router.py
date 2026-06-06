@@ -75,8 +75,8 @@ async def nova_chat(
     authorization: Optional[str] = Header(None),
 ):
     """Chat with NOVA AI assistant"""
-    await require_superadmin(authorization)  # IDOR fix · NOVA = módulo owner-only
-    return await handle_chat(request)
+    user = await require_superadmin(authorization)  # IDOR fix · NOVA = módulo owner-only
+    return await handle_chat(request, user=user)
 
 
 @router.get("/briefing")

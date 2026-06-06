@@ -12,6 +12,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
     context_docs: List[Dict[str, Any]] = []
+    client_id: Optional[str] = None  # negocio activo del Switcher · prioridad sobre el nombre del texto
 
 
 def extract_active_client(messages: List[Dict[str, Any]]) -> Optional[str]:

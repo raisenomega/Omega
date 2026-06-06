@@ -15,17 +15,32 @@ from ._context_builder import build_nova_system_prompt, get_client_context
 from ._memory_handler import extract_mentioned_agents, save_conversation_memory_async
 from ._chat_helpers import ChatMessage, ChatRequest, extract_active_client
 from app.bc_cognition.domain.canonical_agents import resolve_alias, is_inactive_alias, CANONICAL_AGENTS
+from app.api.routes.clients_v3 import _clients_reader as clients_reader
 
 logger = logging.getLogger(__name__)
 
 
-async def handle_chat(request: ChatRequest) -> Dict[str, Any]:
-    """Process chat with Claude Sonnet 4.6 + multi-agent routing + memory"""
+async def handle_chat(request: ChatRequest, user: Optional[dict] = None) -> Dict[str, Any]:
+    """Process chat with Claude Sonnet 4.6 + multi-agent routing + memory.
+
+    SUB-PASO 2.0: si request.client_id viene (Switcher), GANA sobre la resolución por nombre
+    (anti-eco-ARIA). Validación de EXISTENCIA (NOVA es owner-only · el gate superadmin del router
+    ya autoriza · no se usa ownership reseller-scoped que daría 403 falso al owner)."""
     try:
         messages = []
         for msg in request.messages[-20:]:
             if msg.role in ["user", "assistant"]:
                 messages.append({"role": msg.role, "content": msg.content})
+
+        # client_id explícito del Switcher · prioridad sobre el nombre del texto.
+        explicit_client_id: Optional[str] = None
+        explicit_client_name: Optional[str] = None
+        if request.client_id:
+            client = clients_reader.get_client(request.client_id)
+            if not client:
+                raise HTTPException(status_code=404, detail="client_not_found")
+            explicit_client_id = request.client_id
+            explicit_client_name = client.get("name")
 
         # AGENT ROUTING: Check if user mentions specific agent
         if messages and messages[-1]["role"] == "user":
@@ -44,30 +59,32 @@ async def handle_chat(request: ChatRequest) -> Dict[str, Any]:
                 code = resolve_alias(mentioned_agent)
                 if code and code != "nova_chat":
                     logger.info(f"Routing {mentioned_agent} → {code}")
-                    active_client_name = extract_active_client(messages)
-                    active_client_id = None
+                    active_client_id = explicit_client_id  # Switcher gana · si None → fallback por nombre
 
-                    if not active_client_name:
-                        try:
-                            supabase = get_supabase_service()
-                            memory_resp = supabase.client.table("agent_memory")\
-                                .select("value").eq("agent_code", "NOVA")\
-                                .order("created_at", desc=True).limit(5).execute()
-                            for mem in (memory_resp.data or []):
-                                val = mem.get("value", "")
-                                match = re.search(
-                                    r"(?:hoy trabajamos|trabajamos con|activa|cliente activo[:\s]+)\s*(.+)",
-                                    val, re.IGNORECASE,
-                                )
-                                if match:
-                                    active_client_name = re.sub(r'[.!?,;]$', '', match.group(1).strip())
-                                    break
-                        except Exception as e:
-                            logger.warning(f"Could not check memory for active client: {e}")
+                    if not active_client_id:
+                        active_client_name = extract_active_client(messages)
 
-                    if active_client_name:
-                        _, active_client_id, _ = await get_client_context(active_client_name)
-                        active_client_id = active_client_id if active_client_id and str(active_client_id).strip() else None
+                        if not active_client_name:
+                            try:
+                                supabase = get_supabase_service()
+                                memory_resp = supabase.client.table("agent_memory")\
+                                    .select("value").eq("agent_code", "NOVA")\
+                                    .order("created_at", desc=True).limit(5).execute()
+                                for mem in (memory_resp.data or []):
+                                    val = mem.get("value", "")
+                                    match = re.search(
+                                        r"(?:hoy trabajamos|trabajamos con|activa|cliente activo[:\s]+)\s*(.+)",
+                                        val, re.IGNORECASE,
+                                    )
+                                    if match:
+                                        active_client_name = re.sub(r'[.!?,;]$', '', match.group(1).strip())
+                                        break
+                            except Exception as e:
+                                logger.warning(f"Could not check memory for active client: {e}")
+
+                        if active_client_name:
+                            _, active_client_id, _ = await get_client_context(active_client_name)
+                            active_client_id = active_client_id if active_client_id and str(active_client_id).strip() else None
 
                     meta = CANONICAL_AGENTS.get(code)
                     if meta:
@@ -91,7 +108,9 @@ async def handle_chat(request: ChatRequest) -> Dict[str, Any]:
         if not messages or messages[0]["role"] != "user":
             messages.insert(0, {"role": "user", "content": "Hola NOVA, estoy listo para trabajar."})
 
-        active_client_name = extract_active_client(messages)
+        # Switcher gana: el nombre exacto del client explícito alimenta el system prompt;
+        # si no vino client_id, fallback al nombre extraído del texto (intacto).
+        active_client_name = explicit_client_name or extract_active_client(messages)
         if active_client_name and not active_client_name.strip():
             active_client_name = None
 

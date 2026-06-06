@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiPost } from "@/lib/api-client";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 
 // NOVA chat V1: estado 100% local (useState · no persiste · handoff 2b).
 // El backend POST /nova/chat/ recibe el array completo y devuelve 1 assistant.
@@ -19,6 +20,7 @@ const STORAGE_KEY = "nova_chat_history";
 
 export function useNovaChat() {
   const { toast } = useToast();
+  const { activeBusinessId } = useActiveBusiness();  // Switcher: NOVA contextualizada al negocio activo
   const [messages, setMessages] = useState<NovaMessage[]>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -41,7 +43,8 @@ export function useNovaChat() {
 
   const sendMutation = useMutation({
     mutationFn: (history: NovaMessage[]): Promise<NovaChatResponse> =>
-      apiPost<NovaChatResponse>("/nova/chat/", { messages: history }),
+      // client_id del Switcher → prioridad sobre el nombre del texto (undefined cuando null → omitido → fallback).
+      apiPost<NovaChatResponse>("/nova/chat/", { messages: history, client_id: activeBusinessId ?? undefined }),
     onSuccess: (res) => {
       setMessages((prev) => [...prev, { role: "assistant", content: res.content }]);
     },
