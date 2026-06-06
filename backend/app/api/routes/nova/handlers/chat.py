@@ -14,6 +14,7 @@ from ._agent_routing import detect_agent_mention, route_to_agent
 from ._context_builder import build_nova_system_prompt, get_client_context
 from ._memory_handler import extract_mentioned_agents, save_conversation_memory_async
 from ._chat_helpers import ChatMessage, ChatRequest, extract_active_client
+from app.bc_cognition.domain.canonical_agents import resolve_alias, is_inactive_alias, CANONICAL_AGENTS
 
 logger = logging.getLogger(__name__)
 
@@ -30,50 +31,54 @@ async def handle_chat(request: ChatRequest) -> Dict[str, Any]:
         if messages and messages[-1]["role"] == "user":
             mentioned_agent = detect_agent_mention(messages[-1]["content"])
             if mentioned_agent and mentioned_agent != "NOVA":
-                logger.info(f"Routing to agent: {mentioned_agent}")
-                active_client_name = extract_active_client(messages)
-                active_client_id = None
+                # Identidad única (Fase 1): nombre legacy → code canónico real.
+                if is_inactive_alias(mentioned_agent):
+                    return {
+                        "role": "assistant",
+                        "content": (
+                            f"**{mentioned_agent}** es un rol de OMEGA Company que todavía no está "
+                            f"operativo. Hoy puedo delegar a: content_creator, strategy, brand_voice, "
+                            f"analytics, engagement, crisis_manager, sentinel_security. ¿A cuál lo dirijo?"
+                        ),
+                    }
+                code = resolve_alias(mentioned_agent)
+                if code and code != "nova_chat":
+                    logger.info(f"Routing {mentioned_agent} → {code}")
+                    active_client_name = extract_active_client(messages)
+                    active_client_id = None
 
-                if not active_client_name:
-                    try:
-                        supabase = get_supabase_service()
-                        memory_resp = supabase.client.table("agent_memory")\
-                            .select("value").eq("agent_code", "NOVA")\
-                            .order("created_at", desc=True).limit(5).execute()
-                        for mem in (memory_resp.data or []):
-                            val = mem.get("value", "")
-                            match = re.search(
-                                r"(?:hoy trabajamos|trabajamos con|activa|cliente activo[:\s]+)\s*(.+)",
-                                val, re.IGNORECASE,
-                            )
-                            if match:
-                                active_client_name = re.sub(r'[.!?,;]$', '', match.group(1).strip())
-                                break
-                    except Exception as e:
-                        logger.warning(f"Could not check memory for active client: {e}")
+                    if not active_client_name:
+                        try:
+                            supabase = get_supabase_service()
+                            memory_resp = supabase.client.table("agent_memory")\
+                                .select("value").eq("agent_code", "NOVA")\
+                                .order("created_at", desc=True).limit(5).execute()
+                            for mem in (memory_resp.data or []):
+                                val = mem.get("value", "")
+                                match = re.search(
+                                    r"(?:hoy trabajamos|trabajamos con|activa|cliente activo[:\s]+)\s*(.+)",
+                                    val, re.IGNORECASE,
+                                )
+                                if match:
+                                    active_client_name = re.sub(r'[.!?,;]$', '', match.group(1).strip())
+                                    break
+                        except Exception as e:
+                            logger.warning(f"Could not check memory for active client: {e}")
 
-                if active_client_name:
-                    _, active_client_id, _ = await get_client_context(active_client_name)
-                    active_client_id = active_client_id if active_client_id and str(active_client_id).strip() else None
+                    if active_client_name:
+                        _, active_client_id, _ = await get_client_context(active_client_name)
+                        active_client_id = active_client_id if active_client_id and str(active_client_id).strip() else None
 
-                try:
-                    supabase = get_supabase_service()
-                    agent_info = supabase.client.table("omega_agents")\
-                        .select("name,role,department,code").eq("code", mentioned_agent).limit(1).execute()
-                    if agent_info.data:
-                        info = agent_info.data[0]
+                    meta = CANONICAL_AGENTS.get(code)
+                    if meta:
                         system_prompt = (
-                            f"Eres {mentioned_agent} ({info.get('name', mentioned_agent)}), "
-                            f"{info.get('role', 'Agent')} del departamento de {info.get('department', 'Unknown')} "
-                            f"en OMEGA Company (Raisen Agency). Responde SIEMPRE en español. Sé profesional, conciso y preciso."
+                            f"Eres {meta['name']} ({meta['role']}) de OmegaRaisen, coordinado por NOVA. "
+                            f"Responde SIEMPRE en español. Profesional, conciso, preciso."
                         )
                     else:
-                        system_prompt = f"Eres {mentioned_agent} de OMEGA Company. Responde en español."
-                except Exception as e:
-                    logger.warning(f"Could not load agent info for {mentioned_agent}: {e}")
-                    system_prompt = f"Eres {mentioned_agent} de OMEGA Company. Responde en español."
-
-                return await route_to_agent(mentioned_agent, messages, system_prompt, 4096, client_id=active_client_id)
+                        system_prompt = f"Eres el agente {code} de OmegaRaisen. Responde en español, conciso."
+                    return await route_to_agent(code, messages, system_prompt, 4096, client_id=active_client_id)
+                # code None (desconocido) o nova_chat → cae al NOVA path normal
 
         # NOVA path
         context_text = ""
