@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useNovaChat } from "@/hooks/useNovaChat";
 
-// Edge-to-edge: -m-6 anula el p-6 del AppLayout · h-[calc(100%+3rem)] recupera
-// la altura de ese padding para que la barra de input quede flush al borde inferior.
+// Edge-to-edge + altura FIJA del viewport: -m-6 anula el p-6 del <main> (NovaChat cubre ese
+// padding) · h = 100svh − 3.5rem (alto del AppHeader sticky h-14) → el overflow-y-auto interno
+// scrollea y header/input quedan fijos como hermanos flex. NO restar el p-6: el -m-6 ya lo absorbe.
 export function NovaChat() {
   const { messages, isSending, sendMessage } = useNovaChat();
   const [value, setValue] = useState("");
@@ -30,7 +31,7 @@ export function NovaChat() {
   };
 
   return (
-    <div className="flex flex-col -m-6 h-[calc(100%+3rem)]">
+    <div className="flex flex-col -m-6 h-[calc(100svh-3.5rem)]">
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <Crown className="h-5 w-5 text-amber-500" />
         <h1 className="text-lg font-display font-bold tracking-tight">NOVA</h1>
