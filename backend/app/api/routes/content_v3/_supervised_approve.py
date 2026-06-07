@@ -39,6 +39,7 @@ def maybe_schedule_on_approve(item: dict[str, Any]) -> Optional[dict[str, Any]]:
         "content_id": str(item["id"]),
         "scheduled_for": str(fecha),
         "status": "pending",
+        "media_url": (item.get("media_urls") or [None])[0],  # foto adjunta → publisher (ya lee media_url)
     }
     cal_repo.insert_scheduled_posts_bulk([row])  # atómico · lanza si falla (caller best-effort)
     return {"scheduled_for": str(fecha), "falta_cuenta": account_id is None}

@@ -43,3 +43,21 @@ def test_non_supervised_draft_ignored(monkeypatch):
     out = sa.maybe_schedule_on_approve(_item({"fecha_sugerida": "2026-06-01T15:00"}))  # sin supervisado=true
     assert out is None
     called.assert_not_called()
+
+
+def test_media_urls_propagates_to_scheduled_media_url(monkeypatch):  # foto adjunta → publisher
+    rows = {}
+    monkeypatch.setattr(sa, "_first_active_account_id", lambda c, p: "acc-1")
+    monkeypatch.setattr(sa.cal_repo, "insert_scheduled_posts_bulk", lambda r: rows.update(r=r) or r)
+    item = {**_item({"supervisado": True, "fecha_sugerida": "2026-06-01T15:00", "platform": "instagram"}),
+            "media_urls": ["https://media/x.jpg"]}
+    sa.maybe_schedule_on_approve(item)
+    assert rows["r"][0]["media_url"] == "https://media/x.jpg"  # el publisher ya lee media_url
+
+
+def test_no_media_urls_sets_media_url_none(monkeypatch):  # texto puro → media_url None (sin romper)
+    rows = {}
+    monkeypatch.setattr(sa, "_first_active_account_id", lambda c, p: "acc-1")
+    monkeypatch.setattr(sa.cal_repo, "insert_scheduled_posts_bulk", lambda r: rows.update(r=r) or r)
+    sa.maybe_schedule_on_approve(_item({"supervisado": True, "fecha_sugerida": "2026-06-01T15:00", "platform": "instagram"}))
+    assert rows["r"][0]["media_url"] is None

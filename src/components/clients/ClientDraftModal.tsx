@@ -8,8 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ImagePlus, ImageOff, Hash } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import type { SupervisedDraft } from "@/hooks/useSupervisedQueue";
+import { useSupervisedQueue, type SupervisedDraft } from "@/hooks/useSupervisedQueue";
+import { MediaPicker } from "./MediaPicker";
 
 function isImageContent(d: SupervisedDraft): boolean {
   if (d.content_type === "image") return true;
@@ -26,14 +26,17 @@ function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-export function ClientDraftModal({ draft, onClose }: { draft: SupervisedDraft | null; onClose: () => void }) {
-  const { toast } = useToast();
+export function ClientDraftModal({ draft, clientId, onClose }: { draft: SupervisedDraft | null; clientId: string; onClose: () => void }) {
+  const { attachPhoto } = useSupervisedQueue(clientId);
   const [imgFailed, setImgFailed] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   if (!draft) return null;
 
   const text = draft.generated_text ?? "";
   const tags = extractHashtags(text);
-  const hasImage = isImageContent(draft) && !!text;
+  // P1: la foto vive en media_urls · generated_text es caption+hashtags. Legacy: imagen-URL-en-texto.
+  const photoUrl = draft.media_urls?.[0] ?? (isImageContent(draft) && text ? text : null);
+  const hasImage = !!photoUrl;
 
   return (
     <Dialog open={!!draft} onOpenChange={(o) => { if (!o) { setImgFailed(false); onClose(); } }}>
@@ -48,7 +51,7 @@ export function ClientDraftModal({ draft, onClose }: { draft: SupervisedDraft | 
 
         {/* Foto */}
         {hasImage && !imgFailed ? (
-          <img src={text} alt={draft.content_type ?? "imagen"} loading="lazy"
+          <img src={photoUrl!} alt={draft.content_type ?? "imagen"} loading="lazy"
             onError={() => setImgFailed(true)} className="rounded-md max-h-72 w-full object-cover" />
         ) : hasImage && imgFailed ? (
           <div className="flex items-center gap-2 rounded-md bg-muted/40 p-4 text-xs text-muted-foreground">
@@ -58,16 +61,15 @@ export function ClientDraftModal({ draft, onClose }: { draft: SupervisedDraft | 
           <div className="flex flex-col items-center gap-2 rounded-md border border-dashed border-border/60 bg-muted/10 p-6 text-center">
             <ImagePlus className="h-7 w-7 text-muted-foreground/60" />
             <p className="text-xs text-muted-foreground">Este borrador todavía no tiene foto.</p>
-            <Button size="sm" variant="outline"
-              onClick={() => toast({ title: "Pronto podrás agregar fotos desde tu biblioteca" })}>
+            <Button size="sm" variant="outline" disabled={attachPhoto.isPending} onClick={() => setPickerOpen(true)}>
               Agregar foto
             </Button>
           </div>
         )}
 
-        {/* Caption */}
-        {!hasImage && (
-          <p className="text-sm whitespace-pre-wrap max-h-60 overflow-y-auto">{text || "(sin texto)"}</p>
+        {/* Caption · siempre que haya texto y la foto NO sea el propio texto (legacy imagen-en-texto) */}
+        {!!text && photoUrl !== text && (
+          <p className="text-sm whitespace-pre-wrap max-h-60 overflow-y-auto">{text}</p>
         )}
 
         {/* Hashtags */}
@@ -79,6 +81,9 @@ export function ClientDraftModal({ draft, onClose }: { draft: SupervisedDraft | 
             ))}
           </div>
         )}
+
+        <MediaPicker open={pickerOpen} onClose={() => setPickerOpen(false)}
+          onSelect={(url) => { attachPhoto.mutate({ id: draft.id, url }); setPickerOpen(false); }} />
       </DialogContent>
     </Dialog>
   );

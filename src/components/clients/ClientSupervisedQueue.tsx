@@ -91,7 +91,7 @@ export function ClientSupervisedQueue({ clientId }: { clientId: string }) {
           </div>
         )}
       </CardContent>
-      <ClientDraftModal draft={selected} onClose={() => setSelected(null)} />
+      <ClientDraftModal draft={selected} clientId={clientId} onClose={() => setSelected(null)} />
     </Card>
   );
 }
