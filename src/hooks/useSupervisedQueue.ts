@@ -13,6 +13,7 @@ export interface SupervisedDraft {
   agent_code: string | null;
   content_type: string | null;
   generated_text: string | null;
+  media_urls: string[] | null;
   confidence: number | null;
   created_at: string;
 }
@@ -58,11 +59,20 @@ export function useSupervisedQueue(clientId: string) {
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
+  // P1: la foto va a media_urls · generated_text (caption+hashtags) NO se toca.
+  const attachPhoto = useMutation({
+    mutationFn: ({ id, url }: { id: string; url: string }) =>
+      apiPatch(`/content/${id}/media`, { media_urls: [url] }),
+    onSuccess: () => { invalidate(); toast({ title: "Foto agregada al borrador" }); },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
   return {
     items: query.data?.items ?? [],
     isLoading: query.isLoading,
     isError: query.isError,
     approve,
     reject,
+    attachPhoto,
   };
 }
