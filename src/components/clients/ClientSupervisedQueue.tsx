@@ -55,6 +55,9 @@ export function ClientSupervisedQueue({ clientId }: { clientId: string }) {
   const { enabled, toggle } = useSupervisadoSetting(clientId);
   const [selected, setSelected] = useState<SupervisedDraft | null>(null);
   const busy = approve.isPending || reject.isPending;
+  // Tras attachPhoto/approve/reject, items se refresca · sincronizamos el draft abierto por id
+  // para que el modal refleje la última versión sin requerir close-reopen (honesto · no UI optimista).
+  const liveSelected = selected ? (items.find((d) => d.id === selected.id) ?? selected) : null;
 
   return (
     <Card className="border-border/50 bg-card/60">
@@ -91,7 +94,7 @@ export function ClientSupervisedQueue({ clientId }: { clientId: string }) {
           </div>
         )}
       </CardContent>
-      <ClientDraftModal draft={selected} clientId={clientId} onClose={() => setSelected(null)} />
+      <ClientDraftModal draft={liveSelected} clientId={clientId} onClose={() => setSelected(null)} />
     </Card>
   );
 }
