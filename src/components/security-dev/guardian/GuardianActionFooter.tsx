@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, ShieldX, Wrench, Bot } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -9,11 +9,10 @@ import { GuardianClaudeConsultPanel } from "./GuardianClaudeConsultPanel";
 import type { GuardianUserDetail, OpenGuardianDetail } from "@/types/guardian";
 
 // Footer del modal (Sub-B) · 3 botones tipo SENTINEL. [Consultar Claude] = preview hasta Sub-E.
-export function GuardianActionFooter({ detail, userDetail, onClose }: { detail: OpenGuardianDetail; userDetail?: GuardianUserDetail; onClose: () => void }) {
+export function GuardianActionFooter({ detail, userDetail, onClose, showConsult, setShowConsult }: { detail: OpenGuardianDetail; userDetail?: GuardianUserDetail; onClose: () => void; showConsult: boolean; setShowConsult: Dispatch<SetStateAction<boolean>> }) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [showActions, setShowActions] = useState(false);
-  const [showConsult, setShowConsult] = useState(false);
   const [fpBusy, setFpBusy] = useState(false);
 
   const markFalsePositive = async () => {

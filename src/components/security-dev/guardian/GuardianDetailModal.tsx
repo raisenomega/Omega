@@ -1,6 +1,9 @@
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronDown } from "lucide-react";
 import { useGuardianUserDetail } from "@/hooks/useGuardian";
 import { fmtDateTime, relativeAgo, SEV_CLS } from "../parts";
 import { GuardianActionFooter } from "./GuardianActionFooter";
@@ -15,9 +18,14 @@ const tzOf = (geo: Record<string, unknown> | null): string => {
 // Sub-B agrega el footer con [false positive] / [tomar acción] / [Consultar con Claude].
 export function GuardianDetailModal({ detail, onClose }: { detail: OpenGuardianDetail; onClose: () => void }) {
   const { data, isLoading } = useGuardianUserDetail(detail.userId ?? null);
+  // UI: showConsult sube acá (single source) · al consultar a Claude el Historial colapsa para liberar
+  // espacio (re-expandible manual con su chevron · no se bloquea plegado). Cero lógica de negocio.
+  const [showConsult, setShowConsult] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(true);
+  useEffect(() => { setHistoryOpen(!showConsult); }, [showConsult]);
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="flex max-h-[90vh] max-w-lg flex-col">
         <DialogHeader>
           <DialogTitle className="text-sm">Detalle {detail.kind === "watchlist" ? `· IP ${detail.ip}` : "· usuario"}</DialogTitle>
         </DialogHeader>
@@ -28,7 +36,7 @@ export function GuardianDetailModal({ detail, onClose }: { detail: OpenGuardianD
         ) : isLoading || !data ? (
           <Skeleton className="h-48 w-full" />
         ) : (
-          <div className="max-h-[65vh] space-y-3 overflow-y-auto text-xs">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto text-xs">
             <div>
               <p className="font-medium">{data.email ?? "(email no disponible)"}</p>
               <p className="text-[10px] text-muted-foreground">
@@ -53,19 +61,27 @@ export function GuardianDetailModal({ detail, onClose }: { detail: OpenGuardianD
                 ))}
               </div>
             )}
-            <div>
-              <p className="font-medium">Historial ({data.history.length})</p>
-              {data.history.map((e) => (
-                <div key={e.id} className="flex justify-between gap-2 border-b border-border/40 py-0.5 text-[10px]">
-                  <span className="text-muted-foreground">{relativeAgo(e.created_at)}</span>
-                  <span>{e.event_type}</span>
-                  <span className="font-mono text-muted-foreground">{e.ip_address ?? "—"}</span>
-                </div>
-              ))}
-            </div>
+            <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
+              <CollapsibleTrigger asChild>
+                <button type="button" className="flex w-full items-center gap-2 hover:opacity-80">
+                  <span className="font-medium">Historial ({data.history.length})</span>
+                  <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${historyOpen ? "" : "-rotate-90"}`} />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                {data.history.map((e) => (
+                  <div key={e.id} className="flex justify-between gap-2 border-b border-border/40 py-0.5 text-[10px]">
+                    <span className="text-muted-foreground">{relativeAgo(e.created_at)}</span>
+                    <span>{e.event_type}</span>
+                    <span className="font-mono text-muted-foreground">{e.ip_address ?? "—"}</span>
+                  </div>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         )}
-        <GuardianActionFooter detail={detail} userDetail={data ?? undefined} onClose={onClose} />
+        <GuardianActionFooter detail={detail} userDetail={data ?? undefined} onClose={onClose}
+          showConsult={showConsult} setShowConsult={setShowConsult} />
       </DialogContent>
     </Dialog>
   );
