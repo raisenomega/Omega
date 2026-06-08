@@ -46,7 +46,7 @@ export function ClientDraftModal({ draft, clientId, onClose }: { draft: Supervis
         <DialogHeader>
           <div className="flex items-center justify-between gap-2">
             <DialogTitle className="text-base">Detalle del borrador</DialogTitle>
-            {!editing && <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setEditing(true)}>Editar</Button>}
+            {!editing && <Button size="sm" onClick={() => setEditing(true)} className="h-7 px-2 text-xs border border-amber-500 bg-transparent text-white transition-colors duration-200 hover:bg-emerald-600 hover:border-emerald-600 hover:text-white">Editar</Button>}
           </div>
           <DialogDescription className="text-[11px]">
             {(draft.agent_code ?? "ARIA")} · {draft.content_type ?? "post"} · {fmtDate(draft.created_at)}
