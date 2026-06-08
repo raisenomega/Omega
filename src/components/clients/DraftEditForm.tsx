@@ -4,11 +4,13 @@
 // hace fan-out (1 scheduled_post por red marcada con su social_account_id) → cero pending sin red (sin_red).
 // El value del datetime-local recorta el offset (yyyy-MM-ddTHH:mm). Caption vacío → Guardar disabled.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useSupervisedQueue, type SupervisedDraft } from "@/hooks/useSupervisedQueue";
 import { useConnectedNetworks } from "@/hooks/useMyAccounts";
+import { feedRejectsRatio } from "@/lib/feed-aspect";
 
 function toLocalInput(iso?: string | null): string {
   // "2026-06-01T15:00:00-04:00" -> "2026-06-01T15:00" (datetime-local no acepta offset)
@@ -40,6 +42,23 @@ export function DraftEditForm({ draft, clientId, onDone }: { draft: SupervisedDr
   const emptyCaption = text.trim() === "";
   const platformsChanged = !sameSet(selected, initialPlatforms);
   const changed = text !== initialText || date !== initialDate || platformsChanged;
+
+  // Lee el ratio real de la imagen (naturalWidth/Height) para avisar si IG-feed la rechazaria.
+  const mediaUrl = draft.media_urls?.[0] ?? null;
+  const [ratio, setRatio] = useState<number | null>(null);
+  useEffect(() => {
+    if (!mediaUrl) { setRatio(null); return; }
+    const img = new Image();
+    img.onload = () => setRatio(img.naturalHeight ? img.naturalWidth / img.naturalHeight : null);
+    img.onerror = () => setRatio(null);
+    img.src = mediaUrl;
+    return () => { img.onload = null; img.onerror = null; };
+  }, [mediaUrl]);
+
+  // Aviso INLINE persistente (no toast, no bloqueante): imagen fuera de rango de feed Y IG marcado.
+  // Mismo rango que el backend (feed-aspect.ts). Reactivo a marcar/desmarcar IG y a cambiar la imagen.
+  const igSelected = selected.includes("instagram");
+  const feedConflict = ratio !== null && igSelected && feedRejectsRatio("instagram", ratio);
 
   const toggle = (p: string) =>
     setSelected((cur) => (cur.includes(p) ? cur.filter((x) => x !== p) : [...cur, p]));
@@ -77,6 +96,17 @@ export function DraftEditForm({ draft, clientId, onDone }: { draft: SupervisedDr
           </div>
         )}
       </div>
+
+      {/* Aviso INLINE persistente · imagen vertical + IG marcado · NO bloquea (las demás redes publican igual) */}
+      {feedConflict && (
+        <div className="flex items-start gap-2 rounded-md border border-amber-500/60 bg-amber-500/10 p-2.5 text-[11px] text-amber-200">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>
+            Esta imagen es vertical{ratio ? ` (ratio ${ratio.toFixed(2)})` : ""}. El feed de Instagram la rechaza —
+            usá una imagen cuadrada o 4:5, o desmarcá Instagram. Las demás redes publican igual.
+          </span>
+        </div>
+      )}
 
       <label className="flex flex-col gap-1 text-xs text-muted-foreground">
         Fecha sugerida (opcional · vacío = sin agendar)

@@ -21,7 +21,8 @@ import logging
 from typing import NamedTuple, Optional
 
 from app.api.routes.publishing import _publish_repository as repo
-from app.bc_cognition.infrastructure.zernio_adapter import ZernioError, create_post
+from app.api.routes.publishing._media_guard import aspect_error, fetch_image_ratio, needs_ratio_check
+from app.bc_cognition.infrastructure.zernio_adapter import ZernioError, create_post, _media_type
 from app.bc_cognition.infrastructure.zernio_resolver import resolve_account_id
 from app.api.routes.clients_v3._clients_reader import get_zernio_account_id  # F5/2b · mapeo per-negocio
 
@@ -74,6 +75,18 @@ async def publish_scheduled_post(scheduled_post_id: str, client_id: str) -> Publ
         err = f"zernio_media_requerida:{platform}"
         await asyncio.to_thread(repo.mark_failed, scheduled_post_id, err)
         return PublishResult(published=False, error=err)
+
+    # Guard aspect ratio per-plataforma (autoridad: la red, NO Zernio). Cierra el zernio_400 enganoso
+    # ("requires media content") cuando la imagen es vertical pero la red exige feed (IG: [0.8, 1.91]).
+    # Solo imagenes (no video) · solo redes con rango de feed · fail-open si no se puede medir el ratio.
+    # Per-fila: esta fila falla honesto; las demas del fan-out (TikTok/FB) publican normal (no se abortan).
+    if media_url and needs_ratio_check(platform) and _media_type(str(media_url)) == "image":
+        ratio = await fetch_image_ratio(str(media_url))
+        if ratio is not None:
+            ar_err = aspect_error(platform, ratio)
+            if ar_err:
+                await asyncio.to_thread(repo.mark_failed, scheduled_post_id, ar_err)
+                return PublishResult(published=False, error=ar_err)
 
     # CONFIG (NO fallo real · ANTES de mark_publishing): resolver la cuenta Zernio. 0/2+ cuentas o key
     # ausente o no se pudo consultar → PublishGateError (409 · el post QUEDA 'pending', reintentable).

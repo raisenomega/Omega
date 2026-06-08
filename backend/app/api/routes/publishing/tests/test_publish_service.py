@@ -32,12 +32,15 @@ async def _resolve_ok(platform, mapped): return "acc1"
 async def _create_ok(**kw): return "zpost_1"
 
 
-def _wire(monkeypatch, repo, resolve=_resolve_ok, create=_create_ok):
+def _wire(monkeypatch, repo, resolve=_resolve_ok, create=_create_ok, ratio=None):
     monkeypatch.setattr(ps, "repo", repo)
     monkeypatch.setattr(ps, "resolve_account_id", resolve)
     monkeypatch.setattr(ps, "create_post", create)
     # F5/2b · get_zernio_account_id consulta Supabase · se aísla (None = sin mapeo per-negocio)
     monkeypatch.setattr(ps, "get_zernio_account_id", lambda *a, **k: None)
+    # Guard aspect ratio · se aísla la lectura del header (I/O). ratio=None → fail-open (no bloquea).
+    async def _ratio(url): return ratio
+    monkeypatch.setattr(ps, "fetch_image_ratio", _ratio)
 
 
 def test_happy_path_publica_y_marca_published(monkeypatch):
@@ -84,6 +87,38 @@ def test_media_faltante_ig_va_a_failed_sin_llamar_zernio(monkeypatch):
     out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
     assert out.published is False and "zernio_media_requerida" in (out.error or "")
     assert called["create"] is False and repo.calls == [("failed", "zernio_media_requerida:instagram")]
+
+
+def test_aspect_9x16_ig_falla_honesto(monkeypatch):  # guard: vertical → IG feed → failed honesto
+    repo = _Repo(_post(media="https://x/y.png"), platform="instagram")
+    called = {"create": False}
+    async def _track(**kw): called["create"] = True; return "x"
+    _wire(monkeypatch, repo, create=_track, ratio=0.5625)  # 9:16
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is False and "imagen_vertical_no_apta_feed_ig" in (out.error or "")
+    assert "zernio_400" not in (out.error or "")  # NO el mensaje enganoso de Zernio
+    assert called["create"] is False  # NUNCA llega a Zernio
+    assert repo.calls == [("failed", out.error)]  # esa fila → failed honesto
+
+
+def test_aspect_9x16_tiktok_pasa(monkeypatch):  # tiktok leniente · vertical OK
+    repo = _Repo(_post(media="https://x/y.png"), platform="tiktok")
+    _wire(monkeypatch, repo, ratio=0.5625)
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is True
+    assert repo.calls == ["publishing", ("published", "zpost_1")]
+
+
+def test_aspect_1x1_ig_pasa(monkeypatch):  # cuadrada → IG feed OK
+    repo = _Repo(_post(media="https://x/y.png"), platform="instagram")
+    _wire(monkeypatch, repo, ratio=1.0)
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is True
+    assert repo.calls == ["publishing", ("published", "zpost_1")]
+
+
+# Fan-out mixto (IG vertical falla · TikTok pasa) = composicion de los dos tests de arriba:
+# cada fila del fan-out es un publish_scheduled_post independiente → una falla NO aborta la otra.
 
 
 def test_status_no_pending_gatea(monkeypatch):

@@ -20,6 +20,8 @@ function zernioMessage(code: string): { title: string; description: string } {
     return { title: "Conectá la red primero", description: "No hay una cuenta conectada para esta red. Conectala y volvé a intentar." };
   if (code.includes("zernio_cuenta_ambigua"))
     return { title: "Hay varias cuentas para esta red", description: "Conectá una sola cuenta para esta red para publicar de forma automática." };
+  if (code.includes("imagen_vertical_no_apta_feed_ig"))
+    return { title: "Imagen vertical para el feed de Instagram", description: "El feed de Instagram no acepta imágenes verticales (9:16). Usá una cuadrada o 4:5, o publicala como Reel/Story. Las demás redes publican igual." };
   if (code.includes("zernio_media_requerida"))
     return { title: "Falta imagen o video", description: "Esta red necesita una imagen o video y el post no la tiene." };
   if (code.includes("zernio_api_key_ausente"))
