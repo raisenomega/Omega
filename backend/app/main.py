@@ -42,7 +42,7 @@ except ImportError:
 from app.api.routes import (
     content, strategy, analytics, engagement, monitor, brand_voice, competitive, trends, crisis,
     reports, growth, video_production, ab_testing, orchestrator, resellers, auth,
-    context, clients, social_accounts, brand_files, agents,
+    context, clients, social_accounts, agents,
     system, omega, nova, sentinel, oracle, prompt_vault, handoff, reseller, sub_brands,
     security_dev
 )
@@ -251,7 +251,6 @@ app.include_router(brand_voice_v2.router, prefix=settings.api_v1_prefix, tags=["
 app.include_router(context.router, prefix=settings.api_v1_prefix)
 app.include_router(clients.router, prefix=settings.api_v1_prefix, tags=["Clients 👥"])
 app.include_router(social_accounts.router, prefix=settings.api_v1_prefix, tags=["Social Accounts 📱"])
-app.include_router(brand_files.router, prefix=settings.api_v1_prefix, tags=["Brand Files 📎"])
 # DEBT-064: legacy content_lab.router DESMONTADO · 100% superseded por content_lab_v3 (:160).
 # Colisionaba en prefix /content-lab. Ninguna ruta legacy-only es usada por el frontend.
 # El paquete content_lab NO se borra: builders.prompt_builder lo usa content_lab_prompt_service.
