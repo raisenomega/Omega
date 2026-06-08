@@ -56,3 +56,10 @@ def get_requires_approval(client_id: str) -> bool:
         return True
     val = r.data[0].get("requires_publish_approval")
     return True if val is None else bool(val)
+
+
+def get_client_timezone(client_id: str) -> Optional[str]:
+    """client_context.timezone (IANA) · None si falta → el domain hace fallback a PR
+    (NUNCA bloquea por tz · misma convención que ARIA · ver _aria_temporal_context)."""
+    r = _sb().table("client_context").select("timezone").eq("client_id", client_id).limit(1).execute()
+    return r.data[0].get("timezone") if r.data else None

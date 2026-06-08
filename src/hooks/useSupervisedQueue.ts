@@ -16,6 +16,7 @@ export interface SupervisedDraft {
   media_urls: string[] | null;
   confidence: number | null;
   created_at: string;
+  metadata?: { fecha_sugerida?: string | null } | null;  // viene en el payload (select *)
 }
 
 interface PendingResult {
@@ -67,6 +68,17 @@ export function useSupervisedQueue(clientId: string) {
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
+  // Editar caption y/o fecha · omitir clave = no tocar · scheduled_for:null = borrar (espeja Pydantic).
+  const editDraft = useMutation({
+    mutationFn: (v: { id: string; generated_text?: string; scheduled_for?: string | null }) =>
+      apiPatch(`/content/${v.id}/draft`, {
+        ...(v.generated_text !== undefined ? { generated_text: v.generated_text } : {}),
+        ...(v.scheduled_for !== undefined ? { scheduled_for: v.scheduled_for } : {}),
+      }),
+    onSuccess: () => { invalidate(); toast({ title: "Borrador actualizado" }); },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
   return {
     items: query.data?.items ?? [],
     isLoading: query.isLoading,
@@ -74,5 +86,6 @@ export function useSupervisedQueue(clientId: string) {
     approve,
     reject,
     attachPhoto,
+    editDraft,
   };
 }
