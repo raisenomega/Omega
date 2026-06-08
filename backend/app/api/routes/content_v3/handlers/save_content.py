@@ -42,7 +42,7 @@ async def save_content(
         await repo.safe_insert("memory", repo.insert_agent_memory_approved, user["id"], client_id, text)
         # P2: draft supervisado con fecha_sugerida → al calendario (best-effort · no rompe el approve)
         scheduled = await repo.safe_insert("schedule_on_approve", _sync_schedule, item)
-        if scheduled:
+        if scheduled and scheduled.get("scheduled"):  # fan-out creo rows · falta_red NO marca scheduled
             await repo.safe_insert("mark_scheduled", repo.update_status, content_id, "scheduled")
 
     return {"id": content_id, "is_saved": request.is_saved, "scheduled": scheduled}

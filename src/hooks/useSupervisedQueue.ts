@@ -16,7 +16,7 @@ export interface SupervisedDraft {
   media_urls: string[] | null;
   confidence: number | null;
   created_at: string;
-  metadata?: { fecha_sugerida?: string | null } | null;  // viene en el payload (select *)
+  metadata?: { fecha_sugerida?: string | null; platform?: string | null; platforms?: string[] | null } | null;  // payload (select *)
 }
 
 interface PendingResult {
@@ -38,15 +38,18 @@ export function useSupervisedQueue(clientId: string) {
   const invalidate = () => qc.invalidateQueries({ queryKey });
 
   const approve = useMutation({
-    mutationFn: (id: string) => apiPatch<{ scheduled: { scheduled_for: string; falta_cuenta: boolean } | null }>(
+    mutationFn: (id: string) => apiPatch<{ scheduled: { scheduled: boolean; falta_red: boolean; scheduled_for: string; count?: number } | null }>(
       `/content/${id}/save`, { is_saved: true }),
     onSuccess: (r) => {
       invalidate();
-      // P2: toast honesto · refleja lo que REALMENTE pasó (no "se publicará")
-      if (r?.scheduled) {
-        const fecha = String(r.scheduled.scheduled_for).slice(0, 16).replace("T", " ");
-        const aviso = r.scheduled.falta_cuenta ? " · falta conectar una cuenta para publicarlo" : "";
-        toast({ title: `Aprobado · agendado para ${fecha}${aviso}` });
+      // P2: toast honesto · refleja lo que REALMENTE pasó (fan-out por red · no "se publicará")
+      const s = r?.scheduled;
+      if (s && s.scheduled) {
+        const fecha = String(s.scheduled_for).slice(0, 16).replace("T", " ");
+        const n = s.count ?? 1;
+        toast({ title: `Aprobado · agendado para ${fecha} en ${n} ${n > 1 ? "redes" : "red"}` });
+      } else if (s && s.falta_red) {
+        toast({ title: "Aprobado · marcá una red en el borrador para agendarlo", variant: "destructive" });
       } else {
         toast({ title: "Aprobado · agendalo en el Calendario cuando quieras" });
       }
@@ -70,10 +73,11 @@ export function useSupervisedQueue(clientId: string) {
 
   // Editar caption y/o fecha · omitir clave = no tocar · scheduled_for:null = borrar (espeja Pydantic).
   const editDraft = useMutation({
-    mutationFn: (v: { id: string; generated_text?: string; scheduled_for?: string | null }) =>
+    mutationFn: (v: { id: string; generated_text?: string; scheduled_for?: string | null; platforms?: string[] }) =>
       apiPatch(`/content/${v.id}/draft`, {
         ...(v.generated_text !== undefined ? { generated_text: v.generated_text } : {}),
         ...(v.scheduled_for !== undefined ? { scheduled_for: v.scheduled_for } : {}),
+        ...(v.platforms !== undefined ? { platforms: v.platforms } : {}),
       }),
     onSuccess: () => { invalidate(); toast({ title: "Borrador actualizado" }); },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),

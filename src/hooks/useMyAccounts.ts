@@ -28,3 +28,19 @@ export function useMyAccounts(clientId: string | undefined, platform: string | u
     staleTime: 60_000,
   });
 }
+
+// Todas las redes conectadas (status=active) del negocio activo, sin filtrar por platform.
+// Para el picker de checkboxes del modal supervisado (fan-out): 1 red marcable por cuenta active.
+// El backend ya scopea por client_id + ownership y solo devuelve active (guardrail: no expired/revoked).
+export function useConnectedNetworks(clientId: string | undefined) {
+  return useQuery<SocialAccountSummary[]>({
+    queryKey: ["connected_networks", clientId],
+    queryFn: async () => {
+      if (!clientId) return [];
+      const r = await apiGet<ListResponse>(`/clients/${clientId}/social-accounts`);
+      return r.items;
+    },
+    enabled: !!clientId,
+    staleTime: 60_000,
+  });
+}

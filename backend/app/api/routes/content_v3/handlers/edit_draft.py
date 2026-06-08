@@ -21,6 +21,7 @@ router = APIRouter()
 class EditDraftRequest(BaseModel):
     generated_text: Optional[str] = None
     scheduled_for: Optional[str] = None  # ausente=no tocar · null=borrar · ISO=set
+    platforms: Optional[list[str]] = None  # ausente=no tocar · []=sin red · [..]=redes marcadas (checkboxes)
 
 
 @router.patch("/{content_id}/draft")
@@ -42,21 +43,31 @@ async def edit_draft(content_id: str, request: EditDraftRequest,
         raise HTTPException(status_code=400, detail="empty_caption")
 
     new_meta = None
-    if "scheduled_for" in fields:
+    if "scheduled_for" in fields or "platforms" in fields:
         meta = dict(item.get("metadata") or {})  # #2 MERGE: parte del estado vivo
-        if request.scheduled_for is None:
-            meta.pop("fecha_sugerida", None)      # null → B2 (no agenda)
-        else:
-            iso = resolve_future_iso(request.scheduled_for, now_for(reader.get_client_timezone(client_id)))  # #1 #3
-            if iso is None:
-                raise HTTPException(status_code=422, detail="invalid_or_past_date")
-            meta["fecha_sugerida"] = iso
+        if "scheduled_for" in fields:
+            if request.scheduled_for is None:
+                meta.pop("fecha_sugerida", None)      # null → B2 (no agenda)
+            else:
+                iso = resolve_future_iso(request.scheduled_for, now_for(reader.get_client_timezone(client_id)))  # #1 #3
+                if iso is None:
+                    raise HTTPException(status_code=422, detail="invalid_or_past_date")
+                meta["fecha_sugerida"] = iso
+        if "platforms" in fields:
+            # checkboxes de redes marcadas → lowercase (casa social_accounts.platform) · []=sin red
+            plats = [str(p).strip().lower() for p in (request.platforms or []) if str(p).strip()]
+            if plats:
+                meta["platforms"] = plats
+            else:
+                meta.pop("platforms", None)
         new_meta = meta
 
     if new_text is None and new_meta is None:
         raise HTTPException(status_code=400, detail="nothing_to_update")
 
     await asyncio.to_thread(repo.update_draft_fields, content_id, new_text, new_meta)
+    final_meta = new_meta if new_meta is not None else (item.get("metadata") or {})
     return {"id": content_id,
             "generated_text": new_text if new_text is not None else item.get("generated_text"),
-            "scheduled_for": (new_meta if new_meta is not None else item.get("metadata") or {}).get("fecha_sugerida")}
+            "scheduled_for": final_meta.get("fecha_sugerida"),
+            "platforms": final_meta.get("platforms") or []}
