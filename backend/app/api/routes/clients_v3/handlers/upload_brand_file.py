@@ -8,6 +8,8 @@ from typing import Optional
 from fastapi import APIRouter, Header, HTTPException, UploadFile, File, Form
 from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.clients_v3._clients_repository import _sb
+from app.api.routes.clients_v3 import _clients_reader as reader
+from app.api.routes.clients_v3._access_control import user_owns_client
 
 router = APIRouter()
 
@@ -22,7 +24,12 @@ async def upload_brand_file(
     file_category: str = Form(...),
     authorization: Optional[str] = Header(None),
 ) -> dict:
-    await get_current_user(authorization)
+    user = await get_current_user(authorization)
+    client = reader.get_client(client_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="client_not_found")
+    if not user_owns_client(user["id"], client):
+        raise HTTPException(status_code=403, detail="client_access_denied")
     if file_category not in ALLOWED_CATEGORIES:
         raise HTTPException(status_code=422, detail="invalid_file_category")
     content = await file.read()
