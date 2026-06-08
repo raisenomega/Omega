@@ -13,6 +13,10 @@
 *.pem
 *.p12
 credentials.json
+
+# Detalle de incidentes de seguridad (referencias file:line de superficie de ataque)
+# NUNCA a git history — el puntero sanitizado vive en SOURCE_OF_TRUTH.md
+*.local.md
 service-account*.json
 
 # Frontend (Vite + React + TypeScript)

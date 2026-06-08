@@ -41,7 +41,7 @@ except ImportError:
 
 from app.api.routes import (
     content, strategy, analytics, engagement, monitor, brand_voice, competitive, trends, crisis,
-    reports, growth, video_production, scheduling, ab_testing, orchestrator, resellers, auth,
+    reports, growth, video_production, ab_testing, orchestrator, resellers, auth,
     context, clients, social_accounts, brand_files, agents,
     system, omega, nova, sentinel, oracle, prompt_vault, handoff, reseller, sub_brands,
     security_dev
@@ -229,7 +229,6 @@ app.include_router(crisis.router, prefix=settings.api_v1_prefix, tags=["Crisis M
 app.include_router(reports.router, prefix=settings.api_v1_prefix, tags=["Report Generator"])
 app.include_router(growth.router, prefix=settings.api_v1_prefix, tags=["Growth Hacker"])
 app.include_router(video_production.router, prefix=settings.api_v1_prefix, tags=["Video Production"])
-app.include_router(scheduling.router, prefix=settings.api_v1_prefix, tags=["Scheduling"])
 app.include_router(ab_testing.router, prefix=settings.api_v1_prefix, tags=["A/B Testing"])
 
 # Master Orchestrator (15)
