@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ImagePlus, ImageOff, Hash } from "lucide-react";
 import { useSupervisedQueue, type SupervisedDraft } from "@/hooks/useSupervisedQueue";
 import { MediaPicker } from "./MediaPicker";
+import { DraftEditForm } from "./DraftEditForm";
 
 function isImageContent(d: SupervisedDraft): boolean {
   if (d.content_type === "image") return true;
@@ -30,6 +31,7 @@ export function ClientDraftModal({ draft, clientId, onClose }: { draft: Supervis
   const { attachPhoto } = useSupervisedQueue(clientId);
   const [imgFailed, setImgFailed] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
   if (!draft) return null;
 
   const text = draft.generated_text ?? "";
@@ -39,10 +41,13 @@ export function ClientDraftModal({ draft, clientId, onClose }: { draft: Supervis
   const hasImage = !!photoUrl;
 
   return (
-    <Dialog open={!!draft} onOpenChange={(o) => { if (!o) { setImgFailed(false); onClose(); } }}>
+    <Dialog open={!!draft} onOpenChange={(o) => { if (!o) { setImgFailed(false); setEditing(false); onClose(); } }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-base">Detalle del borrador</DialogTitle>
+          <div className="flex items-center justify-between gap-2">
+            <DialogTitle className="text-base">Detalle del borrador</DialogTitle>
+            {!editing && <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setEditing(true)}>Editar</Button>}
+          </div>
           <DialogDescription className="text-[11px]">
             {(draft.agent_code ?? "ARIA")} · {draft.content_type ?? "post"} · {fmtDate(draft.created_at)}
             {draft.confidence !== null ? ` · conf ${draft.confidence}` : ""}
@@ -67,13 +72,17 @@ export function ClientDraftModal({ draft, clientId, onClose }: { draft: Supervis
           </div>
         )}
 
-        {/* Caption · siempre que haya texto y la foto NO sea el propio texto (legacy imagen-en-texto) */}
-        {!!text && photoUrl !== text && (
-          <p className="text-sm whitespace-pre-wrap max-h-60 overflow-y-auto">{text}</p>
+        {/* Caption / edición · la foto NO es el propio texto (legacy imagen-en-texto) */}
+        {editing ? (
+          <DraftEditForm draft={draft} clientId={clientId} onDone={() => setEditing(false)} />
+        ) : (
+          !!text && photoUrl !== text && (
+            <p className="text-sm whitespace-pre-wrap max-h-60 overflow-y-auto">{text}</p>
+          )
         )}
 
         {/* Hashtags */}
-        {tags.length > 0 && (
+        {!editing && tags.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5 border-t border-border/20 pt-3">
             <Hash className="h-3.5 w-3.5 text-muted-foreground" />
             {tags.map((t, i) => (

@@ -33,6 +33,20 @@ def update_media_urls(content_id: str, media_urls: list[str]) -> None:
     _sb().table("content_lab_generated").update({"media_urls": media_urls}).eq("id", content_id).execute()
 
 
+def update_draft_fields(content_id: str, generated_text: Optional[str], metadata: Optional[dict[str, Any]]) -> None:
+    """UPDATE parcial de un draft · SOLO columnas presentes (None = no tocar). NO toca status.
+    `metadata` llega YA MERGEADO por el handler (preserva supervisado/platform/origen · audit B3).
+    Único writer-UPDATE de metadata en la tabla → sin colisión (los demás son INSERT)."""
+    patch: dict[str, Any] = {}
+    if generated_text is not None:
+        patch["generated_text"] = generated_text
+    if metadata is not None:
+        patch["metadata"] = metadata
+    if not patch:
+        return
+    _sb().table("content_lab_generated").update(patch).eq("id", content_id).execute()
+
+
 def set_requires_approval(client_id: str, value: bool) -> None:
     """Toggle Modo Supervisado · client_context.requires_publish_approval (DEBT-097)."""
     _sb().table("client_context").update({"requires_publish_approval": value}).eq("client_id", client_id).execute()
