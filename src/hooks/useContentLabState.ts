@@ -15,7 +15,7 @@ import type { ResultV2, BlockState, ModalState } from "@/components/content/Resu
 const INITIAL_FORM: FormState = { platform: "instagram", type: "caption", tone: "casual", topic: "", braveQuery: "", clientId: "", aspect: "1:1", accountId: "", applyLogo: false };
 const INITIAL_BLOCK: BlockState = { items: [] };
 
-export function useContentLabState() {
+export function useContentLabState(activeBusinessId: string | null) {
   const { toast } = useToast();
   // Brief CTA (Centro de Inteligencia): si llegamos con location.state.brief, lo pre-cargamos en el topic.
   // Defensivo: si no hay brief válido → INITIAL_FORM intacto.
@@ -54,8 +54,14 @@ export function useContentLabState() {
   // DEBT-CL-020: reset attachments cuando cambia type (un caption no necesita imagen ref · evita confusión)
   useEffect(() => { setForm(prev => ({ ...prev, reference_image_b64: undefined, reference_attachment_b64: undefined, reference_mime_type: undefined })); }, [form.type]);
   const [variations, setVariations] = useState<Record<VariationLabel, boolean>>({ Conservadora: false, Balanceada: true, Atrevida: false });
-  const [results, setResults] = useState<ResultV2[]>(loadPersistedResults);
-  useEffect(() => { persistResults(results); }, [results]);
+  const [results, setResults] = useState<ResultV2[]>(() => loadPersistedResults(activeBusinessId));
+  // Al cambiar de negocio, recargá SUS results (cada negocio su cache · aísla la grilla).
+  useEffect(() => { setResults(loadPersistedResults(activeBusinessId)); }, [activeBusinessId]);
+  // Persistí SOLO cuando cambian los results (dep [results], NO activeBusinessId · intencional): en el render
+  // del switch los results viejos NO se re-escriben al key nuevo; tras la recarga el persist corre con el
+  // negocio nuevo. Por eso el dep array es más angosto que el closure read.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { persistResults(activeBusinessId, results); }, [results]);
   const [block, setBlock] = useState<BlockState>(INITIAL_BLOCK);
   const [modalState, setModalState] = useState<ModalState>("closed");
   const [scheduledAt, setScheduledAt] = useState("");
