@@ -11,8 +11,8 @@ import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 import { EmptyState } from "@/components/common/EmptyState";
 
 export default function ContentLabPageV2() {
-  const s = useContentLabState();
   const { activeBusinessId, isReady } = useActiveBusiness();
+  const s = useContentLabState(activeBusinessId);
   // Preset del negocio activo en el form (el usuario puede cambiarlo · no se elimina la opción).
   useEffect(() => {
     if (activeBusinessId) s.setForm((f) => (f.clientId === activeBusinessId ? f : { ...f, clientId: activeBusinessId }));
