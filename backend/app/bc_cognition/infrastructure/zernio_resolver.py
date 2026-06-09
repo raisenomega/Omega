@@ -1,42 +1,31 @@
-"""Resolucion del accountId de Zernio por plataforma · FASE 2a (SOLO-UN-NEGOCIO · en vivo).
+"""Resolucion del accountId de Zernio por plataforma · BINDING DETERMINISTICO per-negocio (post-incidente).
 
-ALCANCE INTENCIONAL (NO es bug · leer antes de "arreglar"):
-2a resuelve el accountId consultando list_accounts() EN VIVO y filtrando por plataforma. Asume UN
-negocio bajo la ZERNIO_API_KEY (el caso actual del owner). NO persiste nada · NO toca social_accounts
-ni connection_metadata · SIN migracion.
+INCIDENTE FUGA MULTI-TENANT (8 jun 2026): el fallback 2a "en vivo" (consultar list_accounts() y, si habia
+UNA sola cuenta de la plataforma, usarla) publicaba el contenido de CUALQUIER negocio en la unica cuenta
+del workspace. Caso real: un post de "Mail Boxes Design" (zernio_account_id=NULL) salio en la IG de RAISEN
+(@raisenagency) porque era la unica cuenta IG bajo la key. El "1 match → usala" se rompe apenas existe un
+segundo negocio. ELIMINADO.
 
-El MULTI-NEGOCIO es FASE 5/2b: ahi se guarda el zernio_account_id por (client_id, platform) en
-social_accounts.connection_metadata (columna existente · sin migracion) y se resuelve por
-activeBusinessId (patron Switcher V1). HASTA ENTONCES, si hay 2+ cuentas de la MISMA plataforma bajo
-la key → FALLA CLARO (P2 · proteger la marca: jamas publicar en la cuenta equivocada · mejor fallar
-que adivinar). Esa rama es justo el puente a 2b.
+REGLA AHORA (zero-ambiguedad a cualquier escala): la cuenta Zernio se resuelve SOLO via binding
+determinístico per-negocio (`mapped_account_id` = zernio_account_id guardado en social_accounts del
+negocio activo, capturado al CONECTAR la cuenta · jamas adivinado por handle ni por "la unica del
+workspace"). Sin binding → FALLA HONESTO (el caller lo mapea a 'conecta esta red para este negocio').
+El binding real (conexion + captura del id) es la arquitectura multi-tenant (DEBT-MULTITENANT-ZERNIO).
 """
-import logging
 from typing import Optional
 
-from app.bc_cognition.infrastructure.zernio_adapter import ZernioPublishError, list_accounts
-
-logger = logging.getLogger(__name__)
+from app.bc_cognition.infrastructure.zernio_adapter import ZernioPublishError
 
 
 class ZernioAccountResolutionError(ZernioPublishError):
-    """No se pudo resolver UNA cuenta para la plataforma (0 conectadas, o 2+ ambiguas · cero adivinanza)."""
+    """No hay binding determinístico de cuenta Zernio para (negocio, plataforma) · cero adivinanza."""
 
 
 async def resolve_account_id(platform: str, mapped_account_id: Optional[str] = None) -> str:
-    """Devuelve el _id de la cuenta Zernio para `platform`.
-    F5/2b: si el caller pasa `mapped_account_id` (mapeo per-negocio persistido), GANA (adapter-puro:
-    el resolver no toca Supabase · el caller lee el mapeo). Sin mapeo → fallback 2a en vivo:
-    0 → ZernioAccountResolutionError (no conectada) · 2+ → error (ambiguo · no adivina)."""
+    """Devuelve el _id de la cuenta Zernio para `platform` SOLO via binding per-negocio.
+    `mapped_account_id` = zernio_account_id del negocio activo (lo lee el caller de social_accounts).
+    Sin binding (None/vacio) → ZernioAccountResolutionError (NO se adivina · cierra la fuga multi-tenant).
+    El fallback 2a 'en vivo a la unica cuenta del workspace' fue ELIMINADO (ver docstring del modulo)."""
     if mapped_account_id:
-        return mapped_account_id
-    accounts = await list_accounts()
-    matches = [a for a in accounts if a.get("platform") == platform and a.get("_id")]
-    if not matches:
-        raise ZernioAccountResolutionError(f"zernio_sin_cuenta:{platform}")
-    if len(matches) > 1:
-        # P2: 2+ cuentas de la misma plataforma = ambiguo. NUNCA elegir una (publicar en la cuenta
-        # equivocada seria el peor error). Multi-negocio resuelve esto en FASE 2b (por client_id).
-        logger.warning(f"zernio resolver · {len(matches)} cuentas '{platform}' · ambiguo (2a un-negocio) → falla")
-        raise ZernioAccountResolutionError(f"zernio_cuenta_ambigua:{platform}:{len(matches)}")
-    return str(matches[0]["_id"])
+        return str(mapped_account_id)
+    raise ZernioAccountResolutionError(f"zernio_sin_cuenta:{platform}")

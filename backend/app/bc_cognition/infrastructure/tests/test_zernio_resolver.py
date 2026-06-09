@@ -1,5 +1,7 @@
-"""zernio_resolver · resolucion accountId por plataforma (FASE 2a · solo-un-negocio). G9 exime tests.
-CASO CLAVE P2: 2+ cuentas misma plataforma → FALLA (no adivina). list_accounts mockeado (sin red real)."""
+"""zernio_resolver · binding determinístico per-negocio (post-INCIDENTE fuga multi-tenant 8 jun). G9 exime.
+El fallback 2a 'en vivo' (usar la unica cuenta del workspace cuando mapped=None) fue ELIMINADO: publicaba
+el contenido de cualquier negocio en la unica cuenta IG (caso real: Mail Boxes Design -> @raisenagency).
+Ahora: solo binding per-negocio (mapped_account_id) · sin binding -> falla honesto (NO adivina)."""
 import asyncio
 
 import pytest
@@ -7,42 +9,18 @@ import pytest
 from app.bc_cognition.infrastructure import zernio_resolver as zr
 
 
-def _patch(monkeypatch, accounts):
-    async def _fake():
-        return accounts
-    monkeypatch.setattr(zr, "list_accounts", _fake)
+def test_binding_per_negocio_gana():
+    # mapped = zernio_account_id del negocio activo → se usa tal cual (cero consulta a Zernio).
+    assert asyncio.run(zr.resolve_account_id("instagram", "IG_DEL_NEGOCIO")) == "IG_DEL_NEGOCIO"
 
 
-def test_una_cuenta_de_la_plataforma_devuelve_id(monkeypatch):
-    _patch(monkeypatch, [{"_id": "fb1", "platform": "facebook"}, {"_id": "ig1", "platform": "instagram"}])
-    assert asyncio.run(zr.resolve_account_id("facebook")) == "fb1"  # filtra por plataforma, ignora ig
+def test_sin_binding_falla_honesto_no_adivina():
+    # mapped=None → NO fallback a 'la unica cuenta del workspace' (cierra la fuga) → falla honesto.
+    with pytest.raises(zr.ZernioAccountResolutionError) as ei:
+        asyncio.run(zr.resolve_account_id("instagram", None))
+    assert "zernio_sin_cuenta:instagram" in str(ei.value)
 
 
-def test_sin_cuenta_de_la_plataforma_falla(monkeypatch):
-    _patch(monkeypatch, [{"_id": "ig1", "platform": "instagram"}])
+def test_binding_vacio_tambien_falla():
     with pytest.raises(zr.ZernioAccountResolutionError):
-        asyncio.run(zr.resolve_account_id("facebook"))
-
-
-def test_dos_cuentas_misma_plataforma_falla_no_adivina(monkeypatch):
-    # P2: ambiguo → FALLA CLARO · NUNCA elige una (publicar en cuenta equivocada = peor error · multi=2b)
-    _patch(monkeypatch, [{"_id": "fb1", "platform": "facebook"}, {"_id": "fb2", "platform": "facebook"}])
-    with pytest.raises(zr.ZernioAccountResolutionError):
-        asyncio.run(zr.resolve_account_id("facebook"))
-
-
-def test_mapeo_persistido_gana_sin_llamar_live(monkeypatch):
-    # F5/2b · si el caller pasa el mapeo per-negocio, GANA · NO consulta Zernio (desambigua multi-negocio)
-    called = {"n": 0}
-    async def _fake():
-        called["n"] += 1
-        return [{"_id": "X1", "platform": "instagram"}, {"_id": "X2", "platform": "instagram"}]  # 2+ = ambiguo
-    monkeypatch.setattr(zr, "list_accounts", _fake)
-    assert asyncio.run(zr.resolve_account_id("instagram", "MAP1")) == "MAP1"
-    assert called["n"] == 0  # ni siquiera llamó list_accounts (mapeo cortocircuita)
-
-
-def test_sin_mapeo_cae_al_fallback_live(monkeypatch):
-    # F5/2b · mapped=None → backward compat: resuelve en vivo (path 2a)
-    _patch(monkeypatch, [{"_id": "ig1", "platform": "instagram"}])
-    assert asyncio.run(zr.resolve_account_id("instagram", None)) == "ig1"
+        asyncio.run(zr.resolve_account_id("facebook", ""))
