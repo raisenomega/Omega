@@ -24,7 +24,7 @@ cd "$ROOT_DIR"
 
 FAILURES=0
 WARNINGS=0
-TOTAL=11
+TOTAL=12
 
 print_header() { echo -e "\n${CYAN}═══ $1 ═══${NC}"; }
 print_pass()   { echo -e "${GREEN}✓ $1${NC}"; }
@@ -377,6 +377,27 @@ if [ -f scripts/personas-sha1.txt ]; then
   [ "$PERSONA_FAIL" -eq 0 ] && print_pass "Personas intactas (NOVA + ARIA)"
 else
   print_warn "scripts/personas-sha1.txt no encontrado (¿primer commit?)"
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# CHECK 12 (P0-1) — multi-worker + scheduler in-process = crons duplicados
+# (display 11/$TOTAL · "check 12" = 12.º check 1-based · auditoría 10 jun 2026)
+# ─────────────────────────────────────────────────────────────────
+print_header "11/$TOTAL · P0-1 — Anti crons duplicados (workers vs scheduler)"
+
+P01_NIXPACKS="backend/nixpacks.toml"
+P01_MAINPY="backend/app/main.py"
+if [ -f "$P01_NIXPACKS" ] && [ -f "$P01_MAINPY" ]; then
+  if grep -qE -- '--workers[= ]*[2-9]' "$P01_NIXPACKS" && grep -q 'scheduler.start()' "$P01_MAINPY"; then
+    print_fail "P0-1: multi-worker + scheduler in-process = crons duplicados"
+    echo "    $P01_NIXPACKS arranca >1 worker mientras main.py corre APScheduler in-process."
+    echo "    Sin locking distribuido → cada worker dispara los 24 crons (doble publicación · viola P2)."
+    echo "    Fix: --workers 1, o extraer scheduler a proceso propio (DEBT-SCHEDULER-SPLIT)."
+  else
+    print_pass "Workers/scheduler coherentes (1 worker mientras scheduler corre in-process)"
+  fi
+else
+  print_warn "nixpacks.toml o main.py no encontrado — check P0-1 omitido"
 fi
 
 # ─────────────────────────────────────────────────────────────────

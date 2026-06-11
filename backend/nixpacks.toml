@@ -16,8 +16,11 @@ cmds = [
   "echo 'Build OK — assets generated at runtime'"
 ]
 
+# --workers 1 OBLIGATORIO mientras APScheduler corra in-process (sin locking
+# distribuido · 2 workers = crons duplicados = doble publicación). Escalar workers
+# requiere ANTES extraer scheduler a servicio Railway separado · DEBT-SCHEDULER-SPLIT.
 [start]
-cmd = ". /opt/venv/bin/activate && uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 2"
+cmd = ". /opt/venv/bin/activate && uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1"
 
 [variables]
 PYTHONUNBUFFERED = "1"
