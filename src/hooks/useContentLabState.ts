@@ -9,6 +9,7 @@ import { downloadResult } from "@/lib/download-result";
 import { useScheduleBlock } from "@/hooks/useScheduleBlock";
 import { useResearch } from "@/hooks/useResearch";
 import { loadPersistedResults, persistResults } from "@/lib/content-lab-persistence";
+import { brandVoiceScheduleError } from "@/lib/schedule-error";
 import { VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
 import type { ResultV2, BlockState, ModalState } from "@/components/content/ResultCardV2";
 
@@ -133,6 +134,8 @@ export function useContentLabState(activeBusinessId: string | null) {
         toast({ title: "Estos contenidos ya no existen, regeneralos", variant: "destructive" });
         return;
       }
+      const bvErr = brandVoiceScheduleError(msg);  // X5 · 422/503 voz de marca (P0-2)
+      if (bvErr) { toast({ ...bvErr, variant: "destructive" }); return; }
       toast({ title: "Error al agendar", description: msg, variant: "destructive" });
     }
   };
