@@ -326,17 +326,24 @@ fi
 # ─────────────────────────────────────────────────────────────────
 # CHECK 9/10 — T5: Tests pasando (Vitest + Pytest)
 # ─────────────────────────────────────────────────────────────────
-print_header "9/$TOTAL · T5 — Tests pasando"
+print_header "9/$TOTAL · T5 — Tests pasando (exit code · gate no ciego)"
 
+# P0-3: usar el EXIT CODE de vitest/pytest, NO grep sobre tail. El grep reportaba
+# verde con 1 suite roja (gate ciego). En FALLO imprime las últimas 15 líneas para
+# que el dev vea POR QUÉ (Ajuste 2 · bloquea Y explica · sin tentar a --no-verify).
+
+# Frontend (Vitest)
 if [ -f package.json ] && grep -q '"test"' package.json; then
-  if npm test --silent 2>&1 | tail -5 | grep -qE 'failed|FAIL'; then
-    print_fail "Tests frontend (Vitest) fallando"
+  VITEST_OUT=$(npm test --silent 2>&1)
+  if [ $? -ne 0 ]; then
+    print_fail "Tests frontend (Vitest) fallando:"
+    echo "$VITEST_OUT" | tail -15 | sed 's/^/    /'
   else
     print_pass "Tests frontend OK"
   fi
 fi
 
-# CHECK 9 backend · invoca pytest vía el venv directo (cross-platform · sin dep de PATH)
+# Backend (Pytest) · venv directo (cross-platform · sin dep de PATH)
 # PY_VENV es relativo a backend/ (POSIX: venv/bin/python · Windows: venv/Scripts/python.exe)
 PY_VENV=""
 if [ -x backend/venv/bin/python ]; then PY_VENV="venv/bin/python"
@@ -344,8 +351,10 @@ elif [ -x backend/venv/Scripts/python.exe ]; then PY_VENV="venv/Scripts/python.e
 fi
 
 if [ -d backend ] && [ -n "$PY_VENV" ]; then
-  if (cd backend && "$PY_VENV" -m pytest -q 2>&1 | tail -3 | grep -qE 'failed|FAIL'); then
-    print_fail "Tests backend (Pytest) fallando"
+  PYTEST_OUT=$(cd backend && "$PY_VENV" -m pytest -q 2>&1)
+  if [ $? -ne 0 ]; then
+    print_fail "Tests backend (Pytest) fallando:"
+    echo "$PYTEST_OUT" | tail -15 | sed 's/^/    /'
   else
     print_pass "Tests backend OK"
   fi

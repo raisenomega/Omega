@@ -1,3 +1,7 @@
+// @vitest-environment jsdom
+// jsdom provee `localStorage` · `@/lib/guardian/actions` importa transitivamente
+// api-client → integrations/supabase/client.ts (toca localStorage en load) · en
+// env `node` reventaba con "ReferenceError: localStorage is not defined" (P0-3).
 import { describe, it, expect } from "vitest";
 import { expiresFromPreset } from "@/lib/guardian/actions";
 
