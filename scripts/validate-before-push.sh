@@ -24,7 +24,7 @@ cd "$ROOT_DIR"
 
 FAILURES=0
 WARNINGS=0
-TOTAL=12
+TOTAL=13
 
 print_header() { echo -e "\n${CYAN}═══ $1 ═══${NC}"; }
 print_pass()   { echo -e "${GREEN}✓ $1${NC}"; }
@@ -407,6 +407,36 @@ if [ -f "$P01_NIXPACKS" ] && [ -f "$P01_MAINPY" ]; then
   fi
 else
   print_warn "nixpacks.toml o main.py no encontrado — check P0-1 omitido"
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# CHECK 13 (P0-4) — pip-audit · CVEs en requirements (allowlist en archivo)
+# (display 12/$TOTAL · "check 13" = 13.º check 1-based · auditoría 10 jun 2026)
+# ─────────────────────────────────────────────────────────────────
+print_header "12/$TOTAL · P0-4 — pip-audit (CVEs en requirements)"
+
+P04_ALLOWLIST="scripts/pip-audit-allowlist.txt"
+# PY_VENV se define en el check 9 (persiste). PYTHONUTF8=1 evita el crash de
+# pip_requirements_parser con el UTF-8 del requirements en Windows (cp1252).
+if [ -n "${PY_VENV:-}" ] && (cd backend && PYTHONUTF8=1 "$PY_VENV" -m pip_audit --version >/dev/null 2>&1); then
+  P04_IGNORE=()
+  if [ -f "$P04_ALLOWLIST" ]; then
+    while read -r p04_line; do
+      p04_line="${p04_line%%#*}"                 # quita comentario inline
+      p04_id=$(echo "$p04_line" | awk '{print $1}')
+      [ -n "$p04_id" ] && P04_IGNORE+=("--ignore-vuln" "$p04_id")
+    done < "$P04_ALLOWLIST"
+  fi
+  P04_OUT=$(cd backend && PYTHONUTF8=1 "$PY_VENV" -m pip_audit -r requirements.txt "${P04_IGNORE[@]}" 2>&1)
+  if [ $? -ne 0 ]; then
+    print_fail "pip-audit: CVE fuera de la allowlist en requirements (push bloqueado):"
+    echo "$P04_OUT" | tail -15 | sed 's/^/    /'
+    echo "    Triage: arreglá el dep, o si es deferido agregá su VULN_ID a $P04_ALLOWLIST con su DEBT."
+  else
+    print_pass "pip-audit OK · sin CVEs fuera de la allowlist ($(( ${#P04_IGNORE[@]} / 2 )) deferidos documentados)"
+  fi
+else
+  print_warn "pip-audit no disponible — check 13 omitido (no fail · pip install -r requirements.txt)"
 fi
 
 # ─────────────────────────────────────────────────────────────────

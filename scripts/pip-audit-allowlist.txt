@@ -1,0 +1,53 @@
+# pip-audit allowlist · CVEs deferidos (NO bloquean el push · el check 13 los
+# pasa como --ignore-vuln). Cualquier CVE que NO esté aquí BLOQUEA el push.
+# Triage futuro = quitar/editar una línea + cerrar su DEBT. critical/high vs
+# medium = criterio del triage humano al editar este archivo, no del script.
+# Formato: VULN_ID  # paquete · DEBT
+#
+# Cerrados HOY (10 jun · P0-4 · NO van aquí): python-jose (eliminada · muerta) ·
+# requests · python-multipart · email-validator · python-dotenv · PyJWT (8 CVEs
+# de auth · bump 2.10.1→2.13.0 verificado con pytest+auth tests).
+#
+# ─── pypdf 4.0.0 → 6.10.2 · salto MAYOR/breaking · usado en 5 handlers
+#     (content_lab_v3/_attachment_extractor · context/extract_file · context/extract_url ·
+#      clients_v3/parse_brand_pdf · clients_v3/upload_client_context) · DEBT-PYPDF-BUMP · 10 jun 2026
+CVE-2025-55197  # pypdf · DEBT-PYPDF-BUMP
+CVE-2025-62707  # pypdf · DEBT-PYPDF-BUMP
+CVE-2025-62708  # pypdf · DEBT-PYPDF-BUMP
+CVE-2025-66019  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-22690  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-22691  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-24688  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-27024  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-27025  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-27026  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-27628  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-27888  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-28351  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-28804  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-31826  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-33123  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-33699  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-40260  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-41168  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-41312  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-41313  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-41314  # pypdf · DEBT-PYPDF-BUMP
+#
+# ─── pillow 10.4.0 → 12.2.0 · salto MAYOR · usada en logo overlay (imagen+video)
+#     · DEBT-PILLOW-BUMP (10→12 · verificar API paste/alpha de Pillow) · 10 jun 2026
+CVE-2026-25990  # pillow · DEBT-PILLOW-BUMP
+CVE-2026-40192  # pillow · DEBT-PILLOW-BUMP
+CVE-2026-42310  # pillow · DEBT-PILLOW-BUMP
+CVE-2026-42311  # pillow · DEBT-PILLOW-BUMP
+PYSEC-2026-165  # pillow · DEBT-PILLOW-BUMP
+#
+# ─── lxml 5.1.0 → 6.1.0 · salto MAYOR · usada en scrapers · DEBT-LXML-BUMP · 10 jun 2026
+PYSEC-2026-87  # lxml · DEBT-LXML-BUMP
+#
+# ─── starlette 0.35.1 + fastapi 0.109.0 · atados · se cierran SOLOS con el bump
+#     mayor de fastapi en Fase 2 Parche 8 · DEBT-FASTAPI-BUMP (ya registrada · NO crear nueva) · 10 jun 2026
+CVE-2024-47874  # starlette · DEBT-FASTAPI-BUMP (Fase 2 P8)
+CVE-2025-54121  # starlette · DEBT-FASTAPI-BUMP (Fase 2 P8)
+PYSEC-2026-161  # starlette · DEBT-FASTAPI-BUMP (Fase 2 P8)
+PYSEC-2024-38   # fastapi   · DEBT-FASTAPI-BUMP (Fase 2 P8)

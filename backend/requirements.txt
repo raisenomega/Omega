@@ -21,21 +21,22 @@ voyageai>=0.3.0              # DEBT-048 · embeddings memoria ARIA · ÚNICA exc
 google-genai==2.6.0          # Nano Banana + Veo 3.1 — ÚNICA excepción I1 · pin exacto verificado en sanity test 23 may 2026 (rango abierto >=2.0.0 colisionaba con supabase==2.7.4 · resolution-too-deep en pip)
 
 # ─── Auth ─────────────────────────────────────────────────────────
-python-jose[cryptography]==3.3.0
+# python-jose ELIMINADA (10 jun 2026 · P0-4 auditoría): CVE-2024-33663 +
+# CVE-2024-33664 · además MUERTA (0 imports de `jose` en backend/app · usa PyJWT).
 passlib[bcrypt]==1.7.4
 bcrypt==4.1.2
-PyJWT==2.10.1
+PyJWT>=2.12.1                 # bump 10 jun 2026 · P0-4 · 8 CVEs en la librería de auth (minor same-major)
 
 # ─── Payments ─────────────────────────────────────────────────────
 stripe==7.10.0
 
 # ─── HTTP / API consumption ───────────────────────────────────────
 httpx==0.28.1                # bump 23 may 2026 · requerido por google-genai 2.6.0 · supabase 2.18.1 lo acepta
-requests==2.31.0
+requests>=2.32.3              # bump 10 jun 2026 · P0-4 · CVE-2024-35195 (auth bypass en sesiones)
 Pillow==10.4.0               # overlay de logo en imágenes generadas (content_lab · Fase 1)
 
 # ─── Form data / files ────────────────────────────────────────────
-python-multipart==0.0.6
+python-multipart>=0.0.9       # bump 10 jun 2026 · P0-4 · CVE-2024-24762 (ReDoS · path caliente uploads)
 
 # ─── Scrapers / extracción ────────────────────────────────────────
 beautifulsoup4==4.12.0
@@ -58,16 +59,17 @@ apscheduler==3.10.4
 # langfuse>=2.0.0             # descomentar al integrar Phase 4
 
 # ─── Configuración ────────────────────────────────────────────────
-python-dotenv==1.0.0
+python-dotenv>=1.2.2          # bump 10 jun 2026 · P0-4 · CVE-2026-28684 (1.0.0 vulnerable)
 
 # ─── Utilities ────────────────────────────────────────────────────
-email-validator==2.1.0
+email-validator>=2.1.1        # bump 10 jun 2026 · P0-4 · 2.1.0 estaba yanked en PyPI
 tzdata==2026.2  # base IANA para zoneinfo (Windows no la trae; conciencia temporal ARIA · prod Linux usa tzdb del SO)
 
 # ─── Testing (dev — separar a requirements-dev.txt en futuro) ─────
 pytest>=7.4.0
 pytest-asyncio>=0.21.0
 pytest-cov>=4.1.0
+pip-audit>=2.7.0             # P0-4 (10 jun 2026): escáner CVE de requirements · check 13 del gate
 
 # ═══════════════════════════════════════════════════════════════════
 # ELIMINADOS POR DECISIÓN OWNER (17 may 2026 — viola DDD I1):
