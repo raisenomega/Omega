@@ -474,7 +474,11 @@ RAZÓN         Stripe reintenta webhooks — sin idempotencia: doble facturació
 ```
 REGLA         Ningún post pasa de draft a scheduled sin brand_voice_check
               que retorne match_score ≥ 0.7
-ENFORCE       Test del pipeline content_lab
+ENFORCE       Gate programático en el handler real draft→scheduled:
+              backend/app/api/routes/calendar_v3/_brand_voice_gate.py
+              (check_or_raise · invocado por handlers/schedule_post.py · 422
+              si <0.7 · 503 honesto + válvula force_brand_voice si el scorer cae).
+              Test: backend/app/api/routes/calendar_v3/tests/test_brand_voice_gate.py
 RAZÓN         Es la regla P2 traducida a código: la marca del cliente
               es el activo. Cero post fuera de tono.
 ```

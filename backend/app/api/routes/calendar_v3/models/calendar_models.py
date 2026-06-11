@@ -40,6 +40,7 @@ class ScheduledPostV3Create(BaseModel):
     scheduled_for: datetime = Field(..., description="Timestamp UTC del PRIMER post · backend espacia los siguientes")
     media_url: Optional[str] = Field(default=None, description="URL Storage compartida entre todos los N posts del bloque")
     social_account_id: Optional[str] = Field(default=None, description="DEBT-CL-015 · si user eligió cuenta específica (N>1 cuentas por platform) · sino backend resuelve primera activa")
+    force_brand_voice: bool = Field(default=False, description="X5 · override humano del gate de voz de marca · agenda bajo responsabilidad (queda auditado en agent_memory)")
 
 
 class ScheduledPostV3Response(BaseModel):
