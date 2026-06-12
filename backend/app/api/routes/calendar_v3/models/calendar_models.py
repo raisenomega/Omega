@@ -2,7 +2,7 @@
 POST /calendar-v3/schedule/ (DEBT-CL-017 + path X)."""
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class CalendarPost(BaseModel):
@@ -41,6 +41,15 @@ class ScheduledPostV3Create(BaseModel):
     media_url: Optional[str] = Field(default=None, description="URL Storage compartida entre todos los N posts del bloque")
     social_account_id: Optional[str] = Field(default=None, description="DEBT-CL-015 · si user eligió cuenta específica (N>1 cuentas por platform) · sino backend resuelve primera activa")
     force_brand_voice: bool = Field(default=False, description="X5 · override humano del gate de voz de marca · agenda bajo responsabilidad (queda auditado en agent_memory)")
+
+    @field_validator("scheduled_for")
+    @classmethod
+    def _scheduled_for_tz_aware(cls, v: datetime) -> datetime:
+        """Bug tz (11 jun): NUNCA asumir UTC para un naive · el front manda la hora
+        del usuario como UTC explícito (Z u offset). Naive → 422 (fail-honest)."""
+        if v.tzinfo is None:
+            raise ValueError("scheduled_for_must_be_tz_aware · enviá la hora con offset o Z (no se asume UTC)")
+        return v
 
 
 class ScheduledPostV3Response(BaseModel):

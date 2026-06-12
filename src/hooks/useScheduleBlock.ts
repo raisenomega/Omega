@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { apiPost } from "@/lib/api-client";
+import { toUtcIso } from "@/lib/schedule-time";
 import type { BlockState } from "@/components/content/ResultCardV2";
 
 interface SchedulePostResponse {
@@ -30,7 +31,9 @@ export function useScheduleBlock() {
       if (textItems.length === 0) {
         throw new Error("Bloque sin items de texto · agregá al menos 1 caption/post/email/etc");
       }
-      const scheduledForIso = scheduledAt.length === 16 ? `${scheduledAt}:00` : scheduledAt;
+      // Bug tz (11 jun): convertir la hora LOCAL del usuario a UTC explícito (Z) ·
+      // sino el backend la guardaba como UTC → corrimiento -4h en AST.
+      const scheduledForIso = toUtcIso(scheduledAt);
       return apiPost<SchedulePostResponse[]>(`/calendar-v3/schedule/`, {
         client_id: clientId,
         platform,
