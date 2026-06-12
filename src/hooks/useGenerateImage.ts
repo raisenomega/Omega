@@ -10,7 +10,7 @@ import { apiGet, apiPost } from "@/lib/api-client";
 // distingue por la forma que llega. handleGenerate sigue igual (await mutateAsync → ResultV2[]).
 interface ImageSyncResponse { id: string; content_type: string; generated_text: string; }
 interface ImageJobStart { job_id: string; status: string; }
-interface ImageJobStatus { job_id: string; status: string; image_url?: string; error?: string; }
+interface ImageJobStatus { job_id: string; status: string; image_url?: string; error?: string; content_id?: string; }
 
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 const POLL_INTERVAL_MS = 5000;
@@ -50,7 +50,9 @@ export function useGenerateImage() {
         for (let i = 0; i < MAX_ATTEMPTS; i++) {
           await sleep(POLL_INTERVAL_MS);
           const job = await apiGet<ImageJobStatus>(`/content-lab/generate-image/${data.job_id}`);
-          if (job.status === "completed" && job.image_url) return [_result(job.job_id, job.image_url, selectedLabels[0])];
+          // BUG 11 jun: usar el content_id real (fila content_lab_generated del worker) como id del
+          // resultado · NO el job_id · sino Guardar busca content_lab_generated por job_id → 404.
+          if (job.status === "completed" && job.image_url) return [_result(job.content_id ?? job.job_id, job.image_url, selectedLabels[0])];
           if (job.status === "failed") throw new Error(job.error ?? "image_generation_failed");
         }
         throw new Error("image_timeout · 5min sin respuesta");

@@ -156,4 +156,5 @@ async def get_image_job_status(
     return ImageJobStatusResponse(
         job_id=job_id, status=job["status"],
         image_url=job.get("image_url"), error=job.get("error"),
+        content_id=(job.get("metadata") or {}).get("content_id"),
     )

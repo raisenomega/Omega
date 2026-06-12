@@ -72,3 +72,19 @@ def test_get_status_job_inexistente_404(monkeypatch):
     with pytest.raises(HTTPException) as ei:
         asyncio.run(gi.get_image_job_status("nope", None))
     assert ei.value.status_code == 404
+
+
+def test_get_status_completed_expone_content_id(monkeypatch):
+    # BUG 11 jun: el worker async guarda content_id en metadata (use_image_job:85),
+    # pero el status NO lo exponía → el frontend usaba job_id como id → Guardar la
+    # imagen daba content_not_found (404). El status debe devolver el content_id real.
+    monkeypatch.setattr(gi, "get_current_user", _user)
+    monkeypatch.setattr(gi, "get_image_job", lambda jid: {
+        "client_id": "c1", "status": "completed", "image_url": "https://x/img.png",
+        "metadata": {"content_id": "real-content-uuid", "style": "realistic"},
+    })
+    monkeypatch.setattr(gi.clients_reader, "get_client", lambda cid: {"id": "c1"})
+    monkeypatch.setattr(gi, "user_owns_client", lambda uid, c: True)
+    out = asyncio.run(gi.get_image_job_status("jobX", None))
+    assert out.content_id == "real-content-uuid"   # ← el frontend usa ESTE id para Guardar
+    assert out.image_url == "https://x/img.png"

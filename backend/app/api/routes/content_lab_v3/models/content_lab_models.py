@@ -77,6 +77,7 @@ class ImageJobStatusResponse(BaseModel):
     status: str  # pending|running|completed|failed|cancelled
     image_url: Optional[str] = None
     error: Optional[str] = None
+    content_id: Optional[str] = None  # fila content_lab_generated del worker · el front la usa para Guardar (BUG 11 jun)
 
 
 class GenerateVideoRequest(BaseModel):
