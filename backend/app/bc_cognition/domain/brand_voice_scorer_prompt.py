@@ -16,7 +16,7 @@ SYSTEM = (
     '{"score": number 0.0-1.0, "reasons": [string, ...]} sin texto extra. '
     "score = qué tan bien encaja el contenido con la marca (1.0 = calce "
     "perfecto · 0.0 = fuera de tono). Sé honesto y estricto: la marca del "
-    "cliente es el activo (P2)."
+    "cliente es el activo (P2). Máximo 4 razones BREVES (1 línea cada una)."
 )
 
 

@@ -1,12 +1,11 @@
-"""Application · scorer de voz de marca para el gate X5 (Opción A · refinamiento 3).
+"""Application · scorer de voz de marca para el gate X5 (Opción A).
 
-Compone marca comprimida + contenido y pide a Claude (Haiku vía routing_table
-"brand_voice_checker" · I2) un score 0-1. NUNCA llama al SDK directo: usa el
-anthropic_adapter (I10). Result tuple (A5): (ok, {score, reasons}, err).
-err="brand_voice_check_unavailable" si el ref o el adapter fallan → el gate
-decide 503 honesto o, con force, agendar bajo responsabilidad humana."""
+Haiku vía routing_table "brand_voice_checker" (I2) · anthropic_adapter, NUNCA
+SDK directo (I10) · Result (A5): (ok, {score, reasons}, err). err=
+"brand_voice_check_unavailable" si el ref o el adapter fallan."""
 import json
 import logging
+import re
 from typing import Any, Optional
 
 from app.bc_cognition.infrastructure.anthropic_adapter import generate
@@ -19,10 +18,9 @@ _UNAVAILABLE = "brand_voice_check_unavailable"
 
 
 def has_brand_reference(client_id: str) -> bool:
-    """Determinístico (sin Haiku) · True si el cliente tiene voz de marca
-    definida (corpus, keywords o ejemplos). False → el gate X5 no puede medir
-    desviación de una voz indefinida → PASS con rastro. Ante error de lectura
-    devuelve True (fail-safe hacia proteger: que el scorer decida/503)."""
+    """Determinístico · True si hay voz definida (corpus/keywords/ejemplos).
+    False → PASS con rastro (no se mide una voz indefinida). Error de lectura →
+    True (fail-safe: que el scorer decida/503)."""
     try:
         ref = build_brand_voice_summary(client_id)
     except Exception as e:
@@ -31,18 +29,25 @@ def has_brand_reference(client_id: str) -> bool:
     return bool(ref.get("corpus_count") or ref.get("top_keywords") or ref.get("latest_approvals"))
 
 
+def _clamp(v: Any) -> float:
+    return max(0.0, min(1.0, float(v)))
+
+
 def _parse_score(text: str) -> Optional[dict[str, Any]]:
-    """Extrae {score, reasons} del JSON del modelo · None si no parsea (I7)."""
-    try:
-        start, end = text.find("{"), text.rfind("}")
-        if start < 0 or end < 0:
-            return None
-        data = json.loads(text[start:end + 1])
-        score = max(0.0, min(1.0, float(data["score"])))
-        reasons = [str(r) for r in (data.get("reasons") or [])][:5]
-        return {"score": score, "reasons": reasons}
-    except (ValueError, KeyError, TypeError):
-        return None
+    """Extrae {score, reasons} (I7). Tolera respuesta TRUNCADA (Haiku corta el
+    array reasons al límite de tokens · 11 jun): el score viene primero → el
+    fallback por regex lo rescata aunque falte el cierre del JSON."""
+    start, end = text.find("{"), text.rfind("}")
+    if start >= 0 and end > start:
+        try:
+            data = json.loads(text[start:end + 1])
+            if isinstance(data, dict) and "score" in data:
+                reasons = [str(r) for r in (data.get("reasons") or [])][:5]
+                return {"score": _clamp(data["score"]), "reasons": reasons}
+        except (ValueError, KeyError, TypeError):
+            pass
+    m = re.search(r'"score"\s*:\s*(-?\d+(?:\.\d+)?)', text)
+    return {"score": _clamp(m.group(1)), "reasons": []} if m else None
 
 
 async def score_brand_voice(client_id: str, content_text: str):
@@ -57,7 +62,7 @@ async def score_brand_voice(client_id: str, content_text: str):
         agent_code="brand_voice_checker",
         system=SYSTEM,
         messages=[{"role": "user", "content": build_user_prompt(content_text, brand_ref)}],
-        max_tokens=300,
+        max_tokens=600,
         temperature=0.0,
     )
     if error is not None or response is None:
