@@ -472,15 +472,23 @@ RAZÓN         Stripe reintenta webhooks — sin idempotencia: doble facturació
 ## X5 · Brand Voice Check Antes de Cada Post Generado
 
 ```
-REGLA         Ningún post pasa de draft a scheduled sin brand_voice_check
-              que retorne match_score ≥ 0.7
+REGLA         DAMAGE GATE de 2 bandas (calibrado 11 jun · ver constantes de
+              dominio + DEBT-X5-CALIBRATION-MULTICLIENT). Ningún post pasa de
+              draft a scheduled si DAÑA la voz de marca:
+              · score < 0.5 (SCORE_BLOCK_THRESHOLD) = daño (insultos/spam/off-tone
+                severo) → 422, no pasa.
+              · 0.5 ≤ score < 0.7 (SCORE_BRAND_BAR) = genérico/no-daña → PASA con
+                el score persistido + flag below_brand_bar (señal, no bloqueo).
+              · score ≥ 0.7 = consistente con la marca → pasa limpio.
+              P2 protege contra DAÑO a la marca, no contra mediocridad.
 ENFORCE       Gate programático en el handler real draft→scheduled:
               backend/app/api/routes/calendar_v3/_brand_voice_gate.py
-              (check_or_raise · invocado por handlers/schedule_post.py · 422
-              si <0.7 · 503 honesto + válvula force_brand_voice si el scorer cae).
+              (check_or_raise · invocado por handlers/schedule_post.py · 422 solo
+              si <0.5 · 503 honesto + válvula force_brand_voice si el scorer cae ·
+              pieza no-texto y cliente sin corpus → skip con rastro en agent_memory).
               Test: backend/app/api/routes/calendar_v3/tests/test_brand_voice_gate.py
-RAZÓN         Es la regla P2 traducida a código: la marca del cliente
-              es el activo. Cero post fuera de tono.
+RAZÓN         Es la regla P2 traducida a código: la marca del cliente es el
+              activo. Se bloquea lo que la daña; lo genérico se marca, no se veta.
 ```
 
 ---

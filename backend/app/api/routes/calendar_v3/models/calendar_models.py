@@ -51,4 +51,5 @@ class ScheduledPostV3Response(BaseModel):
     scheduled_for: str
     status: str
     media_url: Optional[str] = None
-    brand_voice_skipped: bool = False  # X5 · cliente sin voz de marca definida (agendó sin filtro · 11 jun)
+    brand_voice_skipped: bool = False    # X5 · cliente sin voz de marca definida (agendó sin filtro · 11 jun)
+    below_brand_bar: bool = False        # X5 · algún post 0.5–0.7: pasó pero genérico/no-es-la-voz (damage gate)

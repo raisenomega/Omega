@@ -29,7 +29,7 @@ def has_brand_reference(client_id: str) -> bool:
     return bool(ref.get("corpus_count") or ref.get("top_keywords") or ref.get("latest_approvals"))
 
 
-def _clamp(v: Any) -> float:
+def _clamp(v: int | float | str) -> float:
     return max(0.0, min(1.0, float(v)))
 
 

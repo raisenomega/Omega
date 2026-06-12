@@ -9,7 +9,9 @@ from fastapi import HTTPException
 
 from app.api.routes.calendar_v3 import _brand_voice_cache as cache
 from app.bc_cognition.application.score_brand_voice import score_brand_voice, has_brand_reference
-from app.bc_cognition.domain.brand_voice_scorer_prompt import MIN_SCORE
+from app.bc_cognition.domain.brand_voice_scorer_prompt import (
+    SCORE_BLOCK_THRESHOLD, SCORE_BRAND_BAR,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -21,14 +23,15 @@ _NON_TEXT_TYPES = {"image", "video", "carousel"}  # sin copy que scorear · skip
 
 
 async def check_or_raise(user_id: str, client_id: str,
-                         content_ids: list[str], force: bool) -> bool:
-    """Aplica el gate X5 · retorna brand_voice_skipped (True = cliente sin voz
-    de marca definida → PASS con rastro, sin Haiku) · lanza 422/503 si aplica."""
+                         content_ids: list[str], force: bool) -> dict:
+    """Damage gate X5 · retorna {"skipped": bool, "below_brand_bar": bool}.
+    422 solo si algún score DAÑA la marca (<0.5) · 0.5–0.7 pasa con flag · ≥0.7
+    limpio · 503 si el scorer cae (válvula force_brand_voice)."""
     # Sin referencia de marca → no se puede medir desviación de una voz indefinida.
     # PASS con rastro (score NULL, no inventado) · determinístico, antes de Haiku.
     if not has_brand_reference(client_id):
         cache.record_skip(user_id, client_id, content_ids)
-        return True
+        return {"skipped": True, "below_brand_bar": False}
 
     rows = cache.fetch_scorables(client_id, content_ids)
     scores: dict[str, float] = {}
@@ -53,11 +56,12 @@ async def check_or_raise(user_id: str, client_id: str,
 
     if non_text:
         cache.record_skip(user_id, client_id, non_text, reason="x5_skip_non_text_content")
-    failures = {c: s for c, s in scores.items() if s < MIN_SCORE}
-    if failures and not force:
-        detail = "brand_voice_below_threshold:" + ",".join(
-            f"{c}={s:.2f}" for c, s in failures.items())
+    damaging = {c: s for c, s in scores.items() if s < SCORE_BLOCK_THRESHOLD}
+    below_bar = any(SCORE_BLOCK_THRESHOLD <= s < SCORE_BRAND_BAR for s in scores.values())
+    if damaging and not force:
+        detail = "brand_voice_damages_brand:" + ",".join(
+            f"{c}={s:.2f}" for c, s in damaging.items())
         raise HTTPException(422, detail)
-    if (failures or unavailable) and force:
-        cache.record_override(user_id, client_id, failures, unavailable)
-    return False
+    if (damaging or unavailable) and force:
+        cache.record_override(user_id, client_id, damaging, unavailable)
+    return {"skipped": False, "below_brand_bar": below_bar}

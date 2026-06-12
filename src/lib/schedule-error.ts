@@ -10,21 +10,22 @@
 export type ScheduleErrorMessage = { title: string; description: string };
 
 /**
- * 422 `brand_voice_below_threshold:cid=score,...` → mensaje que dice CUÁNTOS
- * fallaron (Ajuste 1). 503 `brand_voice_check_unavailable` → mensaje honesto
- * sin filtrar tecnicismos (no menciona el param force al usuario). null = no
- * es un error de voz de marca → cae al toast genérico.
+ * Damage gate (11 jun): 422 `brand_voice_damages_brand:cid=score,...` significa
+ * que el contenido DAÑA la voz de marca (insultos/spam/off-tone · score <0.5) →
+ * mensaje de daño + cuántos (Ajuste 1). El contenido genérico (0.5–0.7) ya NO da
+ * 422 (pasa con flag below_brand_bar). 503 `brand_voice_check_unavailable` →
+ * mensaje honesto sin filtrar el param force. null = cae al toast genérico.
  */
 export const brandVoiceScheduleError = (msg: string): ScheduleErrorMessage | null => {
-  if (msg.startsWith("brand_voice_below_threshold")) {
+  if (msg.startsWith("brand_voice_damages_brand")) {
     const list = msg.split(":")[1] ?? "";
     const count = list.split(",").filter(Boolean).length;
     const cuantos = count > 1
-      ? `${count} contenidos no pasan`
-      : "Este contenido no pasa";
+      ? `${count} contenidos dañan`
+      : "Este contenido daña";
     return {
-      title: "Filtro de voz de marca",
-      description: `${cuantos} el filtro de voz de marca del cliente (score < 0.7). Regeneralo o aprueba manualmente.`,
+      title: "Daña la voz de marca",
+      description: `${cuantos} la voz de marca del cliente (insultos, spam u off-tone severo). Regeneralo o aprueba manualmente.`,
     };
   }
   if (msg.startsWith("brand_voice_check_unavailable")) {

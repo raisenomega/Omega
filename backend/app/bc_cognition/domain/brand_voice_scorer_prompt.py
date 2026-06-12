@@ -7,7 +7,13 @@ bien encaja el contenido con la voz de la marca del cliente (P2 = activo)."""
 import json
 from typing import Any
 
-MIN_SCORE = 0.7  # X5: ningún draft pasa a scheduled con match_score < 0.7
+# Umbrales del gate X5 · damage gate de dos bandas. Calibración 11 jun (corpus
+# real afb9f578 · n=1 cliente · escala anclada): legítimo ≥0.62 (captions 0.62-0.78,
+# hashtags legítimos 0.62) · dañino ≤0.15 (insultos, spam, off-tone). La división
+# real es ~0.5, NO 0.7 → bloquear solo el daño, marcar lo genérico sin bloquear.
+# Re-validar con ≥3 clientes (DEBT-X5-CALIBRATION-MULTICLIENT).
+SCORE_BLOCK_THRESHOLD = 0.5  # < esto = DAÑA la marca (insultos/spam/off-tone) → 422
+SCORE_BRAND_BAR = 0.7        # 0.5–0.7 = genérico/no-daña → PASA con flag below_brand_bar
 
 SYSTEM = (
     "Eres el verificador de voz de marca de OmegaRaisen. Evalúas si un "

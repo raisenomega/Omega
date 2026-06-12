@@ -6,7 +6,7 @@ ESCALA ANCLADA (4 bandas + regla 'matchea aprobados → 0.7+' + ejemplo bajo) si
 en el SYSTEM, para que no se borre en un refactor y el scorer no vuelva a
 castigar contenido on-brand por matices menores."""
 from app.bc_cognition.domain.brand_voice_scorer_prompt import (
-    SYSTEM, MIN_SCORE, build_user_prompt,
+    SYSTEM, SCORE_BLOCK_THRESHOLD, SCORE_BRAND_BAR, build_user_prompt,
 )
 
 
@@ -18,8 +18,9 @@ def test_escala_anclada_presente():
     assert "matices menores" in SYSTEM            # no castigar on-brand por detalle
 
 
-def test_umbral_sigue_en_0_7():
-    assert MIN_SCORE == 0.7
+def test_umbrales_damage_gate():
+    assert SCORE_BLOCK_THRESHOLD == 0.5   # <0.5 = daña → 422
+    assert SCORE_BRAND_BAR == 0.7         # 0.5–0.7 = pasa con flag below_brand_bar
 
 
 def test_user_prompt_incluye_los_ejemplos_aprobados_reales():

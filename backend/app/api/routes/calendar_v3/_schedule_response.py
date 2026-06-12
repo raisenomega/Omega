@@ -2,7 +2,8 @@
 from app.api.routes.calendar_v3.models.calendar_models import ScheduledPostV3Response
 
 
-def to_responses(rows: list[dict], brand_voice_skipped: bool = False) -> list[ScheduledPostV3Response]:
+def to_responses(rows: list[dict], brand_voice_skipped: bool = False,
+                 below_brand_bar: bool = False) -> list[ScheduledPostV3Response]:
     return [
         ScheduledPostV3Response(
             id=str(r["id"]),
@@ -13,6 +14,7 @@ def to_responses(rows: list[dict], brand_voice_skipped: bool = False) -> list[Sc
             status=str(r.get("status") or "pending"),
             media_url=r.get("media_url"),
             brand_voice_skipped=brand_voice_skipped,
+            below_brand_bar=below_brand_bar,
         )
         for r in rows
     ]

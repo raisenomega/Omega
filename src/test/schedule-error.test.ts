@@ -7,16 +7,17 @@ describe("brandVoiceScheduleError", () => {
     expect(brandVoiceScheduleError("HTTP 500")).toBeNull();
   });
 
-  it("422 un solo contenido → singular", () => {
-    const r = brandVoiceScheduleError("brand_voice_below_threshold:c1=0.42");
+  it("422 daño · un solo contenido → singular (mensaje de DAÑO, no <0.7)", () => {
+    const r = brandVoiceScheduleError("brand_voice_damages_brand:c1=0.15");
     expect(r).not.toBeNull();
-    expect(r?.description).toContain("Este contenido no pasa");
-    expect(r?.description).toContain("score < 0.7");
+    expect(r?.description).toContain("Este contenido daña");
+    expect(r?.description).toContain("insultos, spam");
+    expect(r?.description).not.toContain("0.7");   // el 422 ya no significa "bajo el bar"
   });
 
-  it("422 varios contenidos → cuenta cuántos fallaron (Ajuste 1)", () => {
-    const r = brandVoiceScheduleError("brand_voice_below_threshold:c1=0.42,c2=0.30,c3=0.10");
-    expect(r?.description).toContain("3 contenidos no pasan");
+  it("422 daño · varios contenidos → cuenta cuántos (Ajuste 1)", () => {
+    const r = brandVoiceScheduleError("brand_voice_damages_brand:c1=0.15,c2=0.10,c3=0.05");
+    expect(r?.description).toContain("3 contenidos dañan");
   });
 
   it("503 unavailable → mensaje honesto sin filtrar el param force al usuario", () => {
