@@ -1,4 +1,4 @@
-import { Minimize2, Calendar, X } from "lucide-react";
+import { Minimize2, Calendar, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ interface Props {
   onClose: () => void;
   onConfirm: () => void;
   onRemoveItem: (i: number) => void;
+  loading?: boolean;  // BUG 11 jun · request en vuelo → botón con spinner (no parece colgado)
 }
 
 const ICON_BY_TYPE: Record<string, string> = {
@@ -26,7 +27,7 @@ const ICON_BY_TYPE: Record<string, string> = {
 const MIN_PIECES = 3;
 const NON_TEXT = ["image", "video", "hashtags"];
 
-export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onMinimize, onRestore, onClose, onConfirm, onRemoveItem }: Props) {
+export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onMinimize, onRestore, onClose, onConfirm, onRemoveItem, loading = false }: Props) {
   if (state === "closed") return null;
 
   const count = block.items.length;
@@ -81,8 +82,8 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
               </div>
             )}
           </div>
-          <Button onClick={onConfirm} disabled={!ready} className="w-full gap-1 bg-amber-500 hover:bg-amber-600 text-white">
-            <Calendar className="h-4 w-4" />Agendar bloque
+          <Button onClick={onConfirm} disabled={!ready || loading} className="w-full gap-1 bg-amber-500 hover:bg-amber-600 text-white">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calendar className="h-4 w-4" />}{loading ? "Agendando…" : "Agendar bloque"}
           </Button>
         </div>
       </Card>

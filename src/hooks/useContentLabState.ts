@@ -176,6 +176,7 @@ export function useContentLabState(activeBusinessId: string | null) {
     form, setForm, variations, setVariations, results, setResults,
     block, modalState, setModalState, scheduledAt, setScheduledAt,
     expandedResult, setExpandedResult, slots: Math.max(4, results.length), isPending,
+    scheduling: scheduleBlock.isPending,  // BUG 11 jun · feedback de progreso en "Agendar bloque"
     handleGenerate, handleAgendar, handleRemoveItem, handleSave, handleDownload, handleConfirm, handleResearch, handleCancelVideo,
     isResearching: research.isPending, appendSnippetToTopic,
   };

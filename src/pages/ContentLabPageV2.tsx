@@ -57,7 +57,7 @@ export default function ContentLabPageV2() {
         onAgendar={s.handleAgendar} onSave={s.handleSave} onDownload={s.handleDownload} />
       <ScheduleModalV2 state={s.modalState} block={s.block} scheduledAt={s.scheduledAt} setScheduledAt={s.setScheduledAt}
         onMinimize={() => s.setModalState("minimized")} onRestore={() => s.setModalState("open")}
-        onClose={() => s.setModalState("closed")} onConfirm={s.handleConfirm} onRemoveItem={s.handleRemoveItem} />
+        onClose={() => s.setModalState("closed")} onConfirm={s.handleConfirm} onRemoveItem={s.handleRemoveItem} loading={s.scheduling} />
     </div>
   );
 }
