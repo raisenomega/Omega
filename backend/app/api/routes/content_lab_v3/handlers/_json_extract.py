@@ -11,12 +11,19 @@ _JSON_FENCE_RE = re.compile(r"^```(?:json)?\s*|\s*```$", re.MULTILINE)
 
 
 def extract_draft(raw: str) -> str:
-    """Extrae 'draft' · prueba cleaned + substring entre llaves · fallback raw."""
+    """Extrae 'draft' · prueba cleaned + substring entre llaves + REPAIR de
+    newlines literales que el modelo mete dentro de los strings (JSON inválido
+    para json.loads estricto · BUG 11 jun) · fallback raw. Así el bloque
+    pre-flight/meta NO se filtra como caption cuando el modelo lo antepone."""
     cleaned = _JSON_FENCE_RE.sub("", raw).strip()
     first, last = cleaned.find("{"), cleaned.rfind("}")
     candidates = [cleaned]
     if first >= 0 and last > first:
-        candidates.append(cleaned[first:last + 1])
+        region = cleaned[first:last + 1]
+        candidates.append(region)
+        # wrap del modelo = newlines LITERALES (los \n intencionales son escapes
+        # de 2 chars, no se tocan) → colapsar a espacio vuelve el JSON parseable.
+        candidates.append(region.replace("\n", " "))
     for c in candidates:
         try:
             data = json.loads(c)
