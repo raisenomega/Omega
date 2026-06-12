@@ -22,9 +22,10 @@ from app.api.routes.calendar_v3 import _brand_voice_gate as g
 
 
 def _row(cid, *, text="hola marca", score=None, scored_at=None,
-         updated_at="2026-06-10T00:00:00+00:00"):
-    return {"id": cid, "generated_text": text, "brand_voice_score": score,
-            "brand_voice_scored_at": scored_at, "updated_at": updated_at}
+         updated_at="2026-06-10T00:00:00+00:00", content_type="text"):
+    return {"id": cid, "content_type": content_type, "generated_text": text,
+            "brand_voice_score": score, "brand_voice_scored_at": scored_at,
+            "updated_at": updated_at}
 
 
 def _run(content_ids, *, rows, score_result, force=False, has_reference=True):
@@ -113,6 +114,19 @@ def test_cache_stale_por_edicion_recalcula():
     assert out is False
     assert calls["score"] == 1
     assert calls["persist"] == [("c1", 0.80)]
+
+
+def test_pieza_no_texto_se_saltea_sin_fallar_el_bloque():
+    # imagen/video/carousel no tienen copy → skip con rastro · el bloque NO falla
+    # por ellas · las piezas de TEXTO sí se scorean (11 jun · hipotesis (a) owner)
+    rows = {"cap": _row("cap", score=None),
+            "img": _row("img", content_type="image", text="")}
+    out, calls = _run(["cap", "img"], rows=rows,
+                      score_result=(True, {"score": 0.88, "reasons": []}, None))
+    assert out is False
+    assert calls["score"] == 1                 # solo el caption · la imagen NO se scoreo
+    assert calls["persist"] == [("cap", 0.88)]
+    assert len(calls["skip"]) == 1             # rastro x5_skip_non_text_content
 
 
 def test_sin_referencia_de_marca_pasa_con_rastro_sin_haiku():

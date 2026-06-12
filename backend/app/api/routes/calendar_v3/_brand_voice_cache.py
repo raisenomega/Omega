@@ -13,7 +13,7 @@ from app.infrastructure.supabase_service import get_supabase_service
 
 logger = logging.getLogger(__name__)
 
-_COLS = "id, generated_text, brand_voice_score, brand_voice_scored_at, updated_at"
+_COLS = "id, content_type, generated_text, brand_voice_score, brand_voice_scored_at, updated_at"
 
 
 def _sb():
@@ -46,8 +46,7 @@ def is_fresh(row: dict[str, Any]) -> bool:
 
 
 def persist_score(content_id: str, score: float) -> None:
-    """RPC atómica: score + scored_at=now() en una transacción (scored_at ==
-    updated_at del trigger → cache hit recién escrito · solo invalida al editar)."""
+    """RPC atómica · score + scored_at=now() en 1 transacción (== updated_at del trigger)."""
     _sb().rpc("mark_brand_voice_scored",
               {"p_content_id": content_id, "p_score": score}).execute()
 
@@ -70,6 +69,7 @@ def record_override(user_id: str, client_id: str,
            {"below_threshold": failures, "unavailable": unavailable})
 
 
-def record_skip(user_id: str, client_id: str, content_ids: list[str]) -> None:
-    """PASS por marca no definida (score NULL · nunca inventado · P1/G9) → agent_memory."""
-    _audit(user_id, client_id, "x5_pass_no_brand_reference", {"content_ids": content_ids})
+def record_skip(user_id: str, client_id: str, content_ids: list[str],
+                reason: str = "x5_pass_no_brand_reference") -> None:
+    """PASS sin scoring (sin corpus o pieza no-texto · score NULL · P1/G9) → agent_memory."""
+    _audit(user_id, client_id, reason, {"content_ids": content_ids})

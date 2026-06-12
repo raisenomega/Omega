@@ -17,6 +17,7 @@ _UNAVAILABLE_DETAIL = (
     "brand_voice_check_unavailable · usa force_brand_voice=true para agendar "
     "bajo responsabilidad humana (queda auditado)"
 )
+_NON_TEXT_TYPES = {"image", "video", "carousel"}  # sin copy que scorear · skip con rastro
 
 
 async def check_or_raise(user_id: str, client_id: str,
@@ -32,8 +33,12 @@ async def check_or_raise(user_id: str, client_id: str,
     rows = cache.fetch_scorables(client_id, content_ids)
     scores: dict[str, float] = {}
     unavailable: list[str] = []
+    non_text: list[str] = []
     for cid in content_ids:
         row = rows.get(cid)
+        if row and row.get("content_type") in _NON_TEXT_TYPES:
+            non_text.append(cid)   # imagen/video/carousel · no tiene copy → skip
+            continue
         if row and cache.is_fresh(row):
             scores[cid] = float(row["brand_voice_score"])
             continue
@@ -46,6 +51,8 @@ async def check_or_raise(user_id: str, client_id: str,
         scores[cid] = val["score"]
         cache.persist_score(cid, val["score"])
 
+    if non_text:
+        cache.record_skip(user_id, client_id, non_text, reason="x5_skip_non_text_content")
     failures = {c: s for c, s in scores.items() if s < MIN_SCORE}
     if failures and not force:
         detail = "brand_voice_below_threshold:" + ",".join(
