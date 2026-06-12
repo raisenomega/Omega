@@ -48,9 +48,9 @@ async def schedule_post_v3(
     if missing:
         raise HTTPException(409, f"content_not_found:{','.join(missing)}")
 
-    # X5 · gate brand voice draft->scheduled (P2 con dientes) · 422 si < 0.7 ·
-    # 503 honesto si el scorer cae (con válvula force_brand_voice) · override auditado.
-    await brand_gate.check_or_raise(user_id, request.client_id, request.content_ids, request.force_brand_voice)
+    # X5 · gate brand voice (422 <0.7 · 503 con válvula force · override auditado ·
+    # skipped=cliente sin voz de marca → PASS con rastro)
+    brand_voice_skipped = await brand_gate.check_or_raise(user_id, request.client_id, request.content_ids, request.force_brand_voice)
 
     timestamps = space_timestamps(request.scheduled_for, n)
     rows_to_insert = [
@@ -72,4 +72,4 @@ async def schedule_post_v3(
         raise HTTPException(500, f"schedule_bulk_failed:{type(e).__name__}:{str(e)[:200]}")
 
     logger.info(f"V3 bulk_schedule {n} rows · user={user_id} · client={request.client_id} · platform={request.platform}")
-    return to_responses(rows)
+    return to_responses(rows, brand_voice_skipped)

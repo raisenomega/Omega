@@ -8,7 +8,7 @@ import logging
 from fastapi import HTTPException
 
 from app.api.routes.calendar_v3 import _brand_voice_cache as cache
-from app.bc_cognition.application.score_brand_voice import score_brand_voice
+from app.bc_cognition.application.score_brand_voice import score_brand_voice, has_brand_reference
 from app.bc_cognition.domain.brand_voice_scorer_prompt import MIN_SCORE
 
 logger = logging.getLogger(__name__)
@@ -20,8 +20,15 @@ _UNAVAILABLE_DETAIL = (
 
 
 async def check_or_raise(user_id: str, client_id: str,
-                         content_ids: list[str], force: bool) -> dict[str, float]:
-    """Aplica el gate X5 · retorna {content_id: score} o lanza 422/503."""
+                         content_ids: list[str], force: bool) -> bool:
+    """Aplica el gate X5 · retorna brand_voice_skipped (True = cliente sin voz
+    de marca definida → PASS con rastro, sin Haiku) · lanza 422/503 si aplica."""
+    # Sin referencia de marca → no se puede medir desviación de una voz indefinida.
+    # PASS con rastro (score NULL, no inventado) · determinístico, antes de Haiku.
+    if not has_brand_reference(client_id):
+        cache.record_skip(user_id, client_id, content_ids)
+        return True
+
     rows = cache.fetch_scorables(client_id, content_ids)
     scores: dict[str, float] = {}
     unavailable: list[str] = []
@@ -46,4 +53,4 @@ async def check_or_raise(user_id: str, client_id: str,
         raise HTTPException(422, detail)
     if (failures or unavailable) and force:
         cache.record_override(user_id, client_id, failures, unavailable)
-    return scores
+    return False

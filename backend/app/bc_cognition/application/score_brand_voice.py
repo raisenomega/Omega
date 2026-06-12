@@ -18,6 +18,19 @@ logger = logging.getLogger(__name__)
 _UNAVAILABLE = "brand_voice_check_unavailable"
 
 
+def has_brand_reference(client_id: str) -> bool:
+    """Determinístico (sin Haiku) · True si el cliente tiene voz de marca
+    definida (corpus, keywords o ejemplos). False → el gate X5 no puede medir
+    desviación de una voz indefinida → PASS con rastro. Ante error de lectura
+    devuelve True (fail-safe hacia proteger: que el scorer decida/503)."""
+    try:
+        ref = build_brand_voice_summary(client_id)
+    except Exception as e:
+        logger.warning("has_brand_reference: ref load failed (client=%s): %s", client_id, e)
+        return True
+    return bool(ref.get("corpus_count") or ref.get("top_keywords") or ref.get("latest_approvals"))
+
+
 def _parse_score(text: str) -> Optional[dict[str, Any]]:
     """Extrae {score, reasons} del JSON del modelo · None si no parsea (I7)."""
     try:

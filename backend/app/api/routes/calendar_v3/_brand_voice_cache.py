@@ -1,10 +1,9 @@
-"""IO del gate X5 · cache del score + persistencia + audit del override.
+"""IO del gate X5 · cache del score + persistencia + audit.
 
-cache (refinamiento 1): el score vive en content_lab_generated.brand_voice_score
-+ brand_voice_scored_at. Fresco si scored_at >= updated_at (no editado tras el
-scoring). persist vía RPC mark_brand_voice_scored (now() estable por transacción
-== updated_at del trigger 00001 → el write NO se auto-invalida). audit del
-override humano → agent_memory (M1 · tabla existente · sin tabla nueva · P5)."""
+cache (refinamiento 1): score en content_lab_generated.brand_voice_score +
+brand_voice_scored_at · fresco si scored_at >= updated_at. persist vía RPC
+mark_brand_voice_scored (now() estable por transacción == updated_at del trigger
+00001 → no se auto-invalida). audit → agent_memory (M1 · sin tabla nueva · P5)."""
 import json
 import logging
 from datetime import datetime
@@ -53,14 +52,24 @@ def persist_score(content_id: str, score: float) -> None:
               {"p_content_id": content_id, "p_score": score}).execute()
 
 
-def record_override(user_id: str, client_id: str,
-                    failures: dict[str, float], unavailable: list[str]) -> None:
-    """Override humano del gate → agent_memory (decisión auditada · P5)."""
+def _audit(user_id: str, client_id: str, decision: str, payload: dict) -> None:
+    """Rastro de una decisión del gate X5 → agent_memory (M1 · P5 · sin tabla nueva)."""
     _sb().table("agent_memory").insert({
         "user_id": user_id, "client_id": client_id,
         "agent_code": "brand_voice_checker", "memory_type": "episodic",
-        "context": "schedule force override · brand_voice gate X5",
-        "decision": "brand_voice_override_forced",
-        "reasoning": json.dumps({"below_threshold": failures, "unavailable": unavailable}),
+        "context": f"schedule X5 · {decision}",
+        "decision": decision, "reasoning": json.dumps(payload),
         "confidence": 7, "was_correct": None,
     }).execute()
+
+
+def record_override(user_id: str, client_id: str,
+                    failures: dict[str, float], unavailable: list[str]) -> None:
+    """Override humano del gate (force) → agent_memory."""
+    _audit(user_id, client_id, "brand_voice_override_forced",
+           {"below_threshold": failures, "unavailable": unavailable})
+
+
+def record_skip(user_id: str, client_id: str, content_ids: list[str]) -> None:
+    """PASS por marca no definida (score NULL · nunca inventado · P1/G9) → agent_memory."""
+    _audit(user_id, client_id, "x5_pass_no_brand_reference", {"content_ids": content_ids})
