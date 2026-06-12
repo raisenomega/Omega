@@ -19,6 +19,7 @@ from app.api.routes.content_lab_v3._prompt_vault_selector import (
 from app.api.routes.content_lab_v3.handlers._system_builder import build_rafa_system
 from app.api.routes.content_lab_v3.handlers._variations import generate_variations, resolve_triples
 from app.bc_billing.application.credits_service import check_budget
+from app.bc_billing.domain.test_accounts import is_unrestricted_test_account
 from app.api.routes.content_lab_v3.models.content_lab_models import (
     GenerateTextRequest, GenerateTextResponse,
 )
@@ -59,7 +60,10 @@ async def generate_text(
     request.topic = st.clean_text
 
     effective = len(request.variation_labels) if request.variation_labels else request.variations
-    if effective > 1 and repo.find_client_plan(client_id) not in _PRO_PLANS:
+    # BUG 11 jun: bypass por EMAIL logueado (no por plan del client target · un
+    # reseller test genera para clients sin pro). Política ESTADO §1: 3 cuentas test.
+    if (effective > 1 and not is_unrestricted_test_account(user.get("email"))
+            and repo.find_client_plan(client_id) not in _PRO_PLANS):
         raise HTTPException(status_code=403, detail="variations_require_pro_plan")
 
     ctx = repo.find_client_context(client_id)
