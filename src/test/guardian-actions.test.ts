@@ -2,7 +2,15 @@
 // jsdom provee `localStorage` · `@/lib/guardian/actions` importa transitivamente
 // api-client → integrations/supabase/client.ts (toca localStorage en load) · en
 // env `node` reventaba con "ReferenceError: localStorage is not defined" (P0-3).
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// CI no tiene .env · integrations/supabase/client.ts llama createClient(VITE_SUPABASE_URL)
+// en MODULE-LOAD → "supabaseUrl is required" cuando este test importa transitivamente el
+// client (vía @/lib/guardian/actions → api-client). Este test solo usa expiresFromPreset
+// (función PURA de fechas) · mockeamos el client para NO importar el real y NO depender de
+// env alguna (root fix · mata la dependencia · reemplaza el parche de env dummy del workflow).
+vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
+
 import { expiresFromPreset } from "@/lib/guardian/actions";
 
 describe("guardian expiresFromPreset", () => {
