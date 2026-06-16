@@ -11,6 +11,7 @@ from fastapi import APIRouter, Header, HTTPException
 from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.content_v3 import _content_reader as reader, _content_repository as repo
 from app.api.routes.content_v3._supervised_approve import maybe_schedule_on_approve
+from app.api.routes.calendar_v3 import _brand_voice_gate as brand_gate
 from app.api.routes.content_v3.models.content_models import SaveContentRequest
 
 router = APIRouter()
@@ -31,6 +32,11 @@ async def save_content(
         raise HTTPException(status_code=403, detail="access_denied")
 
     was_approved = item.get("status") == "approved"
+    # Gap supervisado cerrado (11 jun): el approve pasa por el MISMO gate X5 que el
+    # block schedule · daño (<0.5) → 422 ANTES de aprobar/agendar/aprender (no más
+    # puerta trasera). No-texto/sin-corpus → skip · cache reusa score si ya existe.
+    if request.is_saved and not was_approved:
+        await brand_gate.check_or_raise(user["id"], str(item["client_id"]), [content_id], False)
     new_status = "approved" if request.is_saved else "draft"
     await repo.safe_insert("update_status", repo.update_status, content_id, new_status)
 
