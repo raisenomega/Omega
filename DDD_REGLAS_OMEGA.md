@@ -334,7 +334,7 @@ ENFORCE        Pre-push hook + CI/CD
 
 Cambio requiere test que falla primero · acciones prohibidas hardcoded · RLS
 en todas las tablas con user_id/client_id/reseller_id/org_id · cero secretos
-hardcoded · validación de entrada con Result · pre-push 11 checks · cero
+hardcoded · validación de entrada con Result · pre-push 15 checks · cero
 mock/fake/dummy en producción · permisos mínimos por subagente.
 
 ---
@@ -520,8 +520,8 @@ persona_nova vía _context_builder). Leerlas NO es modificarlas. Lo prohibido es
 
 # SCRIPT DE VERIFICACIÓN ÚNICA
 
-Ver `scripts/validate-before-push.sh` para implementación completa con 11 checks
-(numerados 0/11 a 10/11 · `TOTAL=11` en el script):
+Ver `scripts/validate-before-push.sh` para implementación completa con 15 checks
+(numerados 0/15 a 14/15 · `TOTAL=15` en el script · autorizado owner 16 jun 2026):
 
 ```
 0.  Identidad git (bloqueante · raisenomega / raisenagencypr@gmail.com)
@@ -531,10 +531,15 @@ Ver `scripts/validate-before-push.sh` para implementación completa con 11 check
 4.  G6:    Sin secretos hardcoded
 5.  G9:    Sin mock/fake/dummy en producción
 6.  G2:    SHA1 de limits_omega.py intacto
-7.  C4:    Archivos ≤100 líneas (error) / ≤75 líneas (warning)
+7.  C4:    Archivos ≤100 líneas (error) / ≤75 líneas (warning) + ratchet C4 (P10.3 ·
+           >100L en dirs de gracia no crece · scripts/c4-baseline.txt)
 8.  T4:    TypeScript compila sin errores
-9.  T5:    Tests pasando (Vitest + pytest)
+9.  T5:    Tests pasando (Vitest + pytest · por exit-code)
 10. X2:    SHA1 personas (NOVA/ARIA) intacto
+11. P0-1:  Anti crons duplicados (multi-worker + scheduler in-process · Fase 1)
+12. P0-4:  pip-audit (CVEs en requirements · allowlist en scripts/pip-audit-allowlist.txt)
+13. P9:    Strings de modelo centralizados (claude-* fuera de routing_table → warning)
+14. P10.5: mypy --strict bc_cognition + bc_billing (warning · DEBT-MYPY-BASELINE)
 ```
 
 **NO están en el gate pre-push ejecutable** (el doc los listaba antes, pero el script
@@ -606,7 +611,7 @@ INFRAESTRUCTURA DE ENFORCEMENT
 [X] scripts/validate-before-push.sh
 [X] scripts/verify-guardrails.sh
 [X] scripts/bootstrap.sh
-[X] pre-push hook instalado (`.git/hooks/pre-push` = validate-before-push.sh · 13 checks · 11 jun)
+[X] pre-push hook instalado (`.git/hooks/pre-push` = validate-before-push.sh · 15 checks · 16 jun · autorizado owner)
     + GitHub Action `contract-gate.yml` (red NO salteable con --no-verify · P1-1 Fase 2)
 [ ] tsconfig.json con strict: true + 9 flags
 
