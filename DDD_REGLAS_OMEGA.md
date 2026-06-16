@@ -609,7 +609,8 @@ INFRAESTRUCTURA DE ENFORCEMENT
 [X] scripts/validate-before-push.sh
 [X] scripts/verify-guardrails.sh
 [X] scripts/bootstrap.sh
-[ ] .husky/pre-push  (configurar en bootstrap)
+[X] pre-push hook instalado (`.git/hooks/pre-push` = validate-before-push.sh · 13 checks · 11 jun)
+    + GitHub Action `contract-gate.yml` (red NO salteable con --no-verify · P1-1 Fase 2)
 [ ] tsconfig.json con strict: true + 9 flags
 
 ═══════════════════════════════════════════════════════════════

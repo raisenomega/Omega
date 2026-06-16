@@ -1,0 +1,46 @@
+name: Contract Gate
+
+# Red que NO se puede saltar con --no-verify (el hook local sí · este Action no · P1-1).
+# Corre los checks ejecutables del contrato (DDD_REGLAS_OMEGA) que aplican en CI:
+# pytest + pip-audit (backend) · tsc + vitest (frontend). Saltamos check 0 (identidad
+# git local) y el de venv (check 9 usa backend/venv) porque no aplican en CI.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install backend deps
+        run: pip install -r backend/requirements.txt
+      - name: Pytest (T5)
+        run: cd backend && python -m pytest -q
+      - name: pip-audit (check 13 · allowlist en archivo · bloquea CVE fuera de ella)
+        run: |
+          IGNORE=()
+          while read -r line; do
+            line="${line%%#*}"; id=$(echo "$line" | awk '{print $1}')
+            [ -n "$id" ] && IGNORE+=(--ignore-vuln "$id")
+          done < scripts/pip-audit-allowlist.txt
+          python -m pip_audit -r backend/requirements.txt "${IGNORE[@]}"
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps
+        run: npm ci || npm install
+      - name: TypeScript strict (T4)
+        run: npx tsc --noEmit
+      - name: Vitest (T5)
+        run: npm test --silent
