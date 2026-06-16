@@ -5,8 +5,9 @@
 # ═══════════════════════════════════════════════════════════════════
 
 # ─── Framework ────────────────────────────────────────────────────
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
+fastapi==0.137.1            # bump P8b (Fase 2) · 0.109.0→0.137.1 · cierra PYSEC-2024-38 + CVEs starlette
+uvicorn[standard]==0.49.0   # bump P8b · acorde a fastapi 0.137.x
+starlette==1.3.1            # pin explícito · resuelto por fastapi 0.137.1 (starlette 1.x) · cierra los 7 CVEs starlette
 pydantic==2.11.7             # bump 23 may 2026 · requerido por realtime 2.7.0 (sub-dep de supabase 2.18.1)
 pydantic-settings==2.6.1
 
