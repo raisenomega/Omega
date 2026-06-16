@@ -16,7 +16,7 @@ from app.api.rate_limit_middleware import RateLimitMiddleware
 from app.api.security_headers_middleware import SecurityHeadersMiddleware  # Capa 3 (Red y HTTP)
 from app.api.error_capture_middleware import SentinelErrorCaptureMiddleware  # Capa 9
 from app.api.request_timing_middleware import RequestTimingMiddleware  # Capa 10
-from app.config import settings
+from app.config import settings, resolve_cors_origins
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from sqlalchemy import create_engine
@@ -109,9 +109,9 @@ app.add_middleware(SentinelErrorCaptureMiddleware)
 app.add_middleware(RateLimitMiddleware, limit_per_minute=settings.rate_limit_per_minute)
 
 # Configure CORS · lee BACKEND_CORS_ORIGINS (CSV) via settings.cors_origins_list.
-# Fallback ["*"] solo si la env var está vacía (dev local). El browser rechaza
-# allow_credentials=True con wildcard "*" · por eso se desactiva en ese caso.
-_cors_origins = settings.cors_origins_list or ["*"]
+# P1-7 fail-secure: vacía + production → RuntimeError en boot (jamás wildcard en
+# prod). Vacía + dev → ["*"]. El browser rechaza allow_credentials=True con "*".
+_cors_origins = resolve_cors_origins(settings.cors_origins_list, settings.environment)
 _allow_creds = _cors_origins != ["*"]
 app.add_middleware(
     CORSMiddleware,
