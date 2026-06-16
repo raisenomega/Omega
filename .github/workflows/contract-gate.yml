@@ -33,6 +33,14 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
+    # CI no tiene .env. integrations/supabase/client.ts (AUTOGENERADO · "do not edit")
+    # llama createClient(VITE_SUPABASE_URL, ...) en module-load → "supabaseUrl is required"
+    # cuando un test importa transitivamente el client (p.ej. guardian-actions.test vía
+    # api-client). Valores DUMMY: los tests testean funciones puras · NO hacen llamadas
+    # reales a Supabase · solo necesitan que createClient construya sin reventar.
+    env:
+      VITE_SUPABASE_URL: https://placeholder.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: placeholder-anon-key-ci
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
