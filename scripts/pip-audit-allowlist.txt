@@ -33,6 +33,13 @@ CVE-2026-41168  # pypdf · DEBT-PYPDF-BUMP
 CVE-2026-41312  # pypdf · DEBT-PYPDF-BUMP
 CVE-2026-41313  # pypdf · DEBT-PYPDF-BUMP
 CVE-2026-41314  # pypdf · DEBT-PYPDF-BUMP
+CVE-2026-48155  # pypdf · DEBT-PYPDF-BUMP (nuevo 16 jun)
+CVE-2026-48156  # pypdf · DEBT-PYPDF-BUMP (nuevo 16 jun)
+CVE-2026-48735  # pypdf · DEBT-PYPDF-BUMP (nuevo 16 jun)
+CVE-2026-49460  # pypdf · DEBT-PYPDF-BUMP (nuevo 16 jun)
+CVE-2026-49461  # pypdf · DEBT-PYPDF-BUMP (nuevo 16 jun)
+CVE-2026-54530  # pypdf · DEBT-PYPDF-BUMP (nuevo 16 jun)
+CVE-2026-54531  # pypdf · DEBT-PYPDF-BUMP (nuevo 16 jun)
 #
 # ─── pillow 10.4.0 → 12.2.0 · salto MAYOR · usada en logo overlay (imagen+video)
 #     · DEBT-PILLOW-BUMP (10→12 · verificar API paste/alpha de Pillow) · 10 jun 2026
@@ -50,4 +57,8 @@ PYSEC-2026-87  # lxml · DEBT-LXML-BUMP
 CVE-2024-47874  # starlette · DEBT-FASTAPI-BUMP (Fase 2 P8)
 CVE-2025-54121  # starlette · DEBT-FASTAPI-BUMP (Fase 2 P8)
 PYSEC-2026-161  # starlette · DEBT-FASTAPI-BUMP (Fase 2 P8)
+CVE-2026-48817  # starlette · DEBT-FASTAPI-BUMP (nuevo 16 jun)
+CVE-2026-48818  # starlette · DEBT-FASTAPI-BUMP (nuevo 16 jun)
+CVE-2026-54282  # starlette · DEBT-FASTAPI-BUMP (nuevo 16 jun)
+CVE-2026-54283  # starlette · DEBT-FASTAPI-BUMP (nuevo 16 jun)
 PYSEC-2024-38   # fastapi   · DEBT-FASTAPI-BUMP (Fase 2 P8)
