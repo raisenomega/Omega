@@ -96,18 +96,5 @@ class Settings(BaseSettings):
         extra = "ignore"  # DEBT-027 · drops vite_*/db_url/etc. orphan env vars
 
 
-def resolve_cors_origins(origins: List[str], environment: str) -> List[str]:
-    """Fail-secure (P1-7): orígenes vacíos en PRODUCCIÓN → raise (jamás wildcard
-    en prod · un typo en la env var abriría CORS al mundo). Dev → ['*'] explícito."""
-    if origins:
-        return origins
-    if environment == "production":
-        raise RuntimeError(
-            "BACKEND_CORS_ORIGINS vacía en producción · fail-secure: configurá los "
-            "orígenes permitidos (CSV) en la env var · jamás wildcard en prod."
-        )
-    return ["*"]
-
-
 # Global settings instance
 settings = Settings()

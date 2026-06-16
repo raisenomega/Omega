@@ -16,7 +16,8 @@ from app.api.rate_limit_middleware import RateLimitMiddleware
 from app.api.security_headers_middleware import SecurityHeadersMiddleware  # Capa 3 (Red y HTTP)
 from app.api.error_capture_middleware import SentinelErrorCaptureMiddleware  # Capa 9
 from app.api.request_timing_middleware import RequestTimingMiddleware  # Capa 10
-from app.config import settings, resolve_cors_origins
+from app.config import settings
+from app._cors_policy import resolve_cors_origins
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from sqlalchemy import create_engine

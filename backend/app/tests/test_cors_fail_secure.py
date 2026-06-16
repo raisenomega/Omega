@@ -4,7 +4,7 @@ Orígenes vacíos en producción → RuntimeError en boot (jamás wildcard en pr
 un typo en la env var abriría CORS al mundo). Dev → ['*']. Con orígenes → tal cual."""
 import pytest
 
-from app.config import resolve_cors_origins
+from app._cors_policy import resolve_cors_origins
 
 
 def test_prod_vacia_raise():
