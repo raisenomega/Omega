@@ -10,6 +10,7 @@ from app.agents.content_creator.text_generation import (
     generate_hashtags,
     generate_video_script
 )
+from app.bc_cognition.domain.routing_table import MODEL_SONNET
 from app.agents.content_creator.image_generation import generate_image
 
 logger = logging.getLogger(__name__)
@@ -28,7 +29,7 @@ class ContentCreatorAgent(BaseAgent):
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.CONTENT_CREATOR,
-            model="claude-sonnet-4-6",
+            model=MODEL_SONNET,
             tools=["text_generation", "image_generation", "hashtag_research"]
         )
 

@@ -6,6 +6,7 @@ import logging
 import os
 from typing import Optional, Dict, Any
 from anthropic import AsyncAnthropic
+from app.bc_cognition.domain.routing_table import MODEL_SONNET
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ class AIProviders:
     DIRECTORS = {
         "NOVA": {
             "provider": "anthropic",
-            "model": "claude-sonnet-4-6",
+            "model": MODEL_SONNET,
             "description": "Claude Sonnet 4.6 — OMEGA Chief Director",
             "strengths": ["Long-form", "Analysis", "Strategy"],
             "default": True,

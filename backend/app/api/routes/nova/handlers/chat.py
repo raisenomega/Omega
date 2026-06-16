@@ -16,6 +16,7 @@ from ._memory_handler import extract_mentioned_agents, save_conversation_memory_
 from ._chat_helpers import ChatMessage, ChatRequest, extract_active_client
 from app.bc_cognition.domain.canonical_agents import resolve_alias, is_inactive_alias, CANONICAL_AGENTS
 from app.api.routes.clients_v3 import _clients_reader as clients_reader
+from app.bc_cognition.domain.routing_table import MODEL_SONNET
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +141,7 @@ async def handle_chat(request: ChatRequest, user: Optional[dict] = None) -> Dict
                         "content-type": "application/json",
                     },
                     json={
-                        "model": "claude-sonnet-4-6",
+                        "model": MODEL_SONNET,
                         "max_tokens": 8192,
                         "system": enhanced_system,
                         "messages": messages,

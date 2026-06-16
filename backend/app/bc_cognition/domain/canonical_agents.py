@@ -7,18 +7,19 @@ Dominio puro (A2): sin imports externos. Modelos alineados a routing_table.
 """
 from typing import Final, Optional
 from types import MappingProxyType
+from app.bc_cognition.domain.routing_table import MODEL_SONNET, MODEL_OPUS
 
 CANONICAL_AGENTS: Final[MappingProxyType] = MappingProxyType({
-    "nova_chat":         {"name": "NOVA",            "model": "claude-opus-4-7",   "role": "Cerebro central · orquesta · solo Ibrain", "status": "operational"},
-    "orchestrator":      {"name": "ORCHESTRATOR",    "model": "claude-opus-4-7",   "role": "Ejecuta chains multi-agente", "status": "operational"},
-    "content_creator":   {"name": "CONTENT CREATOR", "model": "claude-sonnet-4-6", "role": "Motor de contenido (texto/imagen/video)", "status": "operational"},
-    "strategy":          {"name": "STRATEGY",        "model": "claude-sonnet-4-6", "role": "Plan, timing, tendencias, competidores", "status": "operational"},
-    "brand_voice":       {"name": "BRAND VOICE",     "model": "claude-sonnet-4-6", "role": "Valida consistencia de marca (7 gates)", "status": "operational"},
-    "analytics":         {"name": "ANALYTICS",       "model": "claude-sonnet-4-6", "role": "Datos, insights, cierra loop was_correct", "status": "operational"},
-    "crisis_manager":    {"name": "CRISIS MANAGER",  "model": "claude-opus-4-7",   "role": "Clasifica crisis · draft · NUNCA publica", "status": "operational"},
-    "sentinel_security": {"name": "SENTINEL",        "model": "claude-opus-4-7",   "role": "Seguridad infra · bloquea deploy <95", "status": "operational"},
-    "sophia":            {"name": "SOPHIA",          "model": "claude-opus-4-7",   "role": "Meta-agente · crea agentes con evidencia", "status": "latent"},
-    "guardian":          {"name": "GUARDIAN",        "model": "claude-sonnet-4-6", "role": "Seguridad de comportamiento (humanos)", "status": "subsystem"},
+    "nova_chat":         {"name": "NOVA",            "model": MODEL_OPUS,   "role": "Cerebro central · orquesta · solo Ibrain", "status": "operational"},
+    "orchestrator":      {"name": "ORCHESTRATOR",    "model": MODEL_OPUS,   "role": "Ejecuta chains multi-agente", "status": "operational"},
+    "content_creator":   {"name": "CONTENT CREATOR", "model": MODEL_SONNET, "role": "Motor de contenido (texto/imagen/video)", "status": "operational"},
+    "strategy":          {"name": "STRATEGY",        "model": MODEL_SONNET, "role": "Plan, timing, tendencias, competidores", "status": "operational"},
+    "brand_voice":       {"name": "BRAND VOICE",     "model": MODEL_SONNET, "role": "Valida consistencia de marca (7 gates)", "status": "operational"},
+    "analytics":         {"name": "ANALYTICS",       "model": MODEL_SONNET, "role": "Datos, insights, cierra loop was_correct", "status": "operational"},
+    "crisis_manager":    {"name": "CRISIS MANAGER",  "model": MODEL_OPUS,   "role": "Clasifica crisis · draft · NUNCA publica", "status": "operational"},
+    "sentinel_security": {"name": "SENTINEL",        "model": MODEL_OPUS,   "role": "Seguridad infra · bloquea deploy <95", "status": "operational"},
+    "sophia":            {"name": "SOPHIA",          "model": MODEL_OPUS,   "role": "Meta-agente · crea agentes con evidencia", "status": "latent"},
+    "guardian":          {"name": "GUARDIAN",        "model": MODEL_SONNET, "role": "Seguridad de comportamiento (humanos)", "status": "subsystem"},
 })
 
 # Community-facing → engagement (code operativo real · clase engagement_agent.py · routing_table sonnet).

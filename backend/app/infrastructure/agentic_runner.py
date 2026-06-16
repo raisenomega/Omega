@@ -8,6 +8,7 @@ import time
 import os
 from typing import Any
 import anthropic
+from app.bc_cognition.domain.routing_table import MODEL_SONNET
 
 # langsmith disabled · DEBT-012 — no-op decorator preserva @traceable sin tracing
 def traceable(*_args: object, **_kwargs: object):
@@ -20,7 +21,7 @@ from app.infrastructure.tool_executor import ToolExecutor
 from app.infrastructure.security.output_filter import OutputFilter
 from app.infrastructure.security.injection_detector import InjectionDetector
 
-CLAUDE_MODEL  = "claude-sonnet-4-6"
+CLAUDE_MODEL  = MODEL_SONNET
 MAX_TOKENS    = 4096
 MAX_ITERATIONS = 10
 

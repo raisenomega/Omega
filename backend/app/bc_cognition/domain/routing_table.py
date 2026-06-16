@@ -14,11 +14,12 @@ from typing import Final, Literal
 
 ModelTier = Literal["haiku", "sonnet", "opus"]
 
-# ─── Model IDs canónicos (verificados con docs Anthropic mayo 2026) ───
+# ─── Model IDs canónicos · fuente única de strings de modelo (P9 · verif. mayo 2026) ───
+MODEL_HAIKU: Final[str] = "claude-haiku-4-5-20251001"
+MODEL_SONNET: Final[str] = "claude-sonnet-4-6"
+MODEL_OPUS: Final[str] = "claude-opus-4-7"
 MODEL_IDS: Final[MappingProxyType] = MappingProxyType({
-    "haiku":  "claude-haiku-4-5-20251001",
-    "sonnet": "claude-sonnet-4-6",
-    "opus":   "claude-opus-4-7",
+    "haiku": MODEL_HAIKU, "sonnet": MODEL_SONNET, "opus": MODEL_OPUS,
 })
 
 # ─── Asignación de tier por agente (≡ DDD_REGLAS_OMEGA.md tabla I2) ───
@@ -96,5 +97,4 @@ def is_registered(agent_code: str) -> bool:
 # Self-check al importar
 assert len(AGENT_TIER) >= 38, \
     f"❌ Routing table incompleta: {len(AGENT_TIER)} agentes (esperado ≥38)"
-assert MODEL_IDS["sonnet"] == "claude-sonnet-4-6", \
-    "❌ Sonnet model_id incorrecto"
+assert MODEL_SONNET == "claude-sonnet-4-6", "❌ Sonnet model_id incorrecto"

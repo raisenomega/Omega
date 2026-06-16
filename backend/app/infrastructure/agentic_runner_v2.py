@@ -10,6 +10,7 @@ import asyncio
 import os
 import time
 from typing import Any
+from app.bc_cognition.domain.routing_table import MODEL_SONNET
 
 # langsmith + mem0 disabled · DEBT-012
 def traceable(*_args: object, **_kwargs: object):
@@ -41,7 +42,7 @@ _MEM0_CONFIG = {
     "llm": {
         "provider": "anthropic",
         "config": {
-            "model": "claude-sonnet-4-6",
+            "model": MODEL_SONNET,
             "api_key": os.getenv("ANTHROPIC_API_KEY", ""),
             "temperature": 0,
             "max_tokens": 2000,

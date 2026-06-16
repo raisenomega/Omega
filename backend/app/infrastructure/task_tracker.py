@@ -9,6 +9,7 @@ import logging
 import uuid
 
 from app.infrastructure.supabase_service import get_supabase_service
+from app.bc_cognition.domain.routing_table import MODEL_SONNET
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +98,7 @@ class TaskTracker:
             task_id: Task UUID to complete
             tokens_used: Total tokens consumed
             provider: AI provider used (e.g., "anthropic")
-            model: Model used (e.g., "claude-sonnet-4-6")
+            model: Model used (e.g., MODEL_SONNET)
 
         Returns:
             True if successful, False otherwise

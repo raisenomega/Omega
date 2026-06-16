@@ -10,6 +10,7 @@ from app.infrastructure.ai.claude_service import claude_service
 from app.domain.llm.types import (
     ContentType, UserTier, LLMResponse
 )
+from app.bc_cognition.domain.routing_table import MODEL_SONNET
 from app.domain.llm.config import LLM_TIERS
 
 logger = logging.getLogger(__name__)
@@ -64,7 +65,7 @@ async def generate_content(
         return LLMResponse(
             content=text,
             provider="anthropic",
-            model="claude-sonnet-4-6",
+            model=MODEL_SONNET,
             cached=False,
             tokens_used=0,
             cost_usd=None,

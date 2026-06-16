@@ -8,6 +8,7 @@ from app.agents.base_agent import BaseAgent, AgentRole, AgentState
 from app.services.video_pipeline import VideoSpec, VideoScript
 from ._video_production_script_mixin import VideoProductionScriptMixin
 from ._video_production_content_mixin import VideoProductionContentMixin
+from app.bc_cognition.domain.routing_table import MODEL_SONNET
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class VideoProductionAgent(VideoProductionScriptMixin, VideoProductionContentMix
         super().__init__(
             agent_id=agent_id,
             role=AgentRole.CONTENT_CREATOR,
-            model="claude-sonnet-4-6",
+            model=MODEL_SONNET,
             tools=["script_writer", "hook_optimizer", "shot_planner", "platform_adapter"],
         )
 

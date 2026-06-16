@@ -12,6 +12,7 @@ from .base_provider import (
     ChatMessage,
     MessageRole
 )
+from app.bc_cognition.domain.routing_table import MODEL_HAIKU, MODEL_SONNET, MODEL_OPUS
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class AnthropicProvider(BaseAIProvider):
     Note: Does NOT replace claude_service.py (legacy compatibility · DEBT-024).
     """
 
-    def __init__(self, api_key: str, model_name: str = "claude-sonnet-4-6") -> None:
+    def __init__(self, api_key: str, model_name: str = MODEL_SONNET) -> None:
         """
         Initialize Anthropic provider.
 
@@ -41,9 +42,9 @@ class AnthropicProvider(BaseAIProvider):
     def _validate_model(self, model_name: str) -> None:
         """Validate Claude V3 model name (Haiku/Sonnet/Opus)."""
         valid_models = [
-            "claude-haiku-4-5-20251001",   # V3 Haiku · workhorse económico
-            "claude-sonnet-4-6",            # V3 Sonnet · default
-            "claude-opus-4-7",              # V3 Opus · razonamiento crítico
+            MODEL_HAIKU,   # V3 Haiku · workhorse económico
+            MODEL_SONNET,            # V3 Sonnet · default
+            MODEL_OPUS,              # V3 Opus · razonamiento crítico
         ]
         if model_name not in valid_models:
             raise ValueError(

@@ -24,7 +24,7 @@ cd "$ROOT_DIR"
 
 FAILURES=0
 WARNINGS=0
-TOTAL=13
+TOTAL=14
 
 print_header() { echo -e "\n${CYAN}═══ $1 ═══${NC}"; }
 print_pass()   { echo -e "${GREEN}✓ $1${NC}"; }
@@ -437,6 +437,28 @@ if [ -n "${PY_VENV:-}" ] && (cd backend && PYTHONUTF8=1 "$PY_VENV" -m pip_audit 
   fi
 else
   print_warn "pip-audit no disponible — check 13 omitido (no fail · pip install -r requirements.txt)"
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# CHECK 14 (P9) — strings de modelo centralizados (claude-* → routing_table)
+# (display 13/$TOTAL · warning · NO bloquea · I2 intacto)
+# ─────────────────────────────────────────────────────────────────
+print_header "13/$TOTAL · P9 — strings de modelo centralizados (claude-* → routing_table)"
+
+# routing_table.py = fuente única (MODEL_HAIKU/SONNET/OPUS). Los adapters de
+# proveedor (bedrock/vertex) llevan IDs específicos del proveedor (ARN/@version) y
+# están exentos a propósito. Cualquier OTRO literal claude-* suelto = warning.
+MODEL_LITERALS=$(grep -rnE "[\"']claude-(haiku|sonnet|opus)" backend/app --include="*.py" 2>/dev/null \
+  | grep -v 'bc_cognition/domain/routing_table.py' \
+  | grep -vE 'bc_cognition/infrastructure/ai_provider_(bedrock|vertex)\.py' \
+  | grep -vE '/tests/|test_' || true)
+
+if [ -n "$MODEL_LITERALS" ]; then
+  print_warn "Literales de modelo fuera de routing_table (usá MODEL_HAIKU/SONNET/OPUS):"
+  echo "$MODEL_LITERALS" | head -10
+  [ $(echo "$MODEL_LITERALS" | wc -l) -gt 10 ] && echo "  ... y más"
+else
+  print_pass "Strings de modelo centralizados en routing_table (cero literales sueltos)"
 fi
 
 # ─────────────────────────────────────────────────────────────────

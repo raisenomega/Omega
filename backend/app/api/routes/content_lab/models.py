@@ -6,6 +6,7 @@ from typing import Optional, Any
 from pydantic import BaseModel, Field
 
 from app.domain.llm.types import ContentType
+from app.bc_cognition.domain.routing_table import MODEL_SONNET
 
 
 class GenerateTextRequest(BaseModel):
@@ -40,7 +41,7 @@ class GenerateTextResponse(BaseModel):
                 "content": "🚀 Descubre nuestro nuevo producto...",
                 "metadata": {
                     "provider": "anthropic",
-                    "model": "claude-sonnet-4-6",
+                    "model": MODEL_SONNET,
                     "cached": True,
                     "tokens_used": 150
                 }

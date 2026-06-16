@@ -5,7 +5,7 @@ Manages all environment variables and settings
 from typing import List, Optional
 from pydantic_settings import BaseSettings
 from pydantic import Field
-
+from app.bc_cognition.domain.routing_table import MODEL_SONNET  # P9 · string de modelo centralizado
 
 class Settings(BaseSettings):
     """Application settings from environment variables"""
@@ -38,7 +38,7 @@ class Settings(BaseSettings):
 
     # Anthropic Claude
     anthropic_api_key: str = Field(..., env="ANTHROPIC_API_KEY")
-    anthropic_model: str = Field(default="claude-sonnet-4-6", env="ANTHROPIC_MODEL")
+    anthropic_model: str = Field(default=MODEL_SONNET, env="ANTHROPIC_MODEL")
     voyage_api_key: str = Field(default="", env="VOYAGE_API_KEY")  # DEBT-048 · embeddings ARIA (I1 exc 3)
 
     # JWT

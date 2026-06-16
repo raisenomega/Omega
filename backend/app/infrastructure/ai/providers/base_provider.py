@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from enum import Enum
+from app.bc_cognition.domain.routing_table import MODEL_SONNET, MODEL_OPUS
 
 
 class MessageRole(str, Enum):
@@ -131,7 +132,7 @@ class BaseAIProvider(ABC):
         Get the model name.
 
         Returns:
-            Model identifier string (e.g., "claude-sonnet-4-6", "claude-opus-4-7")
+            Model identifier string (e.g., MODEL_SONNET, MODEL_OPUS)
         """
         pass
 

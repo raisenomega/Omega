@@ -6,6 +6,7 @@ from typing import List, Optional, Dict, Any
 import logging
 from anthropic import AsyncAnthropic
 from app.config import settings
+from app.bc_cognition.domain.routing_table import MODEL_SONNET
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ class ClaudeService:
     
     def __init__(self):
         self.client = AsyncAnthropic(api_key=settings.anthropic_api_key)
-        self.model = "claude-sonnet-4-6"
+        self.model = MODEL_SONNET
     
     async def generate_text(
         self,

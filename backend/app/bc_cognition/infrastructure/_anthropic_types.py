@@ -1,6 +1,7 @@
 """OmegaRaisen — Tipos del Anthropic adapter (split para cumplir C4)."""
 
 from dataclasses import dataclass
+from app.bc_cognition.domain.routing_table import MODEL_HAIKU, MODEL_SONNET, MODEL_OPUS
 
 
 @dataclass(frozen=True)
@@ -26,9 +27,9 @@ class ClaudeError:
 
 # USD por 1M tokens (input, output) · ratios verificados mayo 2026
 _RATES: dict[str, tuple[float, float]] = {
-    "claude-haiku-4-5-20251001": (1.00, 5.00),
-    "claude-sonnet-4-6":         (3.00, 15.00),
-    "claude-opus-4-7":          (15.00, 75.00),
+    MODEL_HAIKU: (1.00, 5.00),
+    MODEL_SONNET:         (3.00, 15.00),
+    MODEL_OPUS:          (15.00, 75.00),
 }
 
 
