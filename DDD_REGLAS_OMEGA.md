@@ -438,26 +438,23 @@ ENFORCE       scripts/verify-personas.sh
 RAZÓN         La identidad del CEO virtual no muta sin aprobación owner
 ```
 
-## X3 · 16 Cron Workers Verificados Post-Deploy
+## X3 · Cron Workers Verificados Post-Deploy
 
 ```
-FUENTE        backend/app/main.py (scheduler.start() en @app.on_event startup, ~L163).
-              ⚠️ backend/app/workers/scheduler.py NO es el scheduler activo (código
-              legacy, 3 jobs, start_scheduler() sin caller · DEBT-SCHEDULER-LEGACY-DUP).
-REGLA         Después de cada deploy: verificar que los 16 cron jobs
-              están activos en APScheduler
-JOBS          vault_scan (cron 2 AM) · db_guardian (cron 5 AM) · sentinel_brief (cron 7 AM) ·
-              pulse_monitor (interval 5 min) · oracle_weekly_brief (cron lun 7 AM) ·
-              aria_learning_report (cron lun 7:05 · DEBT-101) ·
-              news_monitor (interval 2h) · competitor_tracker (interval 6h) ·
-              trend_spotter (interval 12h) · brand_dna_refresh (cron 3 AM · DEBT-044) ·
-              video_jobs_orphan_cleanup (interval 1h · DEBT-045) ·
-              outcome_evaluator (cron 4 AM · 4A-2 PASO 3 ciclo auto-aprendizaje) ·
-              credit_period_reset (cron 0:05 fin-de-mes · DEBT-052) ·
-              decision_evaluator (cron :30 cada hora · DEBT-100 ARIA_LEARNING_LOOP) ·
-              strategy_generator (cron 7:10 diario · DEBT-096 F2 · filtra por cadencia/cliente) ·
-              hermes_ping (interval 5 min · DEBT-HERMES-CORE f1 · salud integraciones → mcp_health_log)
-ENFORCE       Endpoint /api/v1/system/cron-status debe retornar 16/16 active
+FUENTE ÚNICA   backend/app/workers/cron_registry.py (CRON_JOB_IDS · EXPECTED_CRON_JOBS).
+              main.py los registra con scheduler.add_job en el startup/lifespan ·
+              el test (api/routes/system/tests/test_cron_registry.py) asserta que los
+              add_job de main.py == CRON_JOB_IDS (drift falla en CI · ya no hay lista
+              hardcoded acá que se desincronice · P1-5 Fase 2).
+              ⚠️ backend/app/workers/scheduler.py NO es el scheduler activo (legacy ·
+              DEBT-SCHEDULER-LEGACY-DUP).
+REALIDAD      24 crons (verificado 16 jun · el viejo "8/16/21" era drift: el grep de 21
+              excluía ids con dígitos, y add_jobstore no es un cron). Ver cron_registry
+              para la lista viva — NO se duplica acá para que no vuelva a driftar.
+REGLA         Después de cada deploy: GET /api/v1/system/cron-status debe retornar
+              healthy:true (active == EXPECTED_CRON_JOBS · missing:[]).
+ENFORCE       Endpoint /api/v1/system/cron-status (superadmin) · compara jobs activos
+              del scheduler contra cron_registry · healthy = no falta ninguno.
 ```
 
 ## X4 · Stripe Connect Webhooks Idempotentes

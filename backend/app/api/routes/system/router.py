@@ -5,6 +5,7 @@ Filosofía: No velocity, only precision 🐢💎
 from typing import Optional
 from fastapi import APIRouter, Header, HTTPException, Request
 from .handlers.get_stats import handle_get_stats
+from .handlers.cron_status import handle_cron_status
 from app.api.routes.auth.auth_utils import get_current_user
 
 router = APIRouter(prefix="/system", tags=["system"])
@@ -30,6 +31,16 @@ async def credit_period_reset_run_now(authorization: Optional[str] = Header(None
         raise HTTPException(status_code=403, detail="superadmin_only")
     from app.bc_billing.application.reset_credit_periods import run_credit_period_reset
     return await run_credit_period_reset()
+
+
+@router.get("/cron-status")
+async def cron_status(authorization: Optional[str] = Header(None)):
+    """Estado de los cron jobs vs cron_registry (fuente única · P1-5) · solo superadmin.
+    {expected, active, healthy, missing, unexpected, jobs}."""
+    user = await get_current_user(authorization)
+    if user.get("role") != "owner":  # owner = superadmin real (00022)
+        raise HTTPException(status_code=403, detail="superadmin_only")
+    return handle_cron_status()
 
 
 @router.get("/stats")
