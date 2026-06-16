@@ -1,6 +1,6 @@
 """Security department report generator: crosses omega_agents with sentinel_scans"""
 from typing import Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ async def _generate_security_report(
     except Exception:
         pass
 
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = datetime.now(timezone.utc).isoformat()
 
     director_score = 0
     director_status = "unknown"

@@ -4,7 +4,7 @@ Capa de infraestructura para acceso a datos de contenido generado
 Filosofía: No velocity, only precision 🐢💎
 """
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 from app.domain.content_lab.entities import ContentLabGenerated
@@ -121,7 +121,7 @@ class ContentLabRepository:
             response = self.supabase.client.table(self.table)\
                 .update({
                     "is_saved": is_saved,
-                    "updated_at": datetime.utcnow().isoformat()
+                    "updated_at": datetime.now(timezone.utc).isoformat()
                 })\
                 .eq("id", content_id)\
                 .execute()
@@ -190,7 +190,7 @@ class ContentLabRepository:
             is_saved=row.get("is_saved", False),
             created_at=datetime.fromisoformat(row["created_at"])
             if row.get("created_at")
-            else datetime.utcnow(),
+            else datetime.now(timezone.utc),
             updated_at=datetime.fromisoformat(row["updated_at"])
             if row.get("updated_at")
             else None

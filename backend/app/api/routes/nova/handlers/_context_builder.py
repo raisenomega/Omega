@@ -3,7 +3,7 @@ Context Builder - Builds system prompts and agent context for NOVA.
 DDD: Application layer helper. Max 200L strict.
 """
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 from app.services.context_service import ContextService
@@ -51,7 +51,7 @@ async def get_agents_context() -> str:
     """Roster canónico de NOVA (8 operativos + SOPHIA + GUARDIAN) · cache 24h.
     Fuente única: CANONICAL_AGENTS (data en memoria · no una tabla de DB muerta)."""
     global _agents_cache, _agents_cache_time
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     if _agents_cache and _agents_cache_time:
         if (now - _agents_cache_time).total_seconds() / 3600 < CACHE_TTL_HOURS:
             return _agents_cache

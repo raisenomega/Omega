@@ -5,7 +5,7 @@ Filosofía: No velocity, only precision 🐢💎
 DDD: Application layer - read operations. Strict <200L.
 """
 from typing import Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from app.infrastructure.supabase_service import get_supabase_service
 from app.bc_cognition.domain.canonical_agents import CANONICAL_AGENTS, operational_count
 from app.bc_cognition.application.nova_aria_learning import aria_learning_global
@@ -28,7 +28,7 @@ async def handle_get_briefing() -> Dict[str, Any]:
     supabase = get_supabase_service()
 
     result = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "nova_memory": None,
         "system_status": None,
         "active_agents": None,

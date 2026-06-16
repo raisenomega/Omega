@@ -7,7 +7,7 @@ todavía. El builder es pure function · este test verifica:
   - mixed sources + parcial recency → emerging
   - 20 approved + diverso + reciente → strong
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.bc_cognition.application._brand_dna_builder import build_brand_dna
 from app.bc_cognition.domain.brand_dna import BrandDNA
@@ -51,6 +51,20 @@ def test_emerging_with_mixed_sources() -> None:
     assert dna.corpus_size == 10
     assert 0.3 <= dna.score < 0.7
     assert dna.confidence_label() == "emerging"
+
+
+def test_aware_now_does_not_raise_naive_vs_aware() -> None:
+    """P2 P8a regresión: el default de producción es `datetime.now(timezone.utc)`
+    (aware). Antes de hardenar _to_datetime, comparar el created_at (parseado
+    aware) contra un thirty_days_ago naive lanzaba TypeError. Con now aware el
+    score debe computarse sin error y reflejar la recencia."""
+    aware_now = datetime(2026, 5, 21, 12, 0, 0, tzinfo=timezone.utc)
+    recent = (aware_now - timedelta(days=5)).isoformat()  # ISO con +00:00
+    corpus = [_post(tone=["casero"], source="approved_draft", created_at=recent)
+              for _ in range(3)]
+    dna = build_brand_dna(corpus, now=aware_now)
+    assert dna.corpus_size == 3
+    assert dna.score >= 0.0
 
 
 def test_strong_with_full_approved_corpus() -> None:

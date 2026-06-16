@@ -5,7 +5,7 @@ Spec: CONTENT_LAB_OMEGA_MASTER.md §6 (Brand DNA Engine).
 """
 import re
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from app.bc_cognition.application._brand_dna_scoring import compute_score
@@ -41,7 +41,7 @@ def build_brand_dna(
             )
         return BrandDNA.empty()
 
-    now = now or datetime.utcnow()
+    now = now or datetime.now(timezone.utc)
 
     tone_counter: Counter[str] = Counter()
     for row in corpus:

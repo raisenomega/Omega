@@ -3,7 +3,7 @@ Domain entities for Inter-Agent Handoff Protocol.
 DDD: Entity layer - business logic, no dependencies on infrastructure.
 """
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from enum import Enum
 
@@ -57,7 +57,7 @@ class Handoff:
         return HandoffCompletion(
             task_id=self.task_id,
             completed_by=self.to_agent,
-            completed_at=datetime.utcnow().isoformat(),
+            completed_at=datetime.now(timezone.utc).isoformat(),
             result=result
         )
 

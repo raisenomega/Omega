@@ -6,7 +6,7 @@ DDD: Application layer. Strict <200L.
 """
 from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, Field
-from datetime import datetime
+from datetime import datetime, timezone
 from app.infrastructure.supabase_service import get_supabase_service
 import logging
 
@@ -42,7 +42,7 @@ async def handle_save_nova_memory(request: SaveNovaMemoryRequest) -> Dict[str, A
             "related_agents": request.related_agents,
             "priority": request.priority.lower(),
             "expires_at": request.expires_at,
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.now(timezone.utc).isoformat()
         }
 
         # Only include client_id if provided (UUID field requires valid UUID or null)

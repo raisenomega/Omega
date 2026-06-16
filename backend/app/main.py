@@ -9,6 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / ".env")
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -89,48 +90,13 @@ def _persistent_jobstore_or_none() -> "SQLAlchemyJobStore | None":
         logger.warning(f"DEBT-047 · jobstore persistente no disponible → in-memory: {e}")
         return None
 
-# Create FastAPI application
-app = FastAPI(
-    title="OmegaRaisen API", version="2.0.0",
-    description="Social Media Automation — 37 AI Agents | Enterprise Platform",
-    docs_url="/docs", redoc_url="/redoc",
-)
-
-# Capa 10 · timing por request · se monta PRIMERO → innermost → mide el handler puro.
-# Fire-and-forget threaded · cero latencia añadida. try/finally registra aún en excepción.
-app.add_middleware(RequestTimingMiddleware)
-
-# Capa 9 · captura de errores backend (5xx + exceptions) · envuelve a los routers (outer que
-# timing), ve sus excepciones/status. Best-effort, no bloquea el request.
-app.add_middleware(SentinelErrorCaptureMiddleware)
-
-# DEBT-070: rate limiting por IP · cablea settings.rate_limit_per_minute (antes config
-# muerta). Se monta ANTES de CORS → CORS queda outermost (Starlette: último add = outer) →
-# el 429 pasa por CORS y lleva los headers al browser.
-app.add_middleware(RateLimitMiddleware, limit_per_minute=settings.rate_limit_per_minute)
-
-# Configure CORS · lee BACKEND_CORS_ORIGINS (CSV) via settings.cors_origins_list.
-# P1-7 fail-secure: vacía + production → RuntimeError en boot (jamás wildcard en
-# prod). Vacía + dev → ["*"]. El browser rechaza allow_credentials=True con "*".
-_cors_origins = resolve_cors_origins(settings.cors_origins_list, settings.environment)
-_allow_creds = _cors_origins != ["*"]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=_cors_origins,
-    allow_credentials=_allow_creds,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Capa 3 (Red y HTTP) · security headers en TODA response. Se monta DESPUÉS de CORS →
-# outermost → cubre también respuestas de error. NO incluye CSP (rompería Swagger /docs;
-# la CSP del producto va en vercel.json · Report-Only).
-app.add_middleware(SecurityHeadersMiddleware)
-
-# Startup event
-@app.on_event("startup")
-async def startup_event():
-    """Initialize services on startup."""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Ciclo de vida ASGI (reemplaza @app.on_event · deprecado en Starlette).
+    Registra los 24 crons in-process (alineado con --workers 1 · P0-1 Fase 1 ·
+    inventario fuente única en workers/cron_registry.py). Sin locking distribuido,
+    un solo worker = un solo disparo por cron."""
+    # ── STARTUP ──
     if QDRANT_AVAILABLE:
         await initialize_qdrant()
     else:
@@ -206,12 +172,50 @@ async def startup_event():
     scheduler.add_job(run_chaos_scan, 'cron', day_of_week='mon', day='1-7', hour=3, minute=0, id='chaos_monthly', max_instances=1, replace_existing=True)
     scheduler.start()
     logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION + RLS_AUDIT + RUNTIME_OBS + PERF + AGENTS_HEALTH + NETWORK_HTTP + INTEGRATIONS + CHAOS workers activos — 24 jobs (jobstore persistente DEBT-047)")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on shutdown."""
+    yield
+    # ── SHUTDOWN ──
     scheduler.shutdown()
     logger.info("SENTINEL schedulers detenidos")
+
+
+# Create FastAPI application
+app = FastAPI(
+    title="OmegaRaisen API", version="2.0.0",
+    description="Social Media Automation — 37 AI Agents | Enterprise Platform",
+    docs_url="/docs", redoc_url="/redoc",
+    lifespan=lifespan,
+)
+
+# Capa 10 · timing por request · se monta PRIMERO → innermost → mide el handler puro.
+# Fire-and-forget threaded · cero latencia añadida. try/finally registra aún en excepción.
+app.add_middleware(RequestTimingMiddleware)
+
+# Capa 9 · captura de errores backend (5xx + exceptions) · envuelve a los routers (outer que
+# timing), ve sus excepciones/status. Best-effort, no bloquea el request.
+app.add_middleware(SentinelErrorCaptureMiddleware)
+
+# DEBT-070: rate limiting por IP · cablea settings.rate_limit_per_minute (antes config
+# muerta). Se monta ANTES de CORS → CORS queda outermost (Starlette: último add = outer) →
+# el 429 pasa por CORS y lleva los headers al browser.
+app.add_middleware(RateLimitMiddleware, limit_per_minute=settings.rate_limit_per_minute)
+
+# Configure CORS · lee BACKEND_CORS_ORIGINS (CSV) via settings.cors_origins_list.
+# P1-7 fail-secure: vacía + production → RuntimeError en boot (jamás wildcard en
+# prod). Vacía + dev → ["*"]. El browser rechaza allow_credentials=True con "*".
+_cors_origins = resolve_cors_origins(settings.cors_origins_list, settings.environment)
+_allow_creds = _cors_origins != ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_credentials=_allow_creds,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Capa 3 (Red y HTTP) · security headers en TODA response. Se monta DESPUÉS de CORS →
+# outermost → cubre también respuestas de error. NO incluye CSP (rompería Swagger /docs;
+# la CSP del producto va en vercel.json · Report-Only).
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Core Agents (1-5)
 app.include_router(content.router, prefix=settings.api_v1_prefix, tags=["Content Creator"])

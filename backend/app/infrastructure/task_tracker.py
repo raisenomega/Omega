@@ -4,7 +4,7 @@ DDD: Infrastructure layer. Max 200L strict.
 DEBT-083: retargeted to agent_executions table for agent run telemetry.
 """
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 import uuid
 
@@ -60,7 +60,7 @@ class TaskTracker:
                 "client_id": safe_client_id,
                 "triggered_by": requested_by,
                 "status": "running",
-                "started_at": datetime.utcnow().isoformat(),
+                "started_at": datetime.now(timezone.utc).isoformat(),
                 "input_data": {
                     "title": title[:200],
                     "description": description[:1000] if description else ""
@@ -108,7 +108,7 @@ class TaskTracker:
             # Update agent_executions record to completed
             update_data = {
                 "status": "completed",
-                "completed_at": datetime.utcnow().isoformat(),
+                "completed_at": datetime.now(timezone.utc).isoformat(),
                 "output_data": {
                     "tokens_used": tokens_used,
                     "provider": provider,

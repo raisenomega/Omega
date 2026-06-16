@@ -1,6 +1,6 @@
 """Standard department report generator using omega_agents + Claude"""
 from typing import Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 from app.infrastructure.ai._text_compat import generate_text
 
@@ -15,7 +15,7 @@ async def _generate_standard_report(
     requested_by: str,
 ) -> Dict[str, Any]:
     """Generate standard department report using omega_agents + Claude analysis"""
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = datetime.now(timezone.utc).isoformat()
 
     total_tasks = sum(a.get("tasks_completed_total", 0) for a in sub_agents)
     if director:

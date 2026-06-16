@@ -4,7 +4,7 @@ Genera briefs estratégicos semanales con análisis del sistema
 Filosofía: No velocity, only precision 🐢💎
 """
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List
 from app.infrastructure.supabase_service import get_supabase_service
 
@@ -50,9 +50,9 @@ class OracleService:
                 sentinel_score = last_scan_resp.data[0].get("security_score")
             # 5. Construir brief
             brief = {
-                "generated_at": datetime.utcnow().isoformat(),
+                "generated_at": datetime.now(timezone.utc).isoformat(),
                 "period": "weekly",
-                "week_of": datetime.utcnow().strftime("%Y-%m-%d"),
+                "week_of": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
                 "executive_summary": {
                     "total_clients": len(clients),
                     "active_clients": len(clients_active),
@@ -76,7 +76,7 @@ class OracleService:
                 "user_id": "ibrain",
                 "data_type": "oracle_brief",
                 "content": brief,
-                "updated_at": datetime.utcnow().isoformat()
+                "updated_at": datetime.now(timezone.utc).isoformat()
             }, on_conflict="user_id,data_type").execute()
             # 7. Guardar en omega_agent_memory para ORACLE
             supabase.client.table("agent_working_memory").insert({
@@ -89,7 +89,7 @@ class OracleService:
                     "content_generated": len(content),
                     "sentinel_score": sentinel_score
                 },
-                "session_id": f"oracle_{datetime.utcnow().strftime('%Y%m%d')}"
+                "session_id": f"oracle_{datetime.now(timezone.utc).strftime('%Y%m%d')}"
             }).execute()
             logger.info(f"ORACLE brief generated: {len(clients_active)} active clients, sentinel={sentinel_score}")
             # brief semanal al owner por email (best-effort · siempre · heartbeat · DEBT-105)

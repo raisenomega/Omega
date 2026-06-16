@@ -1,6 +1,6 @@
 """Leads, storage and user-roles methods for SupabaseService"""
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 
 logger = logging.getLogger(__name__)
@@ -90,11 +90,11 @@ class LeadsMixin:
             if notes:
                 update_data["notes"] = notes
             if status == "contacted":
-                update_data["contacted_at"] = datetime.utcnow().isoformat()
+                update_data["contacted_at"] = datetime.now(timezone.utc).isoformat()
             elif status == "converted":
                 lead = await self.get_lead_by_id(lead_id)
                 if lead and not lead.get("contacted_at"):
-                    update_data["contacted_at"] = datetime.utcnow().isoformat()
+                    update_data["contacted_at"] = datetime.now(timezone.utc).isoformat()
             r = self.client.table("leads").update(update_data).eq("id", lead_id).execute()
             logger.info(f"Lead {lead_id} status updated to {status}")
             return r.data[0] if r.data else {}

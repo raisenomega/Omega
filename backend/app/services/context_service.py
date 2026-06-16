@@ -4,7 +4,7 @@ Filosofía: No velocity, only precision 🐢💎
 """
 import logging
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from app.infrastructure.supabase_service import get_supabase_service
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class ContextService:
     async def get_global_context(self) -> str:
         """Get ALL context from library (global + client + department) with 1h caching."""
         global _global_cache, _global_cache_time
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         # Check cache validity
         if _global_cache and _global_cache_time:
             age_minutes = (now - _global_cache_time).total_seconds() / 60

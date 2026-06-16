@@ -4,7 +4,7 @@ DDD: Application Service layer - orchestrates domain entities.
 Strict <200L per file.
 """
 from typing import Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 import logging
 from app.domain.handoff.entities import (
@@ -65,7 +65,7 @@ class HandoffService:
             payload=payload,
             priority=HandoffPriority(priority),
             deadline=deadline,
-            created_at=datetime.utcnow().isoformat(),
+            created_at=datetime.now(timezone.utc).isoformat(),
             status=HandoffStatus.PENDING
         )
 
@@ -98,7 +98,7 @@ class HandoffService:
         confirmation = HandoffConfirmation(
             task_id=task_id,
             confirmed_by=agent_code,
-            confirmed_at=datetime.utcnow().isoformat(),
+            confirmed_at=datetime.now(timezone.utc).isoformat(),
             status=HandoffStatus.IN_PROGRESS
         )
 

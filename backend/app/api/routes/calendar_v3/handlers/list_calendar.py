@@ -39,7 +39,7 @@ def _to_item(row: dict) -> CalendarPost:
 
 @router.get("/", response_model=CalendarListResponse)
 async def list_calendar(
-    month: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}$"),
+    month: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}$"),
     status: str = Query("all"),
     authorization: Optional[str] = Header(None),
 ) -> CalendarListResponse:

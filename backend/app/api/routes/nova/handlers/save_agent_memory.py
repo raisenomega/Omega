@@ -7,7 +7,7 @@ from typing import Dict, Any
 from fastapi import HTTPException
 from pydantic import BaseModel
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.infrastructure.supabase_service import get_supabase_service
 
@@ -41,7 +41,7 @@ async def handle_save_agent_memory(request: SaveAgentMemoryRequest) -> Dict[str,
         agent_code = request.agent_code.upper()
 
         # Prepare insert data
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         insert_data = {
             "agent_code": agent_code,
             "memory_type": request.memory_type,

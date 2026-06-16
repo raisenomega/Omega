@@ -3,7 +3,7 @@ Agent Domain Entities
 Business entities for agents system
 Filosofía: No velocity, only precision 🐢💎
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Any
 from dataclasses import dataclass, field
 
@@ -82,7 +82,7 @@ class Agent:
                 / self.total_executions
             )
 
-        self.last_executed_at = datetime.utcnow()
+        self.last_executed_at = datetime.now(timezone.utc)
 
 
 @dataclass
@@ -132,13 +132,13 @@ class AgentExecution:
     def mark_as_running(self) -> None:
         """Start execution"""
         self.status = "running"
-        self.started_at = datetime.utcnow()
+        self.started_at = datetime.now(timezone.utc)
 
     def mark_as_completed(self, output: dict[str, Any]) -> None:
         """Complete execution successfully"""
         self.status = "completed"
         self.output_data = output
-        self.completed_at = datetime.utcnow()
+        self.completed_at = datetime.now(timezone.utc)
         if self.started_at:
             self.execution_time_ms = int((self.completed_at - self.started_at).total_seconds() * 1000)
 
@@ -146,7 +146,7 @@ class AgentExecution:
         """Mark execution as failed"""
         self.status = "failed"
         self.error_message = error
-        self.completed_at = datetime.utcnow()
+        self.completed_at = datetime.now(timezone.utc)
         if self.started_at:
             self.execution_time_ms = int((self.completed_at - self.started_at).total_seconds() * 1000)
 

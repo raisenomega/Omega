@@ -3,7 +3,7 @@
 Fórmula: weighted sum de 4 componentes (corpus_size, recency, diversity,
 quality). Gate N<3 fuerza weak para corpus mínimo viable.
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 _WEIGHTS = {
@@ -27,6 +27,10 @@ def compute_score(corpus: list[dict], now: datetime) -> float:
 
     corpus_size_score = min(n / 20.0, 1.0)
 
+    # aware-safe: naive `now` (p.ej. caller legacy o tests) se trata como UTC ·
+    # _to_datetime también devuelve aware → la comparación nunca mezcla naive/aware.
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
     thirty_days_ago = now - timedelta(days=30)
     posts_30d = sum(
         1 for p in corpus
@@ -57,12 +61,14 @@ def compute_score(corpus: list[dict], now: datetime) -> float:
 
 
 def _to_datetime(value) -> datetime:
+    """Normaliza a datetime aware-UTC (naive → se asume UTC). Mantiene toda
+    comparación en aware vs aware (Supabase devuelve aware)."""
     if isinstance(value, datetime):
-        return value.replace(tzinfo=None) if value.tzinfo else value
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
     if isinstance(value, str):
         try:
             dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
-            return dt.replace(tzinfo=None)
+            return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
         except ValueError:
-            return datetime.min
-    return datetime.min
+            return datetime.min.replace(tzinfo=timezone.utc)
+    return datetime.min.replace(tzinfo=timezone.utc)

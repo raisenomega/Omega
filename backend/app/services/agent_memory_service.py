@@ -4,7 +4,7 @@ Gestiona memoria persistente de conversaciones para los 44 agentes organizaciona
 Filosofía: No velocity, only precision 🐢💎
 """
 from typing import List, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 from app.infrastructure.supabase_service import get_supabase_service
@@ -67,13 +67,13 @@ class AgentMemoryService:
 
         try:
             supabase = get_supabase_service()
-            session_id = f"session_{datetime.utcnow().strftime('%Y%m%d_%H%M')}"
+            session_id = f"session_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M')}"
 
             for agent_code in agent_codes:
                 memory_content = {
                     "user_message": user_message[:500],  # Limitar longitud
                     "nova_response": nova_response[:500],
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "context": [
                         {
                             "role": msg.get("role"),

@@ -8,7 +8,7 @@ DDD: Application layer. Strict <200L.
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 from app.infrastructure.supabase_service import get_supabase_service
 from app.services.handoff_service import HandoffService
 from .get_briefing import handle_get_briefing
@@ -70,7 +70,7 @@ async def handle_execute_action(request: ExecuteActionRequest) -> Dict[str, Any]
                     "content": f"Delegated {request.payload.get('task_type')} to {request.target_agent}",
                     "related_agents": [request.target_agent],
                     "priority": (request.payload.get("priority") or "NORMAL").lower(),
-                    "created_at": datetime.utcnow().isoformat()
+                    "created_at": datetime.now(timezone.utc).isoformat()
                 }
                 supabase.client.table("agent_working_memory").insert(memory_entry).execute()
                 memory_saved = True

@@ -8,7 +8,7 @@ DDD: api/handlers (misma capa que _context_builder · no toca persona/domain). F
 """
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from app.agents.orchestrator_agent import OrchestratorAgent
@@ -76,7 +76,7 @@ def build_capabilities_block() -> str:
     """Bloque 'INVENTARIO DE CAPACIDADES' · cacheado 10min. Las 2 queries (score · veredictos) tienen
     fail-safe independiente: una falla → 'n/d' en SU línea, el bloque siempre se renderiza."""
     global _cache, _cache_time
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     if _cache is not None and _cache_time and (now - _cache_time).total_seconds() < _TTL_SECONDS:
         return _cache
 

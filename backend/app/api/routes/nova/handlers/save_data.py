@@ -7,7 +7,7 @@ from typing import Dict, Any, Union, List
 from fastapi import HTTPException
 from pydantic import BaseModel
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.infrastructure.supabase_service import get_supabase_service
 
@@ -46,7 +46,7 @@ async def handle_save_data(request: SaveDataRequest) -> Dict[str, Any]:
             )
 
         # Prepare upsert data
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         upsert_data = {
             "user_id": user_id,
             "data_type": request.data_type,
