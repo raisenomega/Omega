@@ -24,7 +24,7 @@ cd "$ROOT_DIR"
 
 FAILURES=0
 WARNINGS=0
-TOTAL=14
+TOTAL=15
 
 print_header() { echo -e "\n${CYAN}═══ $1 ═══${NC}"; }
 print_pass()   { echo -e "${GREEN}✓ $1${NC}"; }
@@ -307,6 +307,33 @@ if [ "$OVER_75" -gt 0 ]; then
   print_warn "$OVER_75 archivos entre 75-100 líneas (refactor recomendado)"
 fi
 
+# RATCHET C4 (P10.3) — la deuda de archivos >100L en dirs de gracia (DEBT-014/017) NO crece.
+# Cuenta los >100L que SÍ existen (todo lo que no sea ui/types.ts/limits_omega) y lo compara
+# con scripts/c4-baseline.txt. Sube → FAIL. Baja → permitido (sugiere bajar el techo).
+C4_BASELINE_FILE="scripts/c4-baseline.txt"
+if [ -f "$C4_BASELINE_FILE" ]; then
+  C4_BASELINE=$(grep -vE '^\s*#' "$C4_BASELINE_FILE" | grep -oE '[0-9]+' | head -1)
+  C4_NOW=$(find backend/app/ src/ \
+    \( -name "*.py" -o -name "*.ts" -o -name "*.tsx" \) \
+    ! -path "*/components/ui/*" \
+    ! -path "*/integrations/supabase/types.ts" \
+    ! -path "*/bc_cognition/domain/limits_omega.py" \
+    ! -path "*/__pycache__/*" \
+    ! -path "*/node_modules/*" \
+    -exec wc -l {} \; 2>/dev/null | awk '$1 > 100' | wc -l)
+  C4_NOW=$(echo "$C4_NOW" | tr -d '[:space:]')
+  if [ "${C4_BASELINE:-0}" -gt 0 ] && [ "$C4_NOW" -gt "$C4_BASELINE" ]; then
+    print_fail "Ratchet C4: archivos >100L subieron $C4_BASELINE → $C4_NOW (la deuda no crece)"
+    echo "    Refactorá el archivo nuevo >100L o documentá la excepción antes de push."
+  elif [ "$C4_NOW" -lt "${C4_BASELINE:-0}" ]; then
+    print_pass "Ratchet C4: $C4_NOW ≤ baseline $C4_BASELINE (bajá el techo en $C4_BASELINE_FILE → $C4_NOW)"
+  else
+    print_pass "Ratchet C4: $C4_NOW archivos >100L = baseline (sin crecimiento)"
+  fi
+else
+  print_warn "Ratchet C4: $C4_BASELINE_FILE no encontrado — check omitido"
+fi
+
 # ─────────────────────────────────────────────────────────────────
 # CHECK 8/10 — T4: TypeScript compila sin errores
 # ─────────────────────────────────────────────────────────────────
@@ -459,6 +486,24 @@ if [ -n "$MODEL_LITERALS" ]; then
   [ $(echo "$MODEL_LITERALS" | wc -l) -gt 10 ] && echo "  ... y más"
 else
   print_pass "Strings de modelo centralizados en routing_table (cero literales sueltos)"
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# CHECK 15 (P10.5) — mypy --strict bc_cognition + bc_billing (warning · no bloquea)
+# (display 14/$TOTAL · graceful skip si mypy ausente · DEBT-MYPY-BASELINE)
+# ─────────────────────────────────────────────────────────────────
+print_header "14/$TOTAL · P10.5 — mypy --strict (bc_cognition + bc_billing · warning)"
+
+# PY_VENV se define en el check 9 (persiste). mypy se instala desde requirements-dev.txt.
+if [ -n "${PY_VENV:-}" ] && (cd backend && PYTHONUTF8=1 "$PY_VENV" -m mypy --version >/dev/null 2>&1); then
+  MYPY_ERRORS=$(cd backend && PYTHONUTF8=1 "$PY_VENV" -m mypy --strict --ignore-missing-imports app/bc_cognition app/bc_billing 2>&1 | grep -c "error:")
+  if [ "$MYPY_ERRORS" -gt 0 ]; then
+    print_warn "mypy --strict: $MYPY_ERRORS errores de tipo (DEBT-MYPY-BASELINE · NO bloquea)"
+  else
+    print_pass "mypy --strict: sin errores en bc_cognition + bc_billing"
+  fi
+else
+  print_warn "mypy no disponible — check omitido (pip install -r backend/requirements-dev.txt)"
 fi
 
 # ─────────────────────────────────────────────────────────────────

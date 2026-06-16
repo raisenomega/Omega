@@ -1,0 +1,5 @@
+# C4 ratchet · conteo de archivos >100L en los dirs de gracia (DEBT-014 frontend + DEBT-017 backend).
+# El gate (check 7) FALLA si el conteo SUBE sobre este número: la deuda de archivos largos
+# puede BAJAR (refactor) pero NUNCA crecer. Para bajar el techo: refactorá un archivo >100L
+# y actualizá este número al nuevo conteo. Generado P10.3 · 16 jun 2026.
+178

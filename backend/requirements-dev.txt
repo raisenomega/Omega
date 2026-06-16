@@ -1,0 +1,4 @@
+# OmegaRaisen — dev/CI tools (NO se instalan en prod · Railway usa requirements.txt)
+# El gate (validate-before-push.sh) corre estos si están presentes; si no, skip best-effort.
+mypy==1.13.0          # P10.5 · check warning mypy --strict bc_cognition + bc_billing (DEBT-MYPY-BASELINE)
+pip-audit             # check 13 · CVEs en requirements.txt (allowlist en scripts/pip-audit-allowlist.txt)

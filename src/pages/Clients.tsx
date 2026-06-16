@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiDelete } from "@/lib/api-client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +13,8 @@ import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 import { useBusinessWizardModal } from "@/hooks/useBusinessWizardModal";
-import ClientDetail from "./ClientDetail";
+// P10.4 code-splitting · ClientDetail (266L + tabs) sale del chunk inicial.
+const ClientDetail = lazy(() => import("./ClientDetail"));
 
 // Switcher V1: /clients = "Agente ARIA". ?business={id} → tabs de ClientDetail · sin activo → empty-state.
 // El modal del wizard vive en useBusinessWizardModal (abrible vía ?new=1 desde el switcher). A1: editar/eliminar en tab Info.
@@ -71,7 +72,9 @@ export default function Clients() {
   }
   if (activeBusinessId) {
     return (<>
-      <ClientDetail clientId={activeBusinessId} onEdit={() => modal.openEdit(activeBusinessId)} onDelete={deleteActive} />
+      <Suspense fallback={<div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+        <ClientDetail clientId={activeBusinessId} onEdit={() => modal.openEdit(activeBusinessId)} onDelete={deleteActive} />
+      </Suspense>
       {wizardModal}
     </>);
   }

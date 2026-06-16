@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,16 +18,25 @@ import Content from "./pages/Content";
 import ContentLabPageV2 from "./pages/ContentLabPageV2";
 import Strategies from "./pages/Strategies";
 import CalendarPage from "./pages/Calendar";
-import Media from "./pages/Media";
 import Analytics from "./pages/Analytics";
 import IntelligencePage from "./pages/IntelligencePage";
 import BrandVoicePage from "./pages/BrandVoicePage";
 import CrisisPage from "./pages/CrisisPage";
 import AddOnsPage from "./pages/AddOnsPage";
 import Nova from "./pages/Nova";
-import SecurityDevPage from "./pages/SecurityDevPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
+
+// P10.4 code-splitting · React.lazy → chunks separados (baja el bundle principal).
+// Media + panel SENTINEL (SecurityDevPage, arrastra ~20 cards) salen del chunk inicial.
+const Media = lazy(() => import("./pages/Media"));
+const SecurityDevPage = lazy(() => import("./pages/SecurityDevPage"));
+
+const PageFallback = () => (
+  <div className="flex h-[60vh] items-center justify-center text-muted-foreground">
+    Cargando…
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -49,6 +59,7 @@ const App = () => (
             {/* ARIADrawer (chat flotante global) DENTRO del Provider: usa useARIAChat → useActiveBusiness.
                 Antes se montaba fuera → crash "must be used within ActiveBusinessProvider" (Commit B). */}
             <ARIADrawer />
+            <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -182,6 +193,7 @@ const App = () => (
               />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
             </ActiveBusinessProvider>
             </BrowserRouter>
           </TooltipProvider>
