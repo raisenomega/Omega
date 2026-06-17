@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { platformLabel, isConnected, allConnected, type ConnectedItem } from "@/lib/zernioConnect";
+import { platformLabel, isConnected, allConnected, connectButtonState, type ConnectedItem } from "@/lib/zernioConnect";
 
 describe("zernioConnect · white-label + estado real de conexión", () => {
   it("platformLabel nombra la RED, nunca 'Zernio'", () => {
@@ -26,5 +26,13 @@ describe("zernioConnect · white-label + estado real de conexión", () => {
     expect(allConnected(["instagram", "facebook"], items)).toBe(true);
     expect(allConnected(["instagram", "facebook", "tiktok"], items)).toBe(false);
     expect(allConnected([], items)).toBe(false);
+  });
+
+  // P1 · abrir el popup (awaitingVerify) NUNCA significa 'connected'. Verde solo desde la verdad de Zernio.
+  it("connectButtonState: abrir popup sin confirmar → 'awaiting', JAMÁS 'connected'", () => {
+    expect(connectButtonState(false, true)).toBe("awaiting");   // popup abierto, sin confirmar
+    expect(connectButtonState(false, false)).toBe("connect");   // ámbar
+    expect(connectButtonState(true, false)).toBe("connected");  // verde solo si Zernio confirma
+    expect(connectButtonState(true, true)).toBe("connected");   // connected (verdad) gana sobre el estado local
   });
 });

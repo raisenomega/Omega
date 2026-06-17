@@ -29,3 +29,13 @@ export function isConnected(platform: string, items: ConnectedItem[]): boolean {
 export function allConnected(platforms: string[], items: ConnectedItem[]): boolean {
   return platforms.length > 0 && platforms.every((p) => isConnected(p, items));
 }
+
+export type ConnectState = "connected" | "awaiting" | "connect";
+
+/** Estado HONESTO del botón (P1): el verde 'connected' SOLO sale de la verdad de Zernio
+ * (`connected`, del GET connected-accounts). Abrir el popup (`awaitingVerify`) jamás significa
+ * conectado — ofrece verificar/reintentar, nunca afirma el hecho. */
+export function connectButtonState(connected: boolean, awaitingVerify: boolean): ConnectState {
+  if (connected) return "connected";
+  return awaitingVerify ? "awaiting" : "connect";
+}
