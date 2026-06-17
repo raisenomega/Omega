@@ -19,15 +19,24 @@
 **🔴 BUG ABIERTO · PRIORIDAD MÁXIMA · `DEBT-ZERNIO-MAILBOXES-NO-ATTACH`:**
 Síntoma: Mail Boxes (negocio B · `7663aa55`) conectó `mail_bd` IG → login completó → **NUNCA verde**.
 
-**DIAGNÓSTICO YA HECHO (read-only · DATOS REALES · CORRIGE la hipótesis del owner):**
+**DIAGNÓSTICO CERRADO · RE-VERIFICADO EN VIVO 17 jun (datos frescos · idénticos al previo · CORRIGE la hipótesis del owner):**
 La hipótesis "todas caen en un profile global" es **FALSA** — los profiles SÍ son per-negocio:
-- **DB `clients.zernio_profile_id`:** Mail Boxes=`6a3302c498` · Omega Raisen=`6a32fe37aa` · Zafacones=`6a32f5ae05` (**DISTINTOS ✓**) · Milagrosa=NULL · Mi negocio=NULL.
+- **DB `clients.zernio_profile_id`:** Mail Boxes=`6a3302c498` · Omega Raisen=`6a32fe37aa` · Zafacones=`6a32f5ae05` (**3 ids únicos · DISTINTOS ✓**) · Milagrosa=NULL · Mi negocio=NULL.
 - **Zernio `GET /profiles` (5):** Default · Raisen(viejo) · Zafacones Ramos · Omega Raisen · **Mail Boxes Design** → el profile de Mail Boxes **SÍ EXISTE** (`6a3302c498`, coincide con la DB).
 - **Zernio `GET /accounts` (4):** las 4 son de Omega Raisen (raisenagency/omegaraisen) TODAS bajo su profile (correcto). **`mail_bd` NO existe en Zernio en NINGÚN profile.**
 
 **RAÍZ REAL:** ensure-profile + connect-url FUNCIONAN (cada negocio tiene su profile propio · creado y guardado). El bug es que **la conexión de `mail_bd` NUNCA se adjuntó al profile de Mail Boxes en Zernio** (ausente de `/accounts`). Por eso `zernio-sync(7663aa55)` → `list_accounts(6a3302c498)`=vacío → **422** → no verde. **El hardening del commit 2 FUNCIONÓ** (se negó a marcar verde una cuenta ausente del profile · previno un cross-publish · es la defensa actuando, NO un fallo).
 
-**POR QUÉ no se adjuntó (hipótesis fuerte · LIGADA al white-label):** tras "Allow" el popup saltó a `zernio.com/signin` + `/dashboard`. El flujo OAuth hosteado de Zernio parece **depender de la sesión del navegador en zernio.com**, no solo del `profileId` del authUrl → la cuenta podría adjuntarse al profile activo de esa sesión (o no finalizar) en vez del `profileId` pasado en `getConnectUrl`. **PRIMERA INVESTIGACIÓN próxima sesión (read-only, antes de tocar código):** ¿`getConnectUrl(platform, profileId)` realmente VINCULA la conexión a ese profile, o el usuario debe elegir el profile dentro de zernio.com? Buscar en docs.zernio.com el contrato del callback del connect + re-test con el navegador logueado en Zernio en el contexto correcto. El bug de aislamiento y el white-label-redirect son probablemente la MISMA raíz.
+**RAÍZ — REFINADA POR TEST EN VIVO 17 jun (el probe corrigió mi hipótesis previa · profile de prueba creado+borrado sin residuo · profiles=5):**
+El authUrl de `GET /connect/instagram?profileId=X` apunta **DIRECTO a `instagram.com/oauth/authorize`** (NO a una UI hosteada de zernio.com), con `redirect_uri=https://zernio.com/api/v1/connect/instagram/callback` (callback **server-side** de Zernio) y un `state` con esta estructura:
+`{ownerId}-{profileId}-{timestampMs}-{finalRedirectUrl doble-encodeado}`.
+→ **El `profileId` VIAJA EN EL `state`** (no depende de la sesión del navegador para saber a qué profile adjuntar) · el `finalRedirectUrl` por default = **`https://zernio.com/dashboard`** (= el `/dashboard` que vio el owner). Por lo tanto la hipótesis "el binding del profile depende de la sesión" es **demasiado fuerte**: el profile va en el state y el code-exchange es server-side. Lo que SÍ queda detrás del login de zernio.com es **el aterrizaje final (dashboard) y — para IG Business — el paso de SELECCIÓN de página/cuenta** (Zernio expone `list/select-facebook-page`, `step=select_page`). Hipótesis viva más precisa: el OAuth de `mail_bd` no se finalizó porque tras el "Allow" el aterrizaje cayó en `zernio.com/signin` (sin sesión) y **el paso de selección de cuenta IG-business nunca se completó** → la cuenta nunca quedó adjunta → ausente de `/accounts` → 422.
+
+**CONTRATO HEADLESS — PARCIALMENTE confirmado en vivo (honesto · falta exercer post-OAuth):**
+- `headless=true` SOLO **NO cambió el authUrl** en el test (idéntico al estándar) → no es el switch operativo por sí solo.
+- **`redirectUrl=<url>` SÍ se honra**: aparece reflejado en el `state` del authUrl → es el mecanismo para **volver a NUESTRO dominio** en vez de `zernio.com/dashboard` (resuelve el redirect white-label).
+- `pending-oauth-data`: endpoint = `GET /connect/pending-oauth-data?profileId=…&platform=…` (exige ambos). `tempToken`/`X-Connect-Token`: **NO se pudieron observar** (headers None · solo se emiten tras un callback OAuth real). Tras completar: **hay que re-listar `GET /accounts?profileId` para el accountId** (no viene en el redirect · confirmado en docs). Existe `POST /accounts/{id}/move` (reasignar) pero NO aplica: `mail_bd` no existe en Zernio, nada que mover. `DELETE /profiles/{id}` funciona (limpieza verificada).
+- **LO QUE FALTA (no exercible sin conectar una cuenta real · requiere OK + cuenta de prueba del owner):** el flujo completo headless end-to-end — si `headless=true`+`redirectUrl` devuelve a nuestro dominio con `tempToken`+`step=select_page`, el contrato exacto de `select-facebook-page`/IG, y de dónde sale el `tempToken`. **PÁRATE acá: owner revisa este contrato real ANTES de planear el commit hosted→headless.**
 
 **WHITE-LABEL (pendiente · menor que el bug · misma raíz probable):**
 1. popup salta a `zernio.com/signin`+`/dashboard` tras Allow → ¿`getConnectUrl` admite `returnUrl/redirectUrl/callback`? (docs.zernio.com).
