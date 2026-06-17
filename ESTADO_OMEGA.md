@@ -6,6 +6,38 @@
 
 ---
 
+## 🔴 HANDOFF · B-2 ZERNIO · cierre sesión 17 jun (RETOMAR ACÁ · leer primero)
+
+**COMMITS (gate 15/15 c/u · TODOS en origin · `main` sync · HEAD `b7b47af`):**
+- `6ff8d0f` commit 1 · migr **00068** `zernio_profile_id` + adapter profiles/connect · **ORIGIN + PROD (00068 aplicada)**
+- `6795856` commit 2 · endpoints profile/connect/connected + **zernio-sync HARDENED** · **ORIGIN + PROD**
+- `2f74a8f` commit 3 · tab Cuentas OAuth-por-red white-label · **ORIGIN + VERCEL**
+- `b7b47af` fix **botón honesto** (`connectButtonState` · no afirma sin confirmar Zernio) · **ORIGIN + VERCEL**
+
+**PRUEBAS VIVAS (owner):** Omega Raisen (A) 4 cuentas → **verde ✓** · botón honesto OK (ámbar durante OAuth, no afirma antes de confirmar) · `DEBT-ZERNIO-MULTI-SAME-PLATFORM` registrada (upsert client_id+platform limit 1).
+
+**🔴 BUG ABIERTO · PRIORIDAD MÁXIMA · `DEBT-ZERNIO-MAILBOXES-NO-ATTACH`:**
+Síntoma: Mail Boxes (negocio B · `7663aa55`) conectó `mail_bd` IG → login completó → **NUNCA verde**.
+
+**DIAGNÓSTICO YA HECHO (read-only · DATOS REALES · CORRIGE la hipótesis del owner):**
+La hipótesis "todas caen en un profile global" es **FALSA** — los profiles SÍ son per-negocio:
+- **DB `clients.zernio_profile_id`:** Mail Boxes=`6a3302c498` · Omega Raisen=`6a32fe37aa` · Zafacones=`6a32f5ae05` (**DISTINTOS ✓**) · Milagrosa=NULL · Mi negocio=NULL.
+- **Zernio `GET /profiles` (5):** Default · Raisen(viejo) · Zafacones Ramos · Omega Raisen · **Mail Boxes Design** → el profile de Mail Boxes **SÍ EXISTE** (`6a3302c498`, coincide con la DB).
+- **Zernio `GET /accounts` (4):** las 4 son de Omega Raisen (raisenagency/omegaraisen) TODAS bajo su profile (correcto). **`mail_bd` NO existe en Zernio en NINGÚN profile.**
+
+**RAÍZ REAL:** ensure-profile + connect-url FUNCIONAN (cada negocio tiene su profile propio · creado y guardado). El bug es que **la conexión de `mail_bd` NUNCA se adjuntó al profile de Mail Boxes en Zernio** (ausente de `/accounts`). Por eso `zernio-sync(7663aa55)` → `list_accounts(6a3302c498)`=vacío → **422** → no verde. **El hardening del commit 2 FUNCIONÓ** (se negó a marcar verde una cuenta ausente del profile · previno un cross-publish · es la defensa actuando, NO un fallo).
+
+**POR QUÉ no se adjuntó (hipótesis fuerte · LIGADA al white-label):** tras "Allow" el popup saltó a `zernio.com/signin` + `/dashboard`. El flujo OAuth hosteado de Zernio parece **depender de la sesión del navegador en zernio.com**, no solo del `profileId` del authUrl → la cuenta podría adjuntarse al profile activo de esa sesión (o no finalizar) en vez del `profileId` pasado en `getConnectUrl`. **PRIMERA INVESTIGACIÓN próxima sesión (read-only, antes de tocar código):** ¿`getConnectUrl(platform, profileId)` realmente VINCULA la conexión a ese profile, o el usuario debe elegir el profile dentro de zernio.com? Buscar en docs.zernio.com el contrato del callback del connect + re-test con el navegador logueado en Zernio en el contexto correcto. El bug de aislamiento y el white-label-redirect son probablemente la MISMA raíz.
+
+**WHITE-LABEL (pendiente · menor que el bug · misma raíz probable):**
+1. popup salta a `zernio.com/signin`+`/dashboard` tras Allow → ¿`getConnectUrl` admite `returnUrl/redirectUrl/callback`? (docs.zernio.com).
+2. "Social Media Connector" en consent Meta/TikTok = nombre de la app de Zernio → confirmar si Zernio permite white-label del nombre o exige app propia (= App Review/audits, lo que B-2 evita).
+3. el `zernio.com/signin` que vio el owner: ¿artefacto de SU sesión de prueba (logueado) o lo vería un cliente externo? Clave — si es lo primero, en prod (API key server-side) medio problema desaparece.
+
+**REGLAS PERMANENTES:** NO tocar `persona_nova.py`/`persona_aria.py`/`limits_omega.py` · NO tocar el profile viejo "Raisen" ni las 4 cuentas de prueba de Omega Raisen · identidad git raisenomega · gate 15/15 + test-first (G3) · **UN commit por parche · PARAR para review del owner ANTES de cada avance · ninguna instancia se auto-aprueba** (pasó un auto-accept ⏵⏵ antes · vigilar) · **CERO publish en vivo** hasta que un negocio B tenga una cuenta **verde en SU profile correcto**, verificado por el owner. Scripts diag read-only en `C:\...\Temp\zernio_*.py` (no-repo).
+
+---
+
 ## REGLA GLOBAL ÚNICA · JAMÁS TOCAR NOVA NI ARIA
 Establecida por el owner (Ibrain) · Sesión 4 (4 jun 2026) · Grabada formalmente · Sesión 5 (5 jun 2026)
 
