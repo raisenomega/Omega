@@ -38,13 +38,15 @@ def _conf() -> tuple[dict, str]:
     return headers, s.zernio_api_base
 
 
-async def list_accounts() -> list[dict]:
-    """Cuentas/perfiles conectados bajo la key (GET /accounts → [{_id, platform, ...}]).
+async def list_accounts(profile_id: Optional[str] = None) -> list[dict]:
+    """Cuentas/perfiles conectados bajo la key (GET /accounts → [{_id, platform, profileId, ...}]).
+    profile_id → filtra ?profileId (B-2 · cuentas de UN negocio aisladas en su profile).
     NOTA paginacion: /accounts limita resultados; si Zernio expone cursor, manejar aca (Fase 5)."""
     headers, base = _conf()
+    url = f"{base}/accounts" + (f"?profileId={profile_id}" if profile_id else "")
     async with httpx.AsyncClient(timeout=_HTTP_TIMEOUT, headers=headers) as client:
         try:
-            resp = await client.get(f"{base}/accounts")
+            resp = await client.get(url)
         except httpx.HTTPError as e:
             raise ZernioPublishError(f"zernio_transport_error:{type(e).__name__}") from e
     if resp.status_code != 200:
