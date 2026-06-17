@@ -23,6 +23,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Wifi, Trash2, Loader2 } from "lucide-react";
 import { getNetworkIcon } from "@/lib/network-icons";
+import { ZernioAccountPicker } from "@/components/clients/ZernioAccountPicker";
 
 const PLATFORMS = [
   { value: "instagram", label: "Instagram" },
@@ -192,6 +193,12 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
                     </p>
                   </div>
                   {acc.status === "active" && <div className="h-2 w-2 rounded-full bg-success" />}
+                  <ZernioAccountPicker
+                    clientId={clientId}
+                    platform={acc.platform}
+                    accountName={acc.account_name ?? ""}
+                    currentHandle={(acc as { zernio_account_handle?: string | null }).zernio_account_handle}
+                  />
                   <Button
                     variant="ghost"
                     size="icon"
