@@ -32,13 +32,18 @@ El authUrl de `GET /connect/instagram?profileId=X` apunta **DIRECTO a `instagram
 `{ownerId}-{profileId}-{timestampMs}-{finalRedirectUrl doble-encodeado}`.
 → **El `profileId` VIAJA EN EL `state`** (no depende de la sesión del navegador para saber a qué profile adjuntar) · el `finalRedirectUrl` por default = **`https://zernio.com/dashboard`** (= el `/dashboard` que vio el owner). Por lo tanto la hipótesis "el binding del profile depende de la sesión" es **demasiado fuerte**: el profile va en el state y el code-exchange es server-side. Lo que SÍ queda detrás del login de zernio.com es **el aterrizaje final (dashboard) y — para IG Business — el paso de SELECCIÓN de página/cuenta** (Zernio expone `list/select-facebook-page`, `step=select_page`). Hipótesis viva más precisa: el OAuth de `mail_bd` no se finalizó porque tras el "Allow" el aterrizaje cayó en `zernio.com/signin` (sin sesión) y **el paso de selección de cuenta IG-business nunca se completó** → la cuenta nunca quedó adjunta → ausente de `/accounts` → 422.
 
-**CONTRATO HEADLESS — PARCIALMENTE confirmado en vivo (honesto · falta exercer post-OAuth):**
-- `headless=true` SOLO **NO cambió el authUrl** en el test (idéntico al estándar) → no es el switch operativo por sí solo.
-- **`redirectUrl=<url>` SÍ se honra**: aparece reflejado en el `state` del authUrl → es el mecanismo para **volver a NUESTRO dominio** en vez de `zernio.com/dashboard` (resuelve el redirect white-label).
-- `pending-oauth-data`: endpoint = `GET /connect/pending-oauth-data?profileId=…&platform=…` (exige ambos). `tempToken`/`X-Connect-Token`: **NO se pudieron observar** (headers None · solo se emiten tras un callback OAuth real). Tras completar: **hay que re-listar `GET /accounts?profileId` para el accountId** (no viene en el redirect · confirmado en docs). Existe `POST /accounts/{id}/move` (reasignar) pero NO aplica: `mail_bd` no existe en Zernio, nada que mover. `DELETE /profiles/{id}` funciona (limpieza verificada).
-- **LO QUE FALTA (no exercible sin conectar una cuenta real · requiere OK + cuenta de prueba del owner):** el flujo completo headless end-to-end — si `headless=true`+`redirectUrl` devuelve a nuestro dominio con `tempToken`+`step=select_page`, el contrato exacto de `select-facebook-page`/IG, y de dónde sale el `tempToken`. **PÁRATE acá: owner revisa este contrato real ANTES de planear el commit hosted→headless.**
+**CONTRATO HEADLESS — CONFIRMADO EN VIVO 17 jun (OAuth real · cuenta descartable `wudi.app` IG · profile de prueba · todo borrado tras capturar · profiles=5):**
+El retorno headless (`headless=true&redirectUrl=<captura OMEGA>`) trajo, en el redirect, estos campos:
+- **host destino = `omega-production-3c67.up.railway.app`** → **ATERRIZA EN NUESTRO DOMINIO**, NO en `zernio.com/signin`. ⇒ resuelve el aislamiento Y el white-label-redirect **de un golpe** (misma raíz, como se anticipó).
+- **`profileId`** = el del profile de prueba → **viaja correcto** (la cuenta cae en el profile pasado).
+- **`accountId`** = **VIENE DIRECTO EN EL RETORNO** (no hay que re-listar `/accounts` a ciegas · mejora vs la suposición previa de la doc).
+- **`username`** = `wudi.app` (handle autoritativo de Zernio).
+- **`connect_token`** = presente en el retorno.
+- **`step=select_page` NO apareció para Instagram** (IG trajo `accountId` directo). **⚠️ OJO FB: para Facebook PODRÍA aparecer el paso de selección de página** (`list/select-facebook-page`) — **NO asumir que IG y FB se comportan igual al diseñar el fix.**
+- (referencia) `redirectUrl` se honra; `pending-oauth-data` = `GET /connect/pending-oauth-data?profileId=…&platform=…`; `POST /accounts/{id}/move` existe (no aplicó); `DELETE /profiles/{id}` OK.
+**CONTRATO CERRADO.** Próximo paso = planear (en commit aparte, con review del owner ANTES de tocar producción) la migración del connect-url de producción hosted→headless usando este contrato.
 
-**EXPERIMENTO DE CAPTURA · `DEBT-ZERNIO-CAPTURE-ENDPOINT-TEMP` (REMOVER tras capturar el contrato):**
+**EXPERIMENTO DE CAPTURA · `DEBT-ZERNIO-CAPTURE-ENDPOINT-TEMP` — ✅ CERRADA 17 jun (endpoint removido + profile/cuenta de prueba borrados profiles=5 + owner retira `ZERNIO_CAPTURE_TOKEN` de Railway):**
 Para confirmar el contrato headless sin construir a ciegas se montó un endpoint TEMPORAL de captura:
 `GET /api/v1/zernio-experiment/capture?cap=<token>` (`backend/app/api/routes/_zernio_experiment.py` +
 1 línea en `main.py` + test 4/4). SIN JWT (recibe el redirect del navegador) → protegido por **token de
