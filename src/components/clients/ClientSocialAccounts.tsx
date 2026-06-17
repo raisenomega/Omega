@@ -23,7 +23,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Wifi, Trash2, Loader2 } from "lucide-react";
 import { getNetworkIcon } from "@/lib/network-icons";
-import { ZernioAccountPicker } from "@/components/clients/ZernioAccountPicker";
+import { ZernioConnectButton } from "@/components/clients/ZernioConnectButton";
+import { isConnected, type ConnectedItem } from "@/lib/zernioConnect";
+import { apiGet } from "@/lib/api-client";
 
 const PLATFORMS = [
   { value: "instagram", label: "Instagram" },
@@ -57,6 +59,12 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
       if (error) throw error;
       return data;
     },
+  });
+
+  // B-2 · estado REAL de conexión por red (del profile del negocio · alimenta el parpadeo).
+  const { data: connected, refetch: refetchConnected } = useQuery({
+    queryKey: ["zernio_connected", clientId],
+    queryFn: () => apiGet<{ items: ConnectedItem[] }>(`/clients/${clientId}/connected-accounts`),
   });
 
   const createMutation = useMutation({
@@ -193,11 +201,11 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
                     </p>
                   </div>
                   {acc.status === "active" && <div className="h-2 w-2 rounded-full bg-success" />}
-                  <ZernioAccountPicker
+                  <ZernioConnectButton
                     clientId={clientId}
                     platform={acc.platform}
-                    accountName={acc.account_name ?? ""}
-                    currentHandle={(acc as { zernio_account_handle?: string | null }).zernio_account_handle}
+                    connected={isConnected(acc.platform, connected?.items ?? [])}
+                    onSynced={() => { void refetchConnected(); }}
                   />
                   <Button
                     variant="ghost"

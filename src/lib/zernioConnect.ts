@@ -1,0 +1,31 @@
+/** Helpers puros del flujo de conexión OAuth-por-red (B-2). Sin render → testeable.
+ * White-label: la etiqueta cara-cliente es el NOMBRE DE LA RED (nunca "Zernio"). */
+
+export const PLATFORM_LABELS: Record<string, string> = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+  tiktok: "TikTok",
+  twitter: "X / Twitter",
+  linkedin: "LinkedIn",
+  youtube: "YouTube",
+};
+
+export function platformLabel(platform: string): string {
+  return PLATFORM_LABELS[platform] ?? platform;
+}
+
+export interface ConnectedItem {
+  platform: string;
+  handle: string | null;
+  zernio_account_id: string;
+}
+
+/** ¿La red está conectada (aparece en el profile del negocio)? Lee la verdad real, no el @handle. */
+export function isConnected(platform: string, items: ConnectedItem[]): boolean {
+  return items.some((i) => i.platform === platform);
+}
+
+/** ¿Todas las redes del negocio están conectadas? (apaga el parpadeo del tab cuando es true). */
+export function allConnected(platforms: string[], items: ConnectedItem[]): boolean {
+  return platforms.length > 0 && platforms.every((p) => isConnected(p, items));
+}
