@@ -5,6 +5,7 @@ OMEGA owner-only endpoints for reseller management
 from fastapi import APIRouter, HTTPException
 from typing import Dict, Any
 from app.infrastructure.supabase_service import get_supabase_service
+from app.config import settings
 from app.models.shared_models import APIResponse
 from app.models.reseller_models import (
     CreateResellerRequest,
@@ -37,6 +38,11 @@ async def create_reseller(request: CreateResellerRequest) -> APIResponse:
         - Default branding configuration
         - Client account with role='reseller' for authentication
     """
+    # SIGNUP GATE: crea un clients role='reseller' vía service-role SIN auth (2da puerta
+    # pública de creación de cuentas). Misma barrera que /register · default cerrado en prod.
+    # (Endurecer con auth superadmin = follow-up · ver CHECKLIST PRE-ONBOARDING-EXTERNO.)
+    if not settings.signup_enabled:
+        raise HTTPException(status_code=403, detail="signups_closed")
     try:
         service = get_supabase_service()
 

@@ -9,12 +9,12 @@ from app.bc_cognition.domain.routing_table import MODEL_SONNET  # P9 · string d
 
 class Settings(BaseSettings):
     """Application settings from environment variables"""
-
     # Application
     app_name: str = Field(default="OmegaRaisen", env="APP_NAME")
     app_version: str = Field(default="1.0.0", env="APP_VERSION")
     environment: str = Field(default="production", env="ENVIRONMENT")
     debug: bool = Field(default=False, env="DEBUG")
+    signup_enabled: bool = Field(default=False, env="SIGNUP_ENABLED")  # gate /register + /resellers/create (default cerrado en prod)
     secret_key: str = Field(..., env="SECRET_KEY")
 
     # API

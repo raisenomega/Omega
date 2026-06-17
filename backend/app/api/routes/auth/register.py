@@ -11,6 +11,7 @@ from app.api.routes.auth.jwt_utils import (
     hash_password,
 )
 from app.infrastructure.supabase_service import get_supabase_service
+from app.config import settings
 import logging
 
 router = APIRouter()
@@ -46,6 +47,11 @@ async def register(request: RegisterRequest) -> APIResponse:
         5. Generate JWT tokens with full client data
         6. Return client data + tokens
     """
+    # SIGNUP GATE: /register crea cuentas vía service-role (bypasea el toggle de Supabase
+    # Auth) → debe cerrarse en código. Default false en prod · reabrir SIGNUP_ENABLED=true
+    # solo para onboarding controlado. ANTES de crear cualquier usuario.
+    if not settings.signup_enabled:
+        raise HTTPException(status_code=403, detail="signups_closed")
     try:
         service = get_supabase_service()
 
