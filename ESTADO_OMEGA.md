@@ -38,6 +38,17 @@ El authUrl de `GET /connect/instagram?profileId=X` apunta **DIRECTO a `instagram
 - `pending-oauth-data`: endpoint = `GET /connect/pending-oauth-data?profileId=…&platform=…` (exige ambos). `tempToken`/`X-Connect-Token`: **NO se pudieron observar** (headers None · solo se emiten tras un callback OAuth real). Tras completar: **hay que re-listar `GET /accounts?profileId` para el accountId** (no viene en el redirect · confirmado en docs). Existe `POST /accounts/{id}/move` (reasignar) pero NO aplica: `mail_bd` no existe en Zernio, nada que mover. `DELETE /profiles/{id}` funciona (limpieza verificada).
 - **LO QUE FALTA (no exercible sin conectar una cuenta real · requiere OK + cuenta de prueba del owner):** el flujo completo headless end-to-end — si `headless=true`+`redirectUrl` devuelve a nuestro dominio con `tempToken`+`step=select_page`, el contrato exacto de `select-facebook-page`/IG, y de dónde sale el `tempToken`. **PÁRATE acá: owner revisa este contrato real ANTES de planear el commit hosted→headless.**
 
+**EXPERIMENTO DE CAPTURA · `DEBT-ZERNIO-CAPTURE-ENDPOINT-TEMP` (REMOVER tras capturar el contrato):**
+Para confirmar el contrato headless sin construir a ciegas se montó un endpoint TEMPORAL de captura:
+`GET /api/v1/zernio-experiment/capture?cap=<token>` (`backend/app/api/routes/_zernio_experiment.py` +
+1 línea en `main.py` + test 4/4). SIN JWT (recibe el redirect del navegador) → protegido por **token de
+UN SOLO USO** (`ZERNIO_CAPTURE_TOKEN` env · 403 sin él · 410 al reusar · inerte si la env falta). **NO
+persiste nada en DB**; `code`/`tempToken` JAMÁS completos en logs (solo presencia/len) · valor completo
+solo en el HTML efímero. Disparo + limpieza por scripts locales en `%TEMP%` (`zernio_exp_start.py` /
+`zernio_exp_cleanup.py` · profile de PRUEBA `OMEGA_EXP_*` descartable). **CERRAR ESTA DEUDA = borrar el
+archivo + la línea de `main.py` + retirar la env var de Railway + correr cleanup**, una vez capturado el
+contrato. Plan completo en `~/.claude/plans/jiggly-fluttering-simon.md`.
+
 **WHITE-LABEL (pendiente · menor que el bug · misma raíz probable):**
 1. popup salta a `zernio.com/signin`+`/dashboard` tras Allow → ¿`getConnectUrl` admite `returnUrl/redirectUrl/callback`? (docs.zernio.com).
 2. "Social Media Connector" en consent Meta/TikTok = nombre de la app de Zernio → confirmar si Zernio permite white-label del nombre o exige app propia (= App Review/audits, lo que B-2 evita).
