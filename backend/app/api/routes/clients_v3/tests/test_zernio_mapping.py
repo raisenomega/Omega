@@ -1,5 +1,6 @@
 """Mapeo Zernio per-negocio · F5/2b (G9 exime tests).
-CRÍTICO: cada endpoint exige user_owns_client → 403 si ajeno. Auth + Supabase + Zernio mockeados."""
+CRÍTICO: cada endpoint exige user_owns_client → 403 si ajeno. Auth + Supabase + Zernio mockeados.
+El hardening del POST (422 cuenta inválida + handle autoritativo) vive en test_zernio_hardening.py."""
 import asyncio
 import importlib
 from types import SimpleNamespace
@@ -32,11 +33,15 @@ def _patch_sb(monkeypatch, store):
                         lambda: SimpleNamespace(client=SimpleNamespace(table=lambda t: _FakeTable(store))))
 
 
-# ── OWNERSHIP 403 · los 3 endpoints ──
+def _patch_la(monkeypatch, accounts):
+    async def _la(): return accounts
+    monkeypatch.setattr(zm, "list_accounts", _la)
+
+
+# ── OWNERSHIP 403 · los 3 endpoints (guard ANTES de Zernio/Supabase) ──
 def test_get_available_403_si_no_dueno(monkeypatch):
     _patch_auth(monkeypatch, owns=False)
-    async def _la(): return []
-    monkeypatch.setattr(zm, "list_accounts", _la)
+    _patch_la(monkeypatch, [])
     with pytest.raises(HTTPException) as e:
         asyncio.run(zm.zernio_available_accounts("c1", None, "auth"))
     assert e.value.status_code == 403
@@ -60,9 +65,8 @@ def test_delete_unmap_403_si_no_dueno(monkeypatch):
 # ── Happy paths ──
 def test_get_available_filtra_platform(monkeypatch):
     _patch_auth(monkeypatch, owns=True)
-    async def _la(): return [{"_id": "ig1", "platform": "instagram", "name": "@a"},
-                             {"_id": "fb1", "platform": "facebook", "name": "@b"}]
-    monkeypatch.setattr(zm, "list_accounts", _la)
+    _patch_la(monkeypatch, [{"_id": "ig1", "platform": "instagram", "name": "@a"},
+                            {"_id": "fb1", "platform": "facebook", "name": "@b"}])
     out = asyncio.run(zm.zernio_available_accounts("c1", "instagram", "auth"))
     assert out.total == 1 and out.items[0].zernio_account_id == "ig1"
 
@@ -71,8 +75,8 @@ def test_post_map_inserta_si_no_existe(monkeypatch):
     _patch_auth(monkeypatch, owns=True)
     store = {"existing": []}
     _patch_sb(monkeypatch, store)
-    body = zm.ZernioMapRequest(zernio_account_id="Z1", zernio_account_handle="@acme")
-    out = asyncio.run(zm.map_zernio_account("c1", "instagram", body, "auth"))
+    _patch_la(monkeypatch, [{"_id": "Z1", "platform": "instagram", "name": "@a"}])
+    out = asyncio.run(zm.map_zernio_account("c1", "instagram", zm.ZernioMapRequest(zernio_account_id="Z1"), "auth"))
     assert out["ok"] is True and store["insert"]["zernio_account_id"] == "Z1"
 
 
@@ -80,8 +84,8 @@ def test_post_map_updatea_si_existe(monkeypatch):
     _patch_auth(monkeypatch, owns=True)
     store = {"existing": [{"id": "row1"}]}
     _patch_sb(monkeypatch, store)
-    body = zm.ZernioMapRequest(zernio_account_id="Z2")
-    asyncio.run(zm.map_zernio_account("c1", "instagram", body, "auth"))
+    _patch_la(monkeypatch, [{"_id": "Z2", "platform": "instagram", "name": "@b"}])
+    asyncio.run(zm.map_zernio_account("c1", "instagram", zm.ZernioMapRequest(zernio_account_id="Z2"), "auth"))
     assert store["update"]["zernio_account_id"] == "Z2"
 
 

@@ -1,12 +1,15 @@
 """Mapeo Zernio per-negocio per-plataforma · F5/2b.
 
 GET    /clients/{id}/zernio-available-accounts?platform=  → cuentas conectadas en Zernio (live).
-POST   /clients/{id}/social-accounts/{platform}/zernio      → mapea zernio_account_id al negocio (upsert).
-DELETE /clients/{id}/social-accounts/{platform}/zernio      → NULL-ea el mapeo ("Cambiar cuenta" = DELETE→POST).
+POST   /clients/{id}/social-accounts/{platform}/zernio      → mapea zernio_account_id al negocio (UPSERT · "Cambiar cuenta" = re-POST · sin ventana sin-binding).
+DELETE /clients/{id}/social-accounts/{platform}/zernio      → NULL-ea el mapeo (desvincular).
 
 SEGURIDAD: get_supabase_service usa service_role → BYPASSA RLS. El guard es user_owns_client en CADA
 endpoint (igual que list_client_social_accounts) ANTES de tocar social_accounts o Zernio. Sin ese check
 un reseller podria modificar cuentas de clientes ajenos.
+HARDENING anti-cross-publish (POST): el zernio_account_id se VALIDA contra list_accounts() de Zernio
+server-side (existe + plataforma correcta · 422 si no) y el handle guardado se toma de Zernio, NO del
+body del frontend (no spoofeable · aunque el picker tenga un bug o se llame con curl, gana la fuente real).
 """
 from typing import Optional
 from fastapi import APIRouter, Header, HTTPException, Query
@@ -55,18 +58,24 @@ async def map_zernio_account(
         raise HTTPException(status_code=404, detail="client_not_found")
     if not user_owns_client(user["id"], client):      # OWNERSHIP GUARD (antes del upsert)
         raise HTTPException(status_code=403, detail="client_access_denied")
+    # HARDENING: validar contra la fuente real (Zernio) · handle autoritativo (no del body).
+    accounts = await list_accounts()
+    match = next((a for a in accounts if str(a.get("_id")) == body.zernio_account_id
+                  and a.get("platform") == platform), None)
+    if not match:
+        raise HTTPException(status_code=422, detail="zernio_account_invalid")
+    handle = match.get("name")                         # de Zernio · ignora body.zernio_account_handle
     sb = get_supabase_service().client
     existing = (sb.table("social_accounts").select("id")
                 .eq("client_id", client_id).eq("platform", platform).limit(1).execute().data)
-    payload = {"zernio_account_id": body.zernio_account_id,
-               "zernio_account_handle": body.zernio_account_handle,
+    payload = {"zernio_account_id": body.zernio_account_id, "zernio_account_handle": handle,
                "oauth_status": "connected", "status": "active"}
     if existing:
         sb.table("social_accounts").update(payload).eq("id", existing[0]["id"]).execute()
     else:
         sb.table("social_accounts").insert({
             **payload, "client_id": client_id, "platform": platform,
-            "account_name": body.zernio_account_handle or body.zernio_account_id,
+            "account_name": handle or body.zernio_account_id,
         }).execute()
     return {"ok": True}
 
