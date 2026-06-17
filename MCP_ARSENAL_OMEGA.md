@@ -22,6 +22,13 @@ futura, y cómo potencian cada componente del sistema.
 > Análisis completo + TikTok Ads MCP oficial + Metricool + HERMES:
 > ver `OMEGA_MCP_MASTER.md` (local v2.0 · gitignored). Adspirer = uso
 > personal del owner, no del sistema.
+>
+> **act. 16 jun 2026 (propuesta · reconciliación specs):** para ese mismo uso
+> personal del owner (ver todos los clientes/ads desde Claude), el **MCP/CLI
+> OFICIAL de Meta Ads** (`mcp.facebook.com/ads` + `@meta/ads-cli` · §2.1) es
+> **mejor y gratis** que Adspirer (OAuth real, 29 tools, sin pegar tokens) →
+> **propongo reemplazar Adspirer por el MCP/CLI oficial** en owner-tools.
+> (Decisión del owner · no ejecutado en esta sesión de specs.)
 
 ---
 
@@ -185,6 +192,16 @@ Lo que NO cubre este MCP (sigue requiriendo Developer App):
   → Ver §2.2 para esa capa
 ```
 
+> **act. 16 jun 2026 (reconciliación specs · fuentes oficiales + prensa técnica):**
+> MCPs de Ads OFICIALES confirmados en 2026: **Google (28 abr)** · **Meta (29 abr** · `mcp.facebook.com/ads`
+> + CLI `@meta/ads-cli`) · **TikTok (13 may)**. Gratis en beta · OAuth real (no pegar tokens) · **todo lo
+> creado aterriza en PAUSED** (no override · alineado con P4).
+> **DISTINCIÓN CLAVE:** este MCP/CLI es para que el **OWNER opere campañas** desde Claude/Claude Code —
+> **NO es un canal para que ARIA hable con la IA de Meta.** El "**Meta Business Agent**" (asistente propio
+> de Meta que responde clientes en WA/IG/Messenger autónomamente) es OTRA cosa: SIN soporte MCP confirmado,
+> sin CRM nativo, pricing pagado aún sin anunciar → **riesgo competitivo a vigilar** (podría competir con
+> el Add-On WhatsApp $19/$35 de DEBT-092). Se documenta como **riesgo**, NO como integración.
+
 ### 2.2 Meta Content Publishing API ⏳ FIRMADO — Fase 3 (post-Developer App approval)
 
 ```
@@ -238,6 +255,16 @@ Vive en:      backend/app/infrastructure/integrations/linkedin_adapter.py
 Valor para OmegaRaisen:
   Resellers que operan cuentas B2B de sus clientes necesitan LinkedIn.
   Tier de prioridad bajo hasta que ≥10% de clientes pidan.
+
+act. 16 jun 2026 (realidad de plataforma · fuentes oficiales LinkedIn):
+  · Postear en PERFIL PERSONAL del cliente (scope r_member_social): PERMISO
+    CERRADO — LinkedIn ya NO acepta solicitudes. NO prometer "postear en el
+    LinkedIn personal del cliente": está BLOQUEADO por la plataforma.
+  · Postear en PÁGINA de empresa: POSIBLE, pero la Community Management API
+    es SOLO para entidades legales registradas (no developers individuales)
+    y requiere review.
+  · Tokens: 60 días (refresh 365). Camino realista = vía Zernio (su app ya
+    aprobada) y SOLO páginas de empresa, no perfiles personales.
 ```
 
 ### 2.4 YouTube Data API 🔵 FUTURO — Mes 4+
@@ -254,6 +281,14 @@ Herramientas que expondrá:
 
 Flujo con bc_cognition:
   Mismo patrón que TikTok — Veo 3.1 genera, YouTube publica.
+
+act. 16 jun 2026 (quota recalculada · fuentes oficiales YouTube Data API):
+  · Costo de upload BAJÓ de ~1,600 a ~100 unidades (4 dic 2025) — barato.
+  · Quota = 10,000 unidades/día POR PROYECTO de Google Cloud (NO por cuenta).
+    → ~100 uploads/día por proyecto a 100 u c/u. Multi-tenant: el cuello es el
+    proyecto, no el cliente. Para escala, pedir quota increase (GRATIS, cola de
+    semanas) o repartir clientes en >1 proyecto GCP.
+  · Shorts: se auto-detecta por ≤3 min + 9:16 (sin flag especial).
 ```
 
 ### 2.5 Google Business Profile API 🔵 FUTURO — Mes 6+
