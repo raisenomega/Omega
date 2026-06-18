@@ -23,9 +23,10 @@ def _front_base() -> str:
     return origins[0].rstrip("/") if origins else ""
 
 
-def _back_to_tab(client_id: str, status: str) -> RedirectResponse:
-    """Devuelve el navegador al tab de Cuentas del negocio · ?zernio=<status> (el verde lo da Zernio, no esto)."""
-    return RedirectResponse(url=f"{_front_base()}/clients?business={client_id}&zernio={status}", status_code=302)
+def _back_to_tab(status: str, platform: str = "") -> RedirectResponse:
+    """Aterriza el POPUP en /zernio/return (relay · ?zernio=<status>&platform). Ese relay sólo dispara un
+    refetch en el opener; el verde lo da connected-accounts (verdad de Zernio), no este redirect ni el postMessage."""
+    return RedirectResponse(url=f"{_front_base()}/zernio/return?zernio={status}&platform={platform}", status_code=302)
 
 
 @router.get("/zernio/callback")
@@ -41,12 +42,12 @@ async def zernio_callback(st: str = "", profileId: str = "", accountId: str = ""
     pid = str(client.get("zernio_profile_id") or "")
     if not pid or pid != profileId:                        # AISLAMIENTO: el retorno debe ser del profile del negocio
         logger.warning("zernio_callback · profileId mismatch · client=%s platform=%s", client_id, platform)
-        return _back_to_tab(client_id, "error")
+        return _back_to_tab("error", platform)
     if step == "select_page":                              # FB · contrato NO confirmado · gated (Commit 3)
         logger.info("zernio_callback · select_page (FB) gated · client=%s", client_id)
-        return _back_to_tab(client_id, "needs_page")
+        return _back_to_tab("needs_page", platform)
     try:
         await persist_zernio_account(client_id, platform, pid, accountId or None)   # hardened · 422 si no en profile
     except HTTPException:
-        return _back_to_tab(client_id, "error")            # cuenta no quedó en el profile → no guarda
-    return _back_to_tab(client_id, "connected")
+        return _back_to_tab("error", platform)            # cuenta no quedó en el profile → no guarda
+    return _back_to_tab("connected", platform)

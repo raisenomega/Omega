@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,6 +66,18 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
     queryKey: ["zernio_connected", clientId],
     queryFn: () => apiGet<{ items: ConnectedItem[] }>(`/clients/${clientId}/connected-accounts`),
   });
+
+  // B-2 headless · el popup de /zernio/return avisa al terminar el OAuth → SOLO re-consultamos la verdad
+  // real (connected-accounts). El mensaje NO afirma conexión; el verde sigue saliendo de `connected.items`.
+  useEffect(() => {
+    const onMsg = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;          // mismo origen
+      const d = e.data as { source?: string; status?: string } | null;
+      if (d?.source === "zernio" && d.status === "connected") void refetchConnected();
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, [refetchConnected]);
 
   const createMutation = useMutation({
     mutationFn: async () => {

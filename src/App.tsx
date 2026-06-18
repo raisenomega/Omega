@@ -12,6 +12,7 @@ import { ARIAProvider } from "@/contexts/ARIAContext";
 import { ActiveBusinessProvider } from "@/contexts/ActiveBusinessContext";
 import { ARIADrawer } from "@/components/aria/ARIADrawer";
 import Auth from "./pages/Auth";
+import ZernioReturn from "./pages/ZernioReturn";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
 import Content from "./pages/Content";
@@ -62,6 +63,8 @@ const App = () => (
             <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              {/* B-2 headless · relay del popup OAuth de Zernio · público (corre en el popup · solo postMessage+close) */}
+              <Route path="/zernio/return" element={<ZernioReturn />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route
                 path="/dashboard"
