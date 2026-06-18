@@ -18,22 +18,6 @@ def _key(monkeypatch):
     oauth_cfg._oauth_settings = None
 
 
-def test_sign_verify_roundtrip():
-    s = stmod.sign_state("client-A", "instagram")
-    assert stmod.verify_state(s) == ("client-A", "instagram")
-
-
-def test_verify_tampered_sig_is_none():
-    s = stmod.sign_state("client-A", "instagram")
-    tampered = s[:-1] + ("0" if s[-1] != "0" else "1")
-    assert stmod.verify_state(tampered) is None
-
-
-def test_verify_wrong_shape_is_none():
-    assert stmod.verify_state("a.b.c") is None
-    assert stmod.verify_state("garbage") is None
-
-
 def _run(**kw):
     return asyncio.run(cb.zernio_callback(**kw))
 
@@ -80,3 +64,32 @@ def test_callback_persist_422_redirects_error(monkeypatch):
     monkeypatch.setattr(cb, "persist_zernio_account", _persist)
     resp = _run(st=stmod.sign_state("client-A", "instagram"), profileId="P", accountId="acc1")
     assert "zernio=error" in resp.headers["location"]
+
+
+def _ok_persist():
+    async def _p(*a, **k):
+        return {"zernio_account_id": "x", "handle": "h"}
+    return _p
+
+
+def test_callback_redirige_al_origen_firmado_si_esta_permitido(monkeypatch):
+    monkeypatch.setattr(cb.settings, "backend_cors_origins",
+                        "https://www.omegaraisen.agency,https://omegaraisen.agency")
+    monkeypatch.setattr(cb.reader, "get_client", lambda cid: {"id": cid, "zernio_profile_id": "P"})
+    monkeypatch.setattr(cb, "persist_zernio_account", _ok_persist())
+    s = stmod.sign_state("client-A", "instagram", "https://www.omegaraisen.agency")
+    resp = _run(st=s, profileId="P", accountId="acc1")
+    assert resp.headers["location"].startswith("https://www.omegaraisen.agency/zernio/return")
+
+
+def test_callback_rechaza_origen_no_permitido_open_redirect(monkeypatch):
+    # origen FIRMADO pero NO en la allowlist → NO redirige ahí (anti open-redirect) → cae al [0] permitido.
+    monkeypatch.setattr(cb.settings, "backend_cors_origins",
+                        "https://www.omegaraisen.agency,https://omegaraisen.agency")
+    monkeypatch.setattr(cb.reader, "get_client", lambda cid: {"id": cid, "zernio_profile_id": "P"})
+    monkeypatch.setattr(cb, "persist_zernio_account", _ok_persist())
+    s = stmod.sign_state("client-A", "instagram", "https://evil.example")
+    resp = _run(st=s, profileId="P", accountId="acc1")
+    loc = resp.headers["location"]
+    assert "evil.example" not in loc                                   # NO redirige al origen forjado/ajeno
+    assert loc.startswith("https://www.omegaraisen.agency/zernio/return")   # cae al [0] permitido

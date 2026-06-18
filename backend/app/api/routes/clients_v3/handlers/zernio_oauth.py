@@ -14,6 +14,7 @@ from app.api.routes.clients_v3._access_control import user_owns_client
 from app.api.routes.clients_v3._zernio_state import sign_state, build_callback_url
 from app.bc_cognition.infrastructure.zernio_adapter import list_accounts
 from app.bc_cognition.infrastructure.zernio_profiles import create_profile, get_connect_url
+from app.config import settings
 
 router = APIRouter()
 
@@ -46,10 +47,13 @@ async def ensure_zernio_profile(client_id: str, authorization: Optional[str] = H
 
 @router.get("/{client_id}/social-accounts/{platform}/connect-url")
 async def zernio_connect_url(client_id: str, platform: str,
-                             authorization: Optional[str] = Header(None)) -> dict:
+                             authorization: Optional[str] = Header(None),
+                             origin: Optional[str] = Header(None)) -> dict:
     client = await _owned(client_id, authorization)        # JWT + ownership ANTES de firmar el state
     pid = await _ensure_profile(client_id, client)
-    redirect_url = build_callback_url(sign_state(client_id, platform))   # HEADLESS · vuelve a OMEGA
+    # firmamos el Origin del navegador SOLO si ya está permitido (si falta/no permitido → "" → callback usa [0]).
+    safe_origin = origin if (origin and origin in settings.cors_origins_list) else ""
+    redirect_url = build_callback_url(sign_state(client_id, platform, safe_origin))  # HEADLESS · vuelve al origen del user
     return {"auth_url": await get_connect_url(platform, pid, redirect_url)}
 
 

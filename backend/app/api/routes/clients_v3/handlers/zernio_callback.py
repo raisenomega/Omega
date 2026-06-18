@@ -17,16 +17,21 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-def _front_base() -> str:
-    """Base del frontend para devolver al usuario al tab de Cuentas (primer CORS origin · fallback vacío)."""
-    origins = settings.cors_origins_list
-    return origins[0].rstrip("/") if origins else ""
+def _front_base(origin: str) -> str:
+    """Vuelve al MISMO origen del usuario (firmado en el state) SOLO si está en la allowlist
+    (anti open-redirect · NUNCA a un origen arbitrario aunque venga firmado). Si no permitido/ausente
+    → primer origen permitido. Resuelve www vs non-www sin depender del orden de la lista."""
+    allowed = settings.cors_origins_list
+    if origin and origin in allowed:
+        return origin.rstrip("/")
+    return allowed[0].rstrip("/") if allowed else ""
 
 
-def _back_to_tab(status: str, platform: str = "") -> RedirectResponse:
+def _back_to_tab(status: str, platform: str, origin: str = "") -> RedirectResponse:
     """Aterriza el POPUP en /zernio/return (relay · ?zernio=<status>&platform). Ese relay sólo dispara un
     refetch en el opener; el verde lo da connected-accounts (verdad de Zernio), no este redirect ni el postMessage."""
-    return RedirectResponse(url=f"{_front_base()}/zernio/return?zernio={status}&platform={platform}", status_code=302)
+    return RedirectResponse(url=f"{_front_base(origin)}/zernio/return?zernio={status}&platform={platform}",
+                            status_code=302)
 
 
 @router.get("/zernio/callback")
@@ -35,19 +40,19 @@ async def zernio_callback(st: str = "", profileId: str = "", accountId: str = ""
     verified = verify_state(st)
     if not verified:
         raise HTTPException(status_code=400, detail="invalid_state")   # firma inválida/forjada
-    client_id, platform = verified
+    client_id, platform, origin = verified                             # origin firmado · se re-valida en _front_base
     client = reader.get_client(client_id)
     if not client:
         raise HTTPException(status_code=404, detail="client_not_found")
     pid = str(client.get("zernio_profile_id") or "")
     if not pid or pid != profileId:                        # AISLAMIENTO: el retorno debe ser del profile del negocio
         logger.warning("zernio_callback · profileId mismatch · client=%s platform=%s", client_id, platform)
-        return _back_to_tab("error", platform)
+        return _back_to_tab("error", platform, origin)
     if step == "select_page":                              # FB · contrato NO confirmado · gated (Commit 3)
         logger.info("zernio_callback · select_page (FB) gated · client=%s", client_id)
-        return _back_to_tab("needs_page", platform)
+        return _back_to_tab("needs_page", platform, origin)
     try:
         await persist_zernio_account(client_id, platform, pid, accountId or None)   # hardened · 422 si no en profile
     except HTTPException:
-        return _back_to_tab("error", platform)            # cuenta no quedó en el profile → no guarda
-    return _back_to_tab("connected", platform)
+        return _back_to_tab("error", platform, origin)            # cuenta no quedó en el profile → no guarda
+    return _back_to_tab("connected", platform, origin)
