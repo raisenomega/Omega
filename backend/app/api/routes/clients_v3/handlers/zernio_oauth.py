@@ -11,6 +11,7 @@ from fastapi import APIRouter, Header, HTTPException
 from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.clients_v3 import _clients_reader as reader, _clients_repository as repo
 from app.api.routes.clients_v3._access_control import user_owns_client
+from app.api.routes.clients_v3._zernio_state import sign_state, build_callback_url
 from app.bc_cognition.infrastructure.zernio_adapter import list_accounts
 from app.bc_cognition.infrastructure.zernio_profiles import create_profile, get_connect_url
 
@@ -46,9 +47,10 @@ async def ensure_zernio_profile(client_id: str, authorization: Optional[str] = H
 @router.get("/{client_id}/social-accounts/{platform}/connect-url")
 async def zernio_connect_url(client_id: str, platform: str,
                              authorization: Optional[str] = Header(None)) -> dict:
-    client = await _owned(client_id, authorization)
+    client = await _owned(client_id, authorization)        # JWT + ownership ANTES de firmar el state
     pid = await _ensure_profile(client_id, client)
-    return {"auth_url": await get_connect_url(platform, pid)}
+    redirect_url = build_callback_url(sign_state(client_id, platform))   # HEADLESS · vuelve a OMEGA
+    return {"auth_url": await get_connect_url(platform, pid, redirect_url)}
 
 
 @router.get("/{client_id}/connected-accounts")

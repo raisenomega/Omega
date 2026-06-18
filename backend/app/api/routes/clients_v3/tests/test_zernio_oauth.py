@@ -42,11 +42,20 @@ def test_ensure_profile_reusa_si_existe(monkeypatch):
 
 
 def test_connect_url_devuelve_auth_url(monkeypatch):
+    # connect-url ahora va HEADLESS: firma el state (necesita OAUTH_ENCRYPTION_KEY) y pasa redirect_url.
+    import app.api.routes.oauth._oauth_config as oauth_cfg
+    monkeypatch.setenv("OAUTH_ENCRYPTION_KEY", "test-hmac-key-123")
+    oauth_cfg._oauth_settings = None
     _auth(monkeypatch, {"id": "c1", "user_id": "u1", "zernio_profile_id": "prof_ya"})
-    async def _cu(platform, pid): return f"https://www.facebook.com/oauth?profileId={pid}"
+    captured = {}
+    async def _cu(platform, pid, redirect_url=None):
+        captured["redirect_url"] = redirect_url
+        return f"https://www.facebook.com/oauth?profileId={pid}"
     monkeypatch.setattr(zo, "get_connect_url", _cu)
     out = asyncio.run(zo.zernio_connect_url("c1", "facebook", "auth"))
     assert "facebook.com" in out["auth_url"] and "prof_ya" in out["auth_url"]
+    # el redirect_url debe apuntar al callback de OMEGA con un state firmado (headless · vuelve a casa)
+    assert "/clients/zernio/callback?st=" in captured["redirect_url"]
 
 
 def test_connected_accounts_lista_del_profile(monkeypatch):

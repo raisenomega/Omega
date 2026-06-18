@@ -9,6 +9,8 @@ import pytest
 from fastapi import HTTPException
 
 zs = importlib.import_module("app.api.routes.clients_v3.handlers.zernio_sync")
+# El hardening (list_accounts + supabase) se movió a _zernio_persist (compartido con el callback headless).
+zp = importlib.import_module("app.api.routes.clients_v3.handlers._zernio_persist")
 
 
 class _FakeTable:
@@ -28,9 +30,9 @@ def _setup(monkeypatch, accounts, client=None, owns=True, store=None):
                         lambda cid: client if client is not None else {"id": cid, "user_id": "u1", "zernio_profile_id": "prof_zafa"})
     monkeypatch.setattr(zs, "user_owns_client", lambda uid, c: owns)
     async def _la(pid): return accounts
-    monkeypatch.setattr(zs, "list_accounts", _la)
+    monkeypatch.setattr(zp, "list_accounts", _la)        # hardening vive en _zernio_persist
     if store is not None:
-        monkeypatch.setattr(zs, "get_supabase_service",
+        monkeypatch.setattr(zp, "get_supabase_service",
                             lambda: SimpleNamespace(client=SimpleNamespace(table=lambda t: _FakeTable(store))))
 
 

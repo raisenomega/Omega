@@ -12,6 +12,7 @@ from app.api.routes.clients_v3.handlers.upload_client_context import router as u
 from app.api.routes.clients_v3.handlers.zernio_mapping import router as zernio_mapping_router
 from app.api.routes.clients_v3.handlers.zernio_oauth import router as zernio_oauth_router
 from app.api.routes.clients_v3.handlers.zernio_sync import router as zernio_sync_router
+from app.api.routes.clients_v3.handlers.zernio_callback import router as zernio_callback_router
 
 router = APIRouter(prefix="/clients", tags=["Clients V3"])
 router.include_router(get_router)
@@ -25,4 +26,5 @@ router.include_router(social_accounts_router)
 router.include_router(upload_context_router)
 router.include_router(zernio_mapping_router)
 router.include_router(zernio_oauth_router)   # B-2 · profile + connect-url + connected-accounts
-router.include_router(zernio_sync_router)    # B-2 · zernio-sync (hardened binding capture)
+router.include_router(zernio_sync_router)    # B-2 · zernio-sync (hardened binding capture · fallback)
+router.include_router(zernio_callback_router)  # B-2 headless · retorno OAuth (sin JWT · profile-scoped)

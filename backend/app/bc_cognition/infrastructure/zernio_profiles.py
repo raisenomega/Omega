@@ -5,6 +5,9 @@ cliente autoriza cae aislada en SU profile (no en una lista global). Reusa _conf
 (misma key + base). Cero fabricacion: non-2xx o sin id → ZernioPublishError honesto (regla G9).
 Contrato verificado en vivo (17 jun): POST /profiles → {profile:{_id}} · GET /connect/<plat>?profileId → {authUrl}.
 """
+from typing import Optional
+from urllib.parse import quote
+
 import httpx
 
 from app.bc_cognition.infrastructure.zernio_adapter import _conf, ZernioPublishError, _HTTP_TIMEOUT
@@ -26,10 +29,14 @@ async def create_profile(name: str, description: str = "") -> str:
     return str(pid)
 
 
-async def get_connect_url(platform: str, profile_id: str) -> str:
-    """GET /connect/<platform>?profileId → authUrl del OAuth hosteado (cae en el profile del negocio)."""
+async def get_connect_url(platform: str, profile_id: str, redirect_url: Optional[str] = None) -> str:
+    """GET /connect/<platform>?profileId(&headless=true&redirectUrl=...) → authUrl del OAuth.
+    redirect_url dado → modo HEADLESS: el OAuth vuelve a NUESTRO dominio (B-2 fix · cierra aislamiento +
+    white-label). redirect_url None → hosted legacy (retrocompatible · cae en zernio.com)."""
     headers, base = _conf()
     url = f"{base}/connect/{platform}?profileId={profile_id}"
+    if redirect_url:
+        url += f"&headless=true&redirectUrl={quote(redirect_url, safe='')}"
     async with httpx.AsyncClient(timeout=_HTTP_TIMEOUT, headers=headers) as client:
         try:
             resp = await client.get(url)
