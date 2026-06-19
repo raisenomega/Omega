@@ -42,7 +42,7 @@ python-multipart>=0.0.9       # bump 10 jun 2026 · P0-4 · CVE-2024-24762 (ReDo
 # ─── Scrapers / extracción ────────────────────────────────────────
 beautifulsoup4==4.12.0
 lxml==5.1.0
-pypdf==4.0.0
+pypdf==6.13.3
 python-docx==1.1.0
 
 # ─── Schedulers ───────────────────────────────────────────────────
