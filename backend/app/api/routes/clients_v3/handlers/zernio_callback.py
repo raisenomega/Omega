@@ -50,6 +50,9 @@ async def zernio_callback(st: str = "", profileId: str = "", accountId: str = ""
         logger.warning("zernio_callback · profileId mismatch · client=%s platform=%s", client_id, platform)
         return _back_to_tab("error", platform, origin)
     if step == "select_page":                              # FB · stash server-side + handoff al page-picker
+        if not user_id:                                    # anómalo en FB (no hay states FB legacy legítimos) → no stashea
+            logger.warning("zernio_callback · select_page sin user_id firmado → no stashea · client=%s", client_id)
+            return _back_to_tab("needs_page", platform, origin)
         stash_pending(user_id, client_id, platform, tempToken, connect_token)   # keyed por user_id (firmado) · server-side
         logger.info("zernio_callback · select_page (FB) · pending stasheado · client=%s", client_id)
         return _back_to_tab("needs_page", platform, origin)            # redirect SIN tokens en la URL
