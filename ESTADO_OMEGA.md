@@ -66,6 +66,8 @@ negocio B se adjunta a SU profile Zernio y cae verde, **aislada** del profile de
 
 **DEUDA registrada:** `DEBT-FB-STASH-MULTIWORKER` — el stash de tokens FB (`_zernio_pending.py`) es in-memory → asume Railway `--workers 1` (igual que `DEBT-SCHEDULER-SPLIT`). Multi-worker lo rompería (un worker stashea, otro atiende el fetch del paso 3 · no comparten memoria). Alternativa al escalar: fila DB efímera. NO construir con DB ahora (sobre-ingeniería para 1 worker · queda escrito para que no sorprenda).
 
+**DEUDA registrada:** `DEBT-FB-RETRY-TRANSIENT` — `select-page` hace `clear_pending` en `finally` → limpia el stash ante CUALQUIER fallo, incluido un transitorio de Zernio (timeout/5xx). Para un 422-real (página no en el profile) está bien (reintentar no ayuda). Para un transitorio es agresivo: obliga a rehacer el OAuth completo (re-Allow en Meta) en vez de solo reintentar el select (el `tempToken` podría seguir vivo). Decisión consciente = lado SEGURO (un fallo no deja credenciales vivas). Revisar con datos del E2E (paso 5): si los transitorios son frecuentes, diferenciar transitorio (no limpia) de 422-real (limpia). NO cambiar ahora.
+
 **REGLAS DEL ARCO:** contrato capturado ✓ (ya no a ciegas) · un commit por paso + review del owner ANTES · no `persona_*`/`limits` · **cero publish hasta página verde en SU profile correcto verificada por el owner**.
 
 ---
