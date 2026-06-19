@@ -62,6 +62,10 @@ negocio B se adjunta a SU profile Zernio y cae verde, **aislada** del profile de
 4. **Persist:** tras el select, la página aparece en `/accounts` → `persist_zernio_account` (`_zernio_persist.py:22-45`) la captura por accountId (**reuso** · el paso NUEVO es el select, no el persist).
 5. **E2E** con cuenta FB de prueba que **NO administre negocios reales** (lección: "Lucas Mark" administra Zafacones+Mail Boxes reales → usar una cuenta FB limpia tipo `wudi.app` para que el aislamiento del branch salga sin tocar nada real).
 
+**PROGRESO:** Paso 1 ✅ adapter `zernio_facebook.py` (`get_facebook_pages`+`select_facebook_page` · commit `35a302e`) · Paso 2 ✅ stash server-side `_zernio_pending.py` + branch `select_page` en callback (tokens nunca al navegador · key=`(client_id,platform)`). Pasos 3-5 pendientes.
+
+**DEUDA registrada:** `DEBT-FB-STASH-MULTIWORKER` — el stash de tokens FB (`_zernio_pending.py`) es in-memory → asume Railway `--workers 1` (igual que `DEBT-SCHEDULER-SPLIT`). Multi-worker lo rompería (un worker stashea, otro atiende el fetch del paso 3 · no comparten memoria). Alternativa al escalar: fila DB efímera. NO construir con DB ahora (sobre-ingeniería para 1 worker · queda escrito para que no sorprenda).
+
 **REGLAS DEL ARCO:** contrato capturado ✓ (ya no a ciegas) · un commit por paso + review del owner ANTES · no `persona_*`/`limits` · **cero publish hasta página verde en SU profile correcto verificada por el owner**.
 
 ---

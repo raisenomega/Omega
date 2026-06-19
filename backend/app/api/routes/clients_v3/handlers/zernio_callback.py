@@ -11,6 +11,7 @@ from fastapi.responses import RedirectResponse
 from app.api.routes.clients_v3 import _clients_reader as reader
 from app.api.routes.clients_v3._zernio_state import verify_state
 from app.api.routes.clients_v3.handlers._zernio_persist import persist_zernio_account
+from app.api.routes.clients_v3.handlers._zernio_pending import stash_pending
 from app.config import settings
 
 router = APIRouter()
@@ -35,8 +36,8 @@ def _back_to_tab(status: str, platform: str, origin: str = "") -> RedirectRespon
 
 
 @router.get("/zernio/callback")
-async def zernio_callback(st: str = "", profileId: str = "", accountId: str = "",
-                          step: str = "") -> RedirectResponse:
+async def zernio_callback(st: str = "", profileId: str = "", accountId: str = "", step: str = "",
+                          tempToken: str = "", connect_token: str = "") -> RedirectResponse:
     verified = verify_state(st)
     if not verified:
         raise HTTPException(status_code=400, detail="invalid_state")   # firma inválida/forjada
@@ -48,9 +49,10 @@ async def zernio_callback(st: str = "", profileId: str = "", accountId: str = ""
     if not pid or pid != profileId:                        # AISLAMIENTO: el retorno debe ser del profile del negocio
         logger.warning("zernio_callback · profileId mismatch · client=%s platform=%s", client_id, platform)
         return _back_to_tab("error", platform, origin)
-    if step == "select_page":                              # FB · contrato NO confirmado · gated (Commit 3)
-        logger.info("zernio_callback · select_page (FB) gated · client=%s", client_id)
-        return _back_to_tab("needs_page", platform, origin)
+    if step == "select_page":                              # FB · stash server-side + handoff al page-picker
+        stash_pending(client_id, platform, tempToken, connect_token)   # tokens SOLO server-side (nunca al navegador)
+        logger.info("zernio_callback · select_page (FB) · pending stasheado · client=%s", client_id)
+        return _back_to_tab("needs_page", platform, origin)            # redirect SIN tokens en la URL
     try:
         await persist_zernio_account(client_id, platform, pid, accountId or None)   # hardened · 422 si no en profile
     except HTTPException:

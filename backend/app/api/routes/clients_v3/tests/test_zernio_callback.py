@@ -34,10 +34,15 @@ def test_callback_profile_mismatch_redirects_error(monkeypatch):
     assert resp.status_code == 302 and "zernio=error" in resp.headers["location"]
 
 
-def test_callback_select_page_is_gated(monkeypatch):
+def test_callback_select_page_stashea_sin_tokens_en_url(monkeypatch):
+    from app.api.routes.clients_v3.handlers import _zernio_pending as pend
+    pend._store.clear()
     monkeypatch.setattr(cb.reader, "get_client", lambda cid: {"id": cid, "zernio_profile_id": "P"})
-    resp = _run(st=stmod.sign_state("client-A", "facebook"), profileId="P", step="select_page")
-    assert "zernio=needs_page" in resp.headers["location"]   # FB no se persiste a ciegas
+    resp = _run(st=stmod.sign_state("client-A", "facebook"), profileId="P", step="select_page",
+                tempToken="ttSEC", connect_token="ctSEC")
+    loc = resp.headers["location"]
+    assert "zernio=needs_page" in loc and "ttSEC" not in loc and "ctSEC" not in loc   # tokens NO en URL
+    assert pend.get_pending("client-A", "facebook") == ("ttSEC", "ctSEC")   # stasheados server-side
 
 
 def test_callback_success_persists_and_connected(monkeypatch):
