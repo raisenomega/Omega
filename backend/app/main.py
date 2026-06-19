@@ -63,7 +63,6 @@ from app.api.routes import brand_voice_v2
 from app.api.routes import guardian
 from app.sentinel.persistence_router import router as sentinel_persistence_router
 from app.api.routes.clients.feature_usage_router import router as feature_usage_router
-from app.api.routes import _zernio_experiment  # TEMP · DEBT-ZERNIO-CAPTURE-ENDPOINT-TEMP · FB · REMOVER tras capturar
 
 # Services & scheduler
 sentinel_service = SentinelService()
@@ -275,8 +274,6 @@ app.include_router(reseller.router, prefix=settings.api_v1_prefix, tags=["Resell
 app.include_router(feature_usage_router, prefix=settings.api_v1_prefix, tags=["Feature Usage 📊"])
 app.include_router(sub_brands.router, prefix=settings.api_v1_prefix, tags=["Sub-Brands 🏷️"])
 app.include_router(security_dev.router, prefix=settings.api_v1_prefix, tags=["Security Dev 🔐"])
-# TEMP · DEBT-ZERNIO-CAPTURE-ENDPOINT-TEMP · captura contrato headless FB · REMOVER tras el experimento
-app.include_router(_zernio_experiment.router, prefix=settings.api_v1_prefix, tags=["Zernio Experiment ⏳TEMP"])
 
 @app.get("/")
 async def root() -> dict[str, str | int]:
