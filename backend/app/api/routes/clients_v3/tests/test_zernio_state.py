@@ -28,3 +28,29 @@ def test_verify_tampered_sig_is_none():
 def test_verify_wrong_shape_is_none():
     assert stmod.verify_state("a.b.c") is None     # 3 segmentos, no 5
     assert stmod.verify_state("garbage") is None
+
+
+def _set_base(monkeypatch, value):
+    """Setea OAUTH_REDIRECT_BASE y resetea el singleton para que build_callback_url lo relea."""
+    monkeypatch.setenv("OAUTH_REDIRECT_BASE", value)
+    oauth_cfg._oauth_settings = None
+
+
+def test_build_callback_url_descarta_path_pegado(monkeypatch):
+    # base con path pegado (el bug real de prod) → solo scheme://host en el resultado.
+    _set_base(monkeypatch, "https://omega-production-3c67.up.railway.app/api/v1/auth/google/callback")
+    assert stmod.build_callback_url("ST") == \
+        "https://omega-production-3c67.up.railway.app/api/v1/clients/zernio/callback?st=ST"
+
+
+def test_build_callback_url_base_vacia_LANZA(monkeypatch):
+    # ESTE es el test que hubiera atrapado el 500 de prod (OAUTH_REDIRECT_BASE ausente → vacía).
+    _set_base(monkeypatch, "")
+    with pytest.raises(RuntimeError):
+        stmod.build_callback_url("ST")
+
+
+def test_build_callback_url_base_sin_host_LANZA(monkeypatch):
+    _set_base(monkeypatch, "/api/v1/clients")      # relativa · sin scheme/host → no se manda relativo a Zernio
+    with pytest.raises(RuntimeError):
+        stmod.build_callback_url("ST")

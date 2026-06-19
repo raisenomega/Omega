@@ -8,6 +8,7 @@ import hashlib
 import hmac
 import secrets
 from typing import Optional
+from urllib.parse import urlparse
 
 from app.api.routes.oauth._oauth_config import get_oauth_settings
 from app.api.routes.oauth._token_crypto import CryptoNotConfigured
@@ -58,6 +59,12 @@ def verify_state(state: str) -> Optional[tuple[str, str, str]]:
 
 
 def build_callback_url(st: str) -> str:
-    """URL de retorno del headless (a NUESTRO backend) con el state firmado · base = OAUTH_REDIRECT_BASE."""
-    base = get_oauth_settings().oauth_redirect_base.rstrip("/")
-    return f"{base}{settings.api_v1_prefix}/clients/zernio/callback?st={st}"
+    """URL de retorno del headless (a NUESTRO backend) con el state firmado. Deriva la base con urlparse
+    → scheme://netloc (DESCARTA cualquier path pegado a OAUTH_REDIRECT_BASE). Si la base no tiene
+    scheme(http/https)+host válido (vacía/relativa), RAISE ruidoso: Zernio rechaza un redirectUrl relativo
+    (400 → 500 silencioso con un cliente). Mejor fallar claro en deploy/test (cubierto por test) que en runtime."""
+    raw = get_oauth_settings().oauth_redirect_base.strip()
+    p = urlparse(raw)
+    if p.scheme not in ("http", "https") or not p.netloc:
+        raise RuntimeError(f"OAUTH_REDIRECT_BASE inválida o ausente: {raw!r}")
+    return f"{p.scheme}://{p.netloc}{settings.api_v1_prefix}/clients/zernio/callback?st={st}"
