@@ -60,6 +60,41 @@ el access-log) · rotar el JWT `reseller@omega.com` (`61f88b91`) · borrar histo
 15/15 + test-first; un commit por paso + review del owner antes del push; el verde SIEMPRE de connected-accounts
 (verdad Zernio), nunca de un postMessage/canal/select; cero publish; NO `META_APP_*` (ruta Zernio ≠ Meta-directa).
 
+### RECON plataformas restantes (19 jun · read-only · NADA construido · OpenAPI Zernio real)
+
+Dos patrones connect headless (spec `/connect/{platform}`): **A-directo** (redirect trae `accountId` → callback
+lo persiste genéricamente · cero código por plataforma) vs **B-selección** (redirect trae OAuth data → endpoint
+`/connect/<plat>/select-*`). OMEGA expone 6 redes.
+
+| Red | Patrón | Estado |
+|---|---|---|
+| instagram | A directo | ✅ cerrado (real, aislado) |
+| facebook | B `select-page` | ✅ cerrado (real, aislado) |
+| tiktok | A directo | ✅ connect vivo (real, aislado · binding `social_accounts.zernio_account_id` escrito) |
+| twitter/X | A directo | ⚪ connect-url 401 (montado, paridad) · **debería conectar sin código** · solo E2E |
+| youtube | A directo | ⚪ idem · caveat Google multi-channel (probar cuenta de 1 canal) · solo E2E |
+| linkedin | B `select-organization` | 🔶 hosted viejo en OR · headless NO construido · **sub-patrón DISTINTO a FB** |
+
+**DIFERIDOS a sesión dedicada propia (NO construir hasta GO explícito):**
+- **Twitter/X + YouTube** — Patrón A · cero código esperado · **solo E2E** con cuentas de prueba en profile
+  **DESCARTABLE** (NO Mail Boxes, que es producción) · YouTube probar primero con cuenta de 1 solo canal.
+- **LinkedIn** — Patrón B pero **NO copiar el branch de FB a ciegas**: usa `pendingDataToken` (lista de orgs muy
+  grande para la URL) → `GET /connect/pending-data?token=` devuelve tempToken+userProfile+organizations →
+  `POST /connect/linkedin/select-organization {profileId,tempToken,userProfile,accountType,selectedOrganization}`
+  con `accountType` personal/organization (org-picker). Arco de construcción propio con review paso a paso.
+- Otras vía Zernio (fuera del PLATFORMS actual): googlebusiness/pinterest/snapchat/whatsapp = paso intermedio;
+  threads/reddit/bluesky/telegram/discord = directas.
+
+**TikTok publicación (recon · vivo en repo HOY):** pipeline genérico `zernio_adapter.create_post` (POST `/posts`
+· `platforms:[{platform,accountId}]` + `mediaItems:[{url,type}]` + publishNow) + ruta `POST /api/v1/publish/auto`
++ `_publish_service.publish_scheduled_post`. **Cadena connect→publish CABLEADA y verificada con datos:** publish
+resuelve el accountId vía `get_zernio_account_id`(social_accounts) → `resolve_account_id` (binding per-negocio o
+falla honesto · sin adivinar) → `create_post`. TikTok ∈ `_MEDIA_REQUIRED` (exige video). Solo `status='pending'`
+(humano aprobó) publica. **Token TikTok 24h: lo maneja ZERNIO** (no mandamos token · pasamos accountId · Zernio
+publica con su conexión guardada · si el token venció y Zernio no lo refrescó → non-2xx → fallo honesto). FALTA
+para "SÓLIDO": un E2E de publish real (video de prueba) verificando que sale en TikTok aislado por negocio — NO
+ejecutado aún.
+
 ---
 
 ## 🟢 HANDOFF · B-2 ZERNIO HEADLESS · MIGRACIÓN COMPLETA + E2E VERDE (18 jun · RETOMAR ACÁ)
