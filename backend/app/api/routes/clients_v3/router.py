@@ -13,6 +13,7 @@ from app.api.routes.clients_v3.handlers.zernio_mapping import router as zernio_m
 from app.api.routes.clients_v3.handlers.zernio_oauth import router as zernio_oauth_router
 from app.api.routes.clients_v3.handlers.zernio_sync import router as zernio_sync_router
 from app.api.routes.clients_v3.handlers.zernio_callback import router as zernio_callback_router
+from app.api.routes.clients_v3.handlers.zernio_fb_pages import router as zernio_fb_pages_router
 
 router = APIRouter(prefix="/clients", tags=["Clients V3"])
 router.include_router(get_router)
@@ -28,3 +29,4 @@ router.include_router(zernio_mapping_router)
 router.include_router(zernio_oauth_router)   # B-2 · profile + connect-url + connected-accounts
 router.include_router(zernio_sync_router)    # B-2 · zernio-sync (hardened binding capture · fallback)
 router.include_router(zernio_callback_router)  # B-2 headless · retorno OAuth (sin JWT · profile-scoped)
+router.include_router(zernio_fb_pages_router)  # B-2 FB · page-picker (JWT · pending-pages + select-page)
