@@ -14,20 +14,31 @@ def _key(monkeypatch):
     oauth_cfg._oauth_settings = None
 
 
-def test_sign_verify_roundtrip():
-    s = stmod.sign_state("client-A", "instagram", "https://www.omegaraisen.agency")
-    assert stmod.verify_state(s) == ("client-A", "instagram", "https://www.omegaraisen.agency")
+def test_sign_verify_roundtrip_con_user_id():
+    s = stmod.sign_state("client-A", "instagram", "https://www.omegaraisen.agency", "user-9")
+    assert stmod.verify_state(s) == ("client-A", "instagram", "https://www.omegaraisen.agency", "user-9")
 
 
 def test_verify_tampered_sig_is_none():
-    s = stmod.sign_state("client-A", "instagram", "https://x.test")
+    s = stmod.sign_state("client-A", "instagram", "https://x.test", "user-9")  # user_id es parte del HMAC
     tampered = s[:-1] + ("0" if s[-1] != "0" else "1")
     assert stmod.verify_state(tampered) is None
 
 
 def test_verify_wrong_shape_is_none():
-    assert stmod.verify_state("a.b.c") is None     # 3 segmentos, no 5
+    assert stmod.verify_state("a.b.c") is None     # 3 segmentos (ni 5 ni 6)
     assert stmod.verify_state("garbage") is None
+
+
+def test_verify_5seg_legacy_backcompat():
+    """State LEGACY de 5 seg (deploy anterior · sin user_id) sigue verificando → user_id='' (back-comp
+    de states en vuelo durante el deploy · estado efímero)."""
+    import hashlib
+    import hmac
+    o = stmod._enc("https://x.test")
+    sig = hmac.new(stmod._signing_key(), stmod._msg("cid", "instagram", o, "nz"), hashlib.sha256).hexdigest()
+    legacy = f"cid.instagram.{o}.nz.{sig}"
+    assert stmod.verify_state(legacy) == ("cid", "instagram", "https://x.test", "")
 
 
 def _set_base(monkeypatch, value):

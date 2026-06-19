@@ -19,14 +19,16 @@ from app.config import settings
 router = APIRouter()
 
 
-async def _owned(client_id: str, authorization: Optional[str]) -> dict:
+async def _owned(client_id: str, authorization: Optional[str]) -> tuple[dict, dict]:
+    """Devuelve (user, client) · 403 si el user autenticado no es dueño. El user_id se propaga al state
+    firmado (connect-url) para atar el stash FB a quien inició el flujo (defensa-en-profundidad)."""
     user = await get_current_user(authorization)
     client = reader.get_client(client_id)
     if not client:
         raise HTTPException(status_code=404, detail="client_not_found")
     if not user_owns_client(user["id"], client):
         raise HTTPException(status_code=403, detail="client_access_denied")
-    return client
+    return user, client
 
 
 async def _ensure_profile(client_id: str, client: dict) -> str:
@@ -41,7 +43,7 @@ async def _ensure_profile(client_id: str, client: dict) -> str:
 
 @router.post("/{client_id}/zernio-profile")
 async def ensure_zernio_profile(client_id: str, authorization: Optional[str] = Header(None)) -> dict:
-    client = await _owned(client_id, authorization)
+    _, client = await _owned(client_id, authorization)
     return {"zernio_profile_id": await _ensure_profile(client_id, client)}
 
 
@@ -49,18 +51,19 @@ async def ensure_zernio_profile(client_id: str, authorization: Optional[str] = H
 async def zernio_connect_url(client_id: str, platform: str,
                              authorization: Optional[str] = Header(None),
                              origin: Optional[str] = Header(None)) -> dict:
-    client = await _owned(client_id, authorization)        # JWT + ownership ANTES de firmar el state
+    user, client = await _owned(client_id, authorization)  # JWT + ownership ANTES de firmar el state
     pid = await _ensure_profile(client_id, client)
     # firmamos el Origin del navegador SOLO si ya está permitido (si falta/no permitido → "" → callback usa [0]).
     safe_origin = origin if (origin and origin in settings.cors_origins_list) else ""
-    redirect_url = build_callback_url(sign_state(client_id, platform, safe_origin))  # HEADLESS · vuelve al origen del user
+    # user_id FIRMADO en el state → el callback ata el stash FB a quien inició el flujo (defensa-en-profundidad).
+    redirect_url = build_callback_url(sign_state(client_id, platform, safe_origin, str(user["id"])))
     return {"auth_url": await get_connect_url(platform, pid, redirect_url)}
 
 
 @router.get("/{client_id}/connected-accounts")
 async def zernio_connected_accounts(client_id: str,
                                     authorization: Optional[str] = Header(None)) -> dict:
-    client = await _owned(client_id, authorization)
+    _, client = await _owned(client_id, authorization)
     pid = client.get("zernio_profile_id")
     if not pid:
         return {"profile": None, "items": []}

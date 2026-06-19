@@ -41,7 +41,7 @@ async def zernio_callback(st: str = "", profileId: str = "", accountId: str = ""
     verified = verify_state(st)
     if not verified:
         raise HTTPException(status_code=400, detail="invalid_state")   # firma inválida/forjada
-    client_id, platform, origin = verified                             # origin firmado · se re-valida en _front_base
+    client_id, platform, origin, user_id = verified                    # user_id+origin firmados (HMAC · inforjables)
     client = reader.get_client(client_id)
     if not client:
         raise HTTPException(status_code=404, detail="client_not_found")
@@ -50,7 +50,7 @@ async def zernio_callback(st: str = "", profileId: str = "", accountId: str = ""
         logger.warning("zernio_callback · profileId mismatch · client=%s platform=%s", client_id, platform)
         return _back_to_tab("error", platform, origin)
     if step == "select_page":                              # FB · stash server-side + handoff al page-picker
-        stash_pending(client_id, platform, tempToken, connect_token)   # tokens SOLO server-side (nunca al navegador)
+        stash_pending(user_id, client_id, platform, tempToken, connect_token)   # keyed por user_id (firmado) · server-side
         logger.info("zernio_callback · select_page (FB) · pending stasheado · client=%s", client_id)
         return _back_to_tab("needs_page", platform, origin)            # redirect SIN tokens en la URL
     try:

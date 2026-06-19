@@ -35,27 +35,38 @@ def _dec(b64: str) -> str:
 
 
 def _msg(client_id: str, platform: str, o: str, nonce: str) -> bytes:
+    """Mensaje firmado LEGACY (5-seg · sin user_id) · solo para back-compat de states en vuelo."""
     return f"{client_id}:{platform}:{o}:{nonce}".encode()
 
 
-def sign_state(client_id: str, platform: str, origin: str = "") -> str:
-    """f'{client_id}.{platform}.{b64origin}.{nonce}.{sig}' · sig = HMAC-SHA256(key, 'cid:plat:o:nonce')."""
+def _msgu(client_id: str, platform: str, o: str, user_id: str, nonce: str) -> bytes:
+    """Mensaje firmado ACTUAL (6-seg · con user_id · defensa-en-profundidad del stash FB)."""
+    return f"{client_id}:{platform}:{o}:{user_id}:{nonce}".encode()
+
+
+def sign_state(client_id: str, platform: str, origin: str = "", user_id: str = "") -> str:
+    """6 segmentos: '{client_id}.{platform}.{b64origin}.{user_id}.{nonce}.{sig}'. El user_id va FIRMADO en
+    el HMAC (inforjable · ata el stash FB a quien inicio el flujo · UUID sin puntos → split seguro)."""
     nonce = secrets.token_urlsafe(16)
     o = _enc(origin)
-    sig = hmac.new(_signing_key(), _msg(client_id, platform, o, nonce), hashlib.sha256).hexdigest()
-    return f"{client_id}.{platform}.{o}.{nonce}.{sig}"
+    sig = hmac.new(_signing_key(), _msgu(client_id, platform, o, user_id, nonce), hashlib.sha256).hexdigest()
+    return f"{client_id}.{platform}.{o}.{user_id}.{nonce}.{sig}"
 
 
-def verify_state(state: str) -> Optional[tuple[str, str, str]]:
-    """Verifica la firma → (client_id, platform, origin), o None si no valida (CSRF/forgery guard)."""
+def verify_state(state: str) -> Optional[tuple[str, str, str, str]]:
+    """Verifica la firma → (client_id, platform, origin, user_id), o None si no valida. TOLERA 5-seg
+    (LEGACY · user_id='') por BACK-COMPAT de states en vuelo durante el deploy (efimeros · branch
+    transitorio · removible cuando pase la ventana de deploy)."""
     parts = state.split(".")
-    if len(parts) != 5:
-        return None
-    client_id, platform, o, nonce, sig = parts
-    expected = hmac.new(_signing_key(), _msg(client_id, platform, o, nonce), hashlib.sha256).hexdigest()
-    if not hmac.compare_digest(sig, expected):  # constant-time
-        return None
-    return client_id, platform, _dec(o)
+    if len(parts) == 6:
+        client_id, platform, o, user_id, nonce, sig = parts
+        exp = hmac.new(_signing_key(), _msgu(client_id, platform, o, user_id, nonce), hashlib.sha256).hexdigest()
+        return (client_id, platform, _dec(o), user_id) if hmac.compare_digest(sig, exp) else None
+    if len(parts) == 5:   # LEGACY en vuelo (firmado por el deploy anterior · sin user_id)
+        client_id, platform, o, nonce, sig = parts
+        exp = hmac.new(_signing_key(), _msg(client_id, platform, o, nonce), hashlib.sha256).hexdigest()
+        return (client_id, platform, _dec(o), "") if hmac.compare_digest(sig, exp) else None
+    return None
 
 
 def build_callback_url(st: str) -> str:
