@@ -6,6 +6,68 @@
 
 ---
 
+## 🟢 HANDOFF · B-2 FACEBOOK HEADLESS — BRANCH COMPLETO + FIX OPCIÓN B CONSTRUIDO (19 jun · RETOMAR ACÁ)
+
+**Estado:** el branch FB headless (Zernio `step=select_page`) está **construido completo** (Pasos 1→5 del
+plan · 7 commits en prod sobre el contrato capturado en Paso 0) PERO el **E2E FB falló** por un bug
+latente desde IG. El fix (**Opción B · BroadcastChannel**) está **CONSTRUIDO + commit local + gate 15/15**,
+PENDIENTE de **review del diff por el owner → push → E2E**.
+
+**EL BUG (causa raíz confirmada read-only):** `window.open(..., "noopener")` deja `window.opener = null`
+→ el relay `window.opener.postMessage` de `/zernio/return` era un **NO-OP** → el page-picker de FB
+**nunca abría** y el auto-verde de IG nunca funcionó por postMessage (latente desde IG ·
+ex-`DEBT-ZERNIO-AUTOVERDE-LATENCIA`, mal diagnosticada como latencia). El owner aportó el dato que reveló
+el alcance: "yo nunca usé el botón de verificar" → el verde de IG llegaba por refetch al navegar/recargar,
+no por el postMessage. FB lo destapó (sin fallback → dead-end total).
+
+**✅ FIX OPCIÓN B (BroadcastChannel) — CONSTRUIDO + COMMIT LOCAL `df1a272` (NO pusheado · NO revisado por owner):**
+- `ZernioReturn.tsx` → publica `{source,status,platform}` en **BroadcastChannel `"zernio-oauth"`**
+  (same-origin · sobrevive noopener) + fallback evento `storage`. `noopener` se MANTIENE (anti-tabnabbing).
+  NUNCA `window.opener`.
+- `ClientSocialAccounts.tsx` → listener suscrito al canal (+ fallback storage). `connected` →
+  `refetchConnected` (NO pinta); `needs_page` → abre page-picker. El verde sigue saliendo **SOLO de
+  connected-accounts** (verdad Zernio), nunca del mensaje del canal.
+- `zernio-return.test.tsx` → reescrito para BroadcastChannel (MockBC) + fallback storage.
+- `ESTADO_OMEGA.md` → `DEBT-ZERNIO-AUTOVERDE-LATENCIA` actualizada (mal-diagnóstico → resuelta por este fix).
+- **Verificado: vitest 7/7 + tsc 0 + gate 15/15.** Commit local `df1a272`.
+
+**RETOMAR ACÁ:**
+1. **El owner revisa el DIFF del fix** (`git show df1a272`) contra los 2 puntos que importan:
+   **(a)** el verde sigue saliendo **SOLO de connected-accounts** — el mensaje `connected` del canal dispara
+   `refetchConnected`, NO pinta verde directo (el canal nuevo NO debe ser vector de verde-falso);
+   **(b)** el **BroadcastChannel es same-origin de verdad** (ambos lados en `omegaraisen.agency`).
+   ⚠️ "los tests pasan" ≠ "el revisor confirmó que no reintrodujo verde-falso por el canal nuevo". Ese
+   review es el **PASO 1, antes del push**.
+2. Con OK del owner → **push** → Railway/Vercel redeploy.
+3. **E2E FB** (cuenta limpia Wudi App · página de prueba `1194443400413697`) → el picker abre → elegir
+   página → `select` → **verde en Mail Boxes** (`6a3302c498d55f9b1e08dfe6`) **aislado** de Omega Raisen
+   (`6a32fe37aa2ea3025b33ba75`).
+4. **RE-VERIFICAR IG** por el canal nuevo (IG cae verde por BroadcastChannel, no por la vía vieja · el fix
+   no rompe lo que ya andaba).
+5. Aislamiento con datos (`GET /accounts?profileId`) + **teardown** de la página de prueba.
+
+**BRANCH FB — los 7 commits ya en prod (sobre el contrato del Paso 0 · headless `step=select_page`):**
+- Adapter `zernio_facebook.py` (`get_facebook_pages` + `select_facebook_page` · `X-Connect-Token` header ·
+  tokens nunca logueados · non-2xx → error honesto · lista vacía = "0 páginas", no error).
+- Stash server-side `_zernio_pending.py` (tempToken+connect_token NUNCA al navegador · keyed por
+  `(user_id, client_id, platform)` · TTL 15min · asume `--workers 1` → `DEBT-FB-STASH-MULTIWORKER`).
+- State firmado 6-seg (`client_id.platform.b64origin.user_id.nonce.sig` · verify tolera 5-seg legacy).
+- Callback branch `step=select_page` → stash + `needs_page` honesto (reemplaza el dead-end).
+- Endpoints JWT: `GET .../facebook/pending-pages` (409 si no hay pending · solo `[{id,name}]`) +
+  `POST .../facebook/select-page {page_id}` (persist + `clear_pending` en `finally` éxito o fallo).
+- Page-picker UI `ZernioPagePicker.tsx` (verde solo de connected-accounts · errores honestos 409/empty/fetch).
+
+**PENDIENTES owner-side (NO Claude · hacer ya · no dependen del handoff):**
+- **Rotar el JWT** de `reseller@omega.com` (`61f88b91`) — lleva rato vivo.
+- **Revocar "Social Media Connector"** en la cuenta FB de prueba (Wudi App).
+- Borrar el historial del chat donde se pegaron JWTs.
+
+**REGLAS:** no `persona_*`/`limits_omega`; identidad raisenomega; gate 15/15 + test-first; **un commit por
+paso + review del owner ANTES del push**; cero publish hasta página verde en SU profile correcto verificada
+por el owner; NO `META_APP_*` (ruta Zernio).
+
+---
+
 ## 🟢 HANDOFF · B-2 ZERNIO HEADLESS · MIGRACIÓN COMPLETA + E2E VERDE (18 jun · RETOMAR ACÁ)
 
 **QUÉ SE LOGRÓ:** el connect de redes migró de **hosted → headless** y el bug de aislamiento
