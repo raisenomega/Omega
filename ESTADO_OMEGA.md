@@ -6,7 +6,39 @@
 
 ---
 
-## 🔴 HANDOFF · B-2 ZERNIO · cierre sesión 17 jun (RETOMAR ACÁ · leer primero)
+## 🟢 HANDOFF · B-2 ZERNIO HEADLESS · MIGRACIÓN COMPLETA + E2E VERDE (18 jun · RETOMAR ACÁ)
+
+**QUÉ SE LOGRÓ:** el connect de redes migró de **hosted → headless** y el bug de aislamiento
+(`DEBT-ZERNIO-MAILBOXES-NO-ATTACH`) está **CERRADO end-to-end y verificado en vivo**: una cuenta de un
+negocio B se adjunta a SU profile Zernio y cae verde, **aislada** del profile de otro negocio.
+
+**COMMITS EN PROD (todos en `main` · git_sha `fe68a28`):**
+- `22bc542` Commit 1 · backend headless: connect-url firma `state` (HMAC) + callback `GET /clients/zernio/callback` (sin JWT · verify firma → 400 · exige `profileId==client.zernio_profile_id` aislamiento · persist hardened 422-sin-guardar · FB `step=select_page` GATED) + `_zernio_persist.py` (hardening compartido con zernio-sync).
+- `4386171` Commit 2 · frontend: ruta `/zernio/return` (relay · postMessage+close · NO pinta verde) + listener en `ClientSocialAccounts` (solo dispara `refetchConnected` · verde sale de connected-accounts = verdad Zernio) + botón honesto intacto.
+- `ac231c1` Commit 2.1 · origen firmado en el state (base64url) + `_front_base` valida contra allowlist (anti open-redirect · test `evil.example`) → el popup vuelve al MISMO origen del user (www vs non-www).
+- `8e67297` Commit 2.2 · `build_callback_url` con `urlparse → scheme://netloc` (descarta path pegado) + **RAISE ruidoso si la base no tiene scheme+host** (en vez de mandar redirectUrl relativo) + tests que LANZAN con base=""/sin-host (cierra el verde-falso del gate).
+- `fe68a28` bump **pypdf 4.0.0 → 6.13.3** (cierra `GHSA-jm82-fx9c-mx94` · DoS RAM · APLICABA: 3 sitios parsean PDF no-confiable · API estable verificada · commit aparte).
+
+**CAUSA RAÍZ DEL 500 (resuelta · era CONFIG, no código):** faltaban **DOS env vars en Railway** (nunca seteadas · Google/Meta OAuth jamás usado en prod). El connect headless es el 1er flujo que las usa:
+- **`OAUTH_REDIRECT_BASE`** ausente → `build_callback_url` daba redirectUrl relativo → Zernio 400 → 500.
+- **`OAUTH_ENCRYPTION_KEY`** ausente → `sign_state` (corre ANTES) → `CryptoNotConfigured` → 500.
+**El owner creó AMBAS en Railway** (`OAUTH_REDIRECT_BASE=https://omega-production-3c67.up.railway.app` · `OAUTH_ENCRYPTION_KEY`=secreto aleatorio estable). Tras eso: connect-url verificado **HTTP 200** (curl autenticado cuenta dueña) con el callback ABSOLUTO embebido en el `state` (no `zernio.com/dashboard`). *(Lección: mi 1er probe al callback de Google con state de 1-parte NO ejercía `_signing_key` → falso "key presente"; el probe correcto = state de 3 partes → 503.)*
+
+**E2E IG (owner · 18 jun) — VERDE:** Allow con cuenta descartable `wudi.app` → popup volvió a OMEGA y cerró solo → IG cayó **verde en Mail Boxes** (auto, tras breve latencia). **Aislamiento CONFIRMADO con datos:** `GET /accounts?profileId=MailBoxes` = `wudi.app` ✓ · `profileId=OmegaRaisen` = sus 4 originales, SIN wudi ✓. **Las 4 de Omega Raisen intactas.** ⚠️ Login OMEGA correcto = cuenta DUEÑA `61f88b91` (`reseller@omega.com`); `741ace1c` (`raisenagencypr`) NO es dueña → 403.
+
+**TEARDOWN HECHO:** `wudi.app` desconectada del profile de Mail Boxes (DELETE 200) → **Mail Boxes = 0 cuentas, limpio** para la cuenta REAL · profiles=5 · cero residuo `OMEGA_EXP_*`. (Nota menor: el row de `social_accounts` de MB-instagram puede tener el binding stale de wudi · inofensivo · se sobreescribe en el upsert cuando conecte la cuenta real · no muestra verde porque connected-accounts lee Zernio=0.)
+
+**PENDIENTES:**
+- **FB / `step=select_page` — GATED, NO construido.** IG trajo `accountId` directo; FB puede requerir elegir Página. El callback ya redirige `needs_page` honesto (no verde, no roto). **Para construirlo: PRIMERO capturar el contrato FB real** (re-armar el endpoint de captura temporal del experimento ya validado · `DEBT-ZERNIO-CAPTURE-ENDPOINT-TEMP` patrón) — NO a ciegas.
+- **`DEBT-ZERNIO-AUTOVERDE-LATENCIA`** (observación · no bloqueante): el auto-verde tardó tras el Allow. Probable: el `refetch` corre antes de que Zernio refleje la cuenta recién adjunta (o el postMessage llega antes que Zernio lista). Revisar después (¿reintento/backoff del refetch, o pequeño delay?). NO ahora.
+- **`DEBT-ZERNIO-MULTI-SAME-PLATFORM`** (de antes): upsert por `(client_id, platform)` limit 1 → una cuenta por red por negocio.
+- Deuda lateral: `OAUTH_REDIRECT_BASE`/`OAUTH_ENCRYPTION_KEY` faltaban → **Google/Meta Analytics OAuth también estaban rotos**; ahora con las env vars creadas, su state-signing/redirect quedó bien (no usado aún · upside).
+
+**REGLAS:** no `persona_*`/`limits_omega`; identidad raisenomega; gate 15/15 + test-first; FB no se toca sin contrato capturado; cero publish.
+
+---
+
+## 🔴 HANDOFF · B-2 ZERNIO · cierre sesión 17 jun (fase de DIAGNÓSTICO · superada por el headless de arriba)
 
 **COMMITS (gate 15/15 c/u · TODOS en origin · `main` sync · HEAD `b7b47af`):**
 - `6ff8d0f` commit 1 · migr **00068** `zernio_profile_id` + adapter profiles/connect · **ORIGIN + PROD (00068 aplicada)**
