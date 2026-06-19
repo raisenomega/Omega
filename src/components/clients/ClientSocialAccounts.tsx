@@ -69,18 +69,28 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
     queryFn: () => apiGet<{ items: ConnectedItem[] }>(`/clients/${clientId}/connected-accounts`),
   });
 
-  // B-2 headless · el popup de /zernio/return avisa al terminar el OAuth → SOLO re-consultamos la verdad
-  // real (connected-accounts). El mensaje NO afirma conexión; el verde sigue saliendo de `connected.items`.
+  // B-2 headless · el popup de /zernio/return avisa al terminar el OAuth por un canal SAME-ORIGIN
+  // (BroadcastChannel · funciona con noopener; window.opener.postMessage era no-op por noopener) → fallback
+  // evento storage. SOLO re-consultamos la verdad real (connected-accounts); el mensaje NO afirma conexión:
+  // el verde sigue saliendo de `connected.items`. (Misma honestidad que el postMessage, canal que SÍ funciona.)
   useEffect(() => {
-    const onMsg = (e: MessageEvent) => {
-      if (e.origin !== window.location.origin) return;          // mismo origen
-      const d = e.data as { source?: string; status?: string; platform?: string } | null;
+    const handle = (d: { source?: string; status?: string; platform?: string } | null) => {
       if (d?.source !== "zernio") return;
-      if (d.status === "connected") void refetchConnected();
+      if (d.status === "connected") void refetchConnected();      // verde de connected-accounts, NO de este mensaje
       else if (d.status === "needs_page" && d.platform) setPagePickerPlatform(d.platform);  // FB → page-picker
     };
-    window.addEventListener("message", onMsg);
-    return () => window.removeEventListener("message", onMsg);
+    let ch: BroadcastChannel | null = null;
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== "zernio-oauth" || !e.newValue) return;
+      try { handle(JSON.parse(e.newValue)); } catch { /* noop */ }
+    };
+    if (typeof BroadcastChannel !== "undefined") {
+      ch = new BroadcastChannel("zernio-oauth");
+      ch.onmessage = (e) => handle(e.data);
+    } else {
+      window.addEventListener("storage", onStorage);
+    }
+    return () => { ch?.close(); window.removeEventListener("storage", onStorage); };
   }, [refetchConnected]);
 
   const createMutation = useMutation({
