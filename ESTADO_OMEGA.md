@@ -38,6 +38,34 @@ negocio B se adjunta a SU profile Zernio y cae verde, **aislada** del profile de
 
 ---
 
+## 🟢 PASO 0 FB · CONTRATO CAPTURADO + teardown completo (18 jun · cerrado)
+
+**Contrato FB headless CONFIRMADO en vivo** (ya NO es asunción · captura controlada con endpoint temporal):
+- `step=select_page` (param exacto "step") · **DOS tokens en el retorno: `tempToken` + `connect_token`** (FB añade `tempToken` vs IG, que solo traía connect_token).
+- La **lista de páginas NO viene en el redirect** → se elige **EN el consent de Meta** (Meta lista las páginas, el usuario elige + Guardar).
+- El **select se completa server-side con el `tempToken`** (probable `list-facebook-pages` / `get-pending-oauth-data` contra Zernio).
+- La página **NO aparece en `GET /accounts?profileId` hasta completar el select** (estado `select_page` = no adjunta a ningún profile).
+- Aterriza en **nuestro dominio** (`omega-production-3c67…`) ✓ · consent = **"Social Media Connector" (app de Zernio)** → **NO exige `META_APP_*`** (regla STOP NO disparada · ruta Zernio, no Meta-directa).
+
+**Teardown COMPLETO (igual de limpio que IG):**
+- Endpoint de captura removido del repo (commit `8cc1ffc` · `6fabca4` fue el re-arme) · **`/zernio-experiment/capture` da 404 en prod** ✓.
+- Profile de prueba `OMEGA_EXP_FB_DELETEME` borrado → **profiles=5, sin residuo `OMEGA_EXP_*`**.
+- **Página real "Mail Boxes Design" NUNCA adjuntada** (`select_page` no completado · global facebook = solo `Raisen Omega Agency` de Omega Raisen · **sin leak** · confirmado read-only).
+- `"Social Media Connector"` **revocado en Meta** (cuenta Lucas Mark · Activos=0) · `ZERNIO_CAPTURE_TOKEN` **retirado de Railway+.env**.
+- **`DEBT-ZERNIO-CAPTURE-ENDPOINT-TEMP` CERRADA** (2da vez · ahora FB).
+- Nota: `instagram/mail_bd` está en el profile Mail Boxes (su lugar correcto · binding stale inofensivo · se sobreescribe al conectar la IG real · no se tocó).
+
+## 🔜 PRÓXIMO ARCO — BRANCH FB (NO empezado · construir sobre el contrato capturado)
+1. **Adapter Zernio:** `list_facebook_pages(tempToken)` + `select_facebook_page(...)` — **NO existen** (grep `zernio_profiles.py` = 0 matches) · contrato real ahora conocido.
+2. **Callback** (`zernio_callback.py:51-53`): en `step=select_page`, en vez de `needs_page` dead-end, **entregar la data pendiente FIRMADA al frontend** para el picker.
+3. **Page-picker UI:** lista páginas → usuario elige → llama select → refetch → verde. Botón honesto intacto.
+4. **Persist:** tras el select, la página aparece en `/accounts` → `persist_zernio_account` (`_zernio_persist.py:22-45`) la captura por accountId (**reuso** · el paso NUEVO es el select, no el persist).
+5. **E2E** con cuenta FB de prueba que **NO administre negocios reales** (lección: "Lucas Mark" administra Zafacones+Mail Boxes reales → usar una cuenta FB limpia tipo `wudi.app` para que el aislamiento del branch salga sin tocar nada real).
+
+**REGLAS DEL ARCO:** contrato capturado ✓ (ya no a ciegas) · un commit por paso + review del owner ANTES · no `persona_*`/`limits` · **cero publish hasta página verde en SU profile correcto verificada por el owner**.
+
+---
+
 ## 🔴 HANDOFF · B-2 ZERNIO · cierre sesión 17 jun (fase de DIAGNÓSTICO · superada por el headless de arriba)
 
 **COMMITS (gate 15/15 c/u · TODOS en origin · `main` sync · HEAD `b7b47af`):**
