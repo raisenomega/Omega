@@ -70,7 +70,7 @@ lo persiste genéricamente · cero código por plataforma) vs **B-selección** (
 |---|---|---|
 | instagram | A directo | ✅ cerrado (real, aislado) |
 | facebook | B `select-page` | ✅ cerrado (real, aislado) |
-| tiktok | A directo | ✅ connect vivo (real, aislado · binding `social_accounts.zernio_account_id` escrito) |
+| tiktok | A directo | ✅ **SÓLIDO** — connect + **publish E2E** + aislamiento probados con datos (ver §TikTok PUBLISH abajo) |
 | twitter/X | A directo | ⚪ connect-url 401 (montado, paridad) · **debería conectar sin código** · solo E2E |
 | youtube | A directo | ⚪ idem · caveat Google multi-channel (probar cuenta de 1 canal) · solo E2E |
 | linkedin | B `select-organization` | 🔶 hosted viejo en OR · headless NO construido · **sub-patrón DISTINTO a FB** |
@@ -91,9 +91,35 @@ lo persiste genéricamente · cero código por plataforma) vs **B-selección** (
 resuelve el accountId vía `get_zernio_account_id`(social_accounts) → `resolve_account_id` (binding per-negocio o
 falla honesto · sin adivinar) → `create_post`. TikTok ∈ `_MEDIA_REQUIRED` (exige video). Solo `status='pending'`
 (humano aprobó) publica. **Token TikTok 24h: lo maneja ZERNIO** (no mandamos token · pasamos accountId · Zernio
-publica con su conexión guardada · si el token venció y Zernio no lo refrescó → non-2xx → fallo honesto). FALTA
-para "SÓLIDO": un E2E de publish real (video de prueba) verificando que sale en TikTok aislado por negocio — NO
-ejecutado aún.
+publica con su conexión guardada · si el token venció y Zernio no lo refrescó → non-2xx → fallo honesto).
+
+### ✅ TikTok PUBLISH end-to-end — SÓLIDO (19 jun · probado con datos · entorno descartable)
+
+TikTok pasó de "funciona" a **SÓLIDO**: connect + **publish end-to-end** + aislamiento, los tres probados con
+datos. E2E real: video de prueba salió en la cuenta **wudy245 (PRUEBA)**, el **binding per-negocio resolvió la
+cuenta correcta** (`get_zernio_account_id`→`6a35c8b5`, NO la real de Mail Boxes `6a35b546`), `scheduled_post`
+`status=published` + `platform_post_id` real (`6a35ce76`), **token-24h alcanzó** (Zernio publicó con la conexión
+de hoy), **Mail Boxes/Omega Raisen intactos** (cero contaminación), **teardown limpio** (cero residuo verificado:
+sin wudi/wudy/OMEGA_EXP en profiles/accounts/DB).
+
+**GOTCHA reusable — TikTok NO borra posts vía API:** Zernio responde literal *"TikTok does not support post
+deletion via API. Please delete the post manually from TikTok."* (DELETE `/v1/posts/{id}` y POST `/unpublish`
+ambos → 400). **Todo E2E de publish en TikTok deja un video que SOLO se quita manual desde la app** → planificar
+el teardown con eso (borrar el video a mano ANTES de desconectar la cuenta · el resto sí es API).
+
+**PATRÓN reusable del E2E de publish descartable** (para futuros publish-tests de cualquier plataforma · el
+publish es **CLIENT-céntrico**, necesita un cliente OMEGA, no solo un profile Zernio): (1) **cliente OMEGA
+descartable** + cuenta de prueba conectada vía UI → profile Zernio auto-creado + binding `social_accounts`
+escrito; (2) materializar el draft de la Cola como `scheduled_post` `pending` (client_id + social_account_id +
+content_id + media_url); (3) **ÚLTIMA PUERTA read-only ANTES del disparo:** la query exacta del resolver
+(`get_zernio_account_id(client, platform)`) confirma que resuelve la cuenta de PRUEBA, NO la real — si resuelve
+algo real → PARAR; (4) verificar read-only que NO hay cron de auto-publish (toda la cadena dispara solo por
+`POST /publish/auto`) + auto-accept UI OFF; (5) **publish gateado por GO manual del owner**; (6) verificar
+`platform_post_id` real + cuenta correcta; (7) **teardown completo** (video manual en TikTok + DELETE
+account/profile + DELETE DB rows en orden FK + DELETE MP4 storage + verif cero residuo).
+
+**Remanente inofensivo:** el *record* del post `6a35ce76` queda huérfano en Zernio (no borrable por API · video ya
+borrado manual · su cuenta/profile/cliente eliminados · fuera de todo profile · sin efecto).
 
 ---
 
