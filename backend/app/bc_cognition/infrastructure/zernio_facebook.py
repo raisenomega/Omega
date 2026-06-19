@@ -28,23 +28,24 @@ def _with_connect_token(headers: dict, connect_token: str) -> dict:
     return headers
 
 
+_FB_SELECT_PATH = "/connect/facebook/select-page"   # GET lista · POST elige (OpenAPI Zernio · unico path real)
+
+
 def _fb_session_params(temp_token: str, profile_id: str) -> dict:
-    """WIRING (2 de 2): params de la sesion OAuth pendiente. profileId = profile Zernio del negocio
-    (Zernio lo EXIGE en get/update-facebook-page · confirmado en el E2E 19 jun: 400 'Profile ID is
-    required'); accountId = tempToken del flujo headless. UN solo punto: si una capa siguiente del E2E
-    revela que sobra/falta un param, se ajusta SOLO aca (1 linea)."""
-    return {"profileId": profile_id, "accountId": temp_token}
+    """WIRING (2 de 2): params de sesion del select-page (contrato OpenAPI real). profileId = profile
+    Zernio del negocio; tempToken = access token temporal del callback OAuth (Zernio lo nombra 'tempToken',
+    NO 'accountId'). UN solo punto: ajuste de contrato = 1 linea aca."""
+    return {"profileId": profile_id, "tempToken": temp_token}
 
 
 async def get_facebook_pages(temp_token: str, connect_token: str, profile_id: str) -> list[dict]:
-    """GET /connect/get-facebook-pages → paginas FB otorgadas en el consent (a elegir). Lista (puede ser
+    """GET /connect/facebook/select-page → paginas FB que el user administra (a elegir). Lista (puede ser
     vacia = 0 paginas reales · NO es error). non-2xx/transporte → ZernioPublishError (jamas [] enmascarando)."""
     headers, base = _conf()
     headers = _with_connect_token(headers, connect_token)
     async with httpx.AsyncClient(timeout=_HTTP_TIMEOUT, headers=headers) as client:
         try:
-            resp = await client.get(f"{base}/connect/get-facebook-pages",
-                                    params=_fb_session_params(temp_token, profile_id))
+            resp = await client.get(f"{base}{_FB_SELECT_PATH}", params=_fb_session_params(temp_token, profile_id))
         except httpx.HTTPError as e:
             logger.warning("get_facebook_pages transporte · ct=%s tt=%s", _tok(connect_token), _tok(temp_token))
             raise ZernioPublishError(f"zernio_transport_error:{type(e).__name__}") from e
@@ -53,22 +54,22 @@ async def get_facebook_pages(temp_token: str, connect_token: str, profile_id: st
     return resp.json().get("pages", [])
 
 
-async def select_facebook_page(temp_token: str, connect_token: str, page_id: str, profile_id: str) -> str:
-    """POST /connect/update-facebook-page {profileId, accountId, pageId} → adjunta la pagina al profile.
-    Devuelve el accountId Zernio resultante. non-2xx/sin-id → ZernioPublishError (cero-fabricacion)."""
+async def select_facebook_page(temp_token: str, connect_token: str, page_id: str,
+                               profile_id: str, user_profile: dict) -> str:
+    """POST /connect/facebook/select-page {profileId, pageId, tempToken, userProfile} → adjunta la pagina
+    al profile. Devuelve account.accountId. non-2xx/sin-id → ZernioPublishError (cero-fabricacion)."""
     headers, base = _conf()
     headers = _with_connect_token(headers, connect_token)
-    body = {**_fb_session_params(temp_token, profile_id), "pageId": page_id}
+    body = {**_fb_session_params(temp_token, profile_id), "pageId": page_id, "userProfile": user_profile}
     async with httpx.AsyncClient(timeout=_HTTP_TIMEOUT, headers=headers) as client:
         try:
-            resp = await client.post(f"{base}/connect/update-facebook-page", json=body)
+            resp = await client.post(f"{base}{_FB_SELECT_PATH}", json=body)
         except httpx.HTTPError as e:
             logger.warning("select_facebook_page transporte · ct=%s tt=%s", _tok(connect_token), _tok(temp_token))
             raise ZernioPublishError(f"zernio_transport_error:{type(e).__name__}") from e
     if resp.status_code not in (200, 201):
         raise ZernioPublishError(f"zernio_fb_select_{resp.status_code}:{resp.text[:200]}")
-    data = resp.json()
-    aid = data.get("_id") or (data.get("account") or {}).get("_id")
+    aid = (resp.json().get("account") or {}).get("accountId")   # contrato real: account.accountId (no _id)
     if not aid:
         raise ZernioPublishError("zernio_fb_no_account_id")
     return str(aid)

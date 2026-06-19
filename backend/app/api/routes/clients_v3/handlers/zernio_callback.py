@@ -4,7 +4,11 @@ el profileId retornado == el zernio_profile_id del negocio. Persistencia: MISMO 
 (persist_zernio_account · 422-sin-guardar si la cuenta no está en el profile del negocio).
 FB/select-page: GATED (contrato no confirmado) → redirige honesto 'needs_page', NO persiste a ciegas.
 """
+import json
 import logging
+from typing import Optional
+from urllib.parse import unquote
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import RedirectResponse
 
@@ -16,6 +20,20 @@ from app.config import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+def _parse_user_profile(raw: str) -> Optional[dict]:
+    """userProfile del redirect FB = JSON doble-url-encoded · requerido por el POST select-page. Parseo
+    DEFENSIVO: input externo malformado/ausente NO crashea el callback (500 opaco) → None (el endpoint
+    select decide · LISTAR no lo necesita, solo profileId+tempToken). NUNCA loguea el valor (nombre/foto = PII)."""
+    if not raw:
+        return None
+    try:
+        parsed = json.loads(unquote(raw))
+        return parsed if isinstance(parsed, dict) else None
+    except (ValueError, TypeError):
+        logger.warning("zernio_callback · userProfile ilegible (no parsea) → degrada honesto")
+        return None
 
 
 def _front_base(origin: str) -> str:
@@ -37,7 +55,7 @@ def _back_to_tab(status: str, platform: str, origin: str = "") -> RedirectRespon
 
 @router.get("/zernio/callback")
 async def zernio_callback(st: str = "", profileId: str = "", accountId: str = "", step: str = "",
-                          tempToken: str = "", connect_token: str = "") -> RedirectResponse:
+                          tempToken: str = "", connect_token: str = "", userProfile: str = "") -> RedirectResponse:
     verified = verify_state(st)
     if not verified:
         raise HTTPException(status_code=400, detail="invalid_state")   # firma inválida/forjada
@@ -53,8 +71,10 @@ async def zernio_callback(st: str = "", profileId: str = "", accountId: str = ""
         if not user_id:                                    # anómalo en FB (no hay states FB legacy legítimos) → no stashea
             logger.warning("zernio_callback · select_page sin user_id firmado → no stashea · client=%s", client_id)
             return _back_to_tab("needs_page", platform, origin)
-        stash_pending(user_id, client_id, platform, tempToken, connect_token)   # keyed por user_id (firmado) · server-side
-        logger.info("zernio_callback · select_page (FB) · pending stasheado · client=%s", client_id)
+        profile = _parse_user_profile(userProfile)                     # defensivo: malformado/ausente → None
+        stash_pending(user_id, client_id, platform, tempToken, connect_token, profile)   # keyed por user_id · server-side
+        logger.info("zernio_callback · select_page (FB) · pending stasheado · client=%s · userProfile=%s",
+                    client_id, "ok" if profile else "ausente/ilegible")   # NUNCA el valor (PII)
         return _back_to_tab("needs_page", platform, origin)            # redirect SIN tokens en la URL
     try:
         await persist_zernio_account(client_id, platform, pid, accountId or None)   # hardened · 422 si no en profile

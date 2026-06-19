@@ -29,7 +29,7 @@ async def fb_pending_pages(client_id: str, authorization: Optional[str] = Header
     pending = get_pending(str(user["id"]), client_id, _FB)        # keyed por user_id firmado → ata al iniciador
     if not pending:
         raise HTTPException(status_code=409, detail="no_pending_facebook_oauth")   # expirado/ajeno/inexistente
-    temp_token, connect_token = pending
+    temp_token, connect_token, _ = pending                        # listar NO necesita userProfile (solo profileId+tempToken)
     pages = await get_facebook_pages(temp_token, connect_token, pid)   # tokens NUNCA al cliente · solo {id,name}
     return {"pages": [{"id": p.get("id"), "name": p.get("name")} for p in pages]}
 
@@ -44,9 +44,11 @@ async def fb_select_page(client_id: str, body: SelectPageRequest,
     pending = get_pending(str(user["id"]), client_id, _FB)
     if not pending:
         raise HTTPException(status_code=409, detail="no_pending_facebook_oauth")
-    temp_token, connect_token = pending
+    temp_token, connect_token, user_profile = pending
+    if user_profile is None:                                     # el POST select exige userProfile · degrada honesto
+        raise HTTPException(status_code=409, detail="userprofile_missing_reconnect")
     try:
-        aid = await select_facebook_page(temp_token, connect_token, body.page_id, pid)
+        aid = await select_facebook_page(temp_token, connect_token, body.page_id, pid, user_profile)
         result = await persist_zernio_account(client_id, _FB, pid, aid)   # hardened · 422 si no quedó en el profile
     finally:
         clear_pending(str(user["id"]), client_id, _FB)           # éxito O fallo → no deja el stash vivo

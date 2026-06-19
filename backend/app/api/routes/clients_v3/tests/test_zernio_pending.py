@@ -5,8 +5,8 @@ from app.api.routes.clients_v3.handlers import _zernio_pending as pend
 
 def test_stash_y_get():
     pend._store.clear()
-    pend.stash_pending("u1", "c1", "facebook", "tt", "ct")
-    assert pend.get_pending("u1", "c1", "facebook") == ("tt", "ct")
+    pend.stash_pending("u1", "c1", "facebook", "tt", "ct", {"id": "u9"})
+    assert pend.get_pending("u1", "c1", "facebook") == ("tt", "ct", {"id": "u9"})   # userProfile round-trip
 
 
 def test_get_ausente_es_none():
@@ -26,8 +26,8 @@ def test_expiry_devuelve_none():
     pend._store.clear()
     pend.stash_pending("u1", "c1", "facebook", "tt", "ct")
     k = pend._key("u1", "c1", "facebook")
-    t, c, _ = pend._store[k]
-    pend._store[k] = (t, c, 0.0)   # expires_at en el pasado → vencido
+    t, c, up, _ = pend._store[k]
+    pend._store[k] = (t, c, up, 0.0)   # expires_at en el pasado → vencido
     assert pend.get_pending("u1", "c1", "facebook") is None
 
 
