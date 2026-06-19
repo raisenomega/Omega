@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Wifi, Trash2, Loader2 } from "lucide-react";
 import { getNetworkIcon } from "@/lib/network-icons";
 import { ZernioConnectButton } from "@/components/clients/ZernioConnectButton";
+import { ZernioPagePicker } from "@/components/clients/ZernioPagePicker";
 import { isConnected, type ConnectedItem } from "@/lib/zernioConnect";
 import { apiGet } from "@/lib/api-client";
 
@@ -47,6 +48,7 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
   const [platform, setPlatform] = useState("instagram");
   const [accountName, setAccountName] = useState("");
   const [followersCount, setFollowersCount] = useState("");
+  const [pagePickerPlatform, setPagePickerPlatform] = useState<string | null>(null);  // FB select_page
 
   const { data: accounts, isLoading } = useQuery({
     queryKey: ["social_accounts", clientId],
@@ -72,8 +74,10 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
   useEffect(() => {
     const onMsg = (e: MessageEvent) => {
       if (e.origin !== window.location.origin) return;          // mismo origen
-      const d = e.data as { source?: string; status?: string } | null;
-      if (d?.source === "zernio" && d.status === "connected") void refetchConnected();
+      const d = e.data as { source?: string; status?: string; platform?: string } | null;
+      if (d?.source !== "zernio") return;
+      if (d.status === "connected") void refetchConnected();
+      else if (d.status === "needs_page" && d.platform) setPagePickerPlatform(d.platform);  // FB → page-picker
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
@@ -125,6 +129,7 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
     PLATFORMS.find((pl) => pl.value === p) || { label: p };
 
   return (
+    <>
     <Card className="border-border/50 bg-card/60">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <CardTitle className="text-sm font-medium">Cuentas Sociales</CardTitle>
@@ -234,5 +239,14 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
         )}
       </CardContent>
     </Card>
+    {pagePickerPlatform && (
+      <ZernioPagePicker
+        clientId={clientId}
+        platform={pagePickerPlatform}
+        onClose={() => setPagePickerPlatform(null)}
+        onConnected={() => { void refetchConnected(); }}   // el verde lo deriva connected-accounts, no el picker
+      />
+    )}
+    </>
   );
 }
