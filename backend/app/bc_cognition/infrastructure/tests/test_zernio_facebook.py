@@ -52,49 +52,49 @@ def _run(c):
 
 def test_get_pages_ok_y_session_param(monkeypatch):
     _patch(monkeypatch, _Resp(200, {"pages": [{"id": "p1", "name": "La Casita"}]}))
-    assert _run(zfb.get_facebook_pages("tt", "ct")) == [{"id": "p1", "name": "La Casita"}]
-    assert _FakeClient.last["params"] == {"accountId": "tt"}   # wiring centralizado
+    assert _run(zfb.get_facebook_pages("tt", "ct", "P")) == [{"id": "p1", "name": "La Casita"}]
+    assert _FakeClient.last["params"] == {"profileId": "P", "accountId": "tt"}   # wiring centralizado
 
 
 def test_get_pages_vacia_NO_es_error(monkeypatch):
     _patch(monkeypatch, _Resp(200, {"pages": []}))
-    assert _run(zfb.get_facebook_pages("tt", "ct")) == []   # 0 paginas reales, NO raise
+    assert _run(zfb.get_facebook_pages("tt", "ct", "P")) == []   # 0 paginas reales, NO raise
 
 
 def test_get_pages_non2xx_levanta(monkeypatch):
     _patch(monkeypatch, _Resp(400, {"error": "bad"}))
-    with pytest.raises(ERR): _run(zfb.get_facebook_pages("tt", "ct"))
+    with pytest.raises(ERR): _run(zfb.get_facebook_pages("tt", "ct", "P"))
 
 
 def test_get_pages_transporte_levanta(monkeypatch):
     _patch(monkeypatch, boom=True)
-    with pytest.raises(ERR): _run(zfb.get_facebook_pages("tt", "ct"))
+    with pytest.raises(ERR): _run(zfb.get_facebook_pages("tt", "ct", "P"))
 
 
 def test_connect_token_va_en_header(monkeypatch):
     cap: dict = {}
     _patch(monkeypatch, _Resp(200, {"pages": []}), cap=cap)
-    _run(zfb.get_facebook_pages("tt", "ct_secret"))
+    _run(zfb.get_facebook_pages("tt", "ct_secret", "P"))
     assert cap.get("X-Connect-Token") == "ct_secret"
 
 
 def test_select_ok_devuelve_account_id(monkeypatch):
     _patch(monkeypatch, _Resp(200, {"_id": "acc_fb1", "pageId": "p1"}))
-    assert _run(zfb.select_facebook_page("tt", "ct", "p1")) == "acc_fb1"
-    assert _FakeClient.last["json"] == {"accountId": "tt", "pageId": "p1"}
+    assert _run(zfb.select_facebook_page("tt", "ct", "p1", "P")) == "acc_fb1"
+    assert _FakeClient.last["json"] == {"profileId": "P", "accountId": "tt", "pageId": "p1"}
 
 
 def test_select_sin_id_levanta(monkeypatch):
     _patch(monkeypatch, _Resp(200, {"platform": "facebook"}))
-    with pytest.raises(ERR): _run(zfb.select_facebook_page("tt", "ct", "p1"))
+    with pytest.raises(ERR): _run(zfb.select_facebook_page("tt", "ct", "p1", "P"))
 
 
 def test_select_non2xx_levanta(monkeypatch):
     _patch(monkeypatch, _Resp(422, {"error": "x"}))
-    with pytest.raises(ERR): _run(zfb.select_facebook_page("tt", "ct", "p1"))
+    with pytest.raises(ERR): _run(zfb.select_facebook_page("tt", "ct", "p1", "P"))
 
 
 def test_tokens_NO_se_loguean(monkeypatch, caplog):
     _patch(monkeypatch, boom=True)
-    with pytest.raises(ERR): _run(zfb.get_facebook_pages("ttSECRET", "ctSECRET"))
+    with pytest.raises(ERR): _run(zfb.get_facebook_pages("ttSECRET", "ctSECRET", "P"))
     assert "ttSECRET" not in caplog.text and "ctSECRET" not in caplog.text   # solo presencia/len

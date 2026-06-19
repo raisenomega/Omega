@@ -22,12 +22,15 @@ class SelectPageRequest(BaseModel):
 
 @router.get("/{client_id}/social-accounts/facebook/pending-pages")
 async def fb_pending_pages(client_id: str, authorization: Optional[str] = Header(None)) -> dict:
-    user, _ = await _owned(client_id, authorization)              # JWT + ownership
+    user, client = await _owned(client_id, authorization)         # JWT + ownership
+    pid = str(client.get("zernio_profile_id") or "")             # Zernio EXIGE profileId en get-facebook-pages
+    if not pid:
+        raise HTTPException(status_code=409, detail="zernio_profile_missing")
     pending = get_pending(str(user["id"]), client_id, _FB)        # keyed por user_id firmado → ata al iniciador
     if not pending:
         raise HTTPException(status_code=409, detail="no_pending_facebook_oauth")   # expirado/ajeno/inexistente
     temp_token, connect_token = pending
-    pages = await get_facebook_pages(temp_token, connect_token)   # tokens NUNCA al cliente · solo {id,name}
+    pages = await get_facebook_pages(temp_token, connect_token, pid)   # tokens NUNCA al cliente · solo {id,name}
     return {"pages": [{"id": p.get("id"), "name": p.get("name")} for p in pages]}
 
 
@@ -43,7 +46,7 @@ async def fb_select_page(client_id: str, body: SelectPageRequest,
         raise HTTPException(status_code=409, detail="no_pending_facebook_oauth")
     temp_token, connect_token = pending
     try:
-        aid = await select_facebook_page(temp_token, connect_token, body.page_id)
+        aid = await select_facebook_page(temp_token, connect_token, body.page_id, pid)
         result = await persist_zernio_account(client_id, _FB, pid, aid)   # hardened · 422 si no quedó en el profile
     finally:
         clear_pending(str(user["id"]), client_id, _FB)           # éxito O fallo → no deja el stash vivo

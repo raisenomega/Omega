@@ -28,20 +28,23 @@ def _with_connect_token(headers: dict, connect_token: str) -> dict:
     return headers
 
 
-def _fb_session_params(temp_token: str) -> dict:
-    """WIRING (2 de 2): id de la sesion OAuth pendiente (tempToken como accountId del flujo headless).
-    Si el E2E (paso 5) revela otro nombre de param, se ajusta SOLO acá."""
-    return {"accountId": temp_token}
+def _fb_session_params(temp_token: str, profile_id: str) -> dict:
+    """WIRING (2 de 2): params de la sesion OAuth pendiente. profileId = profile Zernio del negocio
+    (Zernio lo EXIGE en get/update-facebook-page · confirmado en el E2E 19 jun: 400 'Profile ID is
+    required'); accountId = tempToken del flujo headless. UN solo punto: si una capa siguiente del E2E
+    revela que sobra/falta un param, se ajusta SOLO aca (1 linea)."""
+    return {"profileId": profile_id, "accountId": temp_token}
 
 
-async def get_facebook_pages(temp_token: str, connect_token: str) -> list[dict]:
+async def get_facebook_pages(temp_token: str, connect_token: str, profile_id: str) -> list[dict]:
     """GET /connect/get-facebook-pages → paginas FB otorgadas en el consent (a elegir). Lista (puede ser
     vacia = 0 paginas reales · NO es error). non-2xx/transporte → ZernioPublishError (jamas [] enmascarando)."""
     headers, base = _conf()
     headers = _with_connect_token(headers, connect_token)
     async with httpx.AsyncClient(timeout=_HTTP_TIMEOUT, headers=headers) as client:
         try:
-            resp = await client.get(f"{base}/connect/get-facebook-pages", params=_fb_session_params(temp_token))
+            resp = await client.get(f"{base}/connect/get-facebook-pages",
+                                    params=_fb_session_params(temp_token, profile_id))
         except httpx.HTTPError as e:
             logger.warning("get_facebook_pages transporte · ct=%s tt=%s", _tok(connect_token), _tok(temp_token))
             raise ZernioPublishError(f"zernio_transport_error:{type(e).__name__}") from e
@@ -50,12 +53,12 @@ async def get_facebook_pages(temp_token: str, connect_token: str) -> list[dict]:
     return resp.json().get("pages", [])
 
 
-async def select_facebook_page(temp_token: str, connect_token: str, page_id: str) -> str:
-    """POST /connect/update-facebook-page {accountId, pageId} → adjunta la pagina al profile. Devuelve el
-    accountId Zernio resultante. non-2xx/sin-id → ZernioPublishError (cero-fabricacion · nunca finge exito)."""
+async def select_facebook_page(temp_token: str, connect_token: str, page_id: str, profile_id: str) -> str:
+    """POST /connect/update-facebook-page {profileId, accountId, pageId} → adjunta la pagina al profile.
+    Devuelve el accountId Zernio resultante. non-2xx/sin-id → ZernioPublishError (cero-fabricacion)."""
     headers, base = _conf()
     headers = _with_connect_token(headers, connect_token)
-    body = {**_fb_session_params(temp_token), "pageId": page_id}
+    body = {**_fb_session_params(temp_token, profile_id), "pageId": page_id}
     async with httpx.AsyncClient(timeout=_HTTP_TIMEOUT, headers=headers) as client:
         try:
             resp = await client.post(f"{base}/connect/update-facebook-page", json=body)

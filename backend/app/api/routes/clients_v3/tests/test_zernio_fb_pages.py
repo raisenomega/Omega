@@ -28,10 +28,22 @@ def _run(c):
 def test_pending_pages_lista_solo_id_name(monkeypatch):
     _auth(monkeypatch)
     pend.stash_pending("u1", CID, "facebook", "tt", "ct")
-    async def _pages(tt, ct):
+    seen: dict = {}
+    async def _pages(tt, ct, pid):
+        seen["pid"] = pid
         return [{"id": "pg1", "name": "La Casita", "secret": "x"}]
     monkeypatch.setattr(fb, "get_facebook_pages", _pages)
     assert _run(fb.fb_pending_pages(CID, "auth")) == {"pages": [{"id": "pg1", "name": "La Casita"}]}
+    assert seen["pid"] == "P"   # profileId del negocio propagado a Zernio (fix 400 'Profile ID is required')
+
+
+def test_pending_pages_sin_profile_409(monkeypatch):
+    _auth(monkeypatch)
+    monkeypatch.setattr(zo.reader, "get_client", lambda cid: {"id": cid, "user_id": "u1"})  # sin zernio_profile_id
+    pend.stash_pending("u1", CID, "facebook", "tt", "ct")
+    with pytest.raises(HTTPException) as e:
+        _run(fb.fb_pending_pages(CID, "auth"))
+    assert e.value.status_code == 409
 
 
 def test_pending_pages_sin_pending_409(monkeypatch):
@@ -53,7 +65,8 @@ def test_pending_pages_otro_user_no_recupera(monkeypatch):
 def test_select_page_ok_persiste_y_limpia(monkeypatch):
     _auth(monkeypatch)
     pend.stash_pending("u1", CID, "facebook", "tt", "ct")
-    async def _sel(tt, ct, pid):
+    async def _sel(tt, ct, page, prof):
+        assert prof == "P"   # profileId del negocio propagado al select (misma familia de endpoint)
         return "acc_fb1"
     async def _persist(c, p, prof, account_id=None):
         return {"zernio_account_id": account_id, "handle": "h"}
@@ -74,7 +87,7 @@ def test_select_page_sin_pending_409(monkeypatch):
 def test_select_page_persist_422_limpia_igual(monkeypatch):
     _auth(monkeypatch)
     pend.stash_pending("u1", CID, "facebook", "tt", "ct")
-    async def _sel(tt, ct, pid):
+    async def _sel(tt, ct, page, prof):
         return "acc_fb1"
     async def _persist(*a, **k):
         raise HTTPException(status_code=422, detail="zernio_account_not_in_profile")
