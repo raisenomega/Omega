@@ -46,6 +46,10 @@ export default function AddOnsPage() {
     if (location.hash === "#agentes") {
       agentesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+    if (location.hash === "#rex") {
+      // deep-link desde la barra del Calendario → aterriza JUSTO en la card de REX
+      document.getElementById("rex")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }, [location.state, location.hash]);
 
   return (
@@ -105,7 +109,12 @@ export default function AddOnsPage() {
         <p className="text-xs text-muted-foreground">Tu equipo de agentes especializados · activá los que tu marca necesita</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {AGENTS.map((agent) => (
-            <AgentCard key={agent.id} agent={agent} onOpen={() => setOpenAgent(agent)} />
+            <AgentCard
+              key={agent.id}
+              agent={agent}
+              anchorId={agent.id === "publicador" ? "rex" : undefined}
+              onOpen={() => setOpenAgent(agent)}
+            />
           ))}
         </div>
       </section>

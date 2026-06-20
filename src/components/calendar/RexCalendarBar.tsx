@@ -35,7 +35,7 @@ export function RexCalendarBar({ clientId }: { clientId: string }) {
         {!isLoading && (hasAddon ? (
           <AutonomousModeToggle clientId={clientId} />
         ) : (
-          <Button size="sm" className="shrink-0" onClick={() => navigate("/add-ons")}>
+          <Button size="sm" className="shrink-0" onClick={() => navigate("/add-ons#rex")}>
             Activar REX
           </Button>
         ))}

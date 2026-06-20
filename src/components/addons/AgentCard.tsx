@@ -6,13 +6,14 @@ import type { Agent } from "./_agents_data";
 interface AgentCardProps {
   agent: Agent;
   onOpen: () => void;
+  anchorId?: string;  // ancla opcional para deep-link (ej. la barra del Calendario → #rex)
 }
 
 // Card compacta del agente · clic → AgentDetailModal. Botón ghost amber→emerald (patrón Add-Ons).
-export function AgentCard({ agent, onOpen }: AgentCardProps) {
+export function AgentCard({ agent, onOpen, anchorId }: AgentCardProps) {
   const price = agent.tiers.length > 1 ? `desde ${agent.tiers[0].price}` : agent.tiers[0].price;
   return (
-    <Card className="flex flex-col h-full transition-all duration-300 hover:border-amber-500/60 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:bg-gradient-to-b hover:from-amber-500/5 hover:to-transparent">
+    <Card id={anchorId} className="flex flex-col h-full transition-all duration-300 hover:border-amber-500/60 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:bg-gradient-to-b hover:from-amber-500/5 hover:to-transparent">
       <CardContent className="flex flex-col items-center gap-3 p-5 flex-1 text-center">
         <AgentAvatar
           src={agent.image}
