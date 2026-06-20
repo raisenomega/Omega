@@ -36,7 +36,7 @@ def required_insert(label: str, fn: Callable[P, T], *args: P.args, **kwargs: P.k
         raise
 
 
-def _sb():
+def _sb() -> Any:
     return get_supabase_service().client
 
 
@@ -54,8 +54,24 @@ def insert_client(user_id: str, reseller_id: str, identity: dict[str, str]) -> s
     NO upsertea por user_id: eso sobrescribía el 1er negocio al crear el 2º (bug write-side ·
     Mail Boxes Design → Omega Raisen). Editar va por PATCH /clients/{id}/onboarding-data
     con client_id explícito (otro path). upsert_client queda legacy (DEBT-UPSERT-CLIENT-CLEANUP)."""
-    r = _sb().table("clients").insert({**identity, "user_id": user_id, "reseller_id": reseller_id}).execute()
+    row: dict[str, Any] = {**identity, "user_id": user_id, "reseller_id": reseller_id}
+    # ARIA dogfood: si el reseller define default_client_aria_level, el cliente nuevo lo HEREDA.
+    # NULL (otros resellers · ej. OMEGA Direct) → se omite → DEFAULT del DB (aria_level=1). No afecta a otros.
+    lvl = _reseller_default_aria(reseller_id)
+    if lvl is not None:
+        row["aria_level"] = lvl
+    r = _sb().table("clients").insert(row).execute()
     return str(r.data[0]["id"])
+
+
+def _reseller_default_aria(reseller_id: str) -> Optional[int]:
+    """default_client_aria_level del reseller (None si no seteado o error → cae al default del DB)."""
+    try:
+        r = (_sb().table("resellers").select("default_client_aria_level")
+             .eq("id", reseller_id).limit(1).execute())
+        return r.data[0].get("default_client_aria_level") if r.data else None
+    except Exception:
+        return None
 
 
 def upsert_client_context(client_id: str, context: dict[str, Any]) -> None:
