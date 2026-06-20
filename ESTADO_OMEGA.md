@@ -668,7 +668,7 @@ cruda descuida su imagen del producto (P2).
 1. ✅ **IDOR / cross-tenant (8 jun · remediado):** el audit confirmó `analytics/dashboard` como FALSO POSITIVO (el router gatea). Los endpoints legacy sin ownership (scheduling, clients/ legacy, brand_files) → ELIMINADOS/parcheados (INCIDENTE-SEC-002 · 16 endpoints · 3 fases · pointer SOURCE §6 · detalle `*.local.md`). Pendientes menores con triggers (reseller DELETE, context latente, feature_usage).
 2. ✅ **NEUTRALIZADO (19 jun):** Endpoints reseller billing/stats/detail/dashboard/oracle/public ya NO 500-ean contra columnas inexistentes (`omega_commission_rate`, `monthly_revenue_reported`, `agency_name`) — selects alineados a columnas reales + `.get()` fallback honesto. **Bonus:** login de reseller arreglado (lookup fantasma `resellers.owner_email` eliminado · usaba `clients.reseller_id`). Schema reseller real se diseña en Sprint 8.
 3. ✅ **NEUTRALIZADO (19 jun):** Crear reseller ya no intenta el INSERT roto (a `resellers` con columnas fantasma ni a `clients`) → degrada honesto con **501 `reseller_provisioning_pending_sprint8`**. Provisioning completo (incl. `owner_user_id`/auth) = Sprint 8 con Modelo C firmado.
-4. 🟠 **SENTINEL ciego** (tabla fantasma `sentinel_scans`) · **anti-fraude no cableado** (tabla sin código).
+4. ✅ **SENTINEL NO ciego** (verificado 20 jun · `sentinel_scans` 00048 real · el cron escribe ambas tablas · 33/19 filas en prod · falso positivo del audit) · **anti-fraude no cableado** (tabla sin código · DEBT-ANTIFRAUD-WIRE).
 5. 🟠 **Schema drift prod-vs-migraciones SIN RESOLVER** — incógnita raíz; bloquea launch en ambas ramas.
 
 ## A · INVENTARIO
@@ -730,7 +730,7 @@ TODO reales: **3** (no ~13; el resto = palabra española "todo"), 1 accionable (
 2. 🟠 Sin defensa-en-profundidad (service_role bypassa RLS; aislamiento depende del guard por handler; analytics lo olvidó).
 3. 🟠 Controles doc no implementados: rate-limit, account-lockout, token-revocation, failover LLM, GitHub Actions (`.github/` no existe), SHA1 worker.
 4. 🟠 Anti-fraude NO cableado (tabla 00004 sin código) — superficie del trial $0/7d.
-5. 🟠 SENTINEL ciego (tabla fantasma).
+5. ✅ SENTINEL NO ciego (verificado 20 jun · ambas tablas reales+pobladas · falso positivo).
 6. ✅ Secretos hardcoded: 0 (aparte de las 3 keys en historial → DEBT-SECURITY-KEYS-ROTATION, rotar pre-launch).
 
 ## G · EVALUACIÓN HONESTA
@@ -744,7 +744,7 @@ TODO reales: **3** (no ~13; el resto = palabra española "todo"), 1 accionable (
 | 3 | 🔴 | Arreglar o desactivar camino reseller (creación + billing/stats/detail/dashboard) hasta reconciliar schema. |
 | 4 | 🟠 | Verificar `STRIPE_PRICE_ENTERPRISE`=$199 en Railway + guard que falle si vacío. |
 | 5 | 🟠 | Cablear anti-fraude activo antes de abrir trial $0/7d a externos. |
-| 6 | 🟠 | Arreglar SENTINEL `sentinel_scans`→`sentinel_risk_scores` (panel ciego). |
+| 6 | ✅ | SENTINEL NO requiere arreglo (verificado 20 jun · ambas tablas reales · el cron escribe ambas · falso positivo). |
 | 7 | 🟡 | Alinear doc de negocio con lo facturable (sacar/construir Crisis/CompIntel/SEO; agregar Rex/Rafa/Maya). |
 | 8 | 🟡 | Hacer honestos docs aspiracionales (separar construido vs roadmap en HERMES/ARIA_LEARNING/SENTINEL_ENTERPRISE/AGENT_SYSTEM; marcar tablas huérfanas). |
 | 9 | 🟡 | Corregir drift de tooling (crons→16, claim `verify-on-stop`, A4/README, borrar `billing/webhook.py` legacy). |
@@ -759,7 +759,7 @@ La verificación adversarial **refutó la evidencia (no la conclusión)** de 2 h
 - **Reseller billing 500:** `get_reseller_billing.py:20`, `get_reseller_stats.py:19`, `get_reseller_detail.py:62`, `resellers/dashboard.py:54-55`.
 - **Reseller creation:** `resellers/admin.py:85-91`, `:103-105`, try/except `:73-116`; `reseller_models.py:47-50`.
 - **Reseller status CHECK:** `admin.py:194-213` vs `00001_initial_consolidated.sql:45`.
-- **SENTINEL fantasma:** `sentinel_service.py:63` + `get_status.py:27`/`get_history.py:28`/`omega/_dept_report_security.py:13,29` (`sentinel_scans`; real `sentinel_risk_scores` 00029).
+- ~~**SENTINEL fantasma**~~ → **FALSO POSITIVO (20 jun):** `sentinel_scans` (00048) es real y poblada (33 filas) · el cron `run_full_scan` escribe ambas tablas · cero cambio de código.
 - **Cron cap reseller:** `get_reseller_clients.py:61-62`.
 - **A4 inexistentes:** `DDD_REGLAS_OMEGA.md:114-128`; `README.md:106-119` (`src/bc-*`).
 - **verify-on-stop:** `.claude/hooks/verify-on-stop.sh` (no valida identidad).
@@ -815,7 +815,7 @@ La verificación adversarial **refutó la evidencia (no la conclusión)** de 2 h
 
 **✅ `clients` CONFIRMADO sano para REX (19 jun · verificado en migraciones + código vivo):** `reseller_id`/`industry`/`plan` (00001) · `region`/`aria_level`/`industry` (00008 `aria_intelligence_schema` · ALTER multilínea) · `zernio_profile_id` (00068) — todas presentes y `clients_v3/handlers/get_client_profile.py:22` las SELECTea en prod. **REX puede arrancar sobre `clients`; NO depende del drift de `resellers`.** El drift de `resellers` queda diferido a Sprint 8 sin bloquear el camino.
 
-🔴 **`sentinel_scans` — tabla fantasma:** el código escribe/lee a `sentinel_scans` (no existe); la real es `sentinel_risk_scores` (existe pero no se usa) → **SENTINEL ciego** (panel muestra "todo OK" porque no hay datos).
+✅ **`sentinel_scans` — VERIFICADO REAL (20 jun · la hipótesis "tabla fantasma → ciego" era FALSA en los dos puntos):** las DOS tablas existen — `sentinel_scans` (migr **00048**) y `sentinel_risk_scores` (migr **00029**). El cron `run_full_scan` (7am AST · `main.py:114`) escribe **AMBAS** (`sentinel_service.py:63` = 3 filas/corrida VAULT/PULSE/DB_GUARDIAN · `:71` = 1 agregada) y todo lector lee una tabla poblada (oracle/nova/panel SENTINEL → `sentinel_scans` · panel security-dev/`get_summary` → `sentinel_risk_scores`). **Conteo prod read-only:** `sentinel_scans`=33 · `sentinel_risk_scores`=19 · última fila IDÉNTICA `2026-06-19 11:00:01 UTC` (misma corrida del cron). **SENTINEL NO está ciego · CERO arreglo de código.** Consistente con DEBT-SENTINEL-BLIND ya CERRADA (3-jun · 00048). El 🔴 previo era falso positivo del audit del 10-jun (no podía ver el schema real).
 
 **Tablas sin uso de código — CORREGIDO 20 jun (verificado contra código real · el registro previo se equivocó):**
 - ❌ `training_pairs` **NO está huérfana** — `bc_cognition/application/aria_learning_report.py:53` la LEE (reporte semanal ARIA learning · ventana 7d). Sacada de la lista de huérfanas. (Aparte: quién la POPULA sigue abierto, pero la tabla está cableada en lectura.)
@@ -827,7 +827,7 @@ La verificación adversarial **refutó la evidencia (no la conclusión)** de 2 h
 ### Decisión de producto pendiente (NO de hoy)
 Para arreglar reseller (#3/#4) + SENTINEL, hay 2 caminos:
 - **CAMINO A — Construir economía reseller (semanas):** migración con las 6+5 columnas + lógica completa de billing/comisiones/stats + UI panel reseller funcional.
-- **CAMINO B — Código honesto (días):** quitar referencias a columnas fantasma · desactivar/ocultar el camino reseller en UI hasta sprint dedicada · SENTINEL: cambiar `sentinel_scans`→`sentinel_risk_scores` en código.
+- **CAMINO B — Código honesto (días):** quitar referencias a columnas fantasma · desactivar/ocultar el camino reseller en UI hasta sprint dedicada · ~~SENTINEL: cambiar `sentinel_scans`→`sentinel_risk_scores`~~ (INNECESARIO · ambas tablas reales · 20 jun).
 
 CAMINO A = roadmap completo · CAMINO B = mitigación honesta. **Decisión del owner con cabeza fresca.**
 
