@@ -337,7 +337,7 @@ persona_nova vía _context_builder). Leerlas NO es modificarlas. Lo prohibido es
 ### 📋 DEBTs consolidados post-Sesión 2 (~28 OPEN)
 
 **SENTINEL/Security-Dev (Sesión 2):** DEBT-024 (claude_service 48 callers · 12h 🟠) · DEBT-025 (ai_providers/dispatcher · 8h 🟠) · DEBT-070 (rate-limit→Redis · 6h 🟡) · DEBT-PREVIOUSLY-IGNORED-BADGE-V2 (3h 🟢) · DEBT-RATE-LIMIT-SYNTHETIC-TEST (3h 🟡) · DEBT-CSP-REPORT-RECEIVER (2h 🟢) · DEBT-CSP-STRICT (4h 🟡) · DEBT-STRIPE-WEBHOOK-E2E-TEST (3h 🟢) · DEBT-RESELLER-CONNECT-STATUS-COLUMN (2h 🟢) · DEBT-PENTEST-PROFESSIONAL ($5-15k 🟠 BLOCKED owner) · DEBT-CHAOS-FULL-COVERAGE (30h 🟢) · DEBT-WORKFLOW-ACTIONS-UPGRADE (30min 🟢) · DEBT-BANDIT-CONFIG-NOISE-EXCLUSIONS (30min 🟢) · DEBT-PROVISION-FUNCTIONS-REVIEW (3 trigger funcs · 30min 🟡) · DEBT-VECTOR-EXTENSION-SCHEMA-MOVE (2h 🟢) · DEBT-SENTINEL-LINTER-INTEGRATION (3h 🟠) · **DEBT-LEAKED-PASSWORD-PROTECTION-FREE-PLAN (🟡 ~5min · BLOCKED Free Plan)**.
-**Heredados pre-Sprint1:** DEBT-002 (Math.random analytics 🟡) · DEBT-004 (202 archivos >75L 🟢) · DEBT-008 (frontend→Supabase directo 🟡) · DEBT-OWNERSHIP-TRIAGE 🟢 · DEBT-RESELLER-PATH-DEAD 🟡 · DEBT-ORPHANED-TABLES 🟢 · DEBT-ANTIFRAUD-WIRE 🟡 · DEBT-ENTERPRISE-PRICE-GUARD 🟢 · **DEBT-SCHEMA-DRIFT-RESELLER 🟡 (NEUTRALIZADO 19 jun · reclasif. desde 🔴 BLOCKER — NO bloquea launch ni REX · ver Diagnóstico 2)** · DEBT-ROTAR-KEYS-PRELAUNCH 🟠 · DEBT-106A/B/C/D (Claude DEV ~40h 🟢) · DEBT-2FA-SUPERADMIN (4h 🟠 sugerido).
+**Heredados pre-Sprint1:** DEBT-002 (Math.random analytics 🟡) · DEBT-004 (202 archivos >75L 🟢) · DEBT-008 (frontend→Supabase directo 🟡) · DEBT-OWNERSHIP-TRIAGE 🟢 · DEBT-ORPHANED-TABLES 🟢 · DEBT-ANTIFRAUD-WIRE 🟡 · DEBT-ENTERPRISE-PRICE-GUARD 🟢 · **DEBT-SCHEMA-DRIFT-RESELLER 🟡 (NEUTRALIZADO 19 jun · reclasif. desde 🔴 BLOCKER — NO bloquea launch ni REX · ver Diagnóstico 2)** · DEBT-ROTAR-KEYS-PRELAUNCH 🟠 · DEBT-106A/B/C/D (Claude DEV ~40h 🟢) · DEBT-2FA-SUPERADMIN (4h 🟠 sugerido).
 
 **DEBT-LEAKED-PASSWORD-PROTECTION-FREE-PLAN** 🟡 (~5min cuando upgrade) · Linter `auth_leaked_password_protection` (WARN) · **NO accionable en Free Plan** (requiere Pro ~$25/mes) · activar toggle Auth→Policies "Prevent use of leaked passwords" al upgrade pre-launch B2B · NO bloqueante MVP.
 
@@ -824,12 +824,8 @@ La verificación adversarial **refutó la evidencia (no la conclusión)** de 2 h
 
 ✅ **`learning_events` — nunca se creó** (sospecha confirmada por la auditoría).
 
-### Decisión de producto pendiente (NO de hoy)
-Para arreglar reseller (#3/#4) + SENTINEL, hay 2 caminos:
-- **CAMINO A — Construir economía reseller (semanas):** migración con las 6+5 columnas + lógica completa de billing/comisiones/stats + UI panel reseller funcional.
-- **CAMINO B — Código honesto (días):** quitar referencias a columnas fantasma · desactivar/ocultar el camino reseller en UI hasta sprint dedicada · ~~SENTINEL: cambiar `sentinel_scans`→`sentinel_risk_scores`~~ (INNECESARIO · ambas tablas reales · 20 jun).
-
-CAMINO A = roadmap completo · CAMINO B = mitigación honesta. **Decisión del owner con cabeza fresca.**
+### Decisión de producto reseller — RESUELTA (Opción C · 19-20 jun)
+El camino reseller (#3/#4) se cerró con **Opción C** (ni A ni B puros): neutralización honesta (7 puntos · 0 500s · login reseller arreglado de paso) + schema definitivo **diferido a Sprint 8 con Modelo C** — no se cementó prod a código especulativo. Detalle en `DEBT-SCHEMA-DRIFT-RESELLER`. (SENTINEL nunca fue parte real: falso positivo · ver arriba.)
 
 ---
 
@@ -841,7 +837,7 @@ CAMINO A = roadmap completo · CAMINO B = mitigación honesta. **Decisión del o
 
 🟠 **DEBT-OWNERSHIP-TRIAGE:** 11 módulos autenticados sin verificación explícita de ownership del `client_id`. Triage: separar legítimos (super-admin, reseller-scope) de IDOR-autenticado real. Lista en Diagnóstico 1. Trigger: después de los 2 críticos sin auth.
 
-🔴 **DEBT-RESELLER-PATH-DEAD:** camino reseller roto en runtime (6 columnas faltantes en `resellers`, 5 en `clients`). Endpoints billing/stats/detail/dashboard → 500. Crear reseller falla silenciosamente. Decisión de producto pendiente: CAMINO A (construir, semanas) vs CAMINO B (código honesto, días).
+🟡 **DEBT-SCHEMA-DRIFT-RESELLER** (consolida la antigua `DEBT-RESELLER-PATH-DEAD` · era la MISMA deuda con dos nombres): el código reseller referenciaba 10 columnas fantasma en `resellers` (+ INSERT a `clients` con cols inexistentes) → billing/stats/detail/dashboard/login **500**. **NEUTRALIZADA vía Opción C (19-20 jun · `1ffa66c`):** 7 puntos degradan honesto (selects a cols reales + `.get()` fallback + create→501 + login reseller arreglado) · 0 500s · verificado en vivo (endpoint público reseller 200). **Schema definitivo diferido a Sprint 8 con Modelo C** (`omega_commission_rate` se elimina ahí · no se cementó prod a código especulativo). NO bloquea REX (se para sobre `clients` sano).
 
 ✅ **DEBT-SENTINEL-BLIND** · ~~CERRADA 3-jun · migración 00048 (sentinel_scans materializada) + db push aplicado + E2E verificado: schema 11 cols + RLS service_role + POST /sentinel/scan/ 200 + 3 filas reales (VAULT/PULSE_MONITOR/DB_GUARDIAN) + /sentinel/status·history·deploy-check pueblan correctamente~~ + commit `7627424`. (corrección a la hipótesis de auditoría: NO era rename a `sentinel_risk_scores` — son modelos distintos; se materializó `sentinel_scans` per-agente, cero cambio de código). (original) SENTINEL escribe/lee a `sentinel_scans` (no existe). Panel ciego (siempre "todo OK").
 
