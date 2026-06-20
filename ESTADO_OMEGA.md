@@ -6,6 +6,18 @@
 
 ---
 
+## 💲 DECISIÓN-PRECIOS-2026 (20 jun · DOCUMENTADA · NO implementar · sesión dedicada pre-launch)
+
+Reestructuración de negocio (toca Stripe + planes DB + copy global + banners upgrade). **NO al vuelo · sesión dedicada, por partes.**
+
+- **Estructura nueva:** Adopción **$0** (generosa en EXPERIENCIA no volumen · deja probar REX 1 vez · muestra features bloqueadas con "esto es Pro") → Básico **$29** (capado: sin Analytics/Crisis/Centro Intel · induce add-ons) → Pro **$97** (sube de $65 · todo desbloqueado · plan OBJETIVO) → Enterprise **$269** (sube de $199 · todo ×3 + ARIA 4 + soporte · plan META).
+- **Posicionamiento:** "el agente autónomo REAL a precio de PYME" · Pro $97 < Hootsuite $99 (que ni publica solo) · Enterprise $269 > Apaya/Sprout $249 (autoridad premium).
+- **Palancas:** cupo de GENERACIÓN (32/64/192) limita y empuja upgrade · add-ons rescatan margen de Básico · mensajes enfocados en AUTONOMÍA según plan.
+- **Economía verificada (20 jun):** AI cost real bajo (Básico $1.58 · Pro $3.72 · Ent $10.43/mes) · Zernio $6/cuenta pocos clientes → $1 a escala · márgenes 84-92% a escala.
+- **Implementar en sesión dedicada:** Stripe + planes DB + copy global + banners upgrade. NO al vuelo.
+
+---
+
 ## ✅ B-2 FACEBOOK HEADLESS — CERRADO END-TO-END + AISLAMIENTO VERIFICADO CON DATOS (19 jun)
 
 **El connect headless de redes está CERRADO en las dos plataformas: IG (18 jun) + FB (19 jun).** Una página
