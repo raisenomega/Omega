@@ -337,7 +337,7 @@ persona_nova vía _context_builder). Leerlas NO es modificarlas. Lo prohibido es
 ### 📋 DEBTs consolidados post-Sesión 2 (~28 OPEN)
 
 **SENTINEL/Security-Dev (Sesión 2):** DEBT-024 (claude_service 48 callers · 12h 🟠) · DEBT-025 (ai_providers/dispatcher · 8h 🟠) · DEBT-070 (rate-limit→Redis · 6h 🟡) · DEBT-PREVIOUSLY-IGNORED-BADGE-V2 (3h 🟢) · DEBT-RATE-LIMIT-SYNTHETIC-TEST (3h 🟡) · DEBT-CSP-REPORT-RECEIVER (2h 🟢) · DEBT-CSP-STRICT (4h 🟡) · DEBT-STRIPE-WEBHOOK-E2E-TEST (3h 🟢) · DEBT-RESELLER-CONNECT-STATUS-COLUMN (2h 🟢) · DEBT-PENTEST-PROFESSIONAL ($5-15k 🟠 BLOCKED owner) · DEBT-CHAOS-FULL-COVERAGE (30h 🟢) · DEBT-WORKFLOW-ACTIONS-UPGRADE (30min 🟢) · DEBT-BANDIT-CONFIG-NOISE-EXCLUSIONS (30min 🟢) · DEBT-PROVISION-FUNCTIONS-REVIEW (3 trigger funcs · 30min 🟡) · DEBT-VECTOR-EXTENSION-SCHEMA-MOVE (2h 🟢) · DEBT-SENTINEL-LINTER-INTEGRATION (3h 🟠) · **DEBT-LEAKED-PASSWORD-PROTECTION-FREE-PLAN (🟡 ~5min · BLOCKED Free Plan)**.
-**Heredados pre-Sprint1:** DEBT-002 (Math.random analytics 🟡) · DEBT-004 (202 archivos >75L 🟢) · DEBT-008 (frontend→Supabase directo 🟡) · DEBT-OWNERSHIP-TRIAGE 🟢 · DEBT-RESELLER-PATH-DEAD 🟡 · DEBT-ORPHANED-TABLES 🟢 · DEBT-ANTIFRAUD-WIRE 🟡 · DEBT-ENTERPRISE-PRICE-GUARD 🟢 · **DEBT-SCHEMA-DRIFT-RESELLER 🔴 BLOCKER** · DEBT-ROTAR-KEYS-PRELAUNCH 🟠 · DEBT-106A/B/C/D (Claude DEV ~40h 🟢) · DEBT-2FA-SUPERADMIN (4h 🟠 sugerido).
+**Heredados pre-Sprint1:** DEBT-002 (Math.random analytics 🟡) · DEBT-004 (202 archivos >75L 🟢) · DEBT-008 (frontend→Supabase directo 🟡) · DEBT-OWNERSHIP-TRIAGE 🟢 · DEBT-RESELLER-PATH-DEAD 🟡 · DEBT-ORPHANED-TABLES 🟢 · DEBT-ANTIFRAUD-WIRE 🟡 · DEBT-ENTERPRISE-PRICE-GUARD 🟢 · **DEBT-SCHEMA-DRIFT-RESELLER 🟡 (NEUTRALIZADO 19 jun · reclasif. desde 🔴 BLOCKER — NO bloquea launch ni REX · ver Diagnóstico 2)** · DEBT-ROTAR-KEYS-PRELAUNCH 🟠 · DEBT-106A/B/C/D (Claude DEV ~40h 🟢) · DEBT-2FA-SUPERADMIN (4h 🟠 sugerido).
 
 **DEBT-LEAKED-PASSWORD-PROTECTION-FREE-PLAN** 🟡 (~5min cuando upgrade) · Linter `auth_leaked_password_protection` (WARN) · **NO accionable en Free Plan** (requiere Pro ~$25/mes) · activar toggle Auth→Policies "Prevent use of leaked passwords" al upgrade pre-launch B2B · NO bloqueante MVP.
 
@@ -666,8 +666,8 @@ cruda descuida su imagen del producto (P2).
 
 **Lo crítico (bugs runtime confirmados):**
 1. ✅ **IDOR / cross-tenant (8 jun · remediado):** el audit confirmó `analytics/dashboard` como FALSO POSITIVO (el router gatea). Los endpoints legacy sin ownership (scheduling, clients/ legacy, brand_files) → ELIMINADOS/parcheados (INCIDENTE-SEC-002 · 16 endpoints · 3 fases · pointer SOURCE §6 · detalle `*.local.md`). Pendientes menores con triggers (reseller DELETE, context latente, feature_usage).
-2. 🔴 **Endpoints reseller billing/stats/detail/dashboard → 500** contra columnas inexistentes (`omega_commission_rate`, `monthly_revenue_reported`) en **5 handlers**.
-3. 🔴 **Crear reseller falla** (INSERT a `clients` de `password_hash/role/subscription_status/trial_active` inexistentes, tragado por try/except → reseller sin login).
+2. ✅ **NEUTRALIZADO (19 jun):** Endpoints reseller billing/stats/detail/dashboard/oracle/public ya NO 500-ean contra columnas inexistentes (`omega_commission_rate`, `monthly_revenue_reported`, `agency_name`) — selects alineados a columnas reales + `.get()` fallback honesto. **Bonus:** login de reseller arreglado (lookup fantasma `resellers.owner_email` eliminado · usaba `clients.reseller_id`). Schema reseller real se diseña en Sprint 8.
+3. ✅ **NEUTRALIZADO (19 jun):** Crear reseller ya no intenta el INSERT roto (a `resellers` con columnas fantasma ni a `clients`) → degrada honesto con **501 `reseller_provisioning_pending_sprint8`**. Provisioning completo (incl. `owner_user_id`/auth) = Sprint 8 con Modelo C firmado.
 4. 🟠 **SENTINEL ciego** (tabla fantasma `sentinel_scans`) · **anti-fraude no cableado** (tabla sin código).
 5. 🟠 **Schema drift prod-vs-migraciones SIN RESOLVER** — incógnita raíz; bloquea launch en ambas ramas.
 
@@ -802,9 +802,18 @@ La verificación adversarial **refutó la evidencia (no la conclusión)** de 2 h
 **Prod COINCIDE con las migraciones canónicas. NO hay drift manual oculto.** Sistema reproducible desde migraciones · disaster-recovery OK.
 
 ### Drift identificado (acotado)
-🔴 **`resellers` — 6 columnas que el código SELECTea pero FALTAN en prod:** `omega_commission_rate`, `monthly_revenue_reported`, `days_overdue`, `suspend_switch`, `clients_migrated`, `payment_due_date` → endpoints reseller billing/stats/detail/dashboard **rotos (500)**.
+🟡 **`resellers` — 10 columnas fantasma (NO 6) que el código referencia pero NO existen en prod ni en migraciones** (verificado 19 jun contra código real · `tier` se descartó: era de `bc_billing`/packs, no de resellers): `agency_name`, `owner_email`, `owner_name`, `omega_commission_rate`, `monthly_revenue_reported`, `payment_due_date`, `days_overdue`, `suspend_switch`, `clients_migrated`, `white_label_active`. El schema canónico real = 15 cols (11 base + `is_owner`/`aria_level`/`addons`/`is_super_owner`). **NO bloquea REX** (se para sobre `clients`, sano). **Diferido a Sprint 8** (schema definitivo = Modelo C · `omega_commission_rate` se elimina ahí).
 
-🔴 **`clients` — 5 columnas que `admin.py` INSERTa pero FALTAN en prod:** `password_hash`, `role`, `subscription_status`, `trial_active`, `email` → crear reseller **falla en runtime** (try/except traga el error → reseller sin login).
+**✅ NEUTRALIZADO (19 jun · red de seguridad · sin tocar prod · 7 puntos · gate 15/15 · 5 tests no-500):**
+- `get_reseller_stats.py:19` / `get_reseller_billing.py:20` — `.select()` solo columnas reales + `.get()` fallback (commission_rate→30, mrr→0).
+- `oracle_service.py:38` — `.select("id, status")` (quitado `agency_name`, no se usaba).
+- `public.py:123` — `agency_name` → `reseller.get("agency_name") or reseller.get("name")` (no KeyError).
+- `admin.py` create_reseller → **501** `reseller_provisioning_pending_sprint8` (en vez de INSERT roto a `resellers`+`clients`). Cubre también el drift de `clients` (`password_hash/role/...`): ese INSERT ya no se intenta.
+- `admin.py` update_reseller_status — descarta `suspend_switch` (fantasma) + guard si no hay cambios reales (status sí es columna real).
+- `login.py:107` — eliminado el lookup `resellers.owner_email` (columna fantasma que 500-eaba el login del reseller) → usa `clients.reseller_id`. **Bonus: arregla login de resellers.**
+- Test `resellers/tests/test_schema_drift_safety.py` (5 casos · simulan schema real · prueban degradación honesta).
+
+**✅ `clients` CONFIRMADO sano para REX (19 jun · verificado en migraciones + código vivo):** `reseller_id`/`industry`/`plan` (00001) · `region`/`aria_level`/`industry` (00008 `aria_intelligence_schema` · ALTER multilínea) · `zernio_profile_id` (00068) — todas presentes y `clients_v3/handlers/get_client_profile.py:22` las SELECTea en prod. **REX puede arrancar sobre `clients`; NO depende del drift de `resellers`.** El drift de `resellers` queda diferido a Sprint 8 sin bloquear el camino.
 
 🔴 **`sentinel_scans` — tabla fantasma:** el código escribe/lee a `sentinel_scans` (no existe); la real es `sentinel_risk_scores` (existe pero no se usa) → **SENTINEL ciego** (panel muestra "todo OK" porque no hay datos).
 

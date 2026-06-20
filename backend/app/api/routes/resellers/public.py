@@ -120,7 +120,9 @@ async def get_branding_by_slug(slug: str) -> APIResponse:
             "reseller": {
                 "id": reseller["id"],
                 "slug": reseller["slug"],
-                "agency_name": reseller["agency_name"],
+                # agency_name es columna fantasma (drift · Sprint 8); el nombre real
+                # vive en resellers.name. Fallback honesto para no romper con KeyError.
+                "agency_name": reseller.get("agency_name") or reseller.get("name"),
                 "status": reseller["status"]
             },
             "branding": branding

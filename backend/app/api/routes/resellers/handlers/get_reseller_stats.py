@@ -15,8 +15,11 @@ async def handle_get_reseller_stats(reseller_id: str) -> Dict[str, Any]:
     try:
         supabase = get_supabase_service()
         # Get reseller
+        # omega_commission_rate / monthly_revenue_reported son columnas fantasma
+        # (schema drift · DEBT-SCHEMA-DRIFT-RESELLER · Sprint 8). Seleccionar solo
+        # columna real y degradar honesto con .get() fallback abajo (no 500).
         reseller_resp = supabase.client.table("resellers")\
-            .select("omega_commission_rate, monthly_revenue_reported")\
+            .select("id")\
             .eq("id", reseller_id).single().execute()
         if not reseller_resp.data:
             raise HTTPException(status_code=404, detail="Reseller not found")

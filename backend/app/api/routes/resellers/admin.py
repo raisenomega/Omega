@@ -12,7 +12,6 @@ from app.models.reseller_models import (
     UpdateResellerStatusRequest,
 )
 import logging
-import bcrypt
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -54,81 +53,16 @@ async def create_reseller(request: CreateResellerRequest) -> APIResponse:
                 detail=f"Slug '{request.slug}' already exists"
             )
 
-        # Create reseller
-        reseller_data = request.model_dump()
-        reseller = await service.create_reseller(reseller_data)
-
-        # Create default branding
-        branding_data: Dict[str, Any] = {
-            "reseller_id": reseller["id"],
-            "primary_color": "38 85% 55%",
-            "secondary_color": "225 12% 14%",
-            "badge_text": "Boutique Creative Agency",
-            "hero_cta_text": "Comenzar"
-        }
-        await service.create_branding(branding_data)
-
-        # Generate temporary password and hash
-        temp_password = "TempAccess2026!"
-        password_hash = bcrypt.hashpw(
-            temp_password.encode('utf-8'),
-            bcrypt.gensalt()
-        ).decode('utf-8')
-
-        # Create client account for reseller authentication
-        try:
-            # Check if client account already exists
-            existing_client = service.client.table("clients")\
-                .select("id, email")\
-                .eq("email", request.owner_email)\
-                .execute()
-
-            if not existing_client.data or len(existing_client.data) == 0:
-                # Create new client account
-                client_data: Dict[str, Any] = {
-                    "name": request.owner_name,
-                    "email": request.owner_email,
-                    "password_hash": password_hash,
-                    "role": "reseller",
-                    "reseller_id": reseller["id"],
-                    "status": "active",
-                    "plan": "enterprise",
-                    "subscription_status": "active",
-                    "trial_active": False
-                }
-
-                service.client.table("clients").insert(client_data).execute()
-
-                logger.info(
-                    f"Client account created for reseller: {request.owner_email}"
-                )
-            else:
-                # Update existing client with reseller role and ID
-                service.client.table("clients")\
-                    .update({
-                        "role": "reseller",
-                        "reseller_id": reseller["id"],
-                        "password_hash": password_hash
-                    })\
-                    .eq("email", request.owner_email)\
-                    .execute()
-
-                logger.info(
-                    f"Client account updated for reseller: {request.owner_email}"
-                )
-        except Exception as client_error:
-            logger.warning(
-                f"Could not create/update client account: {client_error}"
-            )
-
-        return APIResponse(
-            success=True,
-            data={
-                **reseller,
-                "temp_password": temp_password,
-                "note": "Temporary password created. User should change it after first login."
-            },
-            message=f"Reseller '{request.agency_name}' created successfully"
+        # Provisioning completo de reseller (fila en resellers + branding + cuenta de
+        # login) exige owner_user_id (NOT NULL → auth.users) y el schema reseller
+        # definitivo del Modelo C. Hoy ese schema está en drift: las columnas que el
+        # modelo Pydantic asume (agency_name, owner_email, owner_name, etc.) NO existen
+        # en la tabla real → DEBT-SCHEMA-DRIFT-RESELLER, diferido a Sprint 8.
+        # Hasta entonces degradamos honesto con 501 en vez de intentar un INSERT roto
+        # (que daría 500 por columnas fantasma / owner_user_id faltante).
+        raise HTTPException(
+            status_code=501,
+            detail="reseller_provisioning_pending_sprint8",
         )
     except HTTPException:
         raise
@@ -211,12 +145,19 @@ async def update_reseller_status(
         if not reseller:
             raise HTTPException(status_code=404, detail="Reseller not found")
 
-        # Prepare update data
+        # Prepare update data. 'status' es columna real. 'suspend_switch' es columna
+        # fantasma (schema drift · DEBT-SCHEMA-DRIFT-RESELLER · Sprint 8) → se ignora
+        # para no romper el UPDATE; se reactiva con el schema real del Modelo C.
         update_data: Dict[str, Any] = {}
         if request.status is not None:
             update_data["status"] = request.status
-        if request.suspend_switch is not None:
-            update_data["suspend_switch"] = request.suspend_switch
+
+        if not update_data:
+            return APIResponse(
+                success=True,
+                data=reseller,
+                message="No changes applied",
+            )
 
         # Update reseller
         updated_reseller = await service.update_reseller(reseller_id, update_data)

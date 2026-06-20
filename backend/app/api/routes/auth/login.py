@@ -104,17 +104,11 @@ async def login(request: LoginRequest, http_request: Request) -> APIResponse:
         # Remove password_hash from response
         client.pop("password_hash", None)
 
-        # For resellers: lookup reseller_id from resellers table (solo para la respuesta/
-        # redirect · NO autoriza · get_current_user re-deriva role/reseller_id de la DB).
-        if client.get("role") == "reseller":
-            reseller_response = await asyncio.to_thread(
-                lambda: service.client.table("resellers")
-                .select("id")
-                .eq("owner_email", client["email"])
-                .execute()
-            )
-            if reseller_response.data and len(reseller_response.data) > 0:
-                client["reseller_id"] = reseller_response.data[0]["id"]
+        # Para resellers, reseller_id ya viene de la fila de clients (columna real,
+        # seteada al crear la cuenta del reseller) y get_current_user re-deriva la
+        # autorización desde la DB. El lookup previo filtraba por resellers.owner_email,
+        # columna fantasma (schema drift · DEBT-SCHEMA-DRIFT-RESELLER · Sprint 8) que
+        # rompía el login del reseller con 500. Se elimina: clients.reseller_id basta.
 
         # Get redirect path by role
         redirect_to = get_redirect_by_role(client.get("role", "client"))

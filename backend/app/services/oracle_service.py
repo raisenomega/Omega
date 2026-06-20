@@ -35,7 +35,7 @@ class OracleService:
             logger.info("Content generation stats not yet available")
             # 3. Resellers activos
             resellers_resp = supabase.client.table("resellers")\
-                .select("id, agency_name, status")\
+                .select("id, status")\
                 .eq("status", "active")\
                 .execute()
             resellers = resellers_resp.data or []
