@@ -817,7 +817,10 @@ La verificación adversarial **refutó la evidencia (no la conclusión)** de 2 h
 
 🔴 **`sentinel_scans` — tabla fantasma:** el código escribe/lee a `sentinel_scans` (no existe); la real es `sentinel_risk_scores` (existe pero no se usa) → **SENTINEL ciego** (panel muestra "todo OK" porque no hay datos).
 
-✅ **Tablas huérfanas (existen en prod, 0 código las usa):** `anti_fraud_signals`, `aria_nba_log`, `cross_client_benchmarks`, `training_pairs` → decisión pendiente: borrar o usar.
+**Tablas sin uso de código — CORREGIDO 20 jun (verificado contra código real · el registro previo se equivocó):**
+- ❌ `training_pairs` **NO está huérfana** — `bc_cognition/application/aria_learning_report.py:53` la LEE (reporte semanal ARIA learning · ventana 7d). Sacada de la lista de huérfanas. (Aparte: quién la POPULA sigue abierto, pero la tabla está cableada en lectura.)
+- 🟢 `aria_nba_log` + `cross_client_benchmarks` (migr 00008): **0 uso en código HOY, pero NO son deuda a limpiar** — son la infraestructura de aprendizaje (Loop 2 · `was_correct` · cross-client benchmarks) que **REX/Centro van a cablear**. Activo listo para usar, NO borrar. La forma de que dejen de estar "vacías" es construir REX, no borrarlas.
+- 🟡 `anti_fraud_signals` (migr 00004): sin cablear (ver DEBT-ANTIFRAUD-WIRE).
 
 ✅ **`learning_events` — nunca se creó** (sospecha confirmada por la auditoría).
 
@@ -842,7 +845,7 @@ CAMINO A = roadmap completo · CAMINO B = mitigación honesta. **Decisión del o
 
 ✅ **DEBT-SENTINEL-BLIND** · ~~CERRADA 3-jun · migración 00048 (sentinel_scans materializada) + db push aplicado + E2E verificado: schema 11 cols + RLS service_role + POST /sentinel/scan/ 200 + 3 filas reales (VAULT/PULSE_MONITOR/DB_GUARDIAN) + /sentinel/status·history·deploy-check pueblan correctamente~~ + commit `7627424`. (corrección a la hipótesis de auditoría: NO era rename a `sentinel_risk_scores` — son modelos distintos; se materializó `sentinel_scans` per-agente, cero cambio de código). (original) SENTINEL escribe/lee a `sentinel_scans` (no existe). Panel ciego (siempre "todo OK").
 
-🟢 **DEBT-ORPHANED-TABLES:** 4 tablas en prod sin uso de código: `anti_fraud_signals`, `aria_nba_log`, `cross_client_benchmarks`, `training_pairs`. Decisión: borrarlas (limpieza) o documentar por qué existen. No urgente.
+🟢 **DEBT-ORPHANED-TABLES (CORREGIDO 20 jun · verificado contra código):** `training_pairs` **sale** (la lee `aria_learning_report.py:53` · no es huérfana). `aria_nba_log` + `cross_client_benchmarks` (00008) = **cimientos de REX/Loop 2, NO deuda** (cero uso hoy · los cablea REX cuando se construya · documentados como activo listo, no a borrar). Solo `anti_fraud_signals` (00004) queda sin cablear → DEBT-ANTIFRAUD-WIRE. **Cero tablas a borrar.**
 
 ### DEUDAS NUEVAS REGISTRADAS — 2026-06-03 (cierre IDORs)
 
