@@ -43,9 +43,9 @@ export const AGENTS: readonly Agent[] = [
     persona: "Rex",
     role: "Agente Publicador",
     image: "/Agentes/Rex.jpg",
-    tagline: "Gestiona y recuerda tu calendario de publicación",
+    tagline: "Publica automáticamente los posts que ya aprobaste, a su hora",
     description:
-      "Rex organiza y ejecuta tu calendario. Planifica la semana con ARIA, programa tus posts con espaciado automático y te avisa a la hora exacta — para que nunca dejes de publicar.",
+      "REX publica automáticamente los posts que ya aprobaste, a su hora programada. Tú apruebas, REX ejecuta. Próximamente: planificación semanal, mejor horario y reportes.",
     tiers: toTiers(PUBLISHER_PACKS),
   },
   {
