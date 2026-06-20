@@ -170,8 +170,11 @@ async def lifespan(app: FastAPI):
     # SENTINEL Sprint 2 Capa 8 — Chaos engineering (5 escenarios controlled) · 1er lunes/mes 3AM AST · 24vo cron job
     from app.workers.sentinel_chaos_worker import run_chaos_scan
     scheduler.add_job(run_chaos_scan, 'cron', day_of_week='mon', day='1-7', hour=3, minute=0, id='chaos_monthly', max_instances=1, replace_existing=True)
+    # REX Publicador Autónomo (DEBT-098 · F2) · cada 5 min · 25vo cron job · max_instances=1 (sostiene el lock)
+    from app.workers.rex_publisher_worker import run_rex_publisher_job
+    scheduler.add_job(run_rex_publisher_job, 'cron', minute='*/5', id='rex_publisher', max_instances=1, replace_existing=True, misfire_grace_time=300)
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION + RLS_AUDIT + RUNTIME_OBS + PERF + AGENTS_HEALTH + NETWORK_HTTP + INTEGRATIONS + CHAOS workers activos — 24 jobs (jobstore persistente DEBT-047)")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION + RLS_AUDIT + RUNTIME_OBS + PERF + AGENTS_HEALTH + NETWORK_HTTP + INTEGRATIONS + CHAOS + REX_PUBLISHER workers activos — 25 jobs (jobstore persistente DEBT-047)")
     yield
     # ── SHUTDOWN ──
     scheduler.shutdown()

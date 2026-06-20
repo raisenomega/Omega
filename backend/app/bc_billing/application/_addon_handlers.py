@@ -83,6 +83,12 @@ async def handle_addon_deactivation(
                         {"aria_level": base}
                     ).eq("id", r["client_id"]).execute()
                     logger.info(f"ARIA Premium deactivated · client={r['client_id']} · aria_level reset to {base}")
+                elif addon_code.startswith("agent_publisher"):
+                    # REX (DEBT-098): baja la compra Y apaga el toggle (seguridad · no queda autónomo sin add-on).
+                    supabase.client.table("clients").update(
+                        {"rex_addon_active": False, "autonomous_mode_on": False}
+                    ).eq("id", r["client_id"]).execute()
+                    logger.info(f"REX add-on deactivated · client={r['client_id']} · rex OFF (addon+toggle)")
                 else:
                     logger.info(f"Addon {addon_code} deactivated · client={r['client_id']} · aria_level intacto")
                 return r["client_id"]

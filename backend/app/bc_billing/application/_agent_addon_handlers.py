@@ -26,4 +26,9 @@ async def handle_agent_addon_activation(
         "deactivated_at": None,
     })
     supabase.client.table("client_plans").update({"addons": addons}).eq("client_id", client_id).execute()
+    # REX (DEBT-098): el add-on publisher_* habilita el Modo Autónomo. Solo flipea la COMPRA
+    # (rex_addon_active) · NO enciende autonomous_mode_on (eso es consentimiento humano vía toggle).
+    if agent_addon_code.startswith("publisher"):
+        supabase.client.table("clients").update({"rex_addon_active": True}).eq("id", client_id).execute()
+        logger.info(f"REX add-on ON · client={client_id} · rex_addon_active=true (toggle queda OFF)")
     logger.info(f"Agent Add-On activated · client={client_id} · agent={agent_addon_code}")

@@ -8,6 +8,7 @@ import { CalendarGrid } from "@/components/calendar/CalendarGrid";
 import { PostsList } from "@/components/calendar/PostsList";
 import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 import { EmptyState } from "@/components/common/EmptyState";
+import { AutonomousModeToggle } from "@/components/calendar/AutonomousModeToggle";
 
 const MONTH_LABELS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -45,6 +46,8 @@ export default function Calendar() {
         <h1 className="text-2xl font-display font-bold tracking-tight">Calendario</h1>
         <p className="text-sm text-muted-foreground">Posts programados · click en un día para ver detalles.</p>
       </header>
+
+      <AutonomousModeToggle clientId={activeBusinessId} />
 
       <div className="flex items-center gap-2">
         <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Mes anterior"><ChevronLeft className="h-4 w-4" /></Button>

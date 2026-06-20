@@ -21,6 +21,6 @@ def test_main_ids_coinciden_con_registry():
     assert _main_job_ids() == set(CRON_JOB_IDS)
 
 
-def test_expected_es_24():
-    assert EXPECTED_CRON_JOBS == 24
-    assert len(CRON_JOB_IDS) == 24
+def test_expected_es_25():
+    assert EXPECTED_CRON_JOBS == 25  # 24 + rex_publisher (DEBT-098)
+    assert len(CRON_JOB_IDS) == 25

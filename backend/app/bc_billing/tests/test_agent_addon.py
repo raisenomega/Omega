@@ -44,13 +44,17 @@ def test_activation_pushes_addon():
     class _T:
         def select(self, *a, **k): return self
         def eq(self, *a, **k): return self
-        def update(self, p): captured["addons"] = p["addons"]; return self
+        def update(self, p):
+            if "addons" in p: captured["addons"] = p["addons"]      # client_plans.addons
+            if "rex_addon_active" in p: captured["rex"] = p["rex_addon_active"]  # flip clients (DEBT-098)
+            return self
         def execute(self): return MagicMock(data=[{"addons": []}])
 
     sb = MagicMock()
     sb.client.table = lambda n: _T()
     asyncio.run(handle_agent_addon_activation("c1", "publisher_esencial", "sub_1", sb))
     assert captured["addons"][0]["addon_code"] == "agent_publisher_esencial"
+    assert captured["rex"] is True  # publisher_* flipea rex_addon_active
 
 
 def test_dispatch_routes_agent_addon():
