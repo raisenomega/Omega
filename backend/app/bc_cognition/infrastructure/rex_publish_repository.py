@@ -1,8 +1,4 @@
-"""Repository REX · todo el acceso a datos del publicador autónomo (DDD A1/A9).
-
-Mantiene el use case libre de SQL (espejo de _publish_repository). Corre con
-service_role. I/O sync · el use case lo envuelve en asyncio.to_thread.
-"""
+"""Repository REX · datos del publicador autónomo (DDD A1/A9 · service_role · I/O sync→to_thread)."""
 import logging
 import os
 from datetime import datetime, timezone
@@ -20,9 +16,20 @@ def _sb() -> Any:
 
 
 def rex_live_enabled() -> bool:
-    """Flag maestro · REX solo publica de verdad si está ON (default OFF · inerte en prod).
-    No entra en config.py (archivo en el techo C4 100L) · env directo en infra (capa de I/O)."""
+    """Maestro global · REX publica solo si ON (default OFF · env directo · no entra en config.py por C4)."""
     return os.getenv("REX_LIVE_ENABLED", "").strip().lower() in _TRUE
+
+
+def reseller_rex_live(client_id: str) -> bool:
+    """2da llave: ¿el reseller DUEÑO del cliente tiene rex_live_enabled=true? · fail-safe False."""
+    try:
+        c = _sb().table("clients").select("reseller_id").eq("id", client_id).limit(1).execute()
+        rid = c.data[0].get("reseller_id") if c.data else None
+        r = _sb().table("resellers").select("rex_live_enabled").eq("id", str(rid)).limit(1).execute()
+        return bool(r.data and r.data[0].get("rex_live_enabled"))
+    except Exception as e:
+        logger.error(f"rex.reseller_rex_live failed client={client_id}: {e}", exc_info=True)
+        return False
 
 
 def fetch_active_rex_client_ids() -> list[str]:
@@ -77,8 +84,7 @@ def fetch_account_binding(social_account_id: str) -> dict[str, Any]:
 
 
 def count_published_today(client_id: str) -> int:
-    """Publicaciones REX REALES de hoy (gate_result='publish' AND published_at NOT NULL).
-    Autoridad propia · NO cuenta publish manual (otra vía · no toca rex_publish_log)."""
+    """Publicaciones REX REALES de hoy (gate_result='publish' AND published_at NOT NULL · autoridad propia)."""
     start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
     r = (_sb().table("rex_publish_log").select("id", count="exact")
          .eq("client_id", client_id).eq("gate_result", "publish")

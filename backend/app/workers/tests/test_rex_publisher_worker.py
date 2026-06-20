@@ -25,8 +25,14 @@ def test_execute_delegates_to_uc_with_selected_fn(monkeypatch: pytest.MonkeyPatc
         seen["fn"] = fn
         return {"client_id": cid}
 
-    monkeypatch.setattr(w, "select_publish_fn", lambda: _shadow)
+    seen_fn_arg: dict[str, str] = {}
+
+    def _select(client_id: str) -> object:
+        seen_fn_arg["cid"] = client_id   # el wrapper recibe el client_id (doble llave por-cliente)
+        return _shadow
+    monkeypatch.setattr(w, "select_publish_fn", _select)
     monkeypatch.setattr(w, "run_rex_for_client", _run)
     out = asyncio.run(w.rex_publisher_worker.execute("c9"))
     assert out == {"client_id": "c9"}
     assert seen["cid"] == "c9" and seen["fn"] is _shadow   # usó la fn que dio el wrapper
+    assert seen_fn_arg["cid"] == "c9"                       # select_publish_fn(client_id), no global

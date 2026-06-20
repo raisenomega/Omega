@@ -28,8 +28,10 @@ async def _live_publish(post_id: str, client_id: str) -> tuple[bool, Optional[st
         return False, f"publish_gate:{e.code}"
 
 
-def select_publish_fn() -> PublishFn:
-    """OFF (default) → shadow (inerte) · ON → real. Garantía de inercia de REX en prod."""
-    live = repo.rex_live_enabled()
-    logger.info(f"rex publish_fn = {'LIVE' if live else 'shadow'} (REX_LIVE_ENABLED)")
+def select_publish_fn(client_id: str) -> PublishFn:
+    """DOBLE LLAVE: maestro global AND rex_live_enabled del reseller DUEÑO del cliente.
+    Maestro OFF → nadie publica (shadow) aunque el reseller esté ON · maestro ON → manda el
+    flag por-reseller. Default (cualquiera de las dos en false) → shadow. Fail-safe a shadow."""
+    live = repo.rex_live_enabled() and repo.reseller_rex_live(client_id)
+    logger.info(f"rex publish_fn[{client_id}] = {'LIVE' if live else 'shadow'} (maestro+reseller)")
     return _live_publish if live else _shadow_publish

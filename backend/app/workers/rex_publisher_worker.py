@@ -32,8 +32,8 @@ class RexPublisherWorker(BaseWorker):
             return []
 
     async def execute(self, client_id: str) -> dict:
-        """Delega al use case · publish_fn según REX_LIVE_ENABLED (la decide el wrapper)."""
-        return await run_rex_for_client(client_id, select_publish_fn())
+        """Delega al use case · publish_fn según maestro+reseller (la decide el wrapper, por cliente)."""
+        return await run_rex_for_client(client_id, select_publish_fn(client_id))
 
 
 rex_publisher_worker = RexPublisherWorker()
