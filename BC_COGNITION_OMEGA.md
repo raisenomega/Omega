@@ -170,7 +170,7 @@ from typing import Final
 
 _RAW = {
     "MIN_CONFIDENCE_TO_ACT":          7,
-    "MAX_POSTS_AUTO_PER_DIA_CLIENTE": 3,
+    "MAX_POSTS_AUTO_PER_DIA_RED":     24,
     "MAX_USD_AUTO_AD_SPEND":          50,
     "MAX_USD_DIARIO_API_POR_CLIENTE": 5,
     "MAX_TOKENS_CONTEXT_DINAMICO":    2000,

@@ -14,7 +14,7 @@ _MEDIA_REQUIRED = {"instagram", "tiktok"}
 
 def build_gate_input(post: dict[str, Any], content: dict[str, Any],
                      account: dict[str, Any], gating: dict[str, Any],
-                     posts_today: int) -> RexGateInput:
+                     posts_today_platform: int) -> RexGateInput:
     """Ensambla el input del gate · fail-safe: señal ausente → None/0 → el gate holdea."""
     platform = str(account.get("platform") or "")
     bv = content.get("brand_voice_score")
@@ -24,7 +24,7 @@ def build_gate_input(post: dict[str, Any], content: dict[str, Any],
         crisis_active=bool(gating.get("crisis_active")),
         brand_voice_score=float(bv) if bv is not None else None,
         confidence=int(content.get("confidence") or 0),
-        posts_today=posts_today,
+        posts_today_platform=posts_today_platform,
         has_media=(bool(post.get("media_url")) if platform in _MEDIA_REQUIRED else True),
         connection_valid=bool(account.get("zernio_account_id")),
     )

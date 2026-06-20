@@ -38,15 +38,16 @@ async def run_rex_for_client(client_id: str, publish_fn: PublishFn) -> dict[str,
     # publicar · ON=real → publish_scheduled_post). El registro distingue ambos por published_at.
     sb = get_supabase_service()
     due = await asyncio.to_thread(repo.fetch_due_posts, client_id, _DUE_LIMIT)
-    published_today = await asyncio.to_thread(repo.count_published_today, client_id)
+    # Conteo POR RED (anti-spam por red · cada red su cupo · ver rex_gate check 5).
+    published_by_platform = await asyncio.to_thread(repo.count_published_today_by_platform, client_id)
     holds = published = 0
 
     for post in due:
         content = await asyncio.to_thread(repo.fetch_content_signals, str(post.get("content_id") or ""))
         account = await asyncio.to_thread(repo.fetch_account_binding, str(post.get("social_account_id") or ""))
-        ctx = steps.build_gate_input(post, content, account, gating, published_today)
+        platform = str(account.get("platform") or "")
+        ctx = steps.build_gate_input(post, content, account, gating, published_by_platform.get(platform, 0))
         verdict = evaluate_rex_gate(ctx)
-        platform = account.get("platform")
 
         if verdict.decision == "hold":
             await asyncio.to_thread(steps.record_outcome, sb, post, gating, client_id,
@@ -59,6 +60,7 @@ async def run_rex_for_client(client_id: str, publish_fn: PublishFn) -> dict[str,
                                 "publish", reason, ok, platform, ctx.brand_voice_score)
         if ok:
             published += 1
-            published_today += 1  # cuenta para el límite diario DENTRO de la corrida
+            # incremento POR RED dentro de la corrida (no combinado)
+            published_by_platform[platform] = published_by_platform.get(platform, 0) + 1
 
     return {"client_id": client_id, "due": len(due), "published": published, "holds": holds}

@@ -31,7 +31,7 @@ class ScheduledPostV3Create(BaseModel):
 
     content_ids: 1+ items de texto del bloque · cada uno se programa como
     1 row separada · backend spread automático según LIMITS_OMEGA
-    (MIN_HORAS_ENTRE_POSTS=2 · MAX_POSTS_AUTO_PER_DIA_CLIENTE=3).
+    (MIN_HORAS_ENTRE_POSTS=2 · reparto bulk 3/día propio · desacoplado del límite de REX por red).
     Atomic insert · todos o ninguno.
     """
     client_id: str = Field(..., description="Client UUID")

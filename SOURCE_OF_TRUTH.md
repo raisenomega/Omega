@@ -140,7 +140,7 @@ P5 — APRENDIZAJE HONESTO
 
 ```
 MIN_CONFIDENCE_TO_ACT          = 7            # escala 0-10
-MAX_POSTS_AUTO_PER_DIA_CLIENTE = 3            # más → human review
+MAX_POSTS_AUTO_PER_DIA_RED     = 24           # POR RED · anti-spam (freno real = espaciado 2h) · más → human review
 MAX_USD_AUTO_AD_SPEND          = 50           # más → owner approval
 MAX_USD_DIARIO_API_POR_CLIENTE = 5            # circuit breaker AI costs
 MAX_TOKENS_CONTEXT_DINAMICO    = 2000         # I6: Lost-in-the-Middle

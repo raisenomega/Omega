@@ -1,6 +1,6 @@
 // Spread automático de timestamps para bulk schedule · split de ScheduleModalV2 (C4)
 export const SPREAD_HOURS = 2;   // LIMITS_OMEGA MIN_HORAS_ENTRE_POSTS
-export const SPREAD_MAX_DAY = 3; // LIMITS_OMEGA MAX_POSTS_AUTO_PER_DIA_CLIENTE
+export const SPREAD_MAX_DAY = 3; // reparto bulk 3/día (UX · desacoplado del límite de publicación de REX por red)
 
 export function computeSpread(base: string, n: number): string[] {
   if (n < 1 || !base) return [];

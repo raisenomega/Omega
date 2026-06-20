@@ -3,9 +3,9 @@
 Función pura · cero imports externos · self-checks al import (patrón
 limits_omega.py / video_entitlements.py).
 
-Reparte N posts respetando LIMITS_OMEGA:
-  MIN_HORAS_ENTRE_POSTS = 2 (anti-spam · plataformas penalizan ráfaga)
-  MAX_POSTS_AUTO_PER_DIA_CLIENTE = 3 (saturación de feed)
+Reparte N posts respetando el espaciado anti-spam (LIMITS_OMEGA MIN_HORAS_ENTRE_POSTS = 2h)
+y un reparto de 3/día propio de la distribución bulk (UX de spread · DESACOPLADO del límite
+de publicación de REX, que es POR RED · ver MAX_POSTS_AUTO_PER_DIA_RED).
 
 Diseño: next-day rows usan la MISMA hora-base que el primer post
 (consistencia cross-día · predecible para el usuario).

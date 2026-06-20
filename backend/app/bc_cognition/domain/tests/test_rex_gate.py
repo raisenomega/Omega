@@ -9,7 +9,7 @@ from app.bc_cognition.domain.brand_voice_scorer_prompt import SCORE_BRAND_BAR
 from app.bc_cognition.domain.rex_gate import RexGateInput, evaluate_rex_gate
 
 _MIN_CONF: int = LIMITS_OMEGA["MIN_CONFIDENCE_TO_ACT"]
-_MAX_POSTS: int = LIMITS_OMEGA["MAX_POSTS_AUTO_PER_DIA_CLIENTE"]
+_MAX_POSTS: int = LIMITS_OMEGA["MAX_POSTS_AUTO_PER_DIA_RED"]
 
 
 def _ok(
@@ -18,7 +18,7 @@ def _ok(
     crisis_active: bool = False,
     brand_voice_score: Optional[float] = SCORE_BRAND_BAR,
     confidence: int = _MIN_CONF,
-    posts_today: int = 0,
+    posts_today_platform: int = 0,
     has_media: bool = True,
     connection_valid: bool = True,
 ) -> RexGateInput:
@@ -26,7 +26,7 @@ def _ok(
     return RexGateInput(
         addon_active=addon_active, toggle_on=toggle_on, crisis_active=crisis_active,
         brand_voice_score=brand_voice_score, confidence=confidence,
-        posts_today=posts_today, has_media=has_media, connection_valid=connection_valid,
+        posts_today_platform=posts_today_platform, has_media=has_media, connection_valid=connection_valid,
     )
 
 
@@ -59,7 +59,7 @@ def test_hold_low_confidence() -> None:
 
 
 def test_hold_daily_limit() -> None:
-    assert evaluate_rex_gate(_ok(posts_today=_MAX_POSTS)).reason == "daily_limit_reached"
+    assert evaluate_rex_gate(_ok(posts_today_platform=_MAX_POSTS)).reason == "daily_limit_reached"
 
 
 def test_hold_no_media() -> None:
@@ -77,8 +77,8 @@ def test_confidence_boundary() -> None:
 
 
 def test_posts_boundary() -> None:
-    assert evaluate_rex_gate(_ok(posts_today=_MAX_POSTS - 1)).decision == "publish"  # 2 pasa
-    assert evaluate_rex_gate(_ok(posts_today=_MAX_POSTS)).decision == "hold"         # 3 hold
+    assert evaluate_rex_gate(_ok(posts_today_platform=_MAX_POSTS - 1)).decision == "publish"  # 23 pasa
+    assert evaluate_rex_gate(_ok(posts_today_platform=_MAX_POSTS)).decision == "hold"         # 24 hold
 
 
 def test_brand_voice_boundary() -> None:

@@ -12,7 +12,7 @@ from app.bc_cognition.domain.limits_omega import LIMITS_OMEGA
 from app.bc_cognition.domain.brand_voice_scorer_prompt import SCORE_BRAND_BAR
 
 _MIN_CONFIDENCE: Final[int] = LIMITS_OMEGA["MIN_CONFIDENCE_TO_ACT"]          # P3 · = 7
-_MAX_POSTS_DAY: Final[int] = LIMITS_OMEGA["MAX_POSTS_AUTO_PER_DIA_CLIENTE"]  # anti-saturación · = 3
+_MAX_POSTS_DAY: Final[int] = LIMITS_OMEGA["MAX_POSTS_AUTO_PER_DIA_RED"]  # anti-spam POR RED · = 24
 
 
 @dataclass(frozen=True)
@@ -23,7 +23,7 @@ class RexGateInput:
     crisis_active: bool         # kill-switch manual de crisis del cliente
     brand_voice_score: Optional[float]  # X5 · None = sin referencia/medición
     confidence: int             # convicción del draft (0-10)
-    posts_today: int            # publicaciones auto ya hechas hoy por el cliente
+    posts_today_platform: int   # publicaciones auto ya hechas hoy en ESTA red
     has_media: bool             # requisito de media de la plataforma satisfecho
     connection_valid: bool      # token/cuenta de la red válidos
 
@@ -48,8 +48,8 @@ def evaluate_rex_gate(ctx: RexGateInput) -> RexVerdict:
     # 4 · Convicción mínima (P3)
     if ctx.confidence < _MIN_CONFIDENCE:
         return RexVerdict("hold", "low_confidence")
-    # 5 · Límite diario de posts automáticos
-    if ctx.posts_today >= _MAX_POSTS_DAY:
+    # 5 · Límite diario de posts automáticos POR RED (anti-spam · cada red su cupo)
+    if ctx.posts_today_platform >= _MAX_POSTS_DAY:
         return RexVerdict("hold", "daily_limit_reached")
     # 6 · Media presente (el use case resuelve el requisito por plataforma)
     if not ctx.has_media:

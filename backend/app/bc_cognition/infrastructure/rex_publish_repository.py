@@ -1,9 +1,9 @@
 """Repository REX · datos del publicador autónomo (DDD A1/A9 · service_role · I/O sync→to_thread)."""
 import logging
 import os
+from collections import Counter
 from datetime import datetime, timezone
 from typing import Any, Optional
-
 from app.infrastructure.supabase_service import get_supabase_service
 
 logger = logging.getLogger(__name__)
@@ -83,13 +83,13 @@ def fetch_account_binding(social_account_id: str) -> dict[str, Any]:
         return {}
 
 
-def count_published_today(client_id: str) -> int:
-    """Publicaciones REX REALES de hoy (gate_result='publish' AND published_at NOT NULL · autoridad propia)."""
+def count_published_today_by_platform(client_id: str) -> dict[str, int]:
+    """Publicaciones REX REALES de hoy POR RED (gate_result='publish' AND published_at NOT NULL · autoridad propia)."""
     start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
-    r = (_sb().table("rex_publish_log").select("id", count="exact")
+    r = (_sb().table("rex_publish_log").select("platform")
          .eq("client_id", client_id).eq("gate_result", "publish")
          .not_.is_("published_at", "null").gte("created_at", start).execute())
-    return r.count or 0
+    return dict(Counter(str(row.get("platform") or "") for row in (r.data or [])))
 
 
 def insert_rex_publish_log(row: dict[str, Any]) -> None:

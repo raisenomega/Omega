@@ -21,21 +21,24 @@ def _gating(**over: object) -> dict[str, Any]:
     return base
 
 
-def _post(pid: str = "p1") -> dict[str, Any]:
-    return {"id": pid, "client_id": "cli1", "content_id": "c1", "social_account_id": "sa1",
+def _post(pid: str = "p1", sa: str = "sa1") -> dict[str, Any]:
+    return {"id": pid, "client_id": "cli1", "content_id": "c1", "social_account_id": sa,
             "scheduled_for": "2026-06-20T10:00:00+00:00", "media_url": "http://x/m.jpg"}
 
 
 def _setup(monkeypatch: pytest.MonkeyPatch, *, gating: Optional[dict[str, Any]],
-           due: list[dict[str, Any]], published_today: int = 0) -> list[dict[str, Any]]:
+           due: list[dict[str, Any]], published_by_platform: Optional[dict[str, int]] = None,
+           account_by_sa: Optional[dict[str, str]] = None) -> list[dict[str, Any]]:
     logs: list[dict[str, Any]] = []
     content = {"confidence": 7, "brand_voice_score": SCORE_BRAND_BAR}
-    account = {"platform": "facebook", "zernio_account_id": "z1", "status": "active"}
+    plats = account_by_sa or {}            # social_account_id → platform (default facebook)
+    counts = published_by_platform or {}   # conteo previo POR RED (default vacío = 0)
     monkeypatch.setattr(repo, "fetch_client_gating", lambda cid: gating)
     monkeypatch.setattr(repo, "fetch_due_posts", lambda cid, lim: due)
     monkeypatch.setattr(repo, "fetch_content_signals", lambda cid: content)
-    monkeypatch.setattr(repo, "fetch_account_binding", lambda sid: account)
-    monkeypatch.setattr(repo, "count_published_today", lambda cid: published_today)
+    monkeypatch.setattr(repo, "fetch_account_binding", lambda sid: {
+        "platform": plats.get(sid, "facebook"), "zernio_account_id": "z1", "status": "active"})
+    monkeypatch.setattr(repo, "count_published_today_by_platform", lambda cid: dict(counts))
     monkeypatch.setattr(repo, "insert_rex_publish_log", lambda row: logs.append(row))
     monkeypatch.setattr(mem, "insert_agent_memory", lambda *a, **k: None)
     monkeypatch.setattr(uc, "get_supabase_service", lambda: object())

@@ -314,7 +314,7 @@ confidence < 7 → HOLD código · SDK Anthropic solo en `bc_cognition/infra/`.
 ARCHIVO        backend/app/bc_cognition/domain/limits_omega.py
 CONTENIDO      LIMITS_OMEGA (frozen dict equivalente Python)
                MIN_CONFIDENCE_TO_ACT = 7
-               MAX_POSTS_AUTO_PER_DIA_CLIENTE = 3
+               MAX_POSTS_AUTO_PER_DIA_RED = 24   # POR RED (anti-spam)
                MAX_USD_AUTO_AD_SPEND = 50
                MAX_USD_DIARIO_API_POR_CLIENTE = 5
                MAX_TOKENS_CONTEXT_DINAMICO = 2000

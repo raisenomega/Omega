@@ -54,9 +54,9 @@ _LIMITS_RAW = {
     # Escala 0-10. Debajo de este umbral: hold_for_human_review.
     "MIN_CONFIDENCE_TO_ACT": 7,
 
-    # Posts automáticos máximos por día por cliente
-    # Más de esto: forzar revisión humana.
-    "MAX_POSTS_AUTO_PER_DIA_CLIENTE": 3,
+    # Posts automáticos máximos por día POR RED (anti-spam · no palanca de negocio)
+    # Más de esto en UNA red: forzar revisión humana. El freno real es el espaciado de 2h.
+    "MAX_POSTS_AUTO_PER_DIA_RED": 24,
 
     # Gasto máximo automático en ads pagados (USD)
     # Operaciones >$50 requieren aprobación owner.
@@ -179,9 +179,10 @@ _LIMIT_RATIONALES = MappingProxyType({
         "Regla P3 del proyecto: cero acción autónoma sin convicción. "
         "Calibrado con datos de 2026-Q1 — debajo de 7, error rate >40%."
     ),
-    "MAX_POSTS_AUTO_PER_DIA_CLIENTE": (
-        "Saturación de feed degrada engagement. 3 posts/día es el techo "
-        "según Hootsuite Social Trends 2026."
+    "MAX_POSTS_AUTO_PER_DIA_RED": (
+        "Anti-spam POR RED, no palanca de negocio. El freno real es el espaciado "
+        "de 2h (~12/día físico). 24/red es backstop generoso muy por debajo del "
+        "techo técnico de IG (100 posts/24h)."
     ),
     "MAX_USD_AUTO_AD_SPEND": (
         "Pérdida tolerable sin firma humana. >$50 → owner approval "
