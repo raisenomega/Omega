@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ariaGet, ariaPost } from "@/lib/aria-fetch";
 import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 import { ariaHistoryQuery, ariaMessageBody, ariaHistoryKey } from "@/lib/aria-scope";
+import { supabase } from "@/integrations/supabase/client";
 import type { PlanCode } from "@/lib/plan-limits";
 
 // Mapping plan → ARIA level BASE (Q2=A · spec §6 ARIA_NOVA_INTELLIGENCE)
@@ -35,12 +36,23 @@ export function useARIAChat() {
   const { toast } = useToast();
   const myPlan = useMyPlanStatus();
   const { activeBusinessId } = useActiveBusiness();  // Switcher V1: ARIA contextualizada al negocio activo
-  const planStatus = useClientPlanStatus(myPlan.clientId ?? "");
-  // DEBT-046: for reseller owners (isOwner=true, clientId=null) use the reseller base level
-  // rather than falling through to "adopcion" (level 1) from the empty clientId path.
-  const planLevel = myPlan.isOwner
-    ? RESELLER_BASE_ARIA_LEVEL
-    : (PLAN_TO_LEVEL[planStatus.planCode] ?? 1);
+  // FIX "Modelo 3.0" stale: plan + aria_level del NEGOCIO ACTIVO (no del user) · un reseller
+  // viendo un cliente usa el nivel de ESE cliente (RESELLER_BASE solo aplica a su ARIA propia).
+  const planStatus = useClientPlanStatus(activeBusinessId ?? myPlan.clientId ?? "");
+  const activeClientLevel = useQuery<number>({  // aria_level real del cliente activo (Supabase · RLS)
+    queryKey: ["client_aria_level", activeBusinessId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clients").select("aria_level").eq("id", activeBusinessId!).maybeSingle();
+      if (error) throw error;
+      return (data?.aria_level as number | null) ?? 1;
+    },
+    enabled: !!activeBusinessId,
+  });
+  // Nivel base: con negocio activo → SU plan · sin negocio → RESELLER_BASE (DEBT-046) o plan del user.
+  const planLevel = activeBusinessId
+    ? (PLAN_TO_LEVEL[planStatus.planCode] ?? 1)
+    : (myPlan.isOwner ? RESELLER_BASE_ARIA_LEVEL : (PLAN_TO_LEVEL[planStatus.planCode] ?? 1));
 
   // Switcher V1: queryKey incluye activeBusinessId → cache se invalida al cambiar de negocio.
   const historyQuery = useQuery({
@@ -72,7 +84,9 @@ export function useARIAChat() {
   // Máximo plan↔backend → no mostrar "Actualizar" a quien ya pagó (evita doble cobro percibido).
   const messages = historyQuery.data ?? [];
   const backendLevel = messages.reduce((mx, m) => Math.max(mx, m.aria_level ?? 0), 0);
-  const ariaLevel = Math.max(planLevel, backendLevel);
+  // aria_level del cliente activo (0 sin negocio) · el máx de los 3 = nivel real sin regresar bajo el plan.
+  const clientLevel = activeBusinessId ? (activeClientLevel.data ?? 1) : 0;
+  const ariaLevel = Math.max(planLevel, clientLevel, backendLevel);
 
   return {
     messages,
