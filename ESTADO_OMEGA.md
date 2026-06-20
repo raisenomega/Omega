@@ -93,6 +93,26 @@ falla honesto · sin adivinar) → `create_post`. TikTok ∈ `_MEDIA_REQUIRED` (
 (humano aprobó) publica. **Token TikTok 24h: lo maneja ZERNIO** (no mandamos token · pasamos accountId · Zernio
 publica con su conexión guardada · si el token venció y Zernio no lo refrescó → non-2xx → fallo honesto).
 
+### ✅ REX · Publicador Autónomo (DEBT-098 F1) — DESPLEGADO E INERTE en prod (20 jun · 7331476 · 00069 aplicada)
+
+Primer incremento de REX construido entero, desplegado y **verificado inerte con datos**. REX = rol ejecutor
+(NO 9no agente · `canonical_agents` intacto · `operational_count()==8`): cron cada 5 min recorre `scheduled_posts`
+`pending` con `scheduled_for<=now()` y publica lo que el humano YA aprobó, tras un gate determinístico de 7 checks.
+
+**Piezas (6 commits `5c3435d`→`7331476`):** F0 migración `00069` (`clients.rex_addon_active`/`autonomous_mode_on`/
+`crisis_active` + `rex_publish_log` append-only · RLS espejo 00027) · F1 `rex_gate.py` puro (7 checks orden prioridad:
+gating→crisis→brand_voice≥0.7→confidence≥7→posts<3→media→connection · umbrales de LIMITS_OMEGA/X5, cero hardcode) ·
+F2 UC flag-agnóstico + **wrapper `rex_publish_fn`** que lee `REX_LIVE_ENABLED` (default OFF=shadow · `publish_scheduled_post`
+INALCANZABLE en OFF) + repo/steps · worker `rex_publisher_worker` (subclase BaseWorker · filtra add-on AND toggle) +
+cron 25º (`*/5`·`max_instances=1`·grace 300) + billing flip (`publisher_*`→`rex_addon_active`, NO toca el toggle · cancela=apaga
+ambos) + toggle UI Calendar (Bot Lucide · visible solo si compró · off default · PATCH con `resolve_client_or_403`).
+
+**Garantías (probadas con código + datos):** flag leído POR-CORRIDA (kill-switch sin reinicio) · filtro exige addon AND
+toggle (2 capas) · default OFF en la migración · ownership en el PATCH. **Inercia doble en prod:** `REX_LIVE_ENABLED`
+sin setear (shadow) + universo addon+toggle=**0** + `rex_publish_log` vacío (0 real). 41 tests · gate 15/15 cada fase ·
+persona/limits SHA1 intactos. **PENDIENTE: E2E en cuenta descartable** (enciende `REX_LIVE_ENABLED` · paso con GO aparte ·
+guion en `REX_E2E_CHECKLIST.md`) → luego activación gradual por cliente real. cron-status=25 y env de Railway: verificación del owner (endpoint authed / panel).
+
 ### ✅ TikTok PUBLISH end-to-end — SÓLIDO (19 jun · probado con datos · entorno descartable)
 
 TikTok pasó de "funciona" a **SÓLIDO**: connect + **publish end-to-end** + aislamiento, los tres probados con
@@ -337,7 +357,7 @@ persona_nova vía _context_builder). Leerlas NO es modificarlas. Lo prohibido es
 ### 📋 DEBTs consolidados post-Sesión 2 (~28 OPEN)
 
 **SENTINEL/Security-Dev (Sesión 2):** DEBT-024 (claude_service 48 callers · 12h 🟠) · DEBT-025 (ai_providers/dispatcher · 8h 🟠) · DEBT-070 (rate-limit→Redis · 6h 🟡) · DEBT-PREVIOUSLY-IGNORED-BADGE-V2 (3h 🟢) · DEBT-RATE-LIMIT-SYNTHETIC-TEST (3h 🟡) · DEBT-CSP-REPORT-RECEIVER (2h 🟢) · DEBT-CSP-STRICT (4h 🟡) · DEBT-STRIPE-WEBHOOK-E2E-TEST (3h 🟢) · DEBT-RESELLER-CONNECT-STATUS-COLUMN (2h 🟢) · DEBT-PENTEST-PROFESSIONAL ($5-15k 🟠 BLOCKED owner) · DEBT-CHAOS-FULL-COVERAGE (30h 🟢) · DEBT-WORKFLOW-ACTIONS-UPGRADE (30min 🟢) · DEBT-BANDIT-CONFIG-NOISE-EXCLUSIONS (30min 🟢) · DEBT-PROVISION-FUNCTIONS-REVIEW (3 trigger funcs · 30min 🟡) · DEBT-VECTOR-EXTENSION-SCHEMA-MOVE (2h 🟢) · DEBT-SENTINEL-LINTER-INTEGRATION (3h 🟠) · **DEBT-LEAKED-PASSWORD-PROTECTION-FREE-PLAN (🟡 ~5min · BLOCKED Free Plan)**.
-**Heredados pre-Sprint1:** DEBT-002 (Math.random analytics 🟡) · DEBT-004 (202 archivos >75L 🟢) · DEBT-008 (frontend→Supabase directo 🟡) · DEBT-OWNERSHIP-TRIAGE 🟢 · DEBT-ORPHANED-TABLES 🟢 · DEBT-ANTIFRAUD-WIRE 🟡 · DEBT-ENTERPRISE-PRICE-GUARD 🟢 · **DEBT-SCHEMA-DRIFT-RESELLER 🟡 (NEUTRALIZADO 19 jun · reclasif. desde 🔴 BLOCKER — NO bloquea launch ni REX · ver Diagnóstico 2)** · DEBT-DRAFTEDIT-TZ 🟡 (20 jun · `DraftEditForm.tsx:70` manda `scheduled_for` sin `toUtcIso` → un post agendado por ESE path se guarda naive y REX lo dispararía a hora equivocada · el path principal `useScheduleBlock.ts:36` SÍ convierte a UTC, OK · NO bloquea REX F1 · fix = aplicar `toUtcIso` también en DraftEditForm) · DEBT-REX-CRISIS-AUTO 🟡 (20 jun · `clients.crisis_active` es kill-switch MANUAL en REX F1; cablear que `crisis_manager`/`crisis_detector` lo enciendan solo al detectar crisis — hoy detección es on-demand sin persistencia · follow-up post primer incremento REX) · DEBT-ROTAR-KEYS-PRELAUNCH 🟠 · DEBT-106A/B/C/D (Claude DEV ~40h 🟢) · DEBT-2FA-SUPERADMIN (4h 🟠 sugerido).
+**Heredados pre-Sprint1:** DEBT-002 (Math.random analytics 🟡) · DEBT-004 (202 archivos >75L 🟢) · DEBT-008 (frontend→Supabase directo 🟡) · DEBT-OWNERSHIP-TRIAGE 🟢 · DEBT-ORPHANED-TABLES 🟢 · DEBT-ANTIFRAUD-WIRE 🟡 · DEBT-ENTERPRISE-PRICE-GUARD 🟢 · **DEBT-SCHEMA-DRIFT-RESELLER 🟡 (NEUTRALIZADO 19 jun · reclasif. desde 🔴 BLOCKER — NO bloquea launch ni REX · ver Diagnóstico 2)** · DEBT-DRAFTEDIT-TZ 🟡 (20 jun · `DraftEditForm.tsx:70` manda `scheduled_for` sin `toUtcIso` → un post agendado por ESE path se guarda naive y REX lo dispararía a hora equivocada · el path principal `useScheduleBlock.ts:36` SÍ convierte a UTC, OK · NO bloquea REX F1 · fix = aplicar `toUtcIso` también en DraftEditForm) · DEBT-REX-CRISIS-AUTO 🟡 (20 jun · `clients.crisis_active` es kill-switch MANUAL en REX F1; cablear que `crisis_manager`/`crisis_detector` lo enciendan solo al detectar crisis — hoy detección es on-demand sin persistencia · follow-up post primer incremento REX) · DEBT-WORKER-LOGS-TABLE-MISSING 🟡 (20 jun · `omega_worker_logs` NO existe en prod · `BaseWorker._log` falla best-effort → workers loguean a stdout/Railway en vez de DB · PREEXISTENTE · afecta a TODOS los workers, no solo REX · no rompe nada · crear la tabla o quitar el log a DB) · DEBT-ROTAR-KEYS-PRELAUNCH 🟠 · DEBT-106A/B/C/D (Claude DEV ~40h 🟢) · DEBT-2FA-SUPERADMIN (4h 🟠 sugerido).
 
 **DEBT-LEAKED-PASSWORD-PROTECTION-FREE-PLAN** 🟡 (~5min cuando upgrade) · Linter `auth_leaked_password_protection` (WARN) · **NO accionable en Free Plan** (requiere Pro ~$25/mes) · activar toggle Auth→Policies "Prevent use of leaked passwords" al upgrade pre-launch B2B · NO bloqueante MVP.
 
