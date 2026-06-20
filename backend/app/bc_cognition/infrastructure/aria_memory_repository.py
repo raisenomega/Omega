@@ -26,16 +26,16 @@ def insert_agent_memory(
     client_id: Optional[str], reseller_id: Optional[str],
     user_message: str, assistant_response: str, level: int,
     source_event_id: Optional[str], was_correct: Optional[bool] = None,
-    content_id: Optional[str] = None,
+    content_id: Optional[str] = None, agent_code: str = "aria",
 ) -> None:
     """INSERT agent_memory schema M1 · was_correct=None → cron evalúa 72h.
     Punto 0: content_id (del draft que generó esta interacción) → aria_nba_id (col existente, sin
-    migración) para que evaluate_decisions cierre was_correct. None=Q&A sin contenido (no-signal · fwd-only)."""
+    migración) para que evaluate_decisions cierre was_correct. None=Q&A sin señal. agent_code='aria' default · 'rex_publisher' en REX."""
     context = redact_pii(user_message)[0]
     decision = redact_pii(assistant_response)[0]
     supabase.client.table("agent_memory").insert({
         "user_id": user_id, "client_id": client_id, "reseller_id": reseller_id,
-        "agent_code": "aria", "memory_type": "episodic",
+        "agent_code": agent_code, "memory_type": "episodic",
         "context": context, "decision": decision, "confidence": 7,
         "was_correct": was_correct, "source_event_id": source_event_id,
         "aria_nba_id": content_id,
