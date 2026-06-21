@@ -8,6 +8,8 @@ interface EngagementRow {
   likes: number;
   comments: number;
   shares: number;
+  saves: number;
+  views: number;
 }
 
 interface EngagementChartProps {
@@ -18,6 +20,8 @@ const chartConfig = {
   likes: { label: "Likes", color: "hsl(var(--chart-1))" },
   comments: { label: "Comentarios", color: "hsl(var(--chart-2))" },
   shares: { label: "Compartidos", color: "hsl(var(--chart-3))" },
+  saves: { label: "Guardados", color: "hsl(var(--chart-4))" },
+  views: { label: "Vistas", color: "hsl(var(--chart-5))" },
 };
 
 function colorFor(platform: string): string {
@@ -39,7 +43,7 @@ export function EngagementChart({ data }: EngagementChartProps) {
   return (
     <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Engagement por plataforma</CardTitle>
+        <CardTitle className="text-sm">Engagement por plataforma · del período</CardTitle>
       </CardHeader>
       <CardContent className="pt-2">
         <ChartContainer config={chartConfig} className="h-64 w-full">
@@ -53,6 +57,8 @@ export function EngagementChart({ data }: EngagementChartProps) {
             </Bar>
             <Bar dataKey="comments" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} fillOpacity={0.7} />
             <Bar dataKey="shares" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} fillOpacity={0.5} />
+            <Bar dataKey="saves" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} fillOpacity={0.5} />
+            <Bar dataKey="views" fill="hsl(var(--chart-5))" radius={[4, 4, 0, 0]} fillOpacity={0.35} />
           </BarChart>
         </ChartContainer>
       </CardContent>

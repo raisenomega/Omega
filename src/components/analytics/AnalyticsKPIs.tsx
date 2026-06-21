@@ -1,9 +1,8 @@
-import { Users, TrendingUp, Clock, FileText, type LucideIcon } from "lucide-react";
+import { Users, Clock, FileText, type LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface AnalyticsKPIsProps {
   followers: number | null;
-  engagement: number | null;
   bestHour: string | null;
   posts: number | null;
 }
@@ -22,20 +21,17 @@ function fmtNumber(n: number | null): string {
   return String(n);
 }
 
-function fmtPct(n: number | null): string {
-  return n === null ? EMPTY : `${n.toFixed(2)}%`;
-}
-
-export function AnalyticsKPIs({ followers, engagement, bestHour, posts }: AnalyticsKPIsProps) {
+// Regla GLOBAL cero-sintéticos: sin dato real → "—" (vacío honesto), NUNCA un número de relleno.
+// SIN KPI de engagement %: decisión P1 (la API no da ER por-post · solo conteos por red abajo).
+export function AnalyticsKPIs({ followers, bestHour, posts }: AnalyticsKPIsProps) {
   const kpis: KPI[] = [
     { label: "Seguidores", value: fmtNumber(followers), icon: Users },
-    { label: "Engagement", value: fmtPct(engagement), icon: TrendingUp },
     { label: "Mejor hora", value: bestHour ?? EMPTY, icon: Clock },
-    { label: "Posts", value: fmtNumber(posts), icon: FileText },
+    { label: "Posts", value: fmtNumber(posts), icon: FileText }, // total histórico de la cuenta
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
       {kpis.map((k) => {
         const Icon = k.icon;
         return (

@@ -43,7 +43,7 @@ export function BestTimesHeatmap({ data }: BestTimesHeatmapProps) {
 
   return (
     <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-      <CardHeader className="pb-2"><CardTitle className="text-sm">Mejores horas para publicar</CardTitle></CardHeader>
+      <CardHeader className="pb-2"><CardTitle className="text-sm">Mejores horas para publicar · del período</CardTitle></CardHeader>
       <CardContent className="pt-2 pb-3 space-y-1 overflow-hidden">
         {hours.map(({ hour, value }) => {
           const pct = Math.round((value / max) * 100);

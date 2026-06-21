@@ -22,7 +22,7 @@ export default function Analytics() {
   useTrackOnMount("feature_open", { feature: "analytics" });
 
   const access = useProAccess();
-  const { loading, growthData, engagementData, heatmapData, avgEngagement, totalFollowers } = useAnalyticsData();
+  const { loading, growthData, engagementData, heatmapData, totalFollowers, posts, bestHour, dataDelay } = useAnalyticsData();
   const { activeBusinessId, isReady } = useActiveBusiness();
 
   if (access.loading) return <ProGateLoading />;
@@ -41,8 +41,7 @@ export default function Analytics() {
   if (!activeBusinessId) return <EmptyState feature="Analytics" />;
 
   const hasEngagement = engagementData.length > 0;
-  const postsCount = hasEngagement ? engagementData.reduce((s, e) => s + e.likes + e.comments + e.shares, 0) : null;
-  const hasAnyData = growthData.length > 0 || hasEngagement || heatmapData.length > 0 || totalFollowers !== null || avgEngagement !== null;
+  const hasAnyData = growthData.length > 0 || hasEngagement || heatmapData.length > 0 || totalFollowers !== null || posts !== null;
 
   return (
     <div className="space-y-6">
@@ -77,7 +76,14 @@ export default function Analytics() {
         </div>
       )}
 
-      <AnalyticsKPIs followers={totalFollowers} engagement={avgEngagement} bestHour={heatmapData.length > 0 ? "19:00 – 21:00" : null} posts={postsCount} />
+      {hasAnyData && dataDelay && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Info className="h-3.5 w-3.5 shrink-0" />
+          <span>{dataDelay}</span>
+        </div>
+      )}
+
+      <AnalyticsKPIs followers={totalFollowers} bestHour={bestHour} posts={posts} />
 
       <div className="grid gap-3 lg:grid-cols-2">
         <GrowthChart data={growthData} />
