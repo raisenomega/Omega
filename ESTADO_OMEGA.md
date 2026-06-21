@@ -64,6 +64,29 @@ El connect de analíticas (OAuth Meta/Google · `/oauth/{meta,google}/authorize`
 
 ---
 
+## 📊 ARCO ANALYTICS "PARIDAD DE VERDAD" (21 jun · EN PROD `e5d0f37` · DEBT-034 avanzada · NO cerrar aún)
+
+**EN PROD (`e5d0f37`):** el fix "Paridad de Verdad" está pusheado. El bug **"28 seguidores falsos"** (violación P1: leer `page_follows.total`=26 de ventana como seguidores actuales) está **RESUELTO** — eliminado `page_follows` (su raíz), test anti-28 con `page_follows.total=26` → total=**5≠28**. **DEBT-034 avanzada, NO cerrada** (ver bug abierto abajo).
+
+**3 commits (gate 15/15 c/u · identidad raisenomega):**
+- `c811e55` backend honesto: seguidores=`/accounts.followersCount` (snapshot · NUNCA page_follows), posts reales, best_hour derivado, engagement por red, sin %.
+- `973f1ba` frontend: KPIs reales, hardcode "19:00–21:00" eliminado, Engagement % removido, labels "del período", dataDelay.
+- `e5d0f37` **limpieza P1**: borrado `analytics_agent.py` sintético (`_get_dashboard_data`=12500/4.2 · `_analyze_metrics` followers=1000) + **6 endpoints huérfanos** de `analytics/router.py`. Conservado `_generate_insights` (uso real content-lab · verificado limpio). `POST /analytics/dashboard-data` → **404**. `GET /dashboard/` (Supabase real) **intacto**.
+
+**Regla GLOBAL nueva fijada (ver SOT §3 P1+):** cero datos sintéticos/mock/placeholder/hardcode · P1 duro end-to-end · vacío honesto (—/empty state) SIEMPRE antes que relleno. **Regla de arquitectura (SOT §3 P6):** resolución uniforme per-negocio · negocio nuevo nace sano · raíz no se parchea 2 veces.
+
+### 🟠 BUG ABIERTO · DEBT-ANALYTICS-RESOLVER-PROFILEID (diagnóstico CERRADO · fix sin codear · ver SOT §6)
+El resolver pide followers/posts por **bound_ids** (`social_accounts.zernio_account_id`) — frágil y **vacío en 3 de 4 negocios**. La data vive bajo **`profileId`** (sólido · ya lo usa engagement). **Síntoma:** Omega Raisen (`5a323aa3`) muestra —/0 con **5 fol + 7 posts reales** en Zernio · Milagrosa (`9d178128`) sin `zernio_profile_id` en DB · Mail Boxes cuadra por suerte (único con bound_ids completos). Sonda read-only confirmó: Omega Raisen 100% alcanzable por profileId (5 fol · `daily-metrics.postCount`=7). `externalPostCount` no confiable (0 con 7 posts) → usar `daily-metrics.postCount`. **FIX DE RAÍZ (3 piezas = 1 solución):** (A) analytics por profileId uniforme · (B) binding per-cuenta derivado del profileId en el flujo de conexión (negocio nuevo nace sano · NO con binding vacío) · (C) backfill Omega Raisen + Milagrosa con la MISMA rutina de B. **Gap separado para PUBLICAR:** `zernio_account_id` None rompe publicar (lo cubre B/C · Milagrosa además sin profile_id).
+
+### 📋 Pendientes registrados (post-fix de raíz · no deuda silenciosa)
+- **Posts KPI REMOVIDO (21 jun · opción 3 · honesto):** la API REST de Zernio **no expone la ventana "this period"** — el 5 (Mail Boxes) / 7 (Omega Raisen) vive SOLO en el panel UI. Sondeado: `externalPostCount` da 5/**0** (0 con 7 posts reales en Omega Raisen, no sincronizado) · `daily-metrics.postCount` sin ventana da **10**/7 (platform-posts de toda la historia · Mail Boxes ≠ 5) · **7 date-params probados** (`days`/`period`/`from-to`/`startDate`/`endDate`/`dateRange`/`range`) **todos ignorados**. Mismo patrón que el ER por-post 1.66% (número de panel, no de API). Reproducirlo = mini-28 → prohibido (regla global P1). **Reintroducir cuando se halle endpoint con ventana real.** Coherente con haber quitado Engagement % por lo mismo.
+- **UI (con el panel ampliado):** quitar mención "Zernio" del aviso de retraso (proveedor invisible) · quitar selector "Todos los clientes" (redundante) · compactar "Mejores horas para publicar".
+- **Métricas nuevas a evaluar (confirmar API REST primero · no solo el panel Zernio):** Total reach, Engagement rate, Engagement over time, Top Performing Posts, Platform Breakdown.
+- **Reconciliación FB:** Zernio reporta `followersCount`=3 para FB Mail Boxes vs 1 recordado por owner → pendiente verificación contra facebook.com directo.
+- **Serie temporal FB/TikTok en GrowthChart** (hoy solo IG · el total ya suma las 3).
+
+---
+
 ## ✅ B-2 FACEBOOK HEADLESS — CERRADO END-TO-END + AISLAMIENTO VERIFICADO CON DATOS (19 jun)
 
 **El connect headless de redes está CERRADO en las dos plataformas: IG (18 jun) + FB (19 jun).** Una página
