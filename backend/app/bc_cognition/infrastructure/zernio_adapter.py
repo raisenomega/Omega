@@ -26,7 +26,17 @@ class ZernioNotConfigured(ZernioError):
 
 
 class ZernioPublishError(ZernioError):
-    """Zernio no confirmo la operacion · mensaje apto para error_message (cero fabricacion)."""
+    """Zernio no confirmo · status_code/transport clasifican transitorio (5xx/429/timeout) vs terminal."""
+    _TRANSIENT = frozenset({429, 500, 502, 503, 504})
+
+    def __init__(self, message: str, status_code: Optional[int] = None, transport: bool = False) -> None:
+        super().__init__(message)
+        self.status_code, self.transport = status_code, transport
+
+    @property
+    def transient(self) -> bool:
+        """True si reintentar PUEDE ayudar (transporte/timeout o 5xx/429 · no 4xx ni terminal)."""
+        return self.transport or self.status_code in self._TRANSIENT
 
 
 def _conf() -> tuple[dict, str]:
@@ -80,10 +90,10 @@ async def create_post(content: str, platforms: list[dict], publish_now: bool = T
         try:
             resp = await client.post(f"{base}/posts", json=body)
         except httpx.HTTPError as e:
-            raise ZernioPublishError(f"zernio_transport_error:{type(e).__name__}") from e
+            raise ZernioPublishError(f"zernio_transport_error:{type(e).__name__}", transport=True) from e
     if resp.status_code not in (200, 201):
         logger.warning(f"zernio publish failed · {resp.status_code} · {resp.text[:300]}")
-        raise ZernioPublishError(f"zernio_{resp.status_code}:{resp.text[:200]}")
+        raise ZernioPublishError(f"zernio_{resp.status_code}:{resp.text[:200]}", status_code=resp.status_code)
     post_id = (resp.json().get("post") or {}).get("_id")
     if not post_id:
         raise ZernioPublishError("zernio_no_post_id")

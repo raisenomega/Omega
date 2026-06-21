@@ -21,10 +21,12 @@ class _Repo:
     def mark_publishing(self, pid): self.calls.append("publishing")
     def mark_published(self, pid, ppid): self.calls.append(("published", ppid)); return {}
     def mark_failed(self, pid, err): self.calls.append(("failed", err))
+    def mark_retry(self, pid, attempts, err):  # transitorio · simula la persistencia (vuelve a pending)
+        self.calls.append(("retry", attempts)); self._post["attempts"] = attempts; self._post["status"] = "pending"
 
 
-def _post(status="pending", sa="sa1", media=None):
-    return {"id": "p1", "client_id": "c1", "status": status,
+def _post(status="pending", sa="sa1", media=None, attempts=0):
+    return {"id": "p1", "client_id": "c1", "status": status, "attempts": attempts,
             "social_account_id": sa, "content_id": "ct1", "media_url": media}
 
 
@@ -127,3 +129,43 @@ def test_status_no_pending_gatea(monkeypatch):
     with pytest.raises(ps.PublishGateError):
         asyncio.run(ps.publish_scheduled_post("p1", "c1"))
     assert repo.calls == []
+
+
+# ── Gap-1 · reintento de fallos TRANSITORIOS de Zernio (no perder el post) ──
+def test_transitorio_5xx_reintenta_y_publica_al_segundo(monkeypatch):
+    # 1er intento: Zernio 503 (transitorio) → mark_retry (queda pending, NO failed) · 2º intento: publica.
+    repo = _Repo(_post(attempts=0))
+    n = {"i": 0}
+    async def _flaky(**kw):
+        n["i"] += 1
+        if n["i"] == 1:
+            raise ZernioPublishError("zernio_503:upstream", status_code=503)
+        return "zpost_2"
+    _wire(monkeypatch, repo, create=_flaky)
+    out1 = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out1.published is False and (out1.error or "").startswith("retry:")
+    assert repo.calls == ["publishing", ("retry", 1)]            # reintentable · NO failed
+    out2 = asyncio.run(ps.publish_scheduled_post("p1", "c1"))    # REX lo retoma (sigue pending)
+    assert out2.published is True and out2.platform_post_id == "zpost_2"
+    assert repo.calls == ["publishing", ("retry", 1), "publishing", ("published", "zpost_2")]
+
+
+def test_terminal_4xx_va_a_failed_sin_reintentar(monkeypatch):
+    # 400 (contenido/media rechazada) = terminal · reintentar no ayuda → failed directo, JAMAS retry.
+    repo = _Repo(_post(attempts=0))
+    async def _boom(**kw): raise ZernioPublishError("zernio_400:contenido_invalido", status_code=400)
+    _wire(monkeypatch, repo, create=_boom)
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is False and "zernio_400" in (out.error or "")
+    assert repo.calls == ["publishing", ("failed", "zernio_400:contenido_invalido")]
+    assert all(c[0] != "retry" for c in repo.calls if isinstance(c, tuple))  # nunca reintenta terminal
+
+
+def test_transitorio_con_tope_agotado_va_a_failed(monkeypatch):
+    # attempts=2 → este es el 3º (== MAX_RETRIES) · transitorio pero tope agotado → failed (no loop infinito).
+    repo = _Repo(_post(attempts=2))
+    async def _boom(**kw): raise ZernioPublishError("zernio_503:upstream", status_code=503)
+    _wire(monkeypatch, repo, create=_boom)
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is False and "zernio_503" in (out.error or "")
+    assert repo.calls == ["publishing", ("failed", "zernio_503:upstream")]  # tope → failed, corta el loop

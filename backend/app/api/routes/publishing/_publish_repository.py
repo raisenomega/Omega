@@ -61,3 +61,11 @@ def mark_failed(post_id: str, error_message: str) -> None:
     _sb().table("scheduled_posts").update(
         {"status": "failed", "error_message": error_message[:500]},
     ).eq("id", post_id).execute()
+
+
+def mark_retry(post_id: str, attempts: int, error_message: str) -> None:
+    """Fallo TRANSITORIO de Zernio (5xx/429/timeout) · vuelve a 'pending' + cuenta el intento.
+    REX lo retoma solo en el próximo tick (cadencia = backoff). El tope lo aplica el service."""
+    _sb().table("scheduled_posts").update(
+        {"status": "pending", "attempts": attempts, "error_message": error_message[:500]},
+    ).eq("id", post_id).execute()

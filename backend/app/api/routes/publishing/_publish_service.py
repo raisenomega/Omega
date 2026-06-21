@@ -32,6 +32,9 @@ _PUBLISHABLE_STATUS = "pending"
 # Redes que exigen media (validacion de PRESENCIA · IG=imagen, TikTok=video). La validacion de TIPO
 # la hace Zernio (si la media no sirve, lo rechaza → mark_failed honesto · decision owner #3).
 _MEDIA_REQUIRED = {"instagram", "tiktok"}
+# Tope de reintentos para fallos TRANSITORIOS de Zernio (5xx/429/timeout · Gap-1 resiliencia SPOF).
+# Constante local (resiliencia operativa, NO guardrail de negocio → no entra en limits_omega).
+MAX_RETRIES = 3
 
 
 class PublishGateError(Exception):
@@ -107,6 +110,13 @@ async def publish_scheduled_post(scheduled_post_id: str, client_id: str) -> Publ
             media_urls=[str(media_url)] if media_url else None,
         )
     except ZernioError as e:
+        # TRANSITORIO (5xx/429/timeout) y aún hay margen → vuelve a 'pending', REX reintenta al próximo
+        # tick (sin perder el post). TERMINAL (4xx/media) o tope agotado → mark_failed honesto como hoy.
+        attempts = int(post.get("attempts") or 0) + 1
+        if getattr(e, "transient", False) and attempts < MAX_RETRIES:
+            logger.warning(f"auto-publish transient · post={scheduled_post_id} intento={attempts}/{MAX_RETRIES} · {e}")
+            await asyncio.to_thread(repo.mark_retry, scheduled_post_id, attempts, str(e))
+            return PublishResult(published=False, error=f"retry:{e}")
         logger.warning(f"auto-publish failed · post={scheduled_post_id} client={client_id} · {e}")
         await asyncio.to_thread(repo.mark_failed, scheduled_post_id, str(e))
         return PublishResult(published=False, error=str(e))
