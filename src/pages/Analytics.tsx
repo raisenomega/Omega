@@ -22,7 +22,7 @@ export default function Analytics() {
   useTrackOnMount("feature_open", { feature: "analytics" });
 
   const access = useProAccess();
-  const { loading, growthData, engagementData, heatmapData, avgEngagement, totalFollowers } = useAnalyticsData();
+  const { loading, growthData, engagementData, heatmapData, avgEngagement, totalFollowers, dataDelay } = useAnalyticsData();
   const { activeBusinessId, isReady } = useActiveBusiness();
 
   if (access.loading) return <ProGateLoading />;
@@ -74,6 +74,13 @@ export default function Analytics() {
           <Button asChild size="sm" variant="outline" className="h-7 text-xs shrink-0">
             <Link to={`/clients/${activeBusinessId}`}>Conectar en Cuentas Sociales →</Link>
           </Button>
+        </div>
+      )}
+
+      {hasAnyData && dataDelay && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Info className="h-3.5 w-3.5 shrink-0" />
+          <span>{dataDelay}</span>
         </div>
       )}
 
