@@ -18,6 +18,12 @@ Reestructuración de negocio (toca Stripe + planes DB + copy global + banners up
 
 ---
 
+## 🟢 DEBT-VITEST-FLAKE-PREPUSH (20 jun · CONFIABILIDAD del gate · NO urgente)
+
+El gate pre-push (CHECK 9 · Vitest) puede fallar **transitorio** por timing del setup de jsdom (~49s) — **no por código**. Frenó el 1er push de `1727500` (20 jun); el reintento pasó **15/15** con vitest directo **67/67** y el gate manual **15/15**. Es ruido que puede bloquear pushes legítimos. **NO urgente.** Si recurre: estabilizar el setup de jsdom (timeout / aislamiento del test runner). Deuda de **confiabilidad del gate**, no del producto. Hermana de [[gate-pytest-false-green]] / DEBT-VERCEL-NO-TSC-CHECK.
+
+---
+
 ## ✅ B-2 FACEBOOK HEADLESS — CERRADO END-TO-END + AISLAMIENTO VERIFICADO CON DATOS (19 jun)
 
 **El connect headless de redes está CERRADO en las dos plataformas: IG (18 jun) + FB (19 jun).** Una página
