@@ -24,6 +24,7 @@ from app.api.routes.publishing import _publish_repository as repo
 from app.api.routes.publishing._media_guard import aspect_error, fetch_image_ratio, needs_ratio_check
 from app.bc_cognition.infrastructure.zernio_adapter import ZernioError, create_post, _media_type
 from app.bc_cognition.infrastructure.zernio_resolver import resolve_account_id
+from app.bc_cognition.infrastructure.hermes_usage import record_mcp_use  # Gap-2 · HERMES ve Zernio real
 from app.api.routes.clients_v3._clients_reader import get_zernio_account_id  # F5/2b · mapeo per-negocio
 
 logger = logging.getLogger(__name__)
@@ -51,6 +52,14 @@ class PublishResult(NamedTuple):
     published: bool
     platform_post_id: Optional[str] = None
     error: Optional[str] = None
+
+
+def _hermes_zernio(ok: bool, detail: Optional[str] = None) -> None:
+    """Registra el uso REAL de Zernio para HERMES (f1.5) · best-effort · JAMÁS rompe el publish."""
+    try:
+        record_mcp_use("zernio", ok=ok, detail=detail)
+    except Exception:  # noqa: BLE001 · observabilidad · el publish manda
+        pass
 
 
 async def publish_scheduled_post(scheduled_post_id: str, client_id: str) -> PublishResult:
@@ -110,6 +119,7 @@ async def publish_scheduled_post(scheduled_post_id: str, client_id: str) -> Publ
             media_urls=[str(media_url)] if media_url else None,
         )
     except ZernioError as e:
+        _hermes_zernio(False, str(e)[:200])  # HERMES f1.5 · CADA intento fallido se ve (aunque luego reintente)
         # TRANSITORIO (5xx/429/timeout) y aún hay margen → vuelve a 'pending', REX reintenta al próximo
         # tick (sin perder el post). TERMINAL (4xx/media) o tope agotado → mark_failed honesto como hoy.
         attempts = int(post.get("attempts") or 0) + 1
@@ -126,5 +136,6 @@ async def publish_scheduled_post(scheduled_post_id: str, client_id: str) -> Publ
         return PublishResult(published=False, error=f"unexpected:{type(e).__name__}")
 
     await asyncio.to_thread(repo.mark_published, scheduled_post_id, platform_post_id)
+    _hermes_zernio(True)  # HERMES f1.5 · publicación real exitosa
     logger.info(f"auto-publish OK · post={scheduled_post_id} client={client_id} platform={platform} id={platform_post_id}")
     return PublishResult(published=True, platform_post_id=platform_post_id)

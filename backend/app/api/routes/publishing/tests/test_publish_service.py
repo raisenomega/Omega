@@ -43,6 +43,8 @@ def _wire(monkeypatch, repo, resolve=_resolve_ok, create=_create_ok, ratio=None)
     # Guard aspect ratio · se aísla la lectura del header (I/O). ratio=None → fail-open (no bloquea).
     async def _ratio(url): return ratio
     monkeypatch.setattr(ps, "fetch_image_ratio", _ratio)
+    # Gap-2 · HERMES usage-tracking · no-op por defecto (los tests específicos lo overridean para asertar).
+    monkeypatch.setattr(ps, "record_mcp_use", lambda *a, **k: None)
 
 
 def test_happy_path_publica_y_marca_published(monkeypatch):
@@ -169,3 +171,48 @@ def test_transitorio_con_tope_agotado_va_a_failed(monkeypatch):
     out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
     assert out.published is False and "zernio_503" in (out.error or "")
     assert repo.calls == ["publishing", ("failed", "zernio_503:upstream")]  # tope → failed, corta el loop
+
+
+# ── Gap-2 · HERMES ve el uso REAL de Zernio (record_mcp_use) ──
+def test_hermes_registra_zernio_ok(monkeypatch):
+    repo = _Repo(_post())
+    rec = []
+    _wire(monkeypatch, repo)
+    monkeypatch.setattr(ps, "record_mcp_use", lambda integ, ok, detail=None: rec.append((integ, ok, detail)))
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is True
+    assert rec == [("zernio", True, None)]  # publicación real exitosa → ok=True
+
+
+def test_hermes_registra_zernio_fallo_en_path_de_retry(monkeypatch):
+    # Zernio 503 (transitorio → reintenta) · el intento fallido SE REGISTRA igual (señal honesta del retry).
+    repo = _Repo(_post(attempts=0))
+    rec = []
+    async def _boom(**kw): raise ZernioPublishError("zernio_503:upstream", status_code=503)
+    _wire(monkeypatch, repo, create=_boom)
+    monkeypatch.setattr(ps, "record_mcp_use", lambda integ, ok, detail=None: rec.append((integ, ok, detail)))
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert (out.error or "").startswith("retry:")           # fue al path de reintento
+    assert rec == [("zernio", False, "zernio_503:upstream")]  # y aún así registró el fallo real
+
+
+def test_hermes_best_effort_no_rompe_el_publish(monkeypatch):
+    # Si record_mcp_use LANZA, el guard lo traga → el publish NO se rompe (observabilidad ≠ camino crítico).
+    repo = _Repo(_post())
+    def _raise(*a, **k): raise RuntimeError("hermes down")
+    _wire(monkeypatch, repo)
+    monkeypatch.setattr(ps, "record_mcp_use", _raise)
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is True and out.platform_post_id == "zpost_1"
+
+
+def test_hermes_no_registra_bug_inesperado(monkeypatch):
+    # Un bug NUESTRO (no ZernioError) NO ensucia la señal de Zernio · solo los ZernioError registran.
+    repo = _Repo(_post())
+    rec = []
+    async def _bug(**kw): raise RuntimeError("bug nuestro")
+    _wire(monkeypatch, repo, create=_bug)
+    monkeypatch.setattr(ps, "record_mcp_use", lambda integ, ok, detail=None: rec.append((integ, ok, detail)))
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is False and "unexpected" in (out.error or "")
+    assert rec == []  # NO se registró uso de Zernio (no fue Zernio quien falló)
