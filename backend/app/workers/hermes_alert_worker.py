@@ -17,6 +17,12 @@ logger = logging.getLogger(__name__)
 _WINDOW_MIN = 6  # ventana ~= intervalo del cron (5 min) + 1 margen · evita re-alertar incidentes viejos
 
 
+def _now() -> datetime:
+    """Punto de inyección de la hora. PROD: wall-clock real (sin cambio). El test lo mockea a un
+    instante fijo para que el cron-test sea determinista (no dependa de la hora a la que corre)."""
+    return datetime.now(timezone.utc)
+
+
 def _parse(at: Optional[str]) -> Optional[datetime]:
     if not at:
         return None
@@ -51,7 +57,7 @@ async def run_hermes_alert_check() -> Dict[str, int]:
     except Exception as e:
         logger.error(f"hermes_alert_check · lectura falló: {e}", exc_info=True)
         return {"checked": 0, "alerted": 0}
-    to_alert = select_alerts(rows, datetime.now(timezone.utc))
+    to_alert = select_alerts(rows, _now())
     sent = 0
     for row in to_alert:
         try:  # una notificación que falla NO rompe el cron ni las demás

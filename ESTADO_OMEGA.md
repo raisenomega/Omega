@@ -46,6 +46,10 @@ se cierra ya · ver reporte 20 jun: una sugerencia unread persiste tras dejar de
 
 El gate pre-push (CHECK 9 · Vitest) puede fallar **transitorio** por timing del setup de jsdom (~49s) — **no por código**. Frenó el 1er push de `1727500` (20 jun); el reintento pasó **15/15** con vitest directo **67/67** y el gate manual **15/15**. Es ruido que puede bloquear pushes legítimos. **NO urgente.** Si recurre: estabilizar el setup de jsdom (timeout / aislamiento del test runner). Deuda de **confiabilidad del gate**, no del producto. Hermana de [[gate-pytest-false-green]] / DEBT-VERCEL-NO-TSC-CHECK.
 
+## ✅ DEBT-HERMES-CRON-TEST-TIME (21 jun · RESUELTA · hermana pytest de DEBT-VITEST-FLAKE-PREPUSH)
+
+El test `test_cron_dispatch_ok_cuenta_la_alerta` (`workers/tests/test_hermes_alert_worker.py`) era un **flake temporal PRE-EXISTENTE** (verificado: fallaba en HEAD limpio, sin relación con analytics). Causa raíz: `run_hermes_alert_check` usaba `datetime.now(timezone.utc)` (hora de pared real) con ventana `_WINDOW_MIN=6`, pero el test anclaba `created_at` a un `_NOW` FIJO (`2026-06-21 12:00 UTC`) → corriendo después de las 12:06 UTC de ese día la fila quedaba "vieja" (fuera de ventana) → `alerted=0` → fallo. **Gate rojo a CUALQUIER hora salvo ~mediodía UTC del 21-jun → bloqueaba CADA push.** **Fix (refactor PURO · cero cambio de prod):** helper `_now()` como punto de inyección (prod sigue usando `datetime.now(timezone.utc)` real) que los 2 cron-tests mockean a `_NOW` → deterministas (el best-effort además se vuelve significativo: la fila queda en ventana → dispatch SÍ se llama → levanta → el cron sobrevive). Era deuda REAL, no inventada. Hermana de [[gate-pytest-false-green]].
+
 ---
 
 ## 🟡 DEBT-SENTINEL-BRIEF-NO-HEARTBEAT (21 jun · canal oficial · NO es bug de canal)

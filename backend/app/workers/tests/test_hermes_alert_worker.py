@@ -33,14 +33,16 @@ def test_critica_recuperada_no_alerta():
 
 def test_cron_best_effort_si_dispatch_lanza_no_rompe(monkeypatch):
     # CRÍTICO: si dispatch_hermes_alert lanza (resend/telegram caído), el cron NO se rompe.
+    monkeypatch.setattr(w, "_now", lambda: _NOW)  # determinista: la fila (1min) queda EN ventana
     monkeypatch.setattr(w.hermes_alerts, "latest_critical", lambda: [_row("zernio", "last_use_failed", 1)])
     async def _boom(integration, detail): raise RuntimeError("resend down")
     monkeypatch.setattr(w, "dispatch_hermes_alert", _boom)
     out = asyncio.run(w.run_hermes_alert_check())
-    assert out == {"checked": 1, "alerted": 0}  # no explotó · alerted=0 (la notif falló, el cron sigue vivo)
+    assert out == {"checked": 1, "alerted": 0}  # dispatch SÍ se llamó y levantó · el cron sigue vivo
 
 
 def test_cron_dispatch_ok_cuenta_la_alerta(monkeypatch):
+    monkeypatch.setattr(w, "_now", lambda: _NOW)  # determinista: no depende de la hora de pared real
     monkeypatch.setattr(w.hermes_alerts, "latest_critical", lambda: [_row("stripe", "last_use_failed", 1)])
     async def _ok(integration, detail): return True
     monkeypatch.setattr(w, "dispatch_hermes_alert", _ok)
