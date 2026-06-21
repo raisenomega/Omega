@@ -1,7 +1,7 @@
 """IDOR fix · analytics auth+ownership scope (DEBT-IDOR-ANALYTICS · G9 exime tests).
 Molde: aria_v1/tests/test_message_client_scope.py (monkeypatch + asyncio.run).
 GET /dashboard/: None→require_superadmin · con client_id→resolve_client_or_403 (variante A).
-Los 6 restantes: get_current_user (anti-abuso). Todo mockeado · sin red ni DB real."""
+(Los 6 endpoints legacy de muestra fueron eliminados · Fase C "paridad de verdad"·datos sintéticos.)"""
 import asyncio
 import importlib
 from unittest.mock import AsyncMock
@@ -59,11 +59,3 @@ def test_dashboard_none_no_owner_403(monkeypatch):
     with pytest.raises(HTTPException) as e:
         asyncio.run(ar.get_dashboard(client_id=None, authorization="auth"))
     assert e.value.status_code == 403
-
-
-# ── Smoke de los 6 restantes (solo get_current_user) ──
-def test_analyze_metrics_sin_auth_401():
-    """POST /analyze-metrics sin Authorization → 401 (un caso cubre el patrón de los 6)."""
-    with pytest.raises(HTTPException) as e:
-        asyncio.run(ar.analyze_metrics(ar.AnalyzeMetricsRequest(data={}), authorization=None))
-    assert e.value.status_code == 401

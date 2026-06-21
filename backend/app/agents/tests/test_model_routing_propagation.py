@@ -97,17 +97,11 @@ def test_analytics_agent_uses_sonnet():
     ) as mock_client:
         mock_client.messages.create = AsyncMock(side_effect=_fake_create)
 
+        # _analyze_metrics fue eliminado (Fase C · datos sintéticos) · _generate_insights es el
+        # método conservado (uso real de Content Lab) y propaga el mismo model=self.model.
         asyncio.run(
-            agent._analyze_metrics(
-                {
-                    "data": {
-                        "likes": 100,
-                        "comments": 20,
-                        "shares": 10,
-                        "followers": 1000,
-                        "impressions": 5000,
-                    }
-                }
+            agent._generate_insights(
+                {"metrics": {"content_length": 120, "platform": "instagram"}}
             )
         )
 
