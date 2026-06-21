@@ -14,7 +14,8 @@ from fastapi.responses import RedirectResponse
 
 from app.api.routes.clients_v3 import _clients_reader as reader
 from app.api.routes.clients_v3._zernio_state import verify_state
-from app.api.routes.clients_v3.handlers._zernio_persist import persist_zernio_account
+from app.api.routes.clients_v3.handlers._zernio_persist import (
+    derive_bindings_from_profile, persist_zernio_account)
 from app.api.routes.clients_v3.handlers._zernio_pending import stash_pending
 from app.config import settings
 
@@ -77,7 +78,11 @@ async def zernio_callback(st: str = "", profileId: str = "", accountId: str = ""
                     client_id, "ok" if profile else "ausente/ilegible")   # NUNCA el valor (PII)
         return _back_to_tab("needs_page", platform, origin)            # redirect SIN tokens en la URL
     try:
-        await persist_zernio_account(client_id, platform, pid, accountId or None)   # hardened · 422 si no en profile
+        await persist_zernio_account(client_id, platform, pid, accountId or None)   # valida el connect (422 si no en profile)
     except HTTPException:
         return _back_to_tab("error", platform, origin)            # cuenta no quedó en el profile → no guarda
+    try:
+        await derive_bindings_from_profile(client_id, pid)   # Pieza B: barre TODAS las cuentas del profile → nadie nace con binding vacío
+    except Exception as e:  # noqa: BLE001 · best-effort: el connect ya es válido · el sweep es bonus, no lo rompe
+        logger.warning("zernio_callback · derive_bindings best-effort falló · client=%s · %s", client_id, e)
     return _back_to_tab("connected", platform, origin)
