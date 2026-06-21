@@ -48,6 +48,16 @@ El gate pre-push (CHECK 9 · Vitest) puede fallar **transitorio** por timing del
 
 ---
 
+## 🟡 DEBT-SENTINEL-BRIEF-NO-HEARTBEAT (21 jun · canal oficial · NO es bug de canal)
+
+El brief diario de SENTINEL **dejó de llegar por email ~31 may** (3 semanas · confirmado Gmail del owner + Resend "last used 21 days ago"). **Causa raíz: NO es canal roto — es brief CONDICIONAL.** `sentinel_service.py` solo dispara `dispatch_sentinel_brief` `if total_issues > 0 OR score < 85` ("solo si hay algo que reportar"). Desde el hardening de junio **SENTINEL está sano** (score ≥95 sostenido · 0 issues) → la condición da False → el brief no se manda, por diseño. **El canal funciona:** `RESEND_API_KEY` válida (last-used 31 may), `alert_email_to` = `raisenagencypr@gmail.com` (correcto), todo el uso de Resend es condicional (brief/alert/oracle/aria) → nada que reportar = no se llama a Resend. **Fix (sesión futura · chico):** cambiar la condición a **brief diario INCONDICIONAL** (heartbeat "SENTINEL 97/100 · 0 issues · HERMES sin fallos · todo en orden") → restaura la comunicación oficial diaria + el resumen HERMES viaja gratis. **NO arreglar canal · cambiar la condición.** Nota: la notificación HERMES (`f58a416`) NO depende de esto — el nivel 2 (alerta inmediata crítica) llama a Resend DIRECTO, independiente del brief.
+
+## 🟡 DEBT-TELEGRAM-CHANNEL (21 jun · canal oficial adicional · NO urgente)
+
+Telegram como 2do canal oficial de notificación (redundancia al email). **El código ya lo soporta** (`alert_dispatcher._send_telegram` + `dispatch_hermes_alert` lo invocan · off mientras no haya credenciales). Falta: pegar `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` en Railway (el restart re-lee settings · sin code deploy) → se activa solo. Útil porque si Resend cae, Telegram entrega igual (cubre el blind-spot del canal email-único).
+
+---
+
 ## ✅ B-2 FACEBOOK HEADLESS — CERRADO END-TO-END + AISLAMIENTO VERIFICADO CON DATOS (19 jun)
 
 **El connect headless de redes está CERRADO en las dos plataformas: IG (18 jun) + FB (19 jun).** Una página
