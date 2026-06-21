@@ -7,19 +7,15 @@ import { ProfileSection } from "@/components/settings/ProfileSection";
 import { PlanSection } from "@/components/settings/PlanSection";
 import { PaymentSection } from "@/components/settings/PaymentSection";
 import { ARIASection } from "@/components/settings/ARIASection";
-import { SocialAccountsSection } from "@/components/settings/SocialAccountsSection";
-import { ConnectMetaButton } from "@/components/integrations/ConnectMetaButton";
-import { ConnectGoogleButton } from "@/components/integrations/ConnectGoogleButton";
 import { SecuritySection } from "@/components/settings/SecuritySection";
 import { NotificationsSection } from "@/components/settings/NotificationsSection";
 
-type TabId = "perfil" | "plan" | "aria" | "cuentas" | "seguridad" | "notificaciones";
+type TabId = "perfil" | "plan" | "aria" | "seguridad" | "notificaciones";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "perfil", label: "Perfil" },
   { id: "plan", label: "Plan" },
   { id: "aria", label: "ARIA" },
-  { id: "cuentas", label: "Cuentas" },
   { id: "seguridad", label: "Seguridad" },
   { id: "notificaciones", label: "Notificaciones" },
 ];
@@ -60,16 +56,6 @@ export default function SettingsPage() {
       {active === "perfil" && <ProfileSection />}
       {active === "plan" && (<div className="space-y-4"><PlanSection clientId={my.clientId} /><PaymentSection /></div>)}
       {active === "aria" && <ARIASection />}
-      {active === "cuentas" && (
-        <div className="space-y-4">
-          {/* RONDA D · OAuth · conectar Meta + Google (503 honesto sin credenciales) */}
-          <div className="flex flex-wrap gap-2">
-            <ConnectMetaButton />
-            <ConnectGoogleButton />
-          </div>
-          <SocialAccountsSection clientId={my.clientId} />
-        </div>
-      )}
       {active === "seguridad" && <SecuritySection />}
       {active === "notificaciones" && <NotificationsSection clientId={my.clientId} />}
     </div>

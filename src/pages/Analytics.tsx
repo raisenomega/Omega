@@ -72,7 +72,7 @@ export default function Analytics() {
           <Info className="h-3.5 w-3.5 shrink-0" />
           <span className="flex-1">Aún no hay métricas reales · las analíticas se activan al conectar tus cuentas y publicar contenido</span>
           <Button asChild size="sm" variant="outline" className="h-7 text-xs shrink-0">
-            <Link to="/settings?tab=cuentas">Conectar cuentas →</Link>
+            <Link to={`/clients/${activeBusinessId}`}>Conectar en Cuentas Sociales →</Link>
           </Button>
         </div>
       )}

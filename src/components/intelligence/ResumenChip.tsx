@@ -1,4 +1,4 @@
-import { Globe, Search, Sparkles, Instagram, LineChart, ArrowRight } from "lucide-react";
+import { Globe, Search, Sparkles, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -42,12 +42,6 @@ export function ResumenChip({ clientId }: ResumenChipProps) {
 
       <ResumenStatusRow icon={<Sparkles className="h-5 w-5" />} label="GEO · ¿Aparecés en ChatGPT?" muted={!g?.analyzed}
         value={g?.analyzed ? geoStatusLabel(g.status) : "Sin verificar · corré el chequeo GEO"} />
-
-      <ResumenStatusRow icon={<Instagram className="h-5 w-5" />} label="Meta" muted
-        value="Conectar cuenta · disponible en Fase 2" />
-
-      <ResumenStatusRow icon={<LineChart className="h-5 w-5" />} label="Google" muted
-        value="Conectar cuenta · disponible en Fase 2" />
 
       <Button onClick={goToBrief} disabled={!analyzed && !g?.analyzed}
         className="w-full bg-amber-500 text-black hover:bg-amber-500/90">

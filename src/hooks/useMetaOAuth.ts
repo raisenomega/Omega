@@ -17,7 +17,8 @@ interface MetaStatusResponse {
 // useVideoPackCheckout. Backend 503-honesto si la app de Meta no está cargada
 // (META_APP_ID/SECRET) o sin OAUTH_ENCRYPTION_KEY → toast honesto, cero mock.
 
-// Estado de la conexión Meta del cliente · usado por ConnectMetaButton.
+// Estado de la conexión Meta del cliente. Hook reservado para el arco Analytics
+// (el connect de analíticas se reconstruye per-negocio ahí · DEBT-ANALYTICS-OAUTH-PER-CLIENT).
 export function useMetaStatus() {
   return useQuery<MetaStatusResponse>({
     queryKey: ["meta-oauth-status"],

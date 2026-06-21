@@ -1,15 +1,15 @@
 import { LineChart } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGoogleChip } from "@/hooks/useGoogleChip";
-import { useGoogleConnect } from "@/hooks/useGoogleOAuth";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 import { IntelMetricGrid, IntelMetricGridSkeleton } from "./IntelMetricGrid";
 
-// Centro de Inteligencia Fase 2 · chip Google con datos REALES (GA4 + Search Console).
-// connected + metrics → grilla real. connected=false → CTA "Conectá Google" (cero mocks).
+// Centro de Inteligencia · chip Google (GA4 + Search Console) · solo CONSUMO (cero mocks).
+// El connect vive en UN solo lugar (Cuentas Sociales) → acá, sin métricas, se apunta ahí.
 export function GoogleIntelChip() {
   const { data, isLoading, isError, error } = useGoogleChip();
-  const connect = useGoogleConnect();
+  const { activeBusinessId } = useActiveBusiness();
 
   return (
     <Card className="border-border/50 bg-card/60 backdrop-blur-sm">
@@ -19,11 +19,7 @@ export function GoogleIntelChip() {
           <p className="text-base font-medium text-foreground">Google · Analytics y Search Console</p>
         </div>
 
-        {isLoading && (
-          <div className="w-full">
-            <IntelMetricGridSkeleton />
-          </div>
-        )}
+        {isLoading && <div className="w-full"><IntelMetricGridSkeleton /></div>}
 
         {isError && (
           <p className="text-center text-sm text-muted-foreground font-body">
@@ -41,25 +37,21 @@ export function GoogleIntelChip() {
               ]}
             />
             {!data.metrics && data.message && (
-              <p className="mt-3 text-center text-xs text-muted-foreground/70 font-body">
-                {data.message}
-              </p>
+              <p className="mt-3 text-center text-xs text-muted-foreground/70 font-body">{data.message}</p>
             )}
           </div>
         )}
 
         {data && !data.connected && (
-          <div className="flex flex-col items-center gap-3 text-center">
+          <div className="flex flex-col items-center gap-2 text-center">
             <p className="text-sm text-muted-foreground font-body">
               {data.message ?? "Conectá Google para ver tus métricas reales."}
             </p>
-            <Button
-              onClick={() => connect.mutate()}
-              disabled={connect.isPending}
-              className="bg-amber-500/90 text-black hover:bg-amber-500"
-            >
-              Conectar Google Analytics
-            </Button>
+            {activeBusinessId && (
+              <Link to={`/clients/${activeBusinessId}`} className="text-sm text-primary hover:underline">
+                Conectá tus cuentas en Cuentas Sociales →
+              </Link>
+            )}
           </div>
         )}
       </CardContent>

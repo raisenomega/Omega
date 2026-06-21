@@ -58,6 +58,12 @@ Telegram como 2do canal oficial de notificación (redundancia al email). **El c�
 
 ---
 
+## 🟡 DEBT-ANALYTICS-OAUTH-PER-CLIENT (21 jun · nace en el arco Analytics · NO urgente)
+
+El connect de analíticas (OAuth Meta/Google · `/oauth/{meta,google}/authorize` → `oauth_tokens`) es **per-USUARIO + esqueleto** (503 en prod · faltan `META_APP_ID/SECRET` + `GOOGLE_CLIENT_*` · `oauth_tokens` vacía). Por eso NO se pudo mover a "Cuentas Sociales" (per-negocio) en la consolidación de botones (21 jun): los hooks `useMetaOAuth`/`useGoogleConnect` no aceptan `client_id` (el backend lo deriva del usuario). **Decisión:** el connect de analíticas **se reconstruye DENTRO del arco Analytics**, ahí nace **per-negocio en su lugar único** (Cuentas Sociales). Para vivir per-negocio necesita: (1) backend que `/oauth/{meta,google}/authorize` acepte `client_id` (escribir `oauth_tokens.client_id` del negocio activo · un reseller con 4 negocios conecta Meta para Mail Boxes sin pisar otro); (2) cablear el OAuth real + creds en Railway; (3) el botón per-negocio en Cuentas Sociales + el consumo (Centro de Inteligencia/Analytics ya consume-only, apuntan ahí). Hoy: los hooks `useMetaOAuth`/`useGoogleOAuth` quedan reservados (sin uso) para ese arco; los componentes per-usuario `ConnectMeta/GoogleButton` + `SocialAccountsSection` se borraron (dead code).
+
+---
+
 ## ✅ B-2 FACEBOOK HEADLESS — CERRADO END-TO-END + AISLAMIENTO VERIFICADO CON DATOS (19 jun)
 
 **El connect headless de redes está CERRADO en las dos plataformas: IG (18 jun) + FB (19 jun).** Una página
