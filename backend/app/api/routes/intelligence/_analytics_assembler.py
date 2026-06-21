@@ -1,9 +1,11 @@
 """Ensamblado PURO de Zernio → shape del panel (testeable · sin I/O · regla GLOBAL cero-sintéticos).
 
-followers ← /accounts.followersCount (snapshot · SOLO bound_ids del negocio · NUNCA page_follows) ·
-posts ← /accounts.externalPostCount (conteo real) · best_hour ← slot de mayor avg_engagement (derivado) ·
-engagement ← daily-metrics por plataforma (likes/comments/shares/saves/views del período) ·
-growth ← follower-history IG (serie). SIN porcentajes. Entrada vacía → salida vacía honesta (None/[]/0).
+AISLAMIENTO por **profileId** (la llave canónica · misma que engagement/best-time/ads · NO bound_ids):
+followers ← /accounts.followersCount de las cuentas del profile (snapshot · NUNCA page_follows) ·
+best_hour ← slot de mayor avg_engagement (derivado) · engagement ← daily-metrics por plataforma ·
+growth ← follower-history IG (serie). SIN porcentajes · SIN KPI Posts (la API no expone ventana 'this
+period' · el 5/7 vive solo en el panel UI → no se reproduce · ver ESTADO_OMEGA pendiente). Entrada vacía
+→ salida vacía honesta (None/[]).
 """
 from typing import Any, Dict, List, Optional
 
@@ -11,21 +13,29 @@ _DAY = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]  # day_of_week 0-6 (e
 _NET_FIELDS = ("likes", "comments", "shares", "saves", "views")
 
 
-def followers_total(accounts_api: List[Dict[str, Any]], bound_ids: List[str]) -> Optional[int]:
-    """Σ followersCount SOLO de las cuentas del negocio (bound_ids). None si ninguna resuelve.
-    NUNCA toca page_follows (suma de ventana · raíz del 28)."""
-    bset, total, seen = set(bound_ids), 0, False
+def _profile_of(account: Dict[str, Any]) -> Optional[str]:
+    """profileId del account · Zernio lo da como objeto {_id,name} o id plano. None si ausente."""
+    p = account.get("profileId")
+    if isinstance(p, dict):
+        return str(p.get("_id")) if p.get("_id") else None
+    return str(p) if p else None
+
+
+def followers_total(accounts_api: List[Dict[str, Any]], profile_id: str) -> Optional[int]:
+    """Σ followersCount SOLO de las cuentas cuyo profileId == el del negocio (AISLAMIENTO por profileId).
+    None si ninguna resuelve. NUNCA toca page_follows (suma de ventana · raíz del 28)."""
+    total, seen = 0, False
     for a in accounts_api:
-        if a.get("_id") in bset and "followersCount" in a:
+        if _profile_of(a) == profile_id and "followersCount" in a:
             total += int(a.get("followersCount") or 0)
             seen = True
     return total if seen else None
 
 
-def posts_total(accounts_api: List[Dict[str, Any]], bound_ids: List[str]) -> int:
-    """Σ externalPostCount (posts reales) de las cuentas del negocio. Total histórico (NO del período)."""
-    bset = set(bound_ids)
-    return sum(int(a.get("externalPostCount") or 0) for a in accounts_api if a.get("_id") in bset)
+def ig_account_ids(accounts_api: List[Dict[str, Any]], profile_id: str) -> List[str]:
+    """_id de las cuentas Instagram del profile (para la serie de growth · follower-history)."""
+    return [str(a["_id"]) for a in accounts_api
+            if _profile_of(a) == profile_id and a.get("platform") == "instagram" and a.get("_id")]
 
 
 def best_hour(best: Dict[str, Any]) -> Optional[str]:

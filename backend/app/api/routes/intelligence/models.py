@@ -71,17 +71,16 @@ class HeatmapCell(BaseModel):
 class SocialAnalyticsResponse(BaseModel):
     """Analytics sociales reales del negocio vía Zernio (DEBT-034 · "paridad de verdad" · cero-sintéticos).
 
-    connected=False + message → negocio sin profile/cuentas (empty honesto, NO ceros que finjan datos).
-    total_followers ← snapshot real (followersCount) · posts ← externalPostCount (total histórico) ·
-    best_hour ← slot real (derivado) · SIN porcentaje de engagement (decisión P1: solo conteos por red).
-    Arrays/None vacíos cuando Zernio no devuelve dato real · JAMÁS un número inventado. data_delay ~24-48h.
+    connected=False + message → negocio sin profileId (empty honesto, NO ceros que finjan datos).
+    total_followers ← Σ followersCount por profileId (snapshot real) · best_hour ← slot real (derivado).
+    SIN porcentaje de engagement Y SIN KPI Posts (decisión P1: la API no expone ER por-post ni ventana
+    'this period' · solo conteos por red). Arrays/None vacíos si Zernio no da dato · data_delay ~24-48h.
     """
     connected: bool = False
     growth: list[GrowthPoint] = Field(default_factory=list)
     engagement: list[EngagementRow] = Field(default_factory=list)
     heatmap: list[HeatmapCell] = Field(default_factory=list)
     total_followers: Optional[int] = None
-    posts: int = 0
     best_hour: Optional[str] = None
     data_delay: Optional[str] = None
     message: Optional[str] = None

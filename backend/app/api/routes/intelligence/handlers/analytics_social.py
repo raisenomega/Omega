@@ -1,10 +1,11 @@
 """GET /intelligence/analytics · métricas sociales reales del negocio vía Zernio (DEBT-034 · live-read).
 
-Per-negocio por profileId + bound account_id (AISLADO · 403 si ajeno · MISMO patrón que chips.py). Honesto/
-best-effort (regla GLOBAL cero-sintéticos): sin profile/cuentas → connected=False + message (empty honesto,
-NO ceros que finjan datos) · Zernio falla → arrays vacíos + lo que sí llegó · NUNCA 500 · JAMÁS un número
-inventado. followers/posts se suman SOLO de las cuentas vinculadas al negocio (bound_ids). Cache mem TTL 15min
-(el dato es de ~24-48h · sin tabla/cron/migración). NO toca el flujo de publicar (este adapter es solo-lectura).
+Per-negocio por **profileId** (la llave canónica · AISLADO · 403 si ajeno · MISMO patrón que chips.py). Honesto/
+best-effort (regla GLOBAL cero-sintéticos): sin profileId → connected=False + message (empty honesto, NO ceros
+que finjan datos) · Zernio falla → arrays vacíos + lo que sí llegó · NUNCA 500 · JAMÁS un número inventado.
+followers/serie se resuelven por **profileId** (NO bound_ids · que son frágiles y vacíos en negocios sin
+binding · ver DEBT-ANALYTICS-RESOLVER-PROFILEID). Cache mem TTL 15min (el dato es de ~24-48h · sin tabla/cron/
+migración). NO toca el flujo de publicar (este adapter es solo-lectura).
 """
 import asyncio
 import logging
@@ -60,25 +61,22 @@ async def social_analytics(
     """Analytics sociales reales del negocio · honesto si no hay profile/cuentas · nunca 500."""
     cid = await _resolve_client_id(authorization, client_id)
     profile_id = arepo.get_zernio_profile_id(cid)
-    accounts = arepo.get_zernio_accounts(cid)
-    if not profile_id and not accounts:
+    if not profile_id:                                    # sin profile no hay nada que resolver (Milagrosa)
         return SocialAnalyticsResponse(connected=False, message=_NO_ACCOUNTS)
 
-    bound_ids: List[str] = [a["account_id"] for a in accounts]
     accounts_api: List[Dict[str, Any]] = await _cached("accounts", za.list_accounts)
-    daily = await _cached(f"daily:{profile_id}", za.daily_metrics, profile_id) if profile_id else {}
-    best = await _cached(f"best:{profile_id}", za.best_time, profile_id) if profile_id else {}
-    ig = [a for a in accounts if a["platform"] == "instagram"]
+    daily = await _cached(f"daily:{profile_id}", za.daily_metrics, profile_id)
+    best = await _cached(f"best:{profile_id}", za.best_time, profile_id)
+    ig_ids = asm.ig_account_ids(accounts_api, profile_id)  # cuentas IG del profile (no bound_ids)
     ig_hist: List[Dict[str, Any]] = list(await asyncio.gather(
-        *[_cached(f"fh:{a['account_id']}", za.follower_history, a["account_id"]) for a in ig]))
+        *[_cached(f"fh:{aid}", za.follower_history, aid) for aid in ig_ids]))
 
     return SocialAnalyticsResponse(
         connected=True,
         growth=[GrowthPoint(**g) for g in asm.growth_series(ig_hist)],
         engagement=[EngagementRow(**e) for e in asm.engagement_by_network(daily)],
         heatmap=[HeatmapCell(**c) for c in asm.heatmap_cells(best)],
-        total_followers=asm.followers_total(accounts_api, bound_ids),
-        posts=asm.posts_total(accounts_api, bound_ids),
+        total_followers=asm.followers_total(accounts_api, profile_id),
         best_hour=asm.best_hour(best),
         data_delay=_DELAY,
     )

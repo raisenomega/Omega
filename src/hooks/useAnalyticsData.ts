@@ -2,9 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api-client";
 import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 
-// DEBT-034 ("paridad de verdad" · live-read): analytics REALES vía Zernio, scopeados por negocio activo.
-// Backend honesto (regla GLOBAL cero-sintéticos): sin profile/cuentas → connected=false + vacíos · NUNCA
-// números inventados. Seguidores = snapshot real · posts = conteo real · best_hour = derivado · SIN %.
+// DEBT-034 ("paridad de verdad" · live-read): analytics REALES vía Zernio, resueltos por profileId.
+// Backend honesto (regla GLOBAL cero-sintéticos): sin profileId → connected=false + vacíos · NUNCA números
+// inventados. Seguidores = snapshot real (Σ followersCount por profileId) · best_hour = derivado · SIN %.
+// SIN KPI Posts: la API no expone ventana 'this period' (ver ESTADO_OMEGA pendiente).
 
 interface GrowthPoint { date: string; followers: number }
 interface EngagementRow { platform: string; likes: number; comments: number; shares: number; saves: number; views: number }
@@ -16,7 +17,6 @@ interface AnalyticsResponse {
   engagement: EngagementRow[];
   heatmap: HeatmapCell[];
   total_followers: number | null;
-  posts: number;
   best_hour: string | null;
   data_delay: string | null;
   message: string | null;
@@ -36,7 +36,6 @@ export function useAnalyticsData() {
     engagementData: (data?.engagement ?? []) as EngagementRow[],
     heatmapData: (data?.heatmap ?? []) as HeatmapCell[],
     totalFollowers: (data?.total_followers ?? null) as number | null,
-    posts: (data?.posts ?? null) as number | null, // total histórico de la cuenta (NO del período)
     bestHour: data?.best_hour ?? null,
     dataDelay: data?.data_delay ?? null,
   };

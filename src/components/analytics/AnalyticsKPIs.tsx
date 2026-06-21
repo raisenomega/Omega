@@ -1,10 +1,9 @@
-import { Users, Clock, FileText, type LucideIcon } from "lucide-react";
+import { Users, Clock, type LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface AnalyticsKPIsProps {
   followers: number | null;
   bestHour: string | null;
-  posts: number | null;
 }
 
 interface KPI {
@@ -22,16 +21,17 @@ function fmtNumber(n: number | null): string {
 }
 
 // Regla GLOBAL cero-sintéticos: sin dato real → "—" (vacío honesto), NUNCA un número de relleno.
-// SIN KPI de engagement %: decisión P1 (la API no da ER por-post · solo conteos por red abajo).
-export function AnalyticsKPIs({ followers, bestHour, posts }: AnalyticsKPIsProps) {
+// SIN KPI engagement % NI KPI Posts (decisión P1): la API no da ER por-post ni ventana 'this period'
+// (el 5/7 vive solo en el panel UI · 7 date-params probados, ignorados) → solo Seguidores + Mejor hora
+// (reales por profileId) + conteos por red abajo. Reintroducir Posts con fuente de ventana honesta.
+export function AnalyticsKPIs({ followers, bestHour }: AnalyticsKPIsProps) {
   const kpis: KPI[] = [
     { label: "Seguidores", value: fmtNumber(followers), icon: Users },
     { label: "Mejor hora", value: bestHour ?? EMPTY, icon: Clock },
-    { label: "Posts", value: fmtNumber(posts), icon: FileText }, // total histórico de la cuenta
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 gap-3">
       {kpis.map((k) => {
         const Icon = k.icon;
         return (

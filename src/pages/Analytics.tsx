@@ -22,7 +22,7 @@ export default function Analytics() {
   useTrackOnMount("feature_open", { feature: "analytics" });
 
   const access = useProAccess();
-  const { loading, growthData, engagementData, heatmapData, totalFollowers, posts, bestHour, dataDelay } = useAnalyticsData();
+  const { loading, growthData, engagementData, heatmapData, totalFollowers, bestHour, dataDelay } = useAnalyticsData();
   const { activeBusinessId, isReady } = useActiveBusiness();
 
   if (access.loading) return <ProGateLoading />;
@@ -41,7 +41,7 @@ export default function Analytics() {
   if (!activeBusinessId) return <EmptyState feature="Analytics" />;
 
   const hasEngagement = engagementData.length > 0;
-  const hasAnyData = growthData.length > 0 || hasEngagement || heatmapData.length > 0 || totalFollowers !== null || posts !== null;
+  const hasAnyData = growthData.length > 0 || hasEngagement || heatmapData.length > 0 || totalFollowers !== null;
 
   return (
     <div className="space-y-6">
@@ -83,7 +83,7 @@ export default function Analytics() {
         </div>
       )}
 
-      <AnalyticsKPIs followers={totalFollowers} bestHour={bestHour} posts={posts} />
+      <AnalyticsKPIs followers={totalFollowers} bestHour={bestHour} />
 
       <div className="grid gap-3 lg:grid-cols-2">
         <GrowthChart data={growthData} />
