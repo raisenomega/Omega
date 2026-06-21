@@ -18,6 +18,19 @@ Reestructuración de negocio (toca Stripe + planes DB + copy global + banners up
 
 ---
 
+## 🟢 DEBT-ARIA-SUGGESTIONS-TEXT (20 jun · CALIDAD del contenido · NO urgente)
+
+El **texto** de las Sugerencias de ARIA es estático: 4 plantillas fijas en `_MSG` de
+`backend/app/api/routes/aria_v1/handlers/suggestions_create.py` (ej. "Con el plan PRO desbloqueás
+posts ilimitados y más cuentas"). La **selección** de cuáles aparecen SÍ es real y per-negocio (motor
+de 4 reglas sobre señales reales: actividad de publicación, plan, perfil, aria_level), y el aislamiento
+por negocio está OK. Lo genérico es el **wording** → "parece" placeholder aunque la lógica sea real.
+Fix futuro: generar el texto con datos reales del negocio (nombre/números/gaps · LLM o templates con
+variables). Deuda de CALIDAD, no de aislamiento. Hermana del bug de retracción STALE (ese es liviano y
+se cierra ya · ver reporte 20 jun: una sugerencia unread persiste tras dejar de aplicar su condición).
+
+---
+
 ## 🟢 DEBT-VITEST-FLAKE-PREPUSH (20 jun · CONFIABILIDAD del gate · NO urgente)
 
 El gate pre-push (CHECK 9 · Vitest) puede fallar **transitorio** por timing del setup de jsdom (~49s) — **no por código**. Frenó el 1er push de `1727500` (20 jun); el reintento pasó **15/15** con vitest directo **67/67** y el gate manual **15/15**. Es ruido que puede bloquear pushes legítimos. **NO urgente.** Si recurre: estabilizar el setup de jsdom (timeout / aislamiento del test runner). Deuda de **confiabilidad del gate**, no del producto. Hermana de [[gate-pytest-false-green]] / DEBT-VERCEL-NO-TSC-CHECK.

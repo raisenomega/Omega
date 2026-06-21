@@ -62,3 +62,17 @@ def mark_read(suggestion_id: str) -> bool:
     except Exception as e:
         logger.error(f"_suggestions_writer.mark_read failed: {e}", exc_info=True)
         return False
+
+
+def retract_unread(client_id: str, suggestion_type: str) -> int:
+    """Auto-cierra (is_read=true) las unread de este tipo cuya condición ya NO aplica al negocio
+    (ej. subió de basic→enterprise → la 'upgrade_plan' caduca). Scope por client_id: NO toca otros
+    negocios. Best-effort · 0 si falla (P1)."""
+    try:
+        _sb().table("aria_suggestions").update({
+            "is_read": True, "read_at": datetime.now(timezone.utc).isoformat(),
+        }).eq("client_id", client_id).eq("suggestion_type", suggestion_type).eq("is_read", False).execute()
+        return 1
+    except Exception as e:
+        logger.error(f"_suggestions_writer.retract_unread failed: {e}", exc_info=True)
+        return 0

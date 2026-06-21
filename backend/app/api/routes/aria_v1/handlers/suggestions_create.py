@@ -29,41 +29,44 @@ _MSG = {
 }
 
 
-def _wants_inactivity(client_id: str) -> bool:
+def _wants_inactivity(client_id: str) -> Optional[bool]:
     determinable, last = repo.published_signal(client_id)
     if not determinable:
-        return False  # consulta falló · indeterminado · P1
+        return None  # consulta falló · indeterminado · P1 (ni emite ni retracta)
     if last is None:
-        return True  # nunca publicó · señal real
+        return True  # nunca publicó · aplica
     return datetime.now(timezone.utc) - last >= timedelta(days=_INACTIVITY_DAYS)
 
 
-def _wants_upgrade(client_id: str) -> bool:
-    return repo.client_plan(client_id) == "basic"  # None (indeterminado) → no emite (P1)
+def _wants_upgrade(client_id: str) -> Optional[bool]:
+    plan = repo.client_plan(client_id)
+    if plan is None:
+        return None  # consulta falló o sin fila · indeterminado · P1
+    return plan == "basic"  # basic→aplica · otro plan conocido→negativo DETERMINADO (retracta)
 
 
-def _wants_profile_incomplete(client: dict[str, Any]) -> bool:
+def _wants_profile_incomplete(client: dict[str, Any]) -> Optional[bool]:
     filled = sum(1 for f in _PROFILE_FIELDS if str(client.get(f) or "").strip())
-    return filled < 2
+    return filled < 2  # client ya resuelto → siempre determinado
 
 
-def _wants_no_addons(client: dict[str, Any]) -> bool:
+def _wants_no_addons(client: dict[str, Any]) -> Optional[bool]:
     level = client.get("aria_level")
     if not isinstance(level, int):
-        return False  # nivel indeterminado · P1
+        return None  # nivel indeterminado · P1
     return level < 4  # aria_level >= 4 = ARIA Premium
 
 
-def _evaluate(client: dict[str, Any]) -> list[str]:
-    """Tipos que aplican según señales reales · orden estable."""
+def _rule_states(client: dict[str, Any]) -> dict[str, Optional[bool]]:
+    """Tri-estado por tipo · True=aplica (emitir) · False=negativo DETERMINADO (retractar stale) ·
+    None=indeterminado (no tocar). Orden estable."""
     cid = str(client["id"])
-    rules: list[tuple[str, bool]] = [
-        ("inactivity", _wants_inactivity(cid)),
-        ("upgrade_plan", _wants_upgrade(cid)),
-        ("profile_incomplete", _wants_profile_incomplete(client)),
-        ("no_addons", _wants_no_addons(client)),
-    ]
-    return [t for t, applies in rules if applies]
+    return {
+        "inactivity": _wants_inactivity(cid),
+        "upgrade_plan": _wants_upgrade(cid),
+        "profile_incomplete": _wants_profile_incomplete(client),
+        "no_addons": _wants_no_addons(client),
+    }
 
 
 @router.post("/suggestions", response_model=ARIASuggestionsResponse)
@@ -75,11 +78,16 @@ async def aria_suggestions_create(
     client = resolve_client_or_403(user["id"], request.client_id)
     cid = str(client["id"])
     generated = 0
-    for stype in _evaluate(client):
-        if repo.unread_type_exists(cid, stype):
-            continue  # idempotente · ya hay una sin leer de este tipo
-        if writer.insert_suggestion(cid, user.get("id"), _MSG[stype], stype):
-            generated += 1
+    for stype, applies in _rule_states(client).items():
+        if applies is True:
+            if repo.unread_type_exists(cid, stype):
+                continue  # idempotente · ya hay una sin leer de este tipo
+            if writer.insert_suggestion(cid, user.get("id"), _MSG[stype], stype):
+                generated += 1
+        elif applies is False:
+            # Retracción: el tipo dejó de aplicar de forma DETERMINADA (ej. basic→enterprise)
+            # → auto-cierra las unread stale de ese tipo para ESE negocio. None→no toca (P1).
+            writer.retract_unread(cid, stype)
     rows = writer.list_suggestions(cid, unread_only=False)
     return ARIASuggestionsResponse(
         suggestions=[ARIASuggestion(**r) for r in rows], generated=generated,
