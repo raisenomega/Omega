@@ -1,6 +1,7 @@
 import { Users, Sparkles, CalendarDays, Wifi, Loader2 } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useMyPlanStatus } from "@/hooks/useMyPlanStatus";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { AccountDistributionChart } from "@/components/dashboard/PlatformCharts";
@@ -30,6 +31,10 @@ export default function Dashboard() {
   } = useDashboardData();
 
   const myPlan = useMyPlanStatus();
+  // Negocio activo del Switcher (reseller elige · cliente N=1 auto-selecciona) o cliente propio.
+  // Universal: los 3 elementos base (barra/seguridad/ARIA) se scopean a ESTE negocio, no al rol.
+  const { activeBusinessId } = useActiveBusiness();
+  const businessId = activeBusinessId ?? myPlan.clientId;
 
   if (loading) {
     return (
@@ -42,16 +47,17 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Header inline · título + Plan Status Bar en misma línea horizontal.
-          Bar visible solo para clientes PYME (no Owner/Reseller). En mobile
+          Universal: barra del NEGOCIO ACTIVO (cualquier usuario). Gateada por businessId
+          (no por rol) → sin negocio seleccionado no muestra Adopción falsa. En mobile
           flex-wrap lo baja a línea propia automáticamente. */}
       <div className="flex items-center justify-between gap-6 flex-wrap">
         <div className="shrink-0">
           <h1 className="text-2xl font-display font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">Resumen general de tu plataforma</p>
         </div>
-        {!myPlan.isOwner && (
+        {businessId && (
           <div className="flex-1 min-w-[420px]">
-            <PlanStatusBar clientId={myPlan.clientId ?? ""} />
+            <PlanStatusBar clientId={businessId} />
           </div>
         )}
       </div>
@@ -84,14 +90,12 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* CAMBIO 1 · grid 2-col: seguridad (2 eventos + scan) + sugerencias de ARIA · solo cliente
-          (superadmin ve SentinelDashboardCard abajo) */}
-      {!myPlan.isOwner && (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <SecurityKPICard />
-          <AriaSuggestionsCard clientId={myPlan.clientId ?? null} />
-        </div>
-      )}
+      {/* Universal (cualquier usuario): seguridad de la SESIÓN (per-usuario) + sugerencias de ARIA
+          del NEGOCIO ACTIVO. Sin gate de rol · ARIA con businessId null muestra su empty honesto. */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <SecurityKPICard />
+        <AriaSuggestionsCard clientId={businessId} />
+      </div>
 
       {/* CAMBIO 3+4 · actividad de agentes · distribución de cuentas (donut) · observaciones — mismo nivel */}
       <div className="grid gap-4 lg:grid-cols-3">
