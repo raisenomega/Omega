@@ -13,12 +13,15 @@ def format_sentinel(result: dict[str, Any]) -> tuple[str, str]:
              f"{i.get('message') or i.get('title') or i.get('agent_code') or 'issue'}"
              for i in issues[:15]]
     detail = "\n".join(lines) if lines else "- sin issues"
+    hf = result.get("hermes_failures") or []
+    hermes = ("HERMES · ultimas 24h: " + ", ".join(f"{h['integration']} ({h['windows']})" for h in hf)
+              ) if hf else "HERMES: sin fallos"
     subject = f"OMEGA SENTINEL brief diario · score {score}/100 · {status}"
     body = (f"SENTINEL brief diario\n"
             f"Score: {score}/100 ({status}) · decision: {result.get('deploy_decision', '?')}\n"
             f"Issues: {result.get('total_issues', 0)} "
             f"({result.get('critical_issues', 0)} CRITICAL) · "
-            f"agentes: {result.get('agents_scanned', 0)}\n\n{detail}")
+            f"agentes: {result.get('agents_scanned', 0)}\n\n{detail}\n\n{hermes}")
     return subject, body
 
 

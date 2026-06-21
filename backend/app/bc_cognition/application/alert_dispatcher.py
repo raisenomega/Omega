@@ -50,6 +50,34 @@ async def _send_resend(body: str, score: int) -> bool:
         return False
 
 
+async def dispatch_hermes_alert(integration: str, detail: str) -> bool:
+    """Alerta inmediata HERMES (integración crítica caída) · Email Resend + Telegram opcional · best-effort.
+    Email o Telegram que salga = True. _send_resend_raw NO toca el path de alarma SENTINEL probado."""
+    subject = f"HERMES · {integration} caído"
+    body = f"HERMES · integración '{integration}' caída.\nError: {detail or '—'}\nRevisá /security-dev -> HERMES."
+    email = await _send_resend_raw(subject, body)
+    tg = await _send_telegram(body)
+    return email or tg
+
+
+async def _send_resend_raw(subject: str, body: str) -> bool:
+    if not settings.resend_api_key:
+        return False
+    try:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as c:
+            resp = await c.post(_RESEND_URL,
+                headers={"Authorization": f"Bearer {settings.resend_api_key}"},
+                json={"from": settings.alert_email_from, "to": [settings.alert_email_to],
+                      "subject": subject, "text": body})
+            resp.raise_for_status()
+        record_mcp_use("resend", ok=True)  # HERMES f1.5
+        return True
+    except Exception as e:
+        record_mcp_use("resend", ok=False, detail=str(e)[:80])  # HERMES f1.5
+        logger.error(f"hermes alert · Resend falló: {e}")
+        return False
+
+
 async def _send_telegram(body: str) -> bool:
     token, chat = settings.telegram_bot_token, settings.telegram_chat_id
     if not (token and chat):  # preparado · activa al pegar TELEGRAM_BOT_TOKEN + CHAT_ID en Railway

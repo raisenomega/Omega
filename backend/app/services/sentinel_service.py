@@ -90,6 +90,11 @@ class SentinelService:
                 "agents_scanned": len(results),
                 "issues": all_issues,
             }
+            try:  # resumen HERMES en el brief (best-effort · enterarse de fallos de integraciones 24h)
+                from app.bc_cognition.infrastructure.hermes_alerts import failures_last_24h
+                result["hermes_failures"] = await asyncio.to_thread(failures_last_24h)
+            except Exception as e:
+                logger.error(f"hermes failures inject failed: {e}")
             if global_score < 80:  # alerta best-effort (Email Resend + Telegram opcional) · no rompe el scan
                 from app.bc_cognition.application.alert_dispatcher import dispatch_sentinel_alert
                 try:
@@ -97,7 +102,7 @@ class SentinelService:
                 except Exception as e:
                     logger.error(f"sentinel alert dispatch failed: {e}")
             # brief diario al owner (best-effort · solo si hay algo que reportar · DEBT-105)
-            if result["total_issues"] > 0 or global_score < 85:
+            if result["total_issues"] > 0 or global_score < 85 or result.get("hermes_failures"):
                 from app.bc_cognition.application.brief_dispatcher import dispatch_sentinel_brief
                 try:
                     await dispatch_sentinel_brief(result)
