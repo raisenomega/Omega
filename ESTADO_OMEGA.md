@@ -6,6 +6,17 @@
 
 ---
 
+## 🗺️ PANORAMA POR CAPAS vs VISIÓN (20 jun · % contra el alcance CANÓNICO)
+
+- **Capa 1 — Plataforma operativa vendible: ~75-85%.** SaaS white-label, agentes core, publicación Zernio en vivo, REX autónomo, billing, seguridad auditada. Falta pulido pre-lanzamiento.
+- **Capa 2 — Agentes CANÓNICOS (8 + SOPHIA · per `OMEGA_ROLES_CANONICO`): ~70-80%.** NOVA/ARIA/REX/Guardian/Sentinel + sub-cerebros `bc_cognition` vivos. **Los 57 agentes del catálogo comercial NO son alcance actual** — son fase futura post-capa 3/4 (verticales por industria/nicho). Medir contra 57 contradice el canon (57 = visión comercial, no operativos).
+- **Capa 3 — Moat de contexto (3 capas de persistencia · backup estratégico + archivo R2): ~15-20%.** `agent_memory` pgvector parcial · el resto por delante · "el activo irreemplazable".
+- **Capa 4 — Modelo comercial (marketplace, bundles, agentes vendibles): ~20%.**
+- **CONJUNTO contra el alcance ACTUAL (excluye verticales): ~55-65% de la visión operativa.**
+- **SECUENCIA del owner (20 jun):** capa 3 (moat) → capa 4 (comercial) → agentes verticales por industria/nicho. Primero **profundidad** (contexto irreemplazable), luego **monetización**, luego **ancho** (nicho). Construir 57 agentes antes del moat = ancho sin profundidad.
+
+---
+
 ## 💲 DECISIÓN-PRECIOS-2026 (20 jun · DOCUMENTADA · NO implementar · sesión dedicada pre-launch)
 
 Reestructuración de negocio (toca Stripe + planes DB + copy global + banners upgrade). **NO al vuelo · sesión dedicada, por partes.**
