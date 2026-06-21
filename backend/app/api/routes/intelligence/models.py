@@ -45,6 +45,48 @@ class AeoCheckResponse(BaseModel):
     message: Optional[str] = None
 
 
+class GrowthPoint(BaseModel):
+    """Punto de la serie de seguidores (IG · GrowthChart)."""
+    date: str
+    followers: int
+
+
+class EngagementRow(BaseModel):
+    """Engagement por plataforma del período (conteos REALES · sin %)."""
+    platform: str
+    likes: int
+    comments: int
+    shares: int
+    saves: int
+    views: int
+
+
+class HeatmapCell(BaseModel):
+    """Celda de mejores horas (BestTimesHeatmap agrupa por hora)."""
+    day: str
+    hour: int
+    value: float
+
+
+class SocialAnalyticsResponse(BaseModel):
+    """Analytics sociales reales del negocio vía Zernio (DEBT-034 · "paridad de verdad" · cero-sintéticos).
+
+    connected=False + message → negocio sin profile/cuentas (empty honesto, NO ceros que finjan datos).
+    total_followers ← snapshot real (followersCount) · posts ← externalPostCount (total histórico) ·
+    best_hour ← slot real (derivado) · SIN porcentaje de engagement (decisión P1: solo conteos por red).
+    Arrays/None vacíos cuando Zernio no devuelve dato real · JAMÁS un número inventado. data_delay ~24-48h.
+    """
+    connected: bool = False
+    growth: list[GrowthPoint] = Field(default_factory=list)
+    engagement: list[EngagementRow] = Field(default_factory=list)
+    heatmap: list[HeatmapCell] = Field(default_factory=list)
+    total_followers: Optional[int] = None
+    posts: int = 0
+    best_hour: Optional[str] = None
+    data_delay: Optional[str] = None
+    message: Optional[str] = None
+
+
 class ChipResponse(BaseModel):
     """Chip Meta/Google (Fase 2) · honesto (regla cero-mocks).
 
