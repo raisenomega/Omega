@@ -5,6 +5,7 @@ from app.api.routes.security_dev.handlers.health_check import handle_dev_health
 from app.api.routes.security_dev.handlers.sentinel_data import handle_sentinel_data
 from app.api.routes.security_dev.handlers.guardian_data import handle_guardian_data
 from app.api.routes.security_dev.handlers.hermes_data import handle_hermes_data
+from app.api.routes.security_dev.handlers.hermes_detail import handle_hermes_detail
 
 router = APIRouter(prefix="/security-dev", tags=["Security Dev 🔐"])
 
@@ -27,3 +28,8 @@ async def guardian_data(authorization: Optional[str] = Header(None)):
 @router.get("/hermes")
 async def hermes_data(authorization: Optional[str] = Header(None)):
     return await handle_hermes_data(authorization)
+
+
+@router.get("/hermes/detail/{integration}")
+async def hermes_detail(integration: str, authorization: Optional[str] = Header(None)):
+    return await handle_hermes_detail(integration, authorization)
