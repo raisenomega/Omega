@@ -21,6 +21,6 @@ def test_main_ids_coinciden_con_registry():
     assert _main_job_ids() == set(CRON_JOB_IDS)
 
 
-def test_expected_es_26():
-    assert EXPECTED_CRON_JOBS == 26  # 25 + hermes_alert_check (HERMES nivel 2 · alerta inmediata)
-    assert len(CRON_JOB_IDS) == 26
+def test_expected_es_27():
+    assert EXPECTED_CRON_JOBS == 27  # 26 + social_metrics_snapshot (Arco 1 · histórico social organic)
+    assert len(CRON_JOB_IDS) == 27

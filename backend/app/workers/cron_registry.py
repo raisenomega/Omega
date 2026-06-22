@@ -18,8 +18,9 @@ CRON_JOB_IDS: Final[frozenset[str]] = frozenset({
     "integrations_hourly", "chaos_monthly",
     "rex_publisher",  # DEBT-098 · publicador autónomo REX · cada 5 min (20 jun · 24→25)
     "hermes_alert_check",  # HERMES nivel 2 · alerta inmediata integración crítica caída (21 jun · 25→26)
+    "social_metrics_snapshot",  # Arco 1 · histórico social organic · diario 6am UTC (22 jun · 26→27)
 })
 
 EXPECTED_CRON_JOBS: Final[int] = len(CRON_JOB_IDS)
 
-assert EXPECTED_CRON_JOBS == 26, f"cron_registry: esperado 26, hay {EXPECTED_CRON_JOBS}"
+assert EXPECTED_CRON_JOBS == 27, f"cron_registry: esperado 27, hay {EXPECTED_CRON_JOBS}"

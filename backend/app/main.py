@@ -175,8 +175,11 @@ async def lifespan(app: FastAPI):
     # REX Publicador Autónomo (DEBT-098 · F2) · cada 5 min · 25vo cron job · max_instances=1 (sostiene el lock)
     from app.workers.rex_publisher_worker import run_rex_publisher_job
     scheduler.add_job(run_rex_publisher_job, 'cron', minute='*/5', id='rex_publisher', max_instances=1, replace_existing=True, misfire_grace_time=300)
+    # SOCIAL METRICS snapshot · histórico social organic (Arco 1 · pipeline) · diario 6am UTC
+    from app.workers.social_metrics_snapshot_worker import run as run_social_metrics_snapshot
+    scheduler.add_job(run_social_metrics_snapshot, 'cron', hour=6, minute=0, id='social_metrics_snapshot', max_instances=1, replace_existing=True)
     scheduler.start()
-    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION + RLS_AUDIT + RUNTIME_OBS + PERF + AGENTS_HEALTH + NETWORK_HTTP + INTEGRATIONS + CHAOS + REX_PUBLISHER workers activos — 25 jobs (jobstore persistente DEBT-047)")
+    logger.info("✅ SENTINEL + ORACLE + OMEGA + BRAND_DNA + ORPHAN_CLEANUP + OUTCOME_EVAL + CREDIT_RESET + DECISION_EVAL + STRATEGY_GEN + HERMES + SECRETS_ROTATION + RLS_AUDIT + RUNTIME_OBS + PERF + AGENTS_HEALTH + NETWORK_HTTP + INTEGRATIONS + CHAOS + REX_PUBLISHER + SOCIAL_METRICS_SNAPSHOT workers activos — 27 jobs (jobstore persistente DEBT-047)")
     yield
     # ── SHUTDOWN ──
     scheduler.shutdown()
