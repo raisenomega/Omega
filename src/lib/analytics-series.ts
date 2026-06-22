@@ -33,3 +33,10 @@ export function engagementTotalSeries(
 export function fmtPct(v: number | null): string {
   return v === null ? "—" : `${v}%`;
 }
+
+/** ¿Hay suficiente historial para mostrar una TENDENCIA? <2 puntos = 1 solo dato → NO dibujar
+ * línea (sugeriría tendencia donde solo hay un punto · regla P1). El GrowthChart muestra
+ * "historial insuficiente" en vez de una línea plana engañosa. */
+export function hasGrowthTrend(points: { date: string; followers: number }[]): boolean {
+  return points.length >= 2;
+}

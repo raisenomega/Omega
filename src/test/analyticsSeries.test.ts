@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { engagementTotalSeries, fmtPct, type EngagementSeriesPoint } from "@/lib/analytics-series";
+import { engagementTotalSeries, fmtPct, hasGrowthTrend, type EngagementSeriesPoint } from "@/lib/analytics-series";
 
 const pt = (date: string, likes: number, comments: number, shares: number, saves: number, views: number): EngagementSeriesPoint =>
   ({ date, impressions: 0, reach: 0, likes, comments, shares, saves, clicks: 0, views });
@@ -25,5 +25,11 @@ describe("analytics-series · transforms puros del panel", () => {
     expect(fmtPct(5.8)).toBe("5.8%");   // MB histórico
     expect(fmtPct(18.2)).toBe("18.2%"); // OR histórico
     expect(fmtPct(0)).toBe("0%");       // 0 real (no es lo mismo que sin dato)
+  });
+
+  it("hasGrowthTrend: <2 puntos → false (no fingir tendencia con 1 dato · P1)", () => {
+    expect(hasGrowthTrend([])).toBe(false);
+    expect(hasGrowthTrend([{ date: "2026-06-20", followers: 2 }])).toBe(false);             // 1 dato → insuficiente
+    expect(hasGrowthTrend([{ date: "2026-06-20", followers: 2 }, { date: "2026-06-21", followers: 2 }])).toBe(true);  // 2 reales (MB)
   });
 });

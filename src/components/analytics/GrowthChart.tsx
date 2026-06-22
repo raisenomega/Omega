@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { hasGrowthTrend } from "@/lib/analytics-series";
 
 interface GrowthChartProps {
   data: { date: string; followers: number }[];
@@ -11,12 +12,17 @@ const chartConfig = {
 };
 
 export function GrowthChart({ data }: GrowthChartProps) {
-  if (data.length === 0) {
+  // P1: <2 puntos NO se grafican (1 dato como línea sugiere tendencia inexistente · historial real
+  // de Zernio puede traer 1 solo punto). 0 → "sin historial" · 1 → "insuficiente". Nunca línea falsa.
+  if (!hasGrowthTrend(data)) {
+    const msg = data.length === 0
+      ? "Sin historial aún · conecta tus cuentas sociales para ver crecimiento"
+      : "Historial insuficiente · 1 solo dato (se necesitan ≥2 días para mostrar tendencia)";
     return (
       <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
         <CardHeader className="pb-2"><CardTitle className="text-sm">Crecimiento de seguidores · Instagram</CardTitle></CardHeader>
         <CardContent className="flex items-center justify-center h-56 text-xs text-muted-foreground text-center">
-          Sin historial aún · conecta tus cuentas sociales para ver crecimiento
+          {msg}
         </CardContent>
       </Card>
     );
