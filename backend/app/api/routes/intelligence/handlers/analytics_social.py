@@ -18,9 +18,11 @@ from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.content_lab_v3 import _content_lab_repository as repo
 from app.api.routes.content_lab_v3._client_resolver import resolve_client_or_403
 from app.api.routes.intelligence import _analytics_assembler as asm
+from app.api.routes.intelligence import _analytics_metrics as met
 from app.api.routes.intelligence import _analytics_repository as arepo
 from app.api.routes.intelligence.models import (
-    EngagementRow, GrowthPoint, HeatmapCell, SocialAnalyticsResponse)
+    EngagementRow, EngagementSeriesPoint, GrowthPoint, HeatmapCell,
+    PostsSeriesPoint, SocialAnalyticsResponse)
 from app.bc_cognition.infrastructure import zernio_analytics_adapter as za
 
 router = APIRouter()
@@ -71,12 +73,17 @@ async def social_analytics(
     ig_hist: List[Dict[str, Any]] = list(await asyncio.gather(
         *[_cached(f"fh:{aid}", za.follower_history, aid) for aid in ig_ids]))
 
+    eng_rows = asm.engagement_by_network(daily)  # una vez · total_reach + ER derivan de aquí (consistencia)
     return SocialAnalyticsResponse(
         connected=True,
         growth=[GrowthPoint(**g) for g in asm.growth_series(ig_hist)],
-        engagement=[EngagementRow(**e) for e in asm.engagement_by_network(daily)],
+        engagement=[EngagementRow(**e) for e in eng_rows],
+        engagement_series=[EngagementSeriesPoint(**s) for s in met.engagement_series(daily)],
+        posts_series=[PostsSeriesPoint(**p) for p in met.posts_series(daily)],
         heatmap=[HeatmapCell(**c) for c in asm.heatmap_cells(best)],
         total_followers=asm.followers_total(accounts_api, profile_id),
+        total_reach=met.total_reach(eng_rows),
+        profile_engagement=met.profile_engagement(eng_rows),
         best_hour=asm.best_hour(best),
         data_delay=_DELAY,
     )

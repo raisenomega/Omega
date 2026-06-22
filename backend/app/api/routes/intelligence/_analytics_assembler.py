@@ -10,7 +10,7 @@ period' · el 5/7 vive solo en el panel UI → no se reproduce · ver ESTADO_OME
 from typing import Any, Dict, List, Optional
 
 _DAY = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]  # day_of_week 0-6 (el heatmap agrupa por hora)
-_NET_FIELDS = ("likes", "comments", "shares", "saves", "views")
+_NET_FIELDS = ("likes", "comments", "shares", "saves", "views", "reach")  # +reach (panel ampliado · acumulado)
 
 
 def _profile_of(account: Dict[str, Any]) -> Optional[str]:
@@ -48,7 +48,7 @@ def best_hour(best: Dict[str, Any]) -> Optional[str]:
 
 
 def engagement_by_network(daily: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Por plataforma Σ {likes,comments,shares,saves,views} del período (conteos reales · sin %)."""
+    """Por plataforma Σ {likes,comments,shares,saves,views,reach} acumulado (conteos reales · sin %)."""
     agg: Dict[str, Dict[str, int]] = {}
     for day in daily.get("dailyData", []) or []:
         for plat, m in (day.get("platformMetrics") or {}).items():

@@ -1,7 +1,12 @@
-"""Modelos Pydantic v2 · Intelligence web-analysis."""
+"""Modelos Pydantic v2 · Intelligence web-analysis + respuesta de analytics sociales.
+Los modelos de datos del panel (GrowthPoint/EngagementRow/series/HeatmapCell) viven en
+_analytics_models.py (split por C4) y se re-exportan aquí → importadores existentes intactos."""
 from typing import Optional
 
 from pydantic import BaseModel, Field
+
+from app.api.routes.intelligence._analytics_models import (  # noqa: F401 · re-export (usados abajo)
+    EngagementRow, EngagementSeriesPoint, GrowthPoint, HeatmapCell, PostsSeriesPoint)
 
 
 class WebAnalysisResponse(BaseModel):
@@ -45,29 +50,6 @@ class AeoCheckResponse(BaseModel):
     message: Optional[str] = None
 
 
-class GrowthPoint(BaseModel):
-    """Punto de la serie de seguidores (IG · GrowthChart)."""
-    date: str
-    followers: int
-
-
-class EngagementRow(BaseModel):
-    """Engagement por plataforma del período (conteos REALES · sin %)."""
-    platform: str
-    likes: int
-    comments: int
-    shares: int
-    saves: int
-    views: int
-
-
-class HeatmapCell(BaseModel):
-    """Celda de mejores horas (BestTimesHeatmap agrupa por hora)."""
-    day: str
-    hour: int
-    value: float
-
-
 class SocialAnalyticsResponse(BaseModel):
     """Analytics sociales reales del negocio vía Zernio (DEBT-034 · "paridad de verdad" · cero-sintéticos).
 
@@ -79,8 +61,12 @@ class SocialAnalyticsResponse(BaseModel):
     connected: bool = False
     growth: list[GrowthPoint] = Field(default_factory=list)
     engagement: list[EngagementRow] = Field(default_factory=list)
+    engagement_series: list[EngagementSeriesPoint] = Field(default_factory=list)
+    posts_series: list[PostsSeriesPoint] = Field(default_factory=list)
     heatmap: list[HeatmapCell] = Field(default_factory=list)
     total_followers: Optional[int] = None
+    total_reach: Optional[int] = None
+    profile_engagement: Optional[float] = None  # engagement promedio HISTÓRICO (Σinter/Σreach·100) · '—' si reach=0
     best_hour: Optional[str] = None
     data_delay: Optional[str] = None
     message: Optional[str] = None

@@ -19,9 +19,9 @@ _ACCOUNTS = [
 _BEST = {"slots": [{"day_of_week": 1, "hour": 19, "avg_engagement": 42.0},
                    {"day_of_week": 3, "hour": 12, "avg_engagement": 8.5}]}
 _DAILY = {"dailyData": [
-    {"platformMetrics": {"instagram": {"likes": 6, "comments": 3, "shares": 1, "saves": 2, "views": 100},
-                         "facebook": {"likes": 4, "comments": 1, "shares": 0, "saves": 0, "views": 40}}},
-    {"platformMetrics": {"instagram": {"likes": 5, "comments": 0, "shares": 0, "saves": 1, "views": 80}}}]}
+    {"platformMetrics": {"instagram": {"likes": 6, "comments": 3, "shares": 1, "saves": 2, "views": 100, "reach": 50},
+                         "facebook": {"likes": 4, "comments": 1, "shares": 0, "saves": 0, "views": 40, "reach": 20}}},
+    {"platformMetrics": {"instagram": {"likes": 5, "comments": 0, "shares": 0, "saves": 1, "views": 80, "reach": 30}}}]}
 
 
 def test_followers_por_profileid_es_5_nunca_28():
@@ -59,8 +59,8 @@ def test_best_hour_derivado_no_hardcode():
 def test_engagement_por_red_con_saves_views_sin_pct():
     rows = {r["platform"]: r for r in asm.engagement_by_network(_DAILY)}
     assert rows["instagram"] == {"platform": "instagram", "likes": 11, "comments": 3,
-                                 "shares": 1, "saves": 3, "views": 180}
-    assert rows["facebook"]["views"] == 40
+                                 "shares": 1, "saves": 3, "views": 180, "reach": 80}  # +reach acumulado (50+30)
+    assert rows["facebook"]["views"] == 40 and rows["facebook"]["reach"] == 20
     assert all("rate" not in r and "engagement" not in r for r in rows.values())
 
 

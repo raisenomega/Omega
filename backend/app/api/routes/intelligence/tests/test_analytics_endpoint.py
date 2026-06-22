@@ -29,8 +29,8 @@ def _auth(monkeypatch):
 
 def _wire_zernio(monkeypatch, seen):
     async def _accs(): return _ACCOUNTS_API
-    async def _daily(pid): seen["daily"] = pid; return {"dailyData": [{"platformMetrics": {
-        "instagram": {"likes": 8, "comments": 2, "shares": 0, "saves": 1, "views": 100}}}]}
+    async def _daily(pid): seen["daily"] = pid; return {"dailyData": [{"date": "2026-06-21", "postCount": 3, "metrics": {"reach": 100, "likes": 8, "comments": 2, "shares": 0, "saves": 1, "views": 100, "impressions": 100, "clicks": 0}, "platformMetrics": {
+        "instagram": {"likes": 8, "comments": 2, "shares": 0, "saves": 1, "views": 100, "reach": 100}}}]}
     async def _best(pid): return {"slots": [{"day_of_week": 1, "hour": 19, "avg_engagement": 40.0}]}
     async def _fh(aid): seen.setdefault("fh", []).append(aid); return {"metrics": {"follower_count": {
         "total": 2, "values": [{"date": "2026-06-21", "value": 2}]}}}
@@ -77,7 +77,12 @@ def test_resuelve_por_profileid_aislado(monkeypatch):
     assert [g.model_dump() for g in out.growth] == [{"date": "2026-06-21", "followers": 2}]
     assert not hasattr(out, "posts")             # sin KPI Posts
     assert out.engagement[0].model_dump() == {"platform": "instagram", "likes": 8, "comments": 2,
-                                              "shares": 0, "saves": 1, "views": 100}
+                                              "shares": 0, "saves": 1, "views": 100, "reach": 100}
+    # panel ampliado wired: total_reach + ER histórico + series (acumulado · derivado de la misma data)
+    assert out.total_reach == 100
+    assert out.profile_engagement == 11.0                       # (8+2+0+1)/100*100
+    assert [p.model_dump() for p in out.posts_series] == [{"date": "2026-06-21", "count": 3}]
+    assert out.engagement_series[0].model_dump()["reach"] == 100
     assert out.data_delay
 
 
