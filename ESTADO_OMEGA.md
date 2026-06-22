@@ -68,6 +68,23 @@ El connect de analíticas (OAuth Meta/Google · `/oauth/{meta,google}/authorize`
 
 ---
 
+## 🟡 DEBT-PLATFORMS-PINTEREST-SNAPCHAT-THREADS-BLUESKY (21 jun · tab Cuentas · NO urgente)
+
+Nace en el **arco Reddit + tab Cuentas honesto** (5 commits `08a87b8`→`edd5955` · gate pendiente del push del conjunto). El tab Cuentas de ARIA (`ClientSocialAccounts.tsx` · NO el modal §7) ofrece **7 redes conectables**: IG/FB/TikTok/X-Twitter/LinkedIn/YouTube + **Reddit** (agregado este arco · Zernio da authUrl · `get_connect_url` es genérico · migr `00071` amplió el CHECK 6→7). Cuatro quedan **"Próximamente"** (texto gris, sin botón, debajo del picker · NO accionables): **Threads, Bluesky** (Zernio sin authUrl prioritario) · **Pinterest** (Zernio `/connect/pinterest` = **503**, caída temporal) · **Snapchat** (**403**, beta). NO se insertan en `social_accounts` → **no necesitan estar en el CHECK todavía**.
+
+**GATILLO de habilitación:** cuando Zernio devuelva **200 + authUrl** para pinterest/snapchat (re-sondear `GET /connect/<platform>?profileId=<real>` · para threads/bluesky: confirmar prioridad de producto), habilitar la red con la receta de abajo.
+
+**RECETA de 3 capas (actualizar las TRES juntas — o el guard falla, que es lo deseado):**
+1. **CHECK (DB):** nueva migración que `DROP`+`ADD` el CHECK de `social_accounts.platform` con la red nueva (patrón `00071`). Dry-run read-only antes (0 filas en conflicto) · aplicar a Supabase **ANTES** del front (regla de orden de deploy · ventana de insert-rechazado = bug en vivo).
+2. **Constante conectable (front):** mover la red de `COMING_SOON_PLATFORMS` → `CONNECTABLE_PLATFORMS` en `src/lib/social-platforms-tab.ts` (fuente única) + actualizar `TAB_PLATFORMS_LEGEND`.
+3. **Lista coming-soon (front):** es la MISMA constante — el "movimiento" de una lista a la otra en `social-platforms-tab.ts` cubre capas 2 y 3 a la vez (por eso es fuente única).
+
+**GUARD YA ACTIVO** (`src/test/socialPlatformsCheckSync.test.ts`): ata capa 1 ↔ capa 2 — lee el `CHECK (platform IN (...))` de la migración `00071` **de disco** y lo compara contra `CONNECTABLE_PLATFORMS`. **Si habilitás una red en la constante sin tocar el CHECK (o viceversa), el test FALLA.** Eso es bueno: impone a la máquina actualizar las 3 capas juntas (no depende del docstring). **OJO al agregar una migración nueva:** el test hoy hardcodea `startsWith("00071")`; al sumar la red en `000NN`, hay que apuntar el test a la última migración con CHECK platform (o generalizarlo a "la última") — si no, comparará contra el CHECK viejo (7) y fallará aunque la DB esté bien.
+
+**Icono:** redes sin brand-icon en Lucide caen a `Globe` (fallback de `getNetworkIcon`) — aceptable para coming-soon; al habilitar, evaluar icono propio. **whatsapp/telegram FUERA** de este arco (otros flujos · DEBT-092 / DEBT-TELEGRAM-CHANNEL).
+
+---
+
 ## 📊 ARCO ANALYTICS "PARIDAD DE VERDAD" (21 jun · EN PROD `e5d0f37` · DEBT-034 avanzada · NO cerrar aún)
 
 **EN PROD (`e5d0f37`):** el fix "Paridad de Verdad" está pusheado. El bug **"28 seguidores falsos"** (violación P1: leer `page_follows.total`=26 de ventana como seguidores actuales) está **RESUELTO** — eliminado `page_follows` (su raíz), test anti-28 con `page_follows.total=26` → total=**5≠28**. **DEBT-034 avanzada, NO cerrada** (ver bug abierto abajo).
