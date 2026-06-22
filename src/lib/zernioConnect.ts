@@ -18,11 +18,19 @@ export interface ConnectedItem {
   platform: string;
   handle: string | null;
   zernio_account_id: string;
+  followers_count?: number | null;   // real de Zernio (connected-accounts) · null/ausente → '—'
 }
 
 /** ¿La red está conectada (aparece en el profile del negocio)? Lee la verdad real, no el @handle. */
 export function isConnected(platform: string, items: ConnectedItem[]): boolean {
   return items.some((i) => i.platform === platform);
+}
+
+/** Seguidores REALES de la red conectada (de connected-accounts · Zernio en vivo, no persistido).
+ * null si la red no está conectada o no hay dato → la fila muestra '—', JAMÁS 0 inventado (P1). */
+export function accountFollowers(platform: string, items: ConnectedItem[]): number | null {
+  const it = items.find((i) => i.platform === platform);
+  return it && typeof it.followers_count === "number" ? it.followers_count : null;
 }
 
 /** ¿Todas las redes del negocio están conectadas? (apaga el parpadeo del tab cuando es true). */

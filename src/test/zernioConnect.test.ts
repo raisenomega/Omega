@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { platformLabel, isConnected, allConnected, connectButtonState, type ConnectedItem } from "@/lib/zernioConnect";
+import { platformLabel, isConnected, allConnected, connectButtonState, accountFollowers, type ConnectedItem } from "@/lib/zernioConnect";
 
 describe("zernioConnect · white-label + estado real de conexión", () => {
   it("platformLabel nombra la RED, nunca 'Zernio'", () => {
@@ -34,5 +34,19 @@ describe("zernioConnect · white-label + estado real de conexión", () => {
     expect(connectButtonState(false, false)).toBe("connect");   // ámbar
     expect(connectButtonState(true, false)).toBe("connected");  // verde solo si Zernio confirma
     expect(connectButtonState(true, true)).toBe("connected");   // connected (verdad) gana sobre el estado local
+  });
+
+  // P1 · seguidores reales solo de la verdad de Zernio · null → '—', nunca 0 inventado.
+  it("accountFollowers devuelve el real si conectada, null si no (jamás 0 sintético)", () => {
+    const withFollowers: ConnectedItem[] = [
+      { platform: "instagram", handle: "@z", zernio_account_id: "ig1", followers_count: 5 },
+      { platform: "facebook", handle: "Z", zernio_account_id: "fb1", followers_count: 0 },  // 0 REAL es válido
+      { platform: "tiktok", handle: "@z", zernio_account_id: "tt1", followers_count: null },
+    ];
+    expect(accountFollowers("instagram", withFollowers)).toBe(5);   // real
+    expect(accountFollowers("facebook", withFollowers)).toBe(0);    // 0 real (de Zernio) se respeta
+    expect(accountFollowers("tiktok", withFollowers)).toBeNull();   // dato ausente → '—'
+    expect(accountFollowers("youtube", withFollowers)).toBeNull();  // no conectada → '—'
+    expect(accountFollowers("instagram", [])).toBeNull();           // sin items → '—'
   });
 });

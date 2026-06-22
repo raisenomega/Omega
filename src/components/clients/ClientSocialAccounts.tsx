@@ -25,17 +25,13 @@ import { Plus, Wifi, Trash2, Loader2 } from "lucide-react";
 import { getNetworkIcon } from "@/lib/network-icons";
 import { ZernioConnectButton } from "@/components/clients/ZernioConnectButton";
 import { ZernioPagePicker } from "@/components/clients/ZernioPagePicker";
-import { isConnected, type ConnectedItem } from "@/lib/zernioConnect";
+import { isConnected, accountFollowers, type ConnectedItem } from "@/lib/zernioConnect";
 import { apiGet } from "@/lib/api-client";
-
-const PLATFORMS = [
-  { value: "instagram", label: "Instagram" },
-  { value: "facebook", label: "Facebook" },
-  { value: "tiktok", label: "TikTok" },
-  { value: "twitter", label: "X / Twitter" },
-  { value: "linkedin", label: "LinkedIn" },
-  { value: "youtube", label: "YouTube" },
-];
+import {
+  CONNECTABLE_PLATFORMS,
+  COMING_SOON_PLATFORMS,
+  TAB_PLATFORMS_LEGEND,
+} from "@/lib/social-platforms-tab";
 
 interface ClientSocialAccountsProps {
   clientId: string;
@@ -47,7 +43,6 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [platform, setPlatform] = useState("instagram");
   const [accountName, setAccountName] = useState("");
-  const [followersCount, setFollowersCount] = useState("");
   const [pagePickerPlatform, setPagePickerPlatform] = useState<string | null>(null);  // FB select_page
 
   const { data: accounts, isLoading } = useQuery({
@@ -95,14 +90,13 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      // DEBT-062: columnas reales de social_accounts V3 · approx_followers (00011) ·
-      // status/oauth_status quedan en su default. Antes escribía organization_id/account_url/
-      // followers_count/connected (inexistentes → "Agregar cuenta" daba error).
+      // Cero sintético (P1): NO escribimos approx_followers a mano. Los seguidores reales se traen
+      // de Zernio al VINCULAR (connected-accounts · followers_count) y se muestran en vivo, sin
+      // persistir un número que pueda quedar stale. La cuenta nace solo con handle/plataforma.
       const { error } = await supabase.from("social_accounts").insert({
         client_id: clientId,
         platform,
         account_name: accountName,
-        approx_followers: followersCount ? parseInt(followersCount) : null,
       });
       if (error) throw error;
     },
@@ -111,7 +105,6 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
       queryClient.invalidateQueries({ queryKey: ["social_accounts"] });
       setDialogOpen(false);
       setAccountName("");
-      setFollowersCount("");
       toast({ title: "Cuenta social agregada" });
     },
     onError: (e) => toast({ title: "Error", description: e.message, variant: "destructive" }),
@@ -136,7 +129,7 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
   };
 
   const platformConfig = (p: string) =>
-    PLATFORMS.find((pl) => pl.value === p) || { label: p };
+    CONNECTABLE_PLATFORMS.find((pl) => pl.value === p) || { label: p };
 
   return (
     <>
@@ -162,7 +155,7 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {PLATFORMS.map((p) => {
+                    {CONNECTABLE_PLATFORMS.map((p) => {
                       const { icon: Icon } = getNetworkIcon(p.value);
                       return (
                         <SelectItem key={p.value} value={p.value}>
@@ -175,6 +168,11 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
                     })}
                   </SelectContent>
                 </Select>
+                {/* Coming soon · DEBAJO del picker, NO dentro: informativo, gris, sin botón →
+                    que nadie las confunda con conectables. Habilitar: ver DEBT-PLATFORMS-*. */}
+                <p className="text-[11px] text-muted-foreground/70 pt-1">
+                  Próximamente: {COMING_SOON_PLATFORMS.map((p) => p.label).join(" · ")}
+                </p>
               </div>
               <div className="space-y-2">
                 <Label>Nombre de cuenta *</Label>
@@ -183,15 +181,6 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
                   onChange={(e) => setAccountName(e.target.value)}
                   placeholder="@usuario"
                   required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Seguidores</Label>
-                <Input
-                  type="number"
-                  value={followersCount}
-                  onChange={(e) => setFollowersCount(e.target.value)}
-                  placeholder="0"
                 />
               </div>
               <Button type="submit" className="w-full gradient-primary" disabled={createMutation.isPending}>
@@ -215,6 +204,8 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
           <div className="space-y-2">
             {accounts.map((acc) => {
               const { icon: Icon } = getNetworkIcon(acc.platform);
+              // Seguidores REALES de Zernio (connected-accounts) · null → '—', nunca 0 inventado (P1).
+              const followers = accountFollowers(acc.platform, connected?.items ?? []);
               return (
                 <div
                   key={acc.id}
@@ -224,7 +215,7 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{acc.account_name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {(acc.approx_followers ?? 0).toLocaleString()} seguidores
+                      {followers !== null ? `${followers.toLocaleString()} seguidores` : "—"}
                     </p>
                   </div>
                   {acc.status === "active" && <div className="h-2 w-2 rounded-full bg-success" />}
@@ -247,6 +238,9 @@ export function ClientSocialAccounts({ clientId }: ClientSocialAccountsProps) {
             })}
           </div>
         )}
+        <p className="mt-3 border-t border-border/30 pt-2 text-[11px] leading-relaxed text-muted-foreground/80">
+          {TAB_PLATFORMS_LEGEND}
+        </p>
       </CardContent>
     </Card>
     {pagePickerPlatform && (
