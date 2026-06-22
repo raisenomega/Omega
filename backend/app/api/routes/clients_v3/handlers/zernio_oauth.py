@@ -19,6 +19,19 @@ from app.config import settings
 router = APIRouter()
 
 
+def _account_followers(account: dict, profile_id: str) -> Optional[int]:
+    """followersCount REAL del account SOLO si pertenece a ESTE profile (aislamiento · mismo
+    criterio que _analytics_assembler.followers_total · NUNCA page_follows). None si el profile
+    no casa o no hay dato → la fila muestra '—', JAMÁS 0 inventado: el número real de Zernio es
+    la única fuente (P1 · cero sintético)."""
+    p = account.get("profileId")
+    acc_pid = str(p.get("_id")) if isinstance(p, dict) else (str(p) if p else None)
+    if acc_pid != profile_id:
+        return None
+    fc = account.get("followersCount")
+    return int(fc) if fc is not None else None
+
+
 async def _owned(client_id: str, authorization: Optional[str]) -> tuple[dict, dict]:
     """Devuelve (user, client) · 403 si el user autenticado no es dueño. El user_id se propaga al state
     firmado (connect-url) para atar el stash FB a quien inició el flujo (defensa-en-profundidad)."""
@@ -70,5 +83,7 @@ async def zernio_connected_accounts(client_id: str,
     accounts = await list_accounts(str(pid))
     items = [{"platform": a.get("platform"),
               "handle": a.get("username") or a.get("displayName"),
-              "zernio_account_id": str(a.get("_id"))} for a in accounts if a.get("_id")]
+              "zernio_account_id": str(a.get("_id")),
+              "followers_count": _account_followers(a, str(pid))}  # real de Zernio · None → fila '—'
+             for a in accounts if a.get("_id")]
     return {"profile": str(pid), "items": items}

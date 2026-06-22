@@ -64,3 +64,39 @@ def test_connected_accounts_lista_del_profile(monkeypatch):
     monkeypatch.setattr(zo, "list_accounts", _la)
     out = asyncio.run(zo.zernio_connected_accounts("c1", "auth"))
     assert out["profile"] == "prof_ya" and out["items"][0]["zernio_account_id"] == "ig1"
+
+
+def test_connected_accounts_followers_real_del_profile(monkeypatch):
+    """(a) followersCount REAL viaja en el item para cuentas de ESTE profile."""
+    _auth(monkeypatch, {"id": "c1", "user_id": "u1", "zernio_profile_id": "prof_ya"})
+    async def _la(pid):
+        return [{"_id": "ig1", "platform": "instagram", "username": "@z",
+                 "profileId": "prof_ya", "followersCount": 1234}]
+    monkeypatch.setattr(zo, "list_accounts", _la)
+    out = asyncio.run(zo.zernio_connected_accounts("c1", "auth"))
+    assert out["items"][0]["followers_count"] == 1234   # real de Zernio, no inventado
+
+
+def test_connected_accounts_followers_aislados_por_profile(monkeypatch):
+    """(b) AISLAMIENTO: el followersCount de OTRO negocio NO se cuela (profile no casa → None)."""
+    _auth(monkeypatch, {"id": "c1", "user_id": "u1", "zernio_profile_id": "prof_ya"})
+    async def _la(pid):
+        return [
+            {"_id": "ig1", "platform": "instagram", "profileId": "prof_ya", "followersCount": 1234},
+            {"_id": "ig2", "platform": "instagram", "profileId": "prof_OTRO", "followersCount": 9999},
+        ]
+    monkeypatch.setattr(zo, "list_accounts", _la)
+    out = asyncio.run(zo.zernio_connected_accounts("c1", "auth"))
+    by_id = {i["zernio_account_id"]: i["followers_count"] for i in out["items"]}
+    assert by_id["ig1"] == 1234        # el mío sí
+    assert by_id["ig2"] is None        # el ajeno NO filtra su número (9999 jamás)
+
+
+def test_connected_accounts_sin_followers_no_inventa_cero(monkeypatch):
+    """(c) sin followersCount → None (la fila muestra '—', NUNCA 0 sintético · P1)."""
+    _auth(monkeypatch, {"id": "c1", "user_id": "u1", "zernio_profile_id": "prof_ya"})
+    async def _la(pid):
+        return [{"_id": "ig1", "platform": "instagram", "profileId": "prof_ya"}]  # sin followersCount
+    monkeypatch.setattr(zo, "list_accounts", _la)
+    out = asyncio.run(zo.zernio_connected_accounts("c1", "auth"))
+    assert out["items"][0]["followers_count"] is None   # '—', no 0
