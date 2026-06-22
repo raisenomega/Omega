@@ -3,10 +3,7 @@ import { Info, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
-import { AnalyticsKPIs } from "@/components/analytics/AnalyticsKPIs";
-import { GrowthChart } from "@/components/analytics/GrowthChart";
-import { EngagementChart } from "@/components/analytics/EngagementChart";
-import { BestTimesHeatmap } from "@/components/analytics/BestTimesHeatmap";
+import { AnalyticsResults } from "@/components/analytics/AnalyticsResults";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useProAccess } from "@/hooks/useProAccess";
@@ -22,7 +19,10 @@ export default function Analytics() {
   useTrackOnMount("feature_open", { feature: "analytics" });
 
   const access = useProAccess();
-  const { loading, growthData, engagementData, heatmapData, totalFollowers, bestHour, dataDelay } = useAnalyticsData();
+  const {
+    loading, growthData, engagementData, engagementSeries, postsSeries,
+    heatmapData, totalFollowers, totalReach, profileEngagement, bestHour, dataDelay,
+  } = useAnalyticsData();
   const { activeBusinessId, isReady } = useActiveBusiness();
 
   if (access.loading) return <ProGateLoading />;
@@ -41,7 +41,8 @@ export default function Analytics() {
   if (!activeBusinessId) return <EmptyState feature="Analytics" />;
 
   const hasEngagement = engagementData.length > 0;
-  const hasAnyData = growthData.length > 0 || hasEngagement || heatmapData.length > 0 || totalFollowers !== null;
+  const hasAnyData = growthData.length > 0 || hasEngagement || heatmapData.length > 0
+    || totalFollowers !== null || totalReach !== null || postsSeries.length > 0;
 
   return (
     <div className="space-y-6">
@@ -83,14 +84,17 @@ export default function Analytics() {
         </div>
       )}
 
-      <AnalyticsKPIs followers={totalFollowers} bestHour={bestHour} />
-
-      <div className="grid gap-3 lg:grid-cols-2">
-        <GrowthChart data={growthData} />
-        <EngagementChart data={engagementData} />
-      </div>
-
-      <BestTimesHeatmap data={heatmapData} />
+      <AnalyticsResults
+        growthData={growthData}
+        engagementData={engagementData}
+        engagementSeries={engagementSeries}
+        postsSeries={postsSeries}
+        heatmapData={heatmapData}
+        totalFollowers={totalFollowers}
+        totalReach={totalReach}
+        profileEngagement={profileEngagement}
+        bestHour={bestHour}
+      />
     </div>
   );
 }

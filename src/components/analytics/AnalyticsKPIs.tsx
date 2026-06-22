@@ -1,8 +1,11 @@
-import { Users, Clock, type LucideIcon } from "lucide-react";
+import { Users, Clock, Eye, TrendingUp, type LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { fmtPct } from "@/lib/analytics-series";
 
 interface AnalyticsKPIsProps {
   followers: number | null;
+  totalReach: number | null;
+  profileEngagement: number | null;   // ER histórico (Σinter/Σreach·100) · null → "—"
   bestHour: string | null;
 }
 
@@ -21,17 +24,18 @@ function fmtNumber(n: number | null): string {
 }
 
 // Regla GLOBAL cero-sintéticos: sin dato real → "—" (vacío honesto), NUNCA un número de relleno.
-// SIN KPI engagement % NI KPI Posts (decisión P1): la API no da ER por-post ni ventana 'this period'
-// (el 5/7 vive solo en el panel UI · 7 date-params probados, ignorados) → solo Seguidores + Mejor hora
-// (reales por profileId) + conteos por red abajo. Reintroducir Posts con fuente de ventana honesta.
-export function AnalyticsKPIs({ followers, bestHour }: AnalyticsKPIsProps) {
+// Todo ACUMULADO (la API no tiene ventana · NO "del período"). "Eng. promedio · histórico" = la ÚNICA
+// métrica % · el label "histórico" es OBLIGATORIO (evita leerlo como ER comparable con Zernio).
+export function AnalyticsKPIs({ followers, totalReach, profileEngagement, bestHour }: AnalyticsKPIsProps) {
   const kpis: KPI[] = [
     { label: "Seguidores", value: fmtNumber(followers), icon: Users },
+    { label: "Alcance total", value: fmtNumber(totalReach), icon: Eye },
+    { label: "Eng. promedio · histórico", value: fmtPct(profileEngagement), icon: TrendingUp },
     { label: "Mejor hora", value: bestHour ?? EMPTY, icon: Clock },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {kpis.map((k) => {
         const Icon = k.icon;
         return (
