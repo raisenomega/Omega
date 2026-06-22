@@ -83,7 +83,7 @@ def test_resuelve_por_profileid_aislado(monkeypatch):
     assert out.profile_engagement == 11.0                       # (8+2+0+1)/100*100
     assert [p.model_dump() for p in out.posts_series] == [{"date": "2026-06-21", "count": 3}]
     assert out.engagement_series[0].model_dump()["reach"] == 100
-    assert out.data_delay
+    assert not hasattr(out, "data_delay")        # delay removido (proveedor invisible · Commit 3)
 
 
 def test_anti_solo_uno_funciona(monkeypatch):

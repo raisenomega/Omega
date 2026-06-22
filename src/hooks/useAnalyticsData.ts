@@ -23,7 +23,6 @@ interface AnalyticsResponse {
   total_reach: number | null;
   profile_engagement: number | null;
   best_hour: string | null;
-  data_delay: string | null;
   message: string | null;
 }
 
@@ -46,6 +45,5 @@ export function useAnalyticsData() {
     totalReach: (data?.total_reach ?? null) as number | null,
     profileEngagement: (data?.profile_engagement ?? null) as number | null,
     bestHour: data?.best_hour ?? null,
-    dataDelay: data?.data_delay ?? null,
   };
 }

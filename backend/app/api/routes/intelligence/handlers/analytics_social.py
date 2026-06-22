@@ -28,7 +28,6 @@ from app.bc_cognition.infrastructure import zernio_analytics_adapter as za
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-_DELAY = "Datos de Zernio · pueden tener hasta ~24-48h de retraso."
 _NO_ACCOUNTS = "Conectá tus redes en Cuentas Sociales para ver tus métricas reales."
 
 _TTL = 900.0  # 15 min · el dato de Zernio es de 24-48h, recargas más seguidas no aportan
@@ -85,5 +84,4 @@ async def social_analytics(
         total_reach=met.total_reach(eng_rows),
         profile_engagement=met.profile_engagement(eng_rows),
         best_hour=asm.best_hour(best),
-        data_delay=_DELAY,
     )

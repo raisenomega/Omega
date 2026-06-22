@@ -1,6 +1,4 @@
-import { useState } from "react";
 import { Info, Loader2 } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import { AnalyticsResults } from "@/components/analytics/AnalyticsResults";
@@ -11,17 +9,13 @@ import { ProFeatureGate, ProGateLoading } from "@/components/ProFeatureGate";
 import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 import { EmptyState } from "@/components/common/EmptyState";
 
-type Period = "7d" | "30d" | "90d";
-
 export default function Analytics() {
-  const [selectedClient, setSelectedClient] = useState("all");
-  const [period, setPeriod] = useState<Period>("30d");
   useTrackOnMount("feature_open", { feature: "analytics" });
 
   const access = useProAccess();
   const {
     loading, growthData, engagementData, engagementSeries, postsSeries,
-    heatmapData, totalFollowers, totalReach, profileEngagement, bestHour, dataDelay,
+    heatmapData, totalFollowers, totalReach, profileEngagement, bestHour,
   } = useAnalyticsData();
   const { activeBusinessId, isReady } = useActiveBusiness();
 
@@ -46,25 +40,9 @@ export default function Analytics() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-display font-bold tracking-tight">Analytics</h1>
-          <p className="text-sm text-muted-foreground">Métricas y reportes de rendimiento</p>
-        </div>
-        <div className="flex gap-2">
-          <Select value={selectedClient} onValueChange={setSelectedClient}>
-            <SelectTrigger className="h-8 w-44 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">Todos los clientes</SelectItem></SelectContent>
-          </Select>
-          <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-            <SelectTrigger className="h-8 w-36 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Últimos 7d</SelectItem>
-              <SelectItem value="30d">Últimos 30d</SelectItem>
-              <SelectItem value="90d">Últimos 90d</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Analytics</h1>
+        <p className="text-sm text-muted-foreground">Métricas y reportes de rendimiento</p>
       </div>
 
       {!hasAnyData && (
@@ -74,13 +52,6 @@ export default function Analytics() {
           <Button asChild size="sm" variant="outline" className="h-7 text-xs shrink-0">
             <Link to={`/clients/${activeBusinessId}`}>Conectar en Cuentas Sociales →</Link>
           </Button>
-        </div>
-      )}
-
-      {hasAnyData && dataDelay && (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Info className="h-3.5 w-3.5 shrink-0" />
-          <span>{dataDelay}</span>
         </div>
       )}
 

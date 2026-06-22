@@ -55,8 +55,8 @@ class SocialAnalyticsResponse(BaseModel):
 
     connected=False + message → negocio sin profileId (empty honesto, NO ceros que finjan datos).
     total_followers ← Σ followersCount por profileId (snapshot real) · best_hour ← slot real (derivado).
-    SIN porcentaje de engagement Y SIN KPI Posts (decisión P1: la API no expone ER por-post ni ventana
-    'this period' · solo conteos por red). Arrays/None vacíos si Zernio no da dato · data_delay ~24-48h.
+    ER de perfil = histórico (Σinter/Σreach · None si reach=0 · NUNCA comparable con Zernio). Series
+    (engagement/posts) ACUMULADO: la API no tiene ventana. Arrays/None vacíos si Zernio no da dato.
     """
     connected: bool = False
     growth: list[GrowthPoint] = Field(default_factory=list)
@@ -68,7 +68,6 @@ class SocialAnalyticsResponse(BaseModel):
     total_reach: Optional[int] = None
     profile_engagement: Optional[float] = None  # engagement promedio HISTÓRICO (Σinter/Σreach·100) · '—' si reach=0
     best_hour: Optional[str] = None
-    data_delay: Optional[str] = None
     message: Optional[str] = None
 
 

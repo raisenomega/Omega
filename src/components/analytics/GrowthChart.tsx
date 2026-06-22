@@ -14,7 +14,7 @@ export function GrowthChart({ data }: GrowthChartProps) {
   if (data.length === 0) {
     return (
       <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Crecimiento de seguidores</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Crecimiento de seguidores · Instagram</CardTitle></CardHeader>
         <CardContent className="flex items-center justify-center h-56 text-xs text-muted-foreground text-center">
           Sin historial aún · conecta tus cuentas sociales para ver crecimiento
         </CardContent>
@@ -24,7 +24,8 @@ export function GrowthChart({ data }: GrowthChartProps) {
   return (
     <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Crecimiento de seguidores</CardTitle>
+        <CardTitle className="text-sm">Crecimiento de seguidores · Instagram</CardTitle>
+        <p className="text-[11px] text-muted-foreground">El KPI "Seguidores" arriba es el total de todas las redes.</p>
       </CardHeader>
       <CardContent className="pt-2">
         <ChartContainer config={chartConfig} className="h-56 w-full">
