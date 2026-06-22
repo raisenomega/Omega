@@ -22,7 +22,7 @@ from app.api.routes.intelligence import _analytics_metrics as met
 from app.api.routes.intelligence import _analytics_repository as arepo
 from app.api.routes.intelligence.models import (
     EngagementRow, EngagementSeriesPoint, GrowthPoint, HeatmapCell,
-    PostsSeriesPoint, SocialAnalyticsResponse)
+    NetworkBreakdown, PostsSeriesPoint, SocialAnalyticsResponse)
 from app.bc_cognition.infrastructure import zernio_analytics_adapter as za
 
 router = APIRouter()
@@ -79,6 +79,7 @@ async def social_analytics(
         engagement=[EngagementRow(**e) for e in eng_rows],
         engagement_series=[EngagementSeriesPoint(**s) for s in met.engagement_series(daily)],
         posts_series=[PostsSeriesPoint(**p) for p in met.posts_series(daily)],
+        networks=[NetworkBreakdown(**n) for n in met.networks_breakdown(daily, accounts_api, profile_id)],
         heatmap=[HeatmapCell(**c) for c in asm.heatmap_cells(best)],
         total_followers=asm.followers_total(accounts_api, profile_id),
         total_reach=met.total_reach(eng_rows),

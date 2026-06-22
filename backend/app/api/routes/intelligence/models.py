@@ -6,7 +6,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 from app.api.routes.intelligence._analytics_models import (  # noqa: F401 · re-export (usados abajo)
-    EngagementRow, EngagementSeriesPoint, GrowthPoint, HeatmapCell, PostsSeriesPoint)
+    EngagementRow, EngagementSeriesPoint, GrowthPoint, HeatmapCell, NetworkBreakdown, PostsSeriesPoint)
 
 
 class WebAnalysisResponse(BaseModel):
@@ -63,6 +63,7 @@ class SocialAnalyticsResponse(BaseModel):
     engagement: list[EngagementRow] = Field(default_factory=list)
     engagement_series: list[EngagementSeriesPoint] = Field(default_factory=list)
     posts_series: list[PostsSeriesPoint] = Field(default_factory=list)
+    networks: list[NetworkBreakdown] = Field(default_factory=list)  # per-red para el chip (aditivo · "Todas"=top-level)
     heatmap: list[HeatmapCell] = Field(default_factory=list)
     total_followers: Optional[int] = None
     total_reach: Optional[int] = None
