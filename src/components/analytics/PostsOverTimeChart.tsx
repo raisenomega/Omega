@@ -5,6 +5,7 @@ import type { PostsSeriesPoint } from "@/lib/analytics-series";
 
 interface Props {
   data: PostsSeriesPoint[];
+  networkLabel?: string | null;   // vista por-red → "· [Red]" · sin red → "· acumulado"
 }
 
 const chartConfig = {
@@ -13,11 +14,12 @@ const chartConfig = {
 
 // Publicaciones por día (postCount real de Zernio · ACUMULADO · NO ventana 'this period').
 // Serie vacía → empty state honesto (no barras en cero que finjan actividad).
-export function PostsOverTimeChart({ data }: Props) {
+export function PostsOverTimeChart({ data, networkLabel }: Props) {
+  const title = `Publicaciones por día · ${networkLabel ?? "acumulado"}`;
   if (data.length === 0) {
     return (
       <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Publicaciones por día · acumulado</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">{title}</CardTitle></CardHeader>
         <CardContent className="flex items-center justify-center h-56 text-xs text-muted-foreground text-center">
           Sin publicaciones registradas aún
         </CardContent>
@@ -26,7 +28,7 @@ export function PostsOverTimeChart({ data }: Props) {
   }
   return (
     <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-      <CardHeader className="pb-2"><CardTitle className="text-sm">Publicaciones por día · acumulado</CardTitle></CardHeader>
+      <CardHeader className="pb-2"><CardTitle className="text-sm">{title}</CardTitle></CardHeader>
       <CardContent className="pt-2">
         <ChartContainer config={chartConfig} className="h-56 w-full">
           <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>

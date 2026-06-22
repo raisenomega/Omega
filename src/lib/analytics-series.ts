@@ -40,3 +40,47 @@ export function fmtPct(v: number | null): string {
 export function hasGrowthTrend(points: { date: string; followers: number }[]): boolean {
   return points.length >= 2;
 }
+
+export interface NetworkBreakdown {
+  platform: string;
+  followers: number | null;
+  reach: number;
+  likes: number; comments: number; shares: number; saves: number; views: number;
+  profile_engagement: number | null;
+  engagement_series: EngagementSeriesPoint[];
+  posts_series: PostsSeriesPoint[];
+}
+
+export interface AggregateView {
+  followers: number | null;
+  reach: number | null;
+  er: number | null;
+  engagementSeries: EngagementSeriesPoint[];
+  postsSeries: PostsSeriesPoint[];
+}
+
+export interface ActiveView extends AggregateView {
+  network: string | null;     // plataforma seleccionada (null = "Todas")
+  growthAvailable: boolean;   // crecimiento solo IG (follower-history IG-only) o vista "Todas"
+}
+
+/** Switch de fuente del chip (PURO · testeable). Sin red (o red inexistente) → vista agregada
+ * ("Todas"). Con red → SUS números de networks[sel]. growthAvailable: solo IG o "Todas" (en otra
+ * red el GrowthChart muestra "no disponible", NUNCA datos del perfil disfrazados · regla P1). */
+export function activeAnalyticsView(
+  selected: string | null,
+  networks: NetworkBreakdown[],
+  aggregate: AggregateView,
+): ActiveView {
+  const n = selected ? networks.find((x) => x.platform === selected) : undefined;
+  if (!n) return { ...aggregate, network: null, growthAvailable: true };
+  return {
+    followers: n.followers,
+    reach: n.reach,
+    er: n.profile_engagement,
+    engagementSeries: n.engagement_series,
+    postsSeries: n.posts_series,
+    network: n.platform,
+    growthAvailable: n.platform === "instagram",
+  };
+}

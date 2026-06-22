@@ -5,6 +5,7 @@ import { engagementTotalSeries, type EngagementSeriesPoint } from "@/lib/analyti
 
 interface Props {
   data: EngagementSeriesPoint[];
+  networkLabel?: string | null;   // vista por-red → "· [Red]" · sin red → "· acumulado"
 }
 
 const chartConfig = {
@@ -14,12 +15,13 @@ const chartConfig = {
 // Engagement en el tiempo = Σ interacciones (likes+comments+shares+saves) por día · 1 línea limpia.
 // ACUMULADO (la serie viene all-history del backend · NO "del período"). Serie vacía → empty state
 // honesto (no un chart plano en cero que finja actividad).
-export function EngagementOverTimeChart({ data }: Props) {
+export function EngagementOverTimeChart({ data, networkLabel }: Props) {
   const series = engagementTotalSeries(data);
+  const title = `Engagement en el tiempo · ${networkLabel ?? "acumulado"}`;
   if (series.length === 0) {
     return (
       <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Engagement en el tiempo · acumulado</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">{title}</CardTitle></CardHeader>
         <CardContent className="flex items-center justify-center h-56 text-xs text-muted-foreground text-center">
           Sin engagement aún · publica contenido para ver la evolución
         </CardContent>
@@ -28,7 +30,7 @@ export function EngagementOverTimeChart({ data }: Props) {
   }
   return (
     <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-      <CardHeader className="pb-2"><CardTitle className="text-sm">Engagement en el tiempo · acumulado</CardTitle></CardHeader>
+      <CardHeader className="pb-2"><CardTitle className="text-sm">{title}</CardTitle></CardHeader>
       <CardContent className="pt-2">
         <ChartContainer config={chartConfig} className="h-56 w-full">
           <AreaChart data={series} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>

@@ -2,7 +2,7 @@ import { Star } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface HeatmapCell { day: string; hour: number; value: number }
-interface BestTimesHeatmapProps { data: HeatmapCell[] }
+interface BestTimesHeatmapProps { data: HeatmapCell[]; perfilCompleto?: boolean }
 
 // Día abreviado del backend (_DAY) → nombre completo para el "Mejor momento".
 const FULL_DAY: Record<string, string> = {
@@ -16,12 +16,14 @@ function fmtHour(h: number): string {
 
 // Compacto (FIX UI): solo el MEJOR slot (día + hora del mayor avg_engagement), sin grilla de % en cero.
 // Empty honesto si no hay slots reales.
-export function BestTimesHeatmap({ data }: BestTimesHeatmapProps) {
+export function BestTimesHeatmap({ data, perfilCompleto }: BestTimesHeatmapProps) {
   const top = data.length > 0 ? data.reduce((m, c) => (c.value > m.value ? c : m)) : null;
+  // best-time es per-PERFIL (todas las redes), no por-red · en vista por-red se etiqueta honesto.
+  const title = `Mejor momento para publicar${perfilCompleto ? " · del perfil completo" : ""}`;
 
   return (
     <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-      <CardHeader className="pb-2"><CardTitle className="text-sm">Mejor momento para publicar</CardTitle></CardHeader>
+      <CardHeader className="pb-2"><CardTitle className="text-sm">{title}</CardTitle></CardHeader>
       <CardContent className="pt-2 pb-3">
         {top ? (
           <div className="flex items-center gap-2 text-sm">

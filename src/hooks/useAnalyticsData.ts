@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api-client";
 import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
-import type { EngagementSeriesPoint, PostsSeriesPoint } from "@/lib/analytics-series";
+import type { EngagementSeriesPoint, PostsSeriesPoint, NetworkBreakdown } from "@/lib/analytics-series";
 
 // DEBT-034 ("paridad de verdad" · live-read): analytics REALES vía Zernio, resueltos por profileId.
 // Backend honesto (regla GLOBAL cero-sintéticos): sin profileId → connected=false + vacíos · NUNCA números
@@ -18,6 +18,7 @@ interface AnalyticsResponse {
   engagement: EngagementRow[];
   engagement_series: EngagementSeriesPoint[];
   posts_series: PostsSeriesPoint[];
+  networks: NetworkBreakdown[];
   heatmap: HeatmapCell[];
   total_followers: number | null;
   total_reach: number | null;
@@ -40,6 +41,7 @@ export function useAnalyticsData() {
     engagementData: (data?.engagement ?? []) as EngagementRow[],
     engagementSeries: (data?.engagement_series ?? []) as EngagementSeriesPoint[],
     postsSeries: (data?.posts_series ?? []) as PostsSeriesPoint[],
+    networks: (data?.networks ?? []) as NetworkBreakdown[],
     heatmapData: (data?.heatmap ?? []) as HeatmapCell[],
     totalFollowers: (data?.total_followers ?? null) as number | null,
     totalReach: (data?.total_reach ?? null) as number | null,

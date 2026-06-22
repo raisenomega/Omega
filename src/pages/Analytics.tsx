@@ -14,8 +14,8 @@ export default function Analytics() {
 
   const access = useProAccess();
   const {
-    loading, growthData, engagementData, engagementSeries, postsSeries,
-    heatmapData, totalFollowers, totalReach, profileEngagement, bestHour,
+    loading, growthData, engagementData, engagementSeries, postsSeries, networks,
+    heatmapData, totalFollowers, totalReach, profileEngagement,
   } = useAnalyticsData();
   const { activeBusinessId, isReady } = useActiveBusiness();
 
@@ -60,11 +60,11 @@ export default function Analytics() {
         engagementData={engagementData}
         engagementSeries={engagementSeries}
         postsSeries={postsSeries}
+        networks={networks}
         heatmapData={heatmapData}
         totalFollowers={totalFollowers}
         totalReach={totalReach}
         profileEngagement={profileEngagement}
-        bestHour={bestHour}
       />
     </div>
   );

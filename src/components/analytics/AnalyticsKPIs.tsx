@@ -1,4 +1,4 @@
-import { Users, Clock, Eye, TrendingUp, type LucideIcon } from "lucide-react";
+import { Users, Eye, TrendingUp, type LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { fmtPct } from "@/lib/analytics-series";
 
@@ -6,7 +6,7 @@ interface AnalyticsKPIsProps {
   followers: number | null;
   totalReach: number | null;
   profileEngagement: number | null;   // ER histórico (Σinter/Σreach·100) · null → "—"
-  bestHour: string | null;
+  networkLabel?: string | null;       // si hay red seleccionada → sufijo "· [Red]" (vista por-red)
 }
 
 interface KPI {
@@ -26,16 +26,17 @@ function fmtNumber(n: number | null): string {
 // Regla GLOBAL cero-sintéticos: sin dato real → "—" (vacío honesto), NUNCA un número de relleno.
 // Todo ACUMULADO (la API no tiene ventana · NO "del período"). "Eng. promedio · histórico" = la ÚNICA
 // métrica % · el label "histórico" es OBLIGATORIO (evita leerlo como ER comparable con Zernio).
-export function AnalyticsKPIs({ followers, totalReach, profileEngagement, bestHour }: AnalyticsKPIsProps) {
+// networkLabel → vista por-red: "· [Red]" en cada KPI para que el usuario sepa que NO es agregado.
+export function AnalyticsKPIs({ followers, totalReach, profileEngagement, networkLabel }: AnalyticsKPIsProps) {
+  const suf = networkLabel ? ` · ${networkLabel}` : "";
   const kpis: KPI[] = [
-    { label: "Seguidores", value: fmtNumber(followers), icon: Users },
-    { label: "Alcance total", value: fmtNumber(totalReach), icon: Eye },
-    { label: "Eng. promedio · histórico", value: fmtPct(profileEngagement), icon: TrendingUp },
-    { label: "Mejor hora", value: bestHour ?? EMPTY, icon: Clock },
+    { label: `Seguidores${suf}`, value: fmtNumber(followers), icon: Users },
+    { label: `Alcance total${suf}`, value: fmtNumber(totalReach), icon: Eye },
+    { label: `Eng. promedio · histórico${suf}`, value: fmtPct(profileEngagement), icon: TrendingUp },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       {kpis.map((k) => {
         const Icon = k.icon;
         return (
