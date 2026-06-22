@@ -3,7 +3,7 @@ Handler: Get System Stats
 Dynamic system statistics - no hardcoding
 Filosofía: No velocity, only precision 🐢💎
 """
-from typing import Callable, Dict, Any
+from typing import Callable, Dict, Any, Optional
 from fastapi import HTTPException, FastAPI
 import logging
 from datetime import date
@@ -27,6 +27,30 @@ def _safe_count(label: str, build: Callable[[], Any]) -> int:
     except Exception as e:
         logger.warning(f"get_stats.{label} count failed: {e}")
         return 0
+
+
+def count_active_agents() -> Optional[int]:
+    """Conteo de agents activos para el /health. **None** si la query/init falla — el health debe
+    poder reportar el FALLO en vez de inventar un número (cero-sintético P1). OJO: NO reusa
+    _safe_count porque ese devuelve 0 on failure (conflación fallo-vs-0-real · la mentira que el
+    /health justamente arrastraba con `count else 37`). Acá None=desconocido, 0=cero real."""
+    try:
+        sb = get_supabase_service().client
+        return sb.table("agents").select("id", count="exact").eq("is_active", True).execute().count
+    except Exception as e:
+        logger.warning(f"count_active_agents failed: {e}")
+        return None
+
+
+def build_health(active: Optional[int], sha: str, environment: str) -> Dict[str, Any]:
+    """Payload HONESTO del /health · status DERIVADO del conteo real. 'healthy' SOLO con conteo
+    positivo; None (falló) o 0 (sin agentes) → 'degraded' con detail (jamás inventa un 37, jamás
+    finge la fracción N/N). git_sha/environment se conservan (ya eran honestos)."""
+    base = {"version": "2.0.0", "environment": environment, "git_sha": sha}
+    if not active:
+        return {**base, "status": "degraded",
+                "detail": "agents_count_unavailable" if active is None else "no_active_agents"}
+    return {**base, "status": "healthy", "agents_active": active}
 
 
 async def handle_get_stats(app: FastAPI) -> Dict[str, Any]:

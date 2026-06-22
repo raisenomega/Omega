@@ -281,32 +281,21 @@ app.include_router(sub_brands.router, prefix=settings.api_v1_prefix, tags=["Sub-
 app.include_router(security_dev.router, prefix=settings.api_v1_prefix, tags=["Security Dev 🔐"])
 
 @app.get("/")
-async def root() -> dict[str, str | int]:
+async def root() -> dict[str, object]:
     """Root endpoint with dynamic stats"""
-    from app.api.routes.system.handlers.get_stats import count_routes, get_supabase_service
-    total_endpoints = count_routes(app)
-    try:
-        supabase = get_supabase_service()
-        agents_resp = supabase.client.table("agents").select("id", count="exact").eq("is_active", True).execute()
-        total_agents = agents_resp.count if agents_resp.count else 37
-    except:
-        total_agents = 37
+    from app.api.routes.system.handlers.get_stats import count_routes, count_active_agents
     return {
         "message": "OmegaRaisen API", "version": "2.0.0", "status": "running",
-        "agents": f"{total_agents}/{total_agents}", "endpoints": str(total_endpoints), "docs": "/docs"
+        "agents_active": count_active_agents(),   # int honesto o null · sin 37 inventado, sin "N/N"
+        "endpoints": count_routes(app), "docs": "/docs",
     }
 
 @app.get("/health")
-async def health_check() -> dict[str, str]:
-    """Health check endpoint"""
-    from app.api.routes.system.handlers.get_stats import get_supabase_service
-    try:
-        supabase = get_supabase_service()
-        agents_resp = supabase.client.table("agents").select("id", count="exact").eq("is_active", True).execute()
-        total_agents = agents_resp.count if agents_resp.count else 37
-    except:
-        total_agents = 37
-    return {"status": "healthy", "version": "2.0.0", "agents": f"{total_agents}/{total_agents}", "environment": settings.environment, "git_sha": os.getenv("RAILWAY_GIT_COMMIT_SHA", "unknown")[:7]}
+async def health_check() -> dict[str, object]:
+    """Health check · status DERIVADO del conteo real de agents (no hardcodeado · no inventa 37)."""
+    from app.api.routes.system.handlers.get_stats import build_health, count_active_agents
+    sha = os.getenv("RAILWAY_GIT_COMMIT_SHA", "unknown")[:7]
+    return build_health(count_active_agents(), sha, settings.environment)
 
 @app.get(f"{settings.api_v1_prefix}/status")
 async def api_status() -> dict[str, str | bool]:

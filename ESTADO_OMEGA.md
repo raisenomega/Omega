@@ -85,6 +85,14 @@ Nace en el **arco Reddit + tab Cuentas honesto** (5 commits `08a87b8`→`edd5955
 
 ---
 
+## ✅ DEBT-HEALTH-FALSE-GREEN (21 jun · `/health` honesto · FG1/2/3 RESUELTOS · `/status` nota)
+
+El `/health` reportaba **`"37/37 agents healthy"` sintético** — 3 false-greens (familia del SENTINEL "siempre OK" y del 28): **FG1** `status:"healthy"` literal hardcodeado (hasta el camino `except` lo devolvía) · **FG2** `total_agents = count if count else 37` + `except: 37` → DB caída reportaba **37** igual (y `else 37` enmascaraba un 0 real) · **FG3** `agents:"37/37"` = `count/count` (tautología que finge fracción vivos/totales). **FIX:** `get_stats.count_active_agents()` devuelve **`None` on failure** (NO reusa `_safe_count` que da 0 → reintroduciría FG2) · `get_stats.build_health()` deriva el status del conteo real (healthy solo con conteo>0 · None→`degraded:agents_count_unavailable` · 0→`degraded:no_active_agents`) · campo honesto `agents_active:int` (sin N/N) · `git_sha`/`environment` conservados (ya honestos) · root `/` también limpiado (su gemelo FG2/FG3). 7 tests (3 ramas + blindaje anti-regresión: jamás "N/N", jamás 37, status≠siempre-healthy). Consumidores verificados read-only: nadie parsea `agents:"N/N"` (el SENTINEL network-worker solo mira headers/status del `/health` · los hooks del front leen la TABLA agents) → shape segura de cambiar.
+
+**NOTA `/api/v1/status` (cosmético · NO se tocó · candidato observabilidad):** devuelve `status:"operational"` como **constante sin probe detrás** — no enmascara un check que falle (a diferencia de FG1/2/3 que SÍ mentían salud cuando algo se rompe), es "la API respondió" por construcción. **No agrandar el commit con un probe nuevo.** Cuando se toque observabilidad, derivarlo de un ping real (DB/deps). Hermano de [[gate-pytest-false-green]] / DEBT-VERCEL-NO-TSC-CHECK.
+
+---
+
 ## 📊 ARCO ANALYTICS "PARIDAD DE VERDAD" (21 jun · EN PROD `e5d0f37` · DEBT-034 avanzada · NO cerrar aún)
 
 **EN PROD (`e5d0f37`):** el fix "Paridad de Verdad" está pusheado. El bug **"28 seguidores falsos"** (violación P1: leer `page_follows.total`=26 de ventana como seguidores actuales) está **RESUELTO** — eliminado `page_follows` (su raíz), test anti-28 con `page_follows.total=26` → total=**5≠28**. **DEBT-034 avanzada, NO cerrada** (ver bug abierto abajo).
