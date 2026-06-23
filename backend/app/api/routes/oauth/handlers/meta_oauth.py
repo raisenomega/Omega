@@ -21,7 +21,7 @@ from fastapi import APIRouter, Header, HTTPException, Query
 from fastapi.responses import RedirectResponse
 
 from app.api.routes.auth.auth_utils import get_current_user
-from app.api.routes.content_lab_v3 import _content_lab_repository as repo
+from app.api.routes.content_lab_v3._client_resolver import resolve_client_or_403
 from app.api.routes.oauth._oauth_config import get_oauth_settings
 from app.api.routes.oauth._oauth_token_repository import get_token, store_token
 
@@ -73,13 +73,11 @@ def _verify_state(state: str) -> str:
     return client_id
 
 
-async def _resolve_client_id(authorization: Optional[str]) -> str:
-    """Cliente propio del usuario JWT (mismo patrón que checkout_video_pack)."""
+async def _owned_client_id(client_id: str, authorization: Optional[str]) -> str:
+    """client_id del Switcher + ownership verbatim (resolve_client_or_403 · get_client+user_owns_client).
+    404 si no existe · 403 si ajeno. Aísla: nadie conecta Meta de un negocio que no es suyo."""
     user = await get_current_user(authorization)
-    client = repo.find_client_for_user(user["id"])
-    if not client:
-        raise HTTPException(status_code=403, detail="no_client_for_user")
-    return str(client["id"])
+    return str(resolve_client_or_403(user["id"], client_id)["id"])
 
 
 def _expires_at_iso(expires_in: Optional[int]) -> Optional[str]:
@@ -90,13 +88,14 @@ def _expires_at_iso(expires_in: Optional[int]) -> Optional[str]:
 
 
 @router.get("/meta/authorize")
-async def meta_authorize(authorization: Optional[str] = Header(None)) -> dict[str, str]:
+async def meta_authorize(client_id: str = Query(...),
+                         authorization: Optional[str] = Header(None)) -> dict[str, str]:
     """Construye la URL del dialog OAuth de Meta con state firmado. 503 honesto sin credenciales."""
     settings = get_oauth_settings()
     if not settings.meta_app_id or not settings.meta_app_secret:
         raise HTTPException(status_code=503, detail="meta_not_configured")
-    client_id = await _resolve_client_id(authorization)
-    state = _sign_state(client_id)  # 503 crypto_not_configured si no hay key
+    actor_client_id = await _owned_client_id(client_id, authorization)
+    state = _sign_state(actor_client_id)  # 503 crypto_not_configured si no hay key
     params = {
         "client_id": settings.meta_app_id,
         "redirect_uri": _redirect_uri(),
@@ -171,11 +170,12 @@ async def meta_callback(
 
 
 @router.get("/meta/status")
-async def meta_status(authorization: Optional[str] = Header(None)) -> dict[str, object]:
+async def meta_status(client_id: str = Query(...),
+                      authorization: Optional[str] = Header(None)) -> dict[str, object]:
     """Estado de la conexión Meta del cliente. Nunca 500: fallo de decrypt/creds → connected:false."""
-    client_id = await _resolve_client_id(authorization)
+    actor_client_id = await _owned_client_id(client_id, authorization)
     try:
-        token = await get_token(client_id, "meta")
+        token = await get_token(actor_client_id, "meta")
     except Exception as e:  # noqa: BLE001 · CryptoNotConfigured / decrypt fail → honesto
         logger.info(f"meta status read failed · {e}")
         return {"connected": False, "scopes": None, "external_account_id": None}
