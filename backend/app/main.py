@@ -175,7 +175,7 @@ async def lifespan(app: FastAPI):
     # REX Publicador Autónomo (DEBT-098 · F2) · cada 5 min · 25vo cron job · max_instances=1 (sostiene el lock)
     from app.workers.rex_publisher_worker import run_rex_publisher_job
     scheduler.add_job(run_rex_publisher_job, 'cron', minute='*/5', id='rex_publisher', max_instances=1, replace_existing=True, misfire_grace_time=300)
-    # SOCIAL METRICS snapshot · histórico social organic (Arco 1 · pipeline) · diario 6am UTC
+    # SOCIAL METRICS snapshot · histórico social organic (Arco 1) · diario 6am AST = 10:00 UTC (scheduler en AST, como los 26 crons)
     from app.workers.social_metrics_snapshot_worker import run as run_social_metrics_snapshot
     scheduler.add_job(run_social_metrics_snapshot, 'cron', hour=6, minute=0, id='social_metrics_snapshot', max_instances=1, replace_existing=True)
     scheduler.start()

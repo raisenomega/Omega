@@ -94,7 +94,7 @@ El `/health` reportaba **`"37/37 agents healthy"` sintético** — 3 false-green
 ---
 
 ## ✅ ARCO 1 · PIPELINE HISTÓRICO — `social_metrics` EN PROD (22 jun · cimiento de LUAN)
-**HECHO (prod · verif 6/6):** tabla `social_metrics` (migr 00072 · `63a617c`) + cron diario 6am `social_metrics_snapshot` (`b6efc01` · cron 26→27). Familia 1 = Zernio social organic. **Verif viva:** 80 filas reales (MB 11·OR 10·Wudi 1·Zafacones 58) · aislado por client_id (MB sin filas de OR) · valores==Zernio (MB IG reach per-día suma 155 · OR 11) · NULLs honestos (FB reach0=0-REAL · snapshot-row activity NULL · activity-row followers NULL) · idempotente (RUN2=80, cero dup).
+**HECHO (prod · verif 6/6):** tabla `social_metrics` (migr 00072 · `63a617c`) + cron diario 6am AST=10:00 UTC `social_metrics_snapshot` (`b6efc01` · cron 26→27 · el scheduler corre en AST). Familia 1 = Zernio social organic. **Verif viva:** 80 filas reales (MB 11·OR 10·Wudi 1·Zafacones 58) · aislado por client_id (MB sin filas de OR) · valores==Zernio (MB IG reach per-día suma 155 · OR 11) · NULLs honestos (FB reach0=0-REAL · snapshot-row activity NULL · activity-row followers NULL) · idempotente (RUN2=80, cero dup).
 **Diseño:** per-día actividad (Zernio la da real · NO resta) + snapshot followers (diff entre snapshots) · `UNIQUE(client_id,platform,metric_date)`+profile_id traza · RLS verbatim social_accounts · NULLABLE (NULL=no-dato, nunca 0) · best-effort por negocio.
 **Forward-compat:** familias 2 (ads→`ads_metrics`) y 3 (web/SEO→`web_metrics`) = tablas hermanas TIPADAS futuras (NO jsonb) · `social_metrics` intacta al sumarlas. Cubre parcialmente DEBT-MCP-ANALYTICS (familia 1; 2/3 futuras).
 **SOLO-ESCRITURA:** el panel sigue live-read · LUAN no razona sobre el histórico aún (futuro).

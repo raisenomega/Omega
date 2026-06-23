@@ -1,4 +1,4 @@
-"""Cron diario (6am UTC) · snapshot de social_metrics (Arco 1 · Fase 2 · solo ESCRITURA).
+"""Cron diario (6am AST = 10:00 UTC · el scheduler corre en AST) · snapshot de social_metrics (Arco 1 · Fase 2 · solo ESCRITURA).
 
 Por negocio activo: list_accounts (followers por red) + daily-metrics (actividad per-día) → builder
 honesto → upsert idempotente. BEST-EFFORT por negocio: un fallo de Zernio de uno NO tumba la corrida

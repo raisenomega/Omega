@@ -32,7 +32,7 @@ CREATE TABLE public.social_metrics (
   saves        integer,
   views        integer,
   post_count   integer,
-  captured_at  timestamptz NOT NULL DEFAULT now(),
+  captured_at  timestamptz NOT NULL DEFAULT now(),   -- PRIMERA captura (por diseño NO se re-escribe en upsert) · freshness = metric_date, NO captured_at
   UNIQUE (client_id, platform, metric_date)
 );
 

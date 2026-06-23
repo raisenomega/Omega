@@ -25,7 +25,11 @@ def fetch_active_profiles() -> List[Dict[str, str]]:
 
 
 def upsert_social_metrics(rows: List[Dict[str, Any]]) -> int:
-    """UPSERT por (client_id, platform, metric_date) = idempotente (re-correr no duplica). 0 si vacío."""
+    """UPSERT por (client_id, platform, metric_date) = idempotente (re-correr no duplica). 0 si vacío.
+
+    captured_at NO va en el payload → en conflicto conserva la PRIMERA captura (por diseño · Opción 3).
+    La señal de freshness es metric_date (día nuevo = INSERT fresco), NO captured_at: una re-corrida
+    del mismo día es idempotente e invisible en captured_at — esperado, no deuda."""
     if not rows:
         return 0
     try:
