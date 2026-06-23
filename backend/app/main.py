@@ -80,11 +80,12 @@ def _persistent_jobstore_or_none() -> "SQLAlchemyJobStore | None":
     Fix 22 jun (PASO 1 probado): build_jobstore_url arma la URL desde COMPONENTES (URL.create
     escapa el `@` del password que rompía el parse-string → host '@@...' → caía a in-memory).
     Va DENTRO del try → si algo falla, sigue cayendo a in-memory (red intacta · no crashea)."""
-    raw = (settings.database_url or "").strip()
-    if not raw:
-        return None
     try:
-        from app.infrastructure._jobstore_url import build_jobstore_url
+        from app.infrastructure._jobstore_url import build_jobstore_url, pick_jobstore_url
+        # JOBSTORE_DATABASE_URL (directa · Railway) si está · si no, DATABASE_URL (igual que antes).
+        raw = pick_jobstore_url(os.getenv("JOBSTORE_DATABASE_URL", ""), settings.database_url)
+        if not raw:
+            return None
         engine = create_engine(build_jobstore_url(raw), pool_pre_ping=True)
         with engine.connect():
             pass

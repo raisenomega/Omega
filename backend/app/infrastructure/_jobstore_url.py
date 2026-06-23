@@ -23,3 +23,11 @@ def build_jobstore_url(raw: str) -> Union[URL, str]:
     user, password, host, port, database = m.groups()
     return URL.create("postgresql+psycopg2", username=user, password=password,
                       host=host, port=int(port), database=database)
+
+
+def pick_jobstore_url(override: str, default: str) -> str:
+    """JOBSTORE_DATABASE_URL (override · conexión DIRECTA seteada en Railway · DEBT-047) si está ·
+    si no, default (DATABASE_URL · comportamiento actual). Permite apuntar SOLO el jobstore a la
+    directa sin tocar la DATABASE_URL global ni el resto de la app. Ambos vacíos → "" → caller None."""
+    o = (override or "").strip()
+    return o if o else (default or "").strip()

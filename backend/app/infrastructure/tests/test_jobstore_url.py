@@ -2,7 +2,7 @@
 Prueba con password con @ Y # (escapa TODO, no solo el @). Pura · sin DB (create_engine solo parsea)."""
 from sqlalchemy import create_engine
 
-from app.infrastructure._jobstore_url import build_jobstore_url
+from app.infrastructure._jobstore_url import build_jobstore_url, pick_jobstore_url
 
 
 def test_password_con_arroba_y_especiales_no_envenena_el_host():
@@ -26,3 +26,18 @@ def test_no_parseable_devuelve_raw_para_que_el_caller_caiga_a_in_memory():
     # si no matchea, devuelve el raw → create_engine/el try-except del caller decide (red intacta)
     assert build_jobstore_url("not-a-postgres-url") == "not-a-postgres-url"
     assert build_jobstore_url("") == ""
+
+
+def test_pick_override_gana_cuando_esta():
+    assert pick_jobstore_url("postgresql://direct:5432/db", "postgresql://pooler:6543/db") == "postgresql://direct:5432/db"
+
+
+def test_pick_cae_al_default_cuando_override_vacio():
+    assert pick_jobstore_url("", "postgresql://pooler:6543/db") == "postgresql://pooler:6543/db"
+    assert pick_jobstore_url("   ", "postgresql://pooler:6543/db") == "postgresql://pooler:6543/db"  # blanco → default
+
+
+def test_pick_ambos_vacios_da_vacio_para_que_el_caller_devuelva_none():
+    # ambos vacíos → "" → en _persistent_jobstore_or_none `if not raw: return None` → in-memory (igual que antes)
+    assert pick_jobstore_url("", "") == ""
+    assert pick_jobstore_url(None, None) == ""
