@@ -13,6 +13,7 @@ import { ActiveBusinessProvider } from "@/contexts/ActiveBusinessContext";
 import { ARIADrawer } from "@/components/aria/ARIADrawer";
 import Auth from "./pages/Auth";
 import ZernioReturn from "./pages/ZernioReturn";
+import OAuthAnalyticsReturn from "./pages/OAuthAnalyticsReturn";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
 import Content from "./pages/Content";
@@ -65,6 +66,8 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               {/* B-2 headless · relay del popup OAuth de Zernio · público (corre en el popup · solo postMessage+close) */}
               <Route path="/zernio/return" element={<ZernioReturn />} />
+              {/* Relay del popup OAuth de analítica (Google/Meta) · público · solo postMessage+close */}
+              <Route path="/oauth/return" element={<OAuthAnalyticsReturn />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route
                 path="/dashboard"

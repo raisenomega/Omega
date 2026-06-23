@@ -15,6 +15,7 @@ import { apiGet } from "@/lib/api-client";
 import { useMetaStatus, useMetaOAuth } from "@/hooks/useMetaOAuth";
 
 const mGet = apiGet as ReturnType<typeof vi.fn>;
+const mOpen = vi.fn();
 
 function wrap({ children }: { children: ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
@@ -24,7 +25,7 @@ function wrap({ children }: { children: ReactNode }) {
 describe("useMetaOAuth · client_id de la ruta en la URL (cierra el 422)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    Object.defineProperty(window, "location", { configurable: true, writable: true, value: { href: "" } });
+    window.open = mOpen;   // stub limpio del popup (sin "window.open not implemented" de jsdom)
   });
 
   it("status pasa ?client_id= al backend", async () => {
@@ -38,5 +39,6 @@ describe("useMetaOAuth · client_id de la ruta en la URL (cierra el 422)", () =>
     const { result } = renderHook(() => useMetaOAuth("c1"), { wrapper: wrap });
     result.current.connect.mutate();
     await waitFor(() => expect(mGet).toHaveBeenCalledWith("/oauth/meta/authorize?client_id=c1"));
+    await waitFor(() => expect(mOpen).toHaveBeenCalledWith("https://dialog.example", "_blank", expect.stringContaining("width=600")));
   });
 });

@@ -162,11 +162,11 @@ async def meta_callback(
             expires_at=expires_at, scopes=_SCOPES, external_account_id=page_id,
         )
     except HTTPException:
-        return RedirectResponse(url=f"{front_base}/settings?oauth_error=meta", status_code=302)
+        return RedirectResponse(url=f"{front_base}/oauth/return?provider=meta&status=error", status_code=302)
     except Exception as e:  # noqa: BLE001 · cualquier fallo → redirect honesto (no 500 a Meta)
         logger.error(f"meta callback failed · {e}")
-        return RedirectResponse(url=f"{front_base}/settings?oauth_error=meta", status_code=302)
-    return RedirectResponse(url=f"{front_base}/settings?connected=meta", status_code=302)
+        return RedirectResponse(url=f"{front_base}/oauth/return?provider=meta&status=error", status_code=302)
+    return RedirectResponse(url=f"{front_base}/oauth/return?provider=meta&status=connected", status_code=302)
 
 
 @router.get("/meta/status")

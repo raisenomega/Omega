@@ -15,6 +15,7 @@ import { apiGet } from "@/lib/api-client";
 import { useGoogleStatus, useGoogleConnect } from "@/hooks/useGoogleOAuth";
 
 const mGet = apiGet as ReturnType<typeof vi.fn>;
+const mOpen = vi.fn();
 
 function wrap({ children }: { children: ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
@@ -24,7 +25,7 @@ function wrap({ children }: { children: ReactNode }) {
 describe("useGoogleOAuth · client_id de la ruta en la URL (cierra el 422)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    Object.defineProperty(window, "location", { configurable: true, writable: true, value: { href: "" } });
+    window.open = mOpen;   // stub limpio del popup (sin "window.open not implemented" de jsdom)
   });
 
   it("status pasa ?client_id= al backend", async () => {
@@ -38,5 +39,6 @@ describe("useGoogleOAuth · client_id de la ruta en la URL (cierra el 422)", () 
     const { result } = renderHook(() => useGoogleConnect("c1"), { wrapper: wrap });
     result.current.mutate();
     await waitFor(() => expect(mGet).toHaveBeenCalledWith("/oauth/google/authorize?client_id=c1"));
+    await waitFor(() => expect(mOpen).toHaveBeenCalledWith("https://consent.example", "_blank", expect.stringContaining("width=600")));
   });
 });

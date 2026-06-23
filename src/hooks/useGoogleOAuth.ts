@@ -38,7 +38,7 @@ export function useGoogleConnect(clientId: string) {
       }
       const data = await apiGet<AuthorizeResponse>(`/oauth/google/authorize?client_id=${encodeURIComponent(clientId)}`);
       if (!data.authorize_url) throw new Error("Sin authorize_url en respuesta backend");
-      window.location.href = data.authorize_url; // Redirect externo al consent de Google
+      window.open(data.authorize_url, "_blank", "noopener,noreferrer,width=600,height=720"); // popup · vuelve por /oauth/return
     },
     onError: (e: Error) => {
       const msg = e.message;

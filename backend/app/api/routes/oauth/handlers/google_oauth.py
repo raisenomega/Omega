@@ -143,11 +143,11 @@ async def google_callback(
             })
         if resp.status_code != 200:
             logger.warning(f"google token exchange failed · {resp.status_code} · {resp.text[:200]}")
-            return RedirectResponse(url=f"{base}/settings?oauth_error=google", status_code=302)
+            return RedirectResponse(url=f"{base}/oauth/return?provider=google&status=error", status_code=302)
         token: dict[str, object] = resp.json()
         access_token = str(token.get("access_token") or "")
         if not access_token:
-            return RedirectResponse(url=f"{base}/settings?oauth_error=google", status_code=302)
+            return RedirectResponse(url=f"{base}/oauth/return?provider=google&status=error", status_code=302)
         refresh_token = token.get("refresh_token")
         scope = token.get("scope")
         await store_token(
@@ -160,9 +160,9 @@ async def google_callback(
         raise HTTPException(status_code=503, detail="crypto_not_configured")
     except httpx.HTTPError as e:
         logger.warning(f"google callback http error · {e}")
-        return RedirectResponse(url=f"{base}/settings?oauth_error=google", status_code=302)
+        return RedirectResponse(url=f"{base}/oauth/return?provider=google&status=error", status_code=302)
 
-    return RedirectResponse(url=f"{base}/settings?connected=google", status_code=302)
+    return RedirectResponse(url=f"{base}/oauth/return?provider=google&status=connected", status_code=302)
 
 
 @router.get("/google/status")
