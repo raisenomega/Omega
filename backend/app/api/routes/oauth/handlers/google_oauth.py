@@ -21,7 +21,7 @@ from fastapi import APIRouter, Header, HTTPException, Query
 from fastapi.responses import RedirectResponse
 
 from app.api.routes.auth.auth_utils import get_current_user
-from app.api.routes.content_lab_v3 import _content_lab_repository as repo
+from app.api.routes.content_lab_v3._client_resolver import resolve_client_or_403
 from app.api.routes.oauth._oauth_config import get_oauth_settings
 from app.api.routes.oauth._oauth_token_repository import get_token, store_token
 from app.api.routes.oauth._token_crypto import CryptoNotConfigured
@@ -78,13 +78,11 @@ def _require_google_creds() -> tuple[str, str]:
     return s.google_client_id, s.google_client_secret
 
 
-async def _resolve_client_id(authorization: Optional[str]) -> str:
-    """JWT → cliente propio del usuario. 403 si el usuario no tiene cliente."""
+async def _owned_client_id(client_id: str, authorization: Optional[str]) -> str:
+    """client_id del Switcher + ownership verbatim (resolve_client_or_403 · get_client+user_owns_client).
+    404 si no existe · 403 si ajeno. Aísla: nadie autoriza Google de un negocio que no es suyo."""
     user = await get_current_user(authorization)
-    client = repo.find_client_for_user(user["id"])
-    if not client:
-        raise HTTPException(status_code=403, detail="no_client_for_user")
-    return str(client["id"])
+    return str(resolve_client_or_403(user["id"], client_id)["id"])
 
 
 def _expires_at_iso(expires_in: Optional[int]) -> Optional[str]:
@@ -95,10 +93,11 @@ def _expires_at_iso(expires_in: Optional[int]) -> Optional[str]:
 
 
 @router.get("/google/authorize")
-async def google_authorize(authorization: Optional[str] = Header(None)) -> dict[str, str]:
+async def google_authorize(client_id: str = Query(...),
+                           authorization: Optional[str] = Header(None)) -> dict[str, str]:
     """Devuelve la URL de consentimiento de Google. 503 honesto sin credenciales/crypto."""
     client_id_app, _ = _require_google_creds()
-    actor_client_id = await _resolve_client_id(authorization)
+    actor_client_id = await _owned_client_id(client_id, authorization)
     try:
         state = _sign_state(actor_client_id)
     except CryptoNotConfigured:
@@ -167,9 +166,10 @@ async def google_callback(
 
 
 @router.get("/google/status")
-async def google_status(authorization: Optional[str] = Header(None)) -> dict[str, object]:
+async def google_status(client_id: str = Query(...),
+                        authorization: Optional[str] = Header(None)) -> dict[str, object]:
     """Estado de conexión Google del cliente. NUNCA 500 (fail-soft a connected=False)."""
-    actor_client_id = await _resolve_client_id(authorization)
+    actor_client_id = await _owned_client_id(client_id, authorization)
     try:
         tok = await get_token(actor_client_id, _PROVIDER)
     except Exception as e:  # crypto/DB → honesto sin tumbar el endpoint
