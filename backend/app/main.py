@@ -76,13 +76,16 @@ def _persistent_jobstore_or_none() -> "SQLAlchemyJobStore | None":
     (el 'incompat con 3.13' de DEBT-045 no aplica al runtime desplegado · verificado).
     Verifica conectividad ANTES de comprometer el jobstore · ante CUALQUIER fallo
     (URL no parseable, DB caída, sin permiso) → None → el scheduler cae al MemoryJobStore
-    default · NUNCA rompe el arranque."""
+    default · NUNCA rompe el arranque.
+    Fix 22 jun (PASO 1 probado): build_jobstore_url arma la URL desde COMPONENTES (URL.create
+    escapa el `@` del password que rompía el parse-string → host '@@...' → caía a in-memory).
+    Va DENTRO del try → si algo falla, sigue cayendo a in-memory (red intacta · no crashea)."""
     raw = (settings.database_url or "").strip()
     if not raw:
         return None
-    url = raw.replace("postgres://", "postgresql+psycopg2://", 1) if raw.startswith("postgres://") else raw
     try:
-        engine = create_engine(url, pool_pre_ping=True)
+        from app.infrastructure._jobstore_url import build_jobstore_url
+        engine = create_engine(build_jobstore_url(raw), pool_pre_ping=True)
         with engine.connect():
             pass
         return SQLAlchemyJobStore(engine=engine)
