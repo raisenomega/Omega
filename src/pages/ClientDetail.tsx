@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Users, Globe, UserCheck, FileText, Loader2, Bot, Brain, ClipboardCheck, Lock, Pencil, Trash2 } from "lucide-react";
 import { ariaLevelInfo } from "@/lib/aria-levels";
 import { ClientSocialAccounts } from "@/components/clients/ClientSocialAccounts";
+import { ClientAnalyticsConnect } from "@/components/clients/ClientAnalyticsConnect";
 import { ClientAIConfig } from "@/components/clients/ClientAIConfig";
 import { ClientAgentsActive } from "@/components/clients/ClientAgentsActive";
 import { ClientAgentExecutions } from "@/components/clients/ClientAgentExecutions";
@@ -130,8 +131,9 @@ export default function ClientDetail({ clientId, onEdit, onDelete }: { clientId:
         </TabsList>
 
         {/* Social Accounts Tab */}
-        <TabsContent value="social">
+        <TabsContent value="social" className="space-y-4">
           <ClientSocialAccounts clientId={client.id} />
+          <ClientAnalyticsConnect clientId={client.id} />
         </TabsContent>
 
         {/* Agent Tab · rediseño 2-col · Nivel ARIA + Créditos · fila inferior Agentes activos */}
