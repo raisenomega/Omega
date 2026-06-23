@@ -19,16 +19,17 @@ interface MetaStatusResponse {
 
 // Estado de la conexión Meta del cliente. Hook reservado para el arco Analytics
 // (el connect de analíticas se reconstruye per-negocio ahí · DEBT-ANALYTICS-OAUTH-PER-CLIENT).
-export function useMetaStatus() {
+export function useMetaStatus(clientId: string) {
   return useQuery<MetaStatusResponse>({
-    queryKey: ["meta-oauth-status"],
-    queryFn: () => apiGet<MetaStatusResponse>(`/oauth/meta/status`),
+    queryKey: ["meta-oauth-status", clientId],
+    queryFn: () => apiGet<MetaStatusResponse>(`/oauth/meta/status?client_id=${encodeURIComponent(clientId)}`),
+    enabled: !!clientId,
     staleTime: 30_000,
   });
 }
 
 // connect(): pide la URL del dialog OAuth y redirige el browser a Meta.
-export function useMetaOAuth() {
+export function useMetaOAuth(clientId: string) {
   const { toast } = useToast();
   const { isDemoAccount } = useDemoMode();
   const connect = useMutation({
@@ -38,7 +39,7 @@ export function useMetaOAuth() {
         toast({ title: "Modo demo", description: "Conectar Meta no está disponible en la cuenta de demo." });
         return;
       }
-      const data = await apiGet<AuthorizeResponse>(`/oauth/meta/authorize`);
+      const data = await apiGet<AuthorizeResponse>(`/oauth/meta/authorize?client_id=${encodeURIComponent(clientId)}`);
       if (!data.authorize_url) throw new Error("Sin authorize_url en respuesta backend");
       window.location.href = data.authorize_url; // Redirect externo al dialog de Meta
     },

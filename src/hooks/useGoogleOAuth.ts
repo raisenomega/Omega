@@ -17,17 +17,16 @@ export interface GoogleStatus {
   has_refresh: boolean;
 }
 
-const STATUS_KEY = ["oauth", "google", "status"];
-
-export function useGoogleStatus() {
+export function useGoogleStatus(clientId: string) {
   return useQuery<GoogleStatus, Error>({
-    queryKey: STATUS_KEY,
-    queryFn: () => apiGet<GoogleStatus>(`/oauth/google/status`),
+    queryKey: ["oauth", "google", "status", clientId],
+    queryFn: () => apiGet<GoogleStatus>(`/oauth/google/status?client_id=${encodeURIComponent(clientId)}`),
+    enabled: !!clientId,
     staleTime: 30_000,
   });
 }
 
-export function useGoogleConnect() {
+export function useGoogleConnect(clientId: string) {
   const { toast } = useToast();
   const { isDemoAccount } = useDemoMode();
   return useMutation<void, Error, void>({
@@ -37,7 +36,7 @@ export function useGoogleConnect() {
         toast({ title: "Modo demo", description: "Conectar Google no está disponible en la cuenta de demo." });
         return;
       }
-      const data = await apiGet<AuthorizeResponse>(`/oauth/google/authorize`);
+      const data = await apiGet<AuthorizeResponse>(`/oauth/google/authorize?client_id=${encodeURIComponent(clientId)}`);
       if (!data.authorize_url) throw new Error("Sin authorize_url en respuesta backend");
       window.location.href = data.authorize_url; // Redirect externo al consent de Google
     },
