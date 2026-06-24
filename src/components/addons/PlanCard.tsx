@@ -53,7 +53,8 @@ export function PlanCard({ planCode, currentPlan, clientId, onRequestDowngrade }
           >
             {upgrade.isPending ? "Redirigiendo a Stripe…" : `Subir a ${config.label}`}
           </Button>
-        ) : isDowngrade ? (
+        ) : isDowngrade && currentPlan !== "enterprise" ? (
+          // Enterprise perpetuo (cuenta-dueño · sin sub Stripe) NO ofrece downgrade (pegaría 409).
           <Button variant="secondary" className="w-full" onClick={() => onRequestDowngrade(planCode)}>
             Bajar a {config.label}
           </Button>

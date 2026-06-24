@@ -1,10 +1,10 @@
 // Acceso por plan para el sidebar Y los gates de página (consistencia sidebar↔ruta).
-// Combina useClientPlanStatus (planCode · ya respeta el demo VISTA toggle) con el
-// created_at del cliente para la prueba de 7 días. En demo, el toggle es autoritativo
-// (el trial real NO aplica). Frontend-only.
+// Combina useClientPlanStatus (planCode · client_plans.plan canónica) con el created_at del
+// negocio para la prueba de 7 días. Gatea por el negocio ACTIVO (activeBusinessId · mismo
+// patrón que Dashboard), no por el 1er cliente. Frontend-only.
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useDemoMode } from "./useDemoMode";
+import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 import { useMyPlanStatus } from "./useMyPlanStatus";
 import { useClientPlanStatus } from "./useClientPlanStatus";
 
@@ -19,8 +19,9 @@ export interface ProAccess {
 }
 
 export function useProAccess(): ProAccess {
-  const demo = useDemoMode();
-  const { clientId } = useMyPlanStatus();
+  const { activeBusinessId } = useActiveBusiness();
+  const { clientId: myClientId } = useMyPlanStatus();
+  const clientId = activeBusinessId ?? myClientId;  // negocio ACTIVO (no el 1ero · limit 1)
   const plan = useClientPlanStatus(clientId ?? "");
 
   const createdQuery = useQuery({
@@ -34,22 +35,20 @@ export function useProAccess(): ProAccess {
       if (error) throw error;
       return data?.created_at ?? null;
     },
-    enabled: !!clientId && !demo.isDemoAccount,
+    enabled: !!clientId,
   });
 
   const createdAt = createdQuery.data ?? null;
-  const realInTrial = createdAt
+  const inTrial = createdAt
     ? (Date.now() - new Date(createdAt).getTime()) / 86400000 < TRIAL_DAYS
     : false;
-  // Demo: el toggle VISTA (planCode) manda · el trial real se ignora.
-  const inTrial = realInTrial && !demo.isDemoAccount;
 
   const code = plan.planCode;
   const hasBasic = code === "basic" || code === "pro" || code === "enterprise" || inTrial;
   const hasPro = code === "pro" || code === "enterprise" || inTrial;
 
   return {
-    loading: plan.loading || (createdQuery.isLoading && !demo.isDemoAccount),
+    loading: plan.loading || createdQuery.isLoading,
     clientId,
     hasBasic,
     hasPro,

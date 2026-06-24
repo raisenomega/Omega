@@ -10,7 +10,6 @@ import { createElement, type ReactNode } from "react";
 
 vi.mock("@/lib/api-client", () => ({ apiGet: vi.fn() }));
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
-vi.mock("@/hooks/useDemoMode", () => ({ useDemoMode: () => ({ isDemoAccount: false }) }));
 import { apiGet } from "@/lib/api-client";
 import { useGoogleStatus, useGoogleConnect } from "@/hooks/useGoogleOAuth";
 

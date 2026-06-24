@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
-import { DemoModeToggle } from "./DemoModeToggle";
 
 export function SidebarUserFooter() {
   const { user, signOut } = useAuth();
@@ -58,7 +57,6 @@ export function SidebarUserFooter() {
         sideOffset={8}
         className="w-56"
       >
-        <DemoModeToggle />
         <DropdownMenuItem onClick={() => navigate("/settings")}>
           <UserIcon className="mr-2 h-4 w-4" />
           Mi Perfil

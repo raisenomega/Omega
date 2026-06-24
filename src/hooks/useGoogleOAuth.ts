@@ -1,7 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api-client";
 import { useToast } from "./use-toast";
-import { useDemoMode } from "./useDemoMode";
 
 // Google OAuth (Analytics + Search Console) · RONDA D. Patrón espejo de useVideoPackCheckout.
 // connect() redirige al consent de Google · useGoogleStatus() refleja si el cliente ya conectó.
@@ -28,14 +27,8 @@ export function useGoogleStatus(clientId: string) {
 
 export function useGoogleConnect(clientId: string) {
   const { toast } = useToast();
-  const { isDemoAccount } = useDemoMode();
   return useMutation<void, Error, void>({
     mutationFn: async () => {
-      // Demo Mode: la cuenta demo NUNCA dispara el OAuth real de Google.
-      if (isDemoAccount) {
-        toast({ title: "Modo demo", description: "Conectar Google no está disponible en la cuenta de demo." });
-        return;
-      }
       const data = await apiGet<AuthorizeResponse>(`/oauth/google/authorize?client_id=${encodeURIComponent(clientId)}`);
       if (!data.authorize_url) throw new Error("Sin authorize_url en respuesta backend");
       window.open(data.authorize_url, "_blank", "noopener,noreferrer,width=600,height=720"); // popup · vuelve por /oauth/return

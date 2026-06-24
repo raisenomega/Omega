@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "./use-toast";
-import { useDemoMode } from "./useDemoMode";
 import { apiPost } from "@/lib/api-client";
 
 interface ScheduleDowngradeInput {
@@ -20,15 +19,10 @@ interface ScheduleDowngradeInput {
  */
 export function useScheduleDowngrade(onDone?: () => void) {
   const { toast } = useToast();
-  const { isDemoAccount } = useDemoMode();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ clientId, targetPlan }: ScheduleDowngradeInput) => {
-      if (isDemoAccount) {
-        toast({ title: "Modo demo", description: 'Cambiá el plan con el toggle "Vista" del menú de usuario · sin cobro.' });
-        return;
-      }
       await apiPost<{ success: boolean }>(`/billing/schedule-downgrade`, {
         client_id: clientId,
         target_plan: targetPlan,
