@@ -8,12 +8,12 @@ import asyncio
 import pytest
 
 import app.workers.rex_publish_fn as fn
-import app.bc_cognition.infrastructure.rex_publish_repository as repo
+import app.bc_cognition.infrastructure.rex_live_repository as live
 
 
 def _keys(monkeypatch: pytest.MonkeyPatch, master: bool, reseller: bool) -> None:
-    monkeypatch.setattr(repo, "rex_live_enabled", lambda: master)
-    monkeypatch.setattr(repo, "reseller_rex_live", lambda cid: reseller)
+    monkeypatch.setattr(live, "rex_live_enabled", lambda: master)
+    monkeypatch.setattr(live, "reseller_rex_live", lambda cid: reseller)
 
 
 def test_master_off_is_shadow(monkeypatch: pytest.MonkeyPatch) -> None:

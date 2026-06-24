@@ -1,51 +1,41 @@
 """Repository REX · datos del publicador autónomo (DDD A1/A9 · service_role · I/O sync→to_thread)."""
 import logging
-import os
 from collections import Counter
 from datetime import datetime, timezone
 from typing import Any, Optional
 from app.infrastructure.supabase_service import get_supabase_service
+from app.bc_cognition.infrastructure import owner_accounts_repository as owners
 
 logger = logging.getLogger(__name__)
-
-_TRUE = {"1", "true", "yes", "on"}
 
 
 def _sb() -> Any:
     return get_supabase_service().client
 
 
-def rex_live_enabled() -> bool:
-    """Maestro global · REX publica solo si ON (default OFF · env directo · no entra en config.py por C4)."""
-    return os.getenv("REX_LIVE_ENABLED", "").strip().lower() in _TRUE
-
-
-def reseller_rex_live(client_id: str) -> bool:
-    """2da llave: ¿el reseller DUEÑO del cliente tiene rex_live_enabled=true? · fail-safe False."""
-    try:
-        c = _sb().table("clients").select("reseller_id").eq("id", client_id).limit(1).execute()
-        rid = c.data[0].get("reseller_id") if c.data else None
-        r = _sb().table("resellers").select("rex_live_enabled").eq("id", str(rid)).limit(1).execute()
-        return bool(r.data and r.data[0].get("rex_live_enabled"))
-    except Exception as e:
-        logger.error(f"rex.reseller_rex_live failed client={client_id}: {e}", exc_info=True)
-        return False
-
-
 def fetch_active_rex_client_ids() -> list[str]:
-    """client_ids con add-on comprado Y toggle encendido (el universo que REX recorre)."""
-    r = (_sb().table("clients").select("id")
-         .eq("rex_addon_active", True).eq("autonomous_mode_on", True).execute())
-    return [str(row["id"]) for row in (r.data or [])]
+    """Universo REX: (add-on comprado OR cuenta-dueño exenta) Y toggle encendido.
+    El toggle filtra server-side en el query · el add-on EFECTIVO se resuelve con OR owners."""
+    owner_ids = owners.fetch_owner_user_ids()
+    r = (_sb().table("clients").select("id, rex_addon_active, user_id")
+         .eq("autonomous_mode_on", True).execute())
+    return [str(row["id"]) for row in (r.data or [])
+            if row.get("rex_addon_active") or str(row.get("user_id")) in owner_ids]
 
 
 def fetch_client_gating(client_id: str) -> Optional[dict[str, Any]]:
-    """Flags + identidad del cliente · None si no se pudo leer (caller = fail-safe, no evalúa)."""
+    """Flags + identidad del cliente · None si no se pudo leer (caller = fail-safe, no evalúa).
+    rex_addon_active EFECTIVO = almacenado OR cuenta-dueño exenta (owner_accounts · migr 00074)."""
     try:
         r = (_sb().table("clients")
              .select("rex_addon_active, autonomous_mode_on, crisis_active, user_id, reseller_id")
              .eq("id", client_id).limit(1).execute())
-        return r.data[0] if r.data else None
+        if not r.data:
+            return None
+        row = r.data[0]
+        row["rex_addon_active"] = (bool(row.get("rex_addon_active"))
+                                   or str(row.get("user_id")) in owners.fetch_owner_user_ids())
+        return row
     except Exception as e:
         logger.error(f"rex.fetch_client_gating failed client={client_id}: {e}", exc_info=True)
         return None
