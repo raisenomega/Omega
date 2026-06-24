@@ -48,7 +48,11 @@ async def set_autonomous_mode(
 ) -> dict[str, bool]:
     user = await get_current_user(authorization)
     client = resolve_client_or_403(user["id"], request.client_id)  # 404/403 si no es dueño
-    if request.enabled and not client.get("rex_addon_active"):
+    # Add-on EFECTIVO (mismo helper que el GET y el worker): columna OR cuenta-dueño exenta.
+    # El GET ya muestra el toggle a cuentas-dueño → el guard del PATCH debe dejarlas ENCENDER
+    # (antes leía la columna cruda → mostraba pero bloqueaba). Consentimiento sigue del owner.
+    if request.enabled and not owners.is_rex_addon_effective(
+            client.get("rex_addon_active"), client.get("user_id")):
         raise HTTPException(status_code=403, detail="rex_addon_not_active")
     sb = get_supabase_service()
     sb.client.table("clients").update(

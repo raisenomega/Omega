@@ -28,7 +28,8 @@ class _FakeTable:
         return None
 
 
-def _setup(monkeypatch: pytest.MonkeyPatch, client: dict[str, Any]) -> dict[str, Any]:
+def _setup(monkeypatch: pytest.MonkeyPatch, client: dict[str, Any],
+           owner_ids: list[str] | None = None) -> dict[str, Any]:
     store: dict[str, Any] = {}
 
     async def _user(auth: object) -> dict[str, str]:
@@ -37,6 +38,7 @@ def _setup(monkeypatch: pytest.MonkeyPatch, client: dict[str, Any]) -> dict[str,
     monkeypatch.setattr(am, "resolve_client_or_403", lambda uid, cid: client)
     monkeypatch.setattr(am, "get_supabase_service",
                         lambda: SimpleNamespace(client=SimpleNamespace(table=lambda t: _FakeTable(store))))
+    monkeypatch.setattr(owners, "fetch_owner_user_ids", lambda: set(owner_ids or []))
     return store
 
 
@@ -62,6 +64,41 @@ def test_disable_always_ok(monkeypatch: pytest.MonkeyPatch) -> None:
     out = asyncio.run(am.set_autonomous_mode(req, "auth"))
     assert out == {"autonomous_mode_on": False}
     assert store["update"] == {"autonomous_mode_on": False}
+
+
+def test_patch_owner_account_enable_ok(monkeypatch: pytest.MonkeyPatch) -> None:
+    # EL FIX A1.2: cuenta-dueño · columna False · efectivo True → encender PERMITIDO (200), no 403.
+    store = _setup(monkeypatch, {"id": "c1", "user_id": "u-own", "rex_addon_active": False},
+                   owner_ids=["u-own"])
+    req = am.AutonomousModeRequest(client_id="c1", enabled=True)
+    out = asyncio.run(am.set_autonomous_mode(req, "auth"))
+    assert out == {"autonomous_mode_on": True}
+    assert store["update"] == {"autonomous_mode_on": True}
+
+
+def test_patch_normal_sin_addon_enable_403(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Cuenta normal (no dueña) sin add-on real → sigue 403 (no se rompió para los demás).
+    _setup(monkeypatch, {"id": "c1", "user_id": "u-free", "rex_addon_active": False},
+           owner_ids=["u-own"])
+    req = am.AutonomousModeRequest(client_id="c1", enabled=True)
+    with pytest.raises(HTTPException) as e:
+        asyncio.run(am.set_autonomous_mode(req, "auth"))
+    assert e.value.status_code == 403 and e.value.detail == "rex_addon_not_active"
+
+
+def test_patch_aislamiento_cuenta_ajena_403(monkeypatch: pytest.MonkeyPatch) -> None:
+    # La exención cambia el guard del add-on, NO el acceso: ownership sigue mandando.
+    async def _user(auth: object) -> dict[str, str]:
+        return {"id": "u1"}
+    monkeypatch.setattr(am, "get_current_user", _user)
+
+    def _deny(uid: str, cid: str) -> dict[str, Any]:
+        raise HTTPException(status_code=403, detail="client_access_denied")
+    monkeypatch.setattr(am, "resolve_client_or_403", _deny)
+    req = am.AutonomousModeRequest(client_id="c1", enabled=True)
+    with pytest.raises(HTTPException) as e:
+        asyncio.run(am.set_autonomous_mode(req, "auth"))
+    assert e.value.status_code == 403 and e.value.detail == "client_access_denied"
 
 
 # ── GET autonomous-mode · rex_addon_active EFECTIVO (exención owner_accounts llega a la UI) ──
