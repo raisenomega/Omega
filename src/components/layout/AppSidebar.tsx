@@ -109,7 +109,7 @@ function LockedItem({ item, onLocked }: { item: NavItemDef; onLocked: () => void
 }
 
 export function AppSidebar() {
-  const { hasBasic, hasPro } = useProAccess();
+  const { hasPro } = useProAccess();
   const { isSuperOwner } = useSuperOwner();
   const { isReseller } = useIsReseller();
   const { toast } = useToast();
@@ -132,18 +132,13 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="[scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {/* PRINCIPAL · colapsable · badge PRO (azul) si hasPro · si no, BÁSICO (amber) */}
+        {/* PRINCIPAL · colapsable · sin badge de plan (la barra del dashboard muestra el plan real) */}
         <Collapsible defaultOpen className="group/principal">
           <SidebarGroup>
             <SidebarGroupLabel asChild>
               <CollapsibleTrigger className="flex w-full items-center">
                 <ChevronDown className="mr-1 h-3.5 w-3.5 transition-transform group-data-[state=closed]/principal:-rotate-90" />
                 Principal
-                {hasPro ? (
-                  <PlanBadge label="PRO" lit color="blue" />
-                ) : (
-                  <PlanBadge label="BÁSICO" lit={hasBasic} color="amber" />
-                )}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             <CollapsibleContent>
