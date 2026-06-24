@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGoogleStatus, useGoogleConnect } from "@/hooks/useGoogleOAuth";
 import { AnalyticsConnectButton } from "@/components/clients/AnalyticsConnectButton";
+import { GooglePropertyPicker } from "@/components/clients/GooglePropertyPicker";
 
 interface Props { clientId: string; }
 
@@ -39,6 +40,7 @@ export function ClientAnalyticsConnect({ clientId }: Props) {
           label="Google" sublabel="Analítica web · sesiones, clics y búsquedas (GA4 + Search Console)"
           connected={!!gStatus.data?.connected} isPending={gConnect.isPending}
           onConnect={() => gConnect.mutate()} />
+        <GooglePropertyPicker clientId={clientId} connected={!!gStatus.data?.connected} />
         <p className="border-t border-border/30 pt-2 text-[11px] leading-relaxed text-muted-foreground/80">
           Una vez conectada, los números y gráficas aparecen en el Centro de Inteligencia, actualizándose solos.
         </p>

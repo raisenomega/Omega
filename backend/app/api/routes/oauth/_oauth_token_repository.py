@@ -49,3 +49,18 @@ def _get_sync(client_id: str, provider: str) -> Optional[dict]:
 async def get_token(client_id: str, provider: str) -> Optional[dict]:
     """Lee + descifra el token del cliente para el proveedor. None si no existe."""
     return await asyncio.to_thread(_get_sync, client_id, provider)
+
+
+def _set_external_sync(client_id: str, provider: str, external_account_id: str) -> int:
+    sb = get_supabase_service().client
+    r = (sb.table("oauth_tokens")
+         .update({"external_account_id": external_account_id,
+                  "updated_at": datetime.now(timezone.utc).isoformat()})
+         .eq("client_id", client_id).eq("provider", provider).execute())
+    return len(r.data or [])
+
+
+async def set_external_account_id(client_id: str, provider: str, external_account_id: str) -> int:
+    """UPDATE de SOLO external_account_id sobre la fila (client_id,provider) EXISTENTE (ya creada al
+    conectar · NO usa store_token, que exige access_token NOT NULL). Devuelve filas afectadas (0 si no existe)."""
+    return await asyncio.to_thread(_set_external_sync, client_id, provider, external_account_id)

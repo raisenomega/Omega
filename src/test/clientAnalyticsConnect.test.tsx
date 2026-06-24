@@ -11,6 +11,8 @@ vi.mock("@/hooks/useGoogleOAuth", () => ({
   useGoogleStatus: () => gStatus,
   useGoogleConnect: () => ({ mutate: gMutate, isPending: false }),
 }));
+// El picker tiene su propio test (googlePropertyPicker.test) · acá se aísla (usa useQueryClient).
+vi.mock("@/components/clients/GooglePropertyPicker", () => ({ GooglePropertyPicker: () => null }));
 import { ClientAnalyticsConnect } from "@/components/clients/ClientAnalyticsConnect";
 
 describe("ClientAnalyticsConnect · estado honesto (el verde lo da el status, no el popup · P1)", () => {
