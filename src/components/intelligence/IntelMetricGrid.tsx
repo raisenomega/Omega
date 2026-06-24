@@ -11,7 +11,7 @@ interface IntelMetricGridProps {
 
 // Grilla de métricas REALES (Fase 2). Solo muestra un número cuando viene del backend
 // (value !== undefined). Si falta una métrica, esa celda dice "Sin datos" en vez de
-// inventar un valor (regla cero-mocks). Compartido por MetaIntelChip y GoogleIntelChip.
+// inventar un valor (regla cero-mocks). Compartido por GoogleIntelChip.
 export function IntelMetricGrid({ cells }: IntelMetricGridProps) {
   return (
     <div className="grid grid-cols-3 gap-2">
