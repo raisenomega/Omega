@@ -1,4 +1,4 @@
-"""GET /intelligence/chips/meta · /intelligence/chips/google · Centro de Inteligencia Fase 2.
+"""GET /intelligence/chips/google · Centro de Inteligencia Fase 2.
 
 Auth: JWT → cliente propio del usuario (find_client_for_user · mismo patrón que los flujos
 OAuth de RONDA D). Cada chip lee el token del cliente y consulta la API real del proveedor.
@@ -17,12 +17,10 @@ from app.api.routes.content_lab_v3 import _content_lab_repository as repo
 from app.api.routes.content_lab_v3._client_resolver import resolve_client_or_403
 from app.api.routes.intelligence import _intelligence_repository as intel_repo
 from app.api.routes.intelligence._google_insights import fetch_google_insights
-from app.api.routes.intelligence._meta_insights import fetch_meta_insights
 from app.api.routes.intelligence.models import ChipResponse
 
 router = APIRouter()
 
-_NOT_CONNECTED_META = "Conectá Meta para ver tus métricas reales (seguidores, engagement, alcance)."
 _NOT_CONNECTED_GOOGLE = "Conectá Google para ver tus métricas reales (sesiones, clics, impresiones)."
 _EMPTY = "Conectado, pero todavía no hay métricas disponibles para mostrar."
 _ERROR = "No pudimos leer las métricas en este momento. Reintentá en unos minutos."
@@ -48,17 +46,6 @@ def _to_response(result: dict[str, object], not_connected_msg: str) -> ChipRespo
     if state == "empty":
         return ChipResponse(connected=True, metrics=None, message=_EMPTY)
     return ChipResponse(connected=True, metrics=None, message=_ERROR)
-
-
-@router.get("/chips/meta", response_model=ChipResponse)
-async def meta_chip(
-    authorization: Optional[str] = Header(None),
-    client_id: Optional[str] = Query(None),  # Switcher V1: negocio activo · ausente → legacy
-) -> ChipResponse:
-    """Métricas reales de Meta del cliente · honesto si no está conectado."""
-    resolved = await _resolve_client_id(authorization, client_id)
-    result = await fetch_meta_insights(resolved)
-    return _to_response(result, _NOT_CONNECTED_META)
 
 
 @router.get("/chips/google", response_model=ChipResponse)
