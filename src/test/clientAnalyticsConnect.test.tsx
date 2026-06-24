@@ -1,44 +1,35 @@
 // @vitest-environment jsdom
-// B3b · sección Analítica del tab Cuentas · estados HONESTOS (P1): el verde lo da el status REAL
-// (/oauth/{provider}/status), NO abrir el popup. Google y Meta son independientes. Cero Zernio visible.
+// B3b · sección Analítica del tab Cuentas · estado HONESTO (P1): el verde lo da el status REAL
+// (/oauth/google/status), NO abrir el popup. (Meta retirado · solo Google.) Cero Zernio visible.
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 
 const gMutate = vi.fn();
-const mMutate = vi.fn();
 const gStatus: { data: { connected: boolean }; refetch: () => void } = { data: { connected: false }, refetch: vi.fn() };
-const mStatus: { data: { connected: boolean }; refetch: () => void } = { data: { connected: false }, refetch: vi.fn() };
 
 vi.mock("@/hooks/useGoogleOAuth", () => ({
   useGoogleStatus: () => gStatus,
   useGoogleConnect: () => ({ mutate: gMutate, isPending: false }),
 }));
-vi.mock("@/hooks/useMetaOAuth", () => ({
-  useMetaStatus: () => mStatus,
-  useMetaOAuth: () => ({ connect: { mutate: mMutate, isPending: false } }),
-}));
 import { ClientAnalyticsConnect } from "@/components/clients/ClientAnalyticsConnect";
 
-describe("ClientAnalyticsConnect · estados honestos (el verde lo da el status, no el popup · P1)", () => {
+describe("ClientAnalyticsConnect · estado honesto (el verde lo da el status, no el popup · P1)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     gStatus.data = { connected: false };
-    mStatus.data = { connected: false };
   });
-  afterEach(() => cleanup());   // sin esto el DOM se acumula entre tests → "multiple elements"
+  afterEach(() => cleanup());
 
-  it("no conectado → 2 botones Conectar Google + Conectar Meta", () => {
+  it("no conectado → botón Conectar Google", () => {
     render(<ClientAnalyticsConnect clientId="c1" />);
     expect(screen.getByText("Conectar Google")).toBeTruthy();
-    expect(screen.getByText("Conectar Meta")).toBeTruthy();
   });
 
-  it("Google conectado → 'Conectado' para Google · Meta sigue 'Conectar Meta' (independientes)", () => {
+  it("Google conectado → 'Conectado' (sin botón Conectar Google)", () => {
     gStatus.data = { connected: true };
     render(<ClientAnalyticsConnect clientId="c1" />);
     expect(screen.getByText("Conectado")).toBeTruthy();
     expect(screen.queryByText("Conectar Google")).toBeNull();
-    expect(screen.getByText("Conectar Meta")).toBeTruthy();
   });
 
   it("click 'Conectar Google' → dispara connect.mutate", () => {

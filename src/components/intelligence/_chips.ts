@@ -1,4 +1,4 @@
-export type ChipId = "resumen" | "seo" | "geo" | "aeo" | "meta" | "google";
+export type ChipId = "resumen" | "seo" | "geo" | "aeo" | "google";
 
 export interface Chip {
   id: ChipId;
@@ -10,6 +10,5 @@ export const INTELLIGENCE_CHIPS: readonly Chip[] = [
   { id: "seo",     label: "SEO" },
   { id: "geo",     label: "GEO" },
   { id: "aeo",     label: "AEO" },
-  { id: "meta",    label: "Meta" },
   { id: "google",  label: "Google" },
 ];

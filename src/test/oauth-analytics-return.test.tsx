@@ -43,10 +43,10 @@ describe("OAuthAnalyticsReturn · relay por BroadcastChannel (espejo de Zernio �
     expect(close).toHaveBeenCalled();
   });
 
-  it("reenvia meta/error tal cual (para refetch · NO pinta verde)", () => {
-    renderAt("?provider=meta&status=error");
+  it("reenvia google/error tal cual (para refetch · NO pinta verde)", () => {
+    renderAt("?provider=google&status=error");
     expect(posted).toContainEqual({
-      name: "oauth-analytics", msg: { source: "oauth-analytics", provider: "meta", status: "error" },
+      name: "oauth-analytics", msg: { source: "oauth-analytics", provider: "google", status: "error" },
     });
   });
 
