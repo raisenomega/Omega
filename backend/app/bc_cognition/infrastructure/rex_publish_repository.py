@@ -20,7 +20,7 @@ def fetch_active_rex_client_ids() -> list[str]:
     r = (_sb().table("clients").select("id, rex_addon_active, user_id")
          .eq("autonomous_mode_on", True).execute())
     return [str(row["id"]) for row in (r.data or [])
-            if row.get("rex_addon_active") or str(row.get("user_id")) in owner_ids]
+            if owners.is_rex_addon_effective(row.get("rex_addon_active"), row.get("user_id"), owner_ids)]
 
 
 def fetch_client_gating(client_id: str) -> Optional[dict[str, Any]]:
@@ -33,8 +33,8 @@ def fetch_client_gating(client_id: str) -> Optional[dict[str, Any]]:
         if not r.data:
             return None
         row = r.data[0]
-        row["rex_addon_active"] = (bool(row.get("rex_addon_active"))
-                                   or str(row.get("user_id")) in owners.fetch_owner_user_ids())
+        row["rex_addon_active"] = owners.is_rex_addon_effective(
+            row.get("rex_addon_active"), row.get("user_id"))
         return row
     except Exception as e:
         logger.error(f"rex.fetch_client_gating failed client={client_id}: {e}", exc_info=True)

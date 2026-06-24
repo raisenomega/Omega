@@ -86,3 +86,10 @@ def test_aislamiento_owner_no_contamina_otros(monkeypatch: pytest.MonkeyPatch) -
     _wire(monkeypatch, [_client("c-own", OWNER, addon=False, toggle=True),
                         _client("c-free", OTHER, addon=False, toggle=True)], [OWNER])
     assert repo.fetch_active_rex_client_ids() == ["c-own"]
+
+
+def test_helper_efectivo_es_una_sola_verdad() -> None:
+    # is_rex_addon_effective = la regla compartida (worker + endpoint la reusan · no se duplica).
+    assert owners.is_rex_addon_effective(False, OWNER, {OWNER}) is True   # exento por dueño
+    assert owners.is_rex_addon_effective(True, OTHER, set()) is True      # add-on real en columna
+    assert owners.is_rex_addon_effective(False, OTHER, {OWNER}) is False  # ni dueño ni add-on

@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.calendar_v3._access import resolve_client_or_403
+from app.bc_cognition.infrastructure import owner_accounts_repository as owners
 from app.infrastructure.supabase_service import get_supabase_service
 
 router = APIRouter()
@@ -25,11 +26,17 @@ async def get_autonomous_mode(
     client_id: str,
     authorization: Optional[str] = Header(None),
 ) -> dict[str, bool]:
-    """Flags del negocio para renderizar el toggle (gating + estado actual)."""
+    """Flags del negocio para renderizar el toggle (gating + estado actual).
+
+    rex_addon_active EFECTIVO (mismo helper que el worker): columna OR cuenta-dueño exenta
+    (owner_accounts) → la exención llega a la UI (toggle se MUESTRA en negocios de cuenta-dueño).
+    Mostrar ≠ encender: autonomous_mode_on (consentimiento) NO se toca acá.
+    """
     user = await get_current_user(authorization)
     client = resolve_client_or_403(user["id"], client_id)  # 404/403 si no es dueño
     return {
-        "rex_addon_active": bool(client.get("rex_addon_active")),
+        "rex_addon_active": owners.is_rex_addon_effective(
+            client.get("rex_addon_active"), client.get("user_id")),
         "autonomous_mode_on": bool(client.get("autonomous_mode_on")),
     }
 

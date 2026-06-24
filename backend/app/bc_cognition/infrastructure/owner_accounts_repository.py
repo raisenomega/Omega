@@ -23,3 +23,12 @@ def fetch_owner_user_ids() -> set[str]:
     except Exception as e:
         logger.error(f"owner.fetch_owner_user_ids failed: {e}", exc_info=True)
         return set()
+
+
+def is_rex_addon_effective(stored: object, user_id: object,
+                           owner_ids: set[str] | None = None) -> bool:
+    """rex_addon_active EFECTIVO = columna almacenada OR cuenta-dueño exenta (owner_accounts).
+    UNA sola verdad para worker y endpoint (no dupliques el OR · si cambia la regla, cambia acá).
+    owner_ids: pasalo precomputado en loops (evita N lecturas) · None → lo resuelve solo (1 cliente)."""
+    ids = owner_ids if owner_ids is not None else fetch_owner_user_ids()
+    return bool(stored) or str(user_id) in ids
