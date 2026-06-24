@@ -158,8 +158,12 @@ def delete_social_accounts(client_id: str) -> None:
 
 
 def promote_client_plan_enterprise(client_id: str) -> int:
-    """Espejo migr 00075 paso 3 · client_plans = fuente del gate (useClientPlanStatus.plan).
-    Enterprise PERPETUO (2099) · NO toca clients.plan ni ownership. Retorna rows actualizadas."""
+    """Enterprise PERPETUO (2099) en AMBAS columnas · restaura el invariante
+    clients.plan == client_plans.plan (espejo de on_checkout_completed del webhook real · A2.1).
+    En clients escribe SOLO la columna plan (user_id/reseller_id/ownership intactos · exime de
+    PAGO, nunca de aislamiento). client_plans sigue siendo la fuente del gate (useClientPlanStatus).
+    Retorna rows actualizadas en client_plans. NO tocar el camino Stripe (es grant separado)."""
+    _sb().table("clients").update({"plan": "enterprise"}).eq("id", client_id).execute()
     res = (_sb().table("client_plans")
            .update({"plan": "enterprise", "current_period_end": "2099-12-31T00:00:00+00:00"})
            .eq("client_id", client_id).execute())

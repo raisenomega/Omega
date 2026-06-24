@@ -1,9 +1,11 @@
 """Tests · Commit 4 · negocio nuevo de cuenta-dueño nace Enterprise perpetuo (espejo migr 00075).
 
-Cuenta en owner_accounts (00074) crea negocio vía onboarding → client_plans se promueve a
-enterprise/2099 (client_plans = fuente del gate · useClientPlanStatus.plan). Cuenta normal →
-no-op (default/trial · sin cambio). El flag SOLO decide el plan: NUNCA toca la tabla clients
-→ ownership intacto (clients.user_id · resolve_client_or_403 ajenos a esto).
+Cuenta en owner_accounts (00074) crea negocio vía onboarding → se promueve a enterprise/2099 en
+AMBAS columnas (clients.plan + client_plans.plan), restaurando el invariante clients.plan ==
+client_plans.plan (espejo de on_checkout_completed del webhook real · A2.1). client_plans es la
+fuente del gate (useClientPlanStatus.plan). Cuenta normal → no-op (default/trial · sin cambio).
+El flag SOLO decide el plan: en clients escribe ÚNICAMENTE la columna plan (user_id/reseller_id
+intactos) → ownership intacto. Exime de PAGO, nunca de aislamiento.
 """
 import asyncio
 from types import SimpleNamespace
@@ -54,9 +56,20 @@ def _patch_repo(monkeypatch: pytest.MonkeyPatch, owner_ids: set) -> dict:
 def test_owner_business_born_enterprise_2099(monkeypatch: pytest.MonkeyPatch) -> None:
     store = _patch_repo(monkeypatch, owner_ids={"u-owner"})
     assert repo.promote_if_owner("u-owner", "c-new") is True
-    assert store["updates"] == [("client_plans",
-        {"plan": "enterprise", "current_period_end": "2099-12-31T00:00:00+00:00"})]
-    assert ("client_id", "c-new") in store["eq"]   # promueve SOLO el negocio nuevo
+    # A2.1 · escribe AMBAS columnas (espejo on_checkout_completed): clients.plan + client_plans.
+    assert ("clients", {"plan": "enterprise"}) in store["updates"]
+    assert ("client_plans",
+        {"plan": "enterprise", "current_period_end": "2099-12-31T00:00:00+00:00"}) in store["updates"]
+    assert ("id", "c-new") in store["eq"]          # clients filtra por id
+    assert ("client_id", "c-new") in store["eq"]   # client_plans filtra por client_id
+
+
+def test_invariant_both_columns_enterprise(monkeypatch: pytest.MonkeyPatch) -> None:
+    """El invariante A2.1: tras promote, clients.plan == client_plans.plan == 'enterprise'."""
+    store = _patch_repo(monkeypatch, owner_ids={"u-owner"})
+    repo.promote_if_owner("u-owner", "c-new")
+    plans = {t: f["plan"] for t, f in store["updates"] if "plan" in f}
+    assert plans == {"clients": "enterprise", "client_plans": "enterprise"}
 
 
 def test_normal_account_no_change(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -65,10 +78,12 @@ def test_normal_account_no_change(monkeypatch: pytest.MonkeyPatch) -> None:
     assert store["updates"] == []                  # default/trial intacto · cero writes
 
 
-def test_isolation_only_plan_never_clients(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_clients_write_only_plan_never_ownership(monkeypatch: pytest.MonkeyPatch) -> None:
+    """En clients escribe SOLO la columna plan · NUNCA user_id/reseller_id (ownership intacto)."""
     store = _patch_repo(monkeypatch, owner_ids={"u-owner"})
     repo.promote_if_owner("u-owner", "c-new")
-    assert {t for t, _ in store["updates"]} == {"client_plans"}  # NUNCA toca clients
+    clients_writes = [f for t, f in store["updates"] if t == "clients"]
+    assert clients_writes == [{"plan": "enterprise"}]   # exactamente plan · nada más
 
 
 def test_handler_wires_owner_enterprise(monkeypatch: pytest.MonkeyPatch) -> None:
