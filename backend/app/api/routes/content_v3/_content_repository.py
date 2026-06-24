@@ -5,6 +5,7 @@ from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import get_supabase_service
 from app.bc_cognition.domain.input_threats import redact_pii, InputContext, SanitizerAction
 from app.bc_cognition.application.input_sanitizer import sanitize_input
+from app.bc_cognition.domain.brand_corpus_guard import is_corpus_worthy_text
 
 logger = logging.getLogger(__name__)
 P = ParamSpec("P"); T = TypeVar("T")
@@ -53,7 +54,9 @@ def set_requires_approval(client_id: str, value: bool) -> None:
 
 
 def insert_brand_voice_corpus_approved(client_id: str, text: str, platform: Optional[str]) -> None:
-    if not text.strip():
+    # Raíz: drafts de imagen guardan la URL en generated_text · NUNCA al corpus
+    # (envenena la referencia del scorer X5). Sin texto real → no se aprende basura.
+    if not is_corpus_worthy_text(text):
         return
     # Input Sanitizer (BRAND_CORPUS · spec §6) · defensa en profundidad incluso en approved_draft.
     si, serr = sanitize_input(text, InputContext.BRAND_CORPUS)

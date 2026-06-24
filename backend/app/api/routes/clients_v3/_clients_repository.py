@@ -5,6 +5,7 @@ from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import get_supabase_service
 from app.bc_cognition.domain.input_threats import redact_pii, InputContext, SanitizerAction
 from app.bc_cognition.application.input_sanitizer import sanitize_input
+from app.bc_cognition.domain.brand_corpus_guard import is_corpus_worthy_text
 from app.bc_cognition.infrastructure import owner_accounts_repository as owners
 
 logger = logging.getLogger(__name__)
@@ -99,7 +100,7 @@ def insert_brand_voice_samples(client_id: str, samples: list[str]) -> None:
     # Input Sanitizer (BRAND_CORPUS · spec §6) · descarta samples con injection (T1/T2), usa clean_text.
     rows = []
     for s in samples:
-        if not s.strip():
+        if not is_corpus_worthy_text(s):  # vacío o URL → no entra al corpus (defensa en profundidad)
             continue
         si, serr = sanitize_input(s, InputContext.BRAND_CORPUS)
         if serr is not None or si is None or si.action in (SanitizerAction.BLOCK, SanitizerAction.HOLD_FOR_HUMAN_REVIEW):
