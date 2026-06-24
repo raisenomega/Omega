@@ -79,6 +79,12 @@ async def create_client_onboarding(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"persist_partial_failed:{type(e).__name__}:{str(e)[:200]}")
 
+    # Cuenta-dueño (owner_accounts · migr 00074) → el negocio nuevo nace Enterprise perpetuo
+    # (espejo 00075 · client_plans = fuente del gate). Cuenta normal → no-op. Best-effort: la
+    # falla del perk NO rompe el alta ya hecha (evita 500 → reintento → negocio duplicado) ·
+    # fail-safe alineado al lector del flag (set vacío → no promueve). NO altera ownership.
+    await repo.safe_insert("owner_enterprise", repo.promote_if_owner, user_id, client_id)
+
     # BEST-EFFORT: telemetría
     await repo.safe_insert("behavioral", repo.insert_behavioral_event, user_id, client_id, "client_onboarded",
                      {"completion_percent": completion, "social_accounts": len(payload.social_accounts)})

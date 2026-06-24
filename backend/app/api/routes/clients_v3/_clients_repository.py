@@ -5,6 +5,7 @@ from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from app.infrastructure.supabase_service import get_supabase_service
 from app.bc_cognition.domain.input_threats import redact_pii, InputContext, SanitizerAction
 from app.bc_cognition.application.input_sanitizer import sanitize_input
+from app.bc_cognition.infrastructure import owner_accounts_repository as owners
 
 logger = logging.getLogger(__name__)
 P = ParamSpec("P"); T = TypeVar("T")
@@ -154,3 +155,23 @@ def update_client_by_id(client_id: str, fields: dict[str, Any]) -> int:
 
 def delete_social_accounts(client_id: str) -> None:
     _sb().table("social_accounts").delete().eq("client_id", client_id).execute()
+
+
+def promote_client_plan_enterprise(client_id: str) -> int:
+    """Espejo migr 00075 paso 3 · client_plans = fuente del gate (useClientPlanStatus.plan).
+    Enterprise PERPETUO (2099) · NO toca clients.plan ni ownership. Retorna rows actualizadas."""
+    res = (_sb().table("client_plans")
+           .update({"plan": "enterprise", "current_period_end": "2099-12-31T00:00:00+00:00"})
+           .eq("client_id", client_id).execute())
+    return len(res.data or [])
+
+
+def promote_if_owner(user_id: str, client_id: str) -> bool:
+    """Cuenta-dueño (owner_accounts · migr 00074) → negocio nuevo nace Enterprise perpetuo.
+    Cuenta normal → no-op (default/trial · sin cambio). fail-safe: si la lectura del flag falla,
+    fetch_owner_user_ids devuelve set() → no-op (NUNCA abre puerta de más). El flag SOLO decide
+    el PLAN: no otorga rol, no cambia scope · ownership intacto. Retorna True si promovió."""
+    if user_id not in owners.fetch_owner_user_ids():
+        return False
+    promote_client_plan_enterprise(client_id)
+    return True
