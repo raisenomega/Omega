@@ -1,7 +1,7 @@
-import { X, Calendar, Save, Download, Check } from "lucide-react";
+import { X, Calendar, Save, Download, Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TYPE_LABELS } from "@/lib/content-lab-constants";
+import { TYPE_LABELS, AGENDA_TYPES } from "@/lib/content-lab-constants";
 import type { ResultV2 } from "./ResultCardV2";
 
 interface Props {
@@ -10,9 +10,10 @@ interface Props {
   onAgendar: (r: ResultV2) => void;
   onSave: (id: string) => void;
   onDownload: (r: ResultV2) => void;
+  onCopy: (r: ResultV2) => void;
 }
 
-export function ResultExpandedModal({ result, onClose, onAgendar, onSave, onDownload }: Props) {
+export function ResultExpandedModal({ result, onClose, onAgendar, onSave, onDownload, onCopy }: Props) {
   if (!result) return null;
   const isImage = result.content_type === "image";
   const isVideo = result.content_type === "video";
@@ -34,22 +35,30 @@ export function ResultExpandedModal({ result, onClose, onAgendar, onSave, onDown
             : isVideo ? <video src={result.generated_text} controls className="rounded-md w-full" />
             : <p className="text-sm whitespace-pre-wrap leading-relaxed">{result.generated_text}</p>}
         </div>
-        <div className="grid grid-cols-3 gap-2 pt-2">
-          <Button onClick={() => onAgendar(result)}
-            className="bg-amber-500 hover:bg-amber-600 text-white gap-1.5 font-semibold">
-            <Calendar className="h-4 w-4" /> Agendar
-          </Button>
-          <Button variant="outline" onClick={() => isVideo ? null : onSave(result.id)}
-            disabled={isVideo}
-            title={isVideo ? "Video persistido automáticamente en Storage" : undefined}
-            className="gap-1.5">
-            {result.saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-            {result.saved ? "Guardado" : isVideo ? "Auto" : "Guardar"}
-          </Button>
-          <Button variant="outline" onClick={() => onDownload(result)} className="gap-1.5">
-            <Download className="h-4 w-4" /> Descargar
-          </Button>
-        </div>
+        {AGENDA_TYPES.has(result.content_type) ? (
+          <div className="grid grid-cols-3 gap-2 pt-2">
+            <Button onClick={() => onAgendar(result)}
+              className="bg-amber-500 hover:bg-amber-600 text-white gap-1.5 font-semibold">
+              <Calendar className="h-4 w-4" /> Agendar
+            </Button>
+            <Button variant="outline" onClick={() => isVideo ? null : onSave(result.id)}
+              disabled={isVideo}
+              title={isVideo ? "Video persistido automáticamente en Storage" : undefined}
+              className="gap-1.5">
+              {result.saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+              {result.saved ? "Guardado" : isVideo ? "Auto" : "Guardar"}
+            </Button>
+            <Button variant="outline" onClick={() => onDownload(result)} className="gap-1.5">
+              <Download className="h-4 w-4" /> Descargar
+            </Button>
+          </div>
+        ) : (
+          <div className="pt-2">
+            <Button variant="outline" onClick={() => onCopy(result)} className="w-full gap-1.5">
+              <Copy className="h-4 w-4" /> Copiar
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

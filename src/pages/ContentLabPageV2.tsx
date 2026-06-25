@@ -44,7 +44,7 @@ export default function ContentLabPageV2() {
           const r = s.results[i];
           return r ? (
             <ResultCardV2 key={r.id} result={r} onExpand={s.setExpandedResult} onAgendar={s.handleAgendar}
-              onSave={s.handleSave} onDownload={s.handleDownload} onRemove={(id) => s.setResults(p => p.filter(x => x.id !== id))}
+              onSave={s.handleSave} onDownload={s.handleDownload} onCopy={s.handleCopy} onRemove={(id) => s.setResults(p => p.filter(x => x.id !== id))}
               onCancel={s.handleCancelVideo} onUseSnippet={s.appendSnippetToTopic} />
           ) : (
             <Card key={`empty-${i}`} className="h-full min-h-full border border-dashed border-muted-foreground/30 flex items-center justify-center bg-card/40">
@@ -54,7 +54,7 @@ export default function ContentLabPageV2() {
         })}
       </div>
       <ResultExpandedModal result={s.expandedResult} onClose={() => s.setExpandedResult(null)}
-        onAgendar={s.handleAgendar} onSave={s.handleSave} onDownload={s.handleDownload} />
+        onAgendar={s.handleAgendar} onSave={s.handleSave} onDownload={s.handleDownload} onCopy={s.handleCopy} />
       <ScheduleModalV2 state={s.modalState} block={s.block} scheduledAt={s.scheduledAt} setScheduledAt={s.setScheduledAt}
         onMinimize={() => s.setModalState("minimized")} onRestore={() => s.setModalState("open")}
         onClose={() => s.setModalState("closed")} onConfirm={s.handleConfirm} onRemoveItem={s.handleRemoveItem} loading={s.scheduling} />

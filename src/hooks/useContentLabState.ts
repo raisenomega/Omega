@@ -116,6 +116,10 @@ export function useContentLabState(activeBusinessId: string | null) {
     try { await downloadResult(r); toast({ title: "Descarga iniciada" }); }
     catch (e) { toast({ title: "Error al descargar", description: e instanceof Error ? e.message : "", variant: "destructive" }); }
   };
+  const handleCopy = (r: ResultV2) => {
+    void navigator.clipboard.writeText(r.generated_text);
+    toast({ title: "Copiado" });
+  };
   const handleConfirm = async () => {
     // clientId siempre = activeBusinessId (Switcher V1 · sync en ContentLabPageV2) · guard defensivo
     if (!form.clientId) { toast({ title: "Falta seleccionar cliente", variant: "destructive" }); return; }
@@ -177,7 +181,7 @@ export function useContentLabState(activeBusinessId: string | null) {
     block, modalState, setModalState, scheduledAt, setScheduledAt,
     expandedResult, setExpandedResult, slots: Math.max(4, results.length), isPending,
     scheduling: scheduleBlock.isPending,  // BUG 11 jun · feedback de progreso en "Agendar bloque"
-    handleGenerate, handleAgendar, handleRemoveItem, handleSave, handleDownload, handleConfirm, handleResearch, handleCancelVideo,
+    handleGenerate, handleAgendar, handleRemoveItem, handleSave, handleDownload, handleCopy, handleConfirm, handleResearch, handleCancelVideo,
     isResearching: research.isPending, appendSnippetToTopic,
   };
 }

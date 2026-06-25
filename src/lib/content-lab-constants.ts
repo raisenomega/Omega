@@ -6,6 +6,11 @@ export const TYPES = [
   "thread", "carousel",
 ] as const;
 
+// Tipos que van a redes → se Agendan (+ Guardar + Descargar). El resto (story/carousel/hashtags/
+// script/email/bio) son de usar-al-momento → SOLO Copiar. Fuente ÚNICA: tarjeta Y modal la importan
+// (evita desincronización · el bug del modal con Agendar fue por listas duplicadas).
+export const AGENDA_TYPES = new Set(["caption", "image", "video", "google_business_post", "thread", "ad"]);
+
 export const TONES = ["profesional", "casual", "inspirador", "educativo", "divertido"] as const;
 export const STYLES = ["realistic", "cartoon", "minimal"] as const;
 export const RATIOS = ["1280:768", "768:1280"] as const;

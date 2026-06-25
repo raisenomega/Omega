@@ -1,8 +1,8 @@
-import { Calendar, Save, Download, Check, X } from "lucide-react";
+import { Calendar, Save, Download, Check, X, Copy } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TYPE_LABELS } from "@/lib/content-lab-constants";
+import { TYPE_LABELS, AGENDA_TYPES } from "@/lib/content-lab-constants";
 import { PendingVideoCard } from "./PendingVideoCard";
 import { ResearchResultCard } from "./ResearchResultCard";
 import type { ResultV2, ModalState, BlockState } from "./result-types";
@@ -15,6 +15,7 @@ interface Props {
   onAgendar: (r: ResultV2) => void;
   onSave: (id: string) => void;
   onDownload: (r: ResultV2) => void;
+  onCopy: (r: ResultV2) => void;
   onRemove: (id: string) => void;
   onCancel?: (id: string) => void;             // DEBT-CL-010 · pending video
   onUseSnippet?: (snippet: string) => void;    // Brave research · appendea al topic
@@ -24,11 +25,7 @@ const LABEL_COLORS: Record<string, string> = {
   Conservadora: "bg-slate-500", Balanceada: "bg-blue-500", Atrevida: "bg-rose-500",
 };
 
-// Tipos que van a redes → se agendan. El resto (story/carousel/hashtags/script/email/bio) son
-// de usar-al-momento (commit 3: solo Copiar). content_type acá es el ui_type fino (useGenerateText).
-const AGENDA_TYPES = new Set(["caption", "image", "video", "google_business_post", "thread", "ad"]);
-
-export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, onRemove, onCancel, onUseSnippet }: Props) {
+export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, onCopy, onRemove, onCancel, onUseSnippet }: Props) {
   // Brave Search · render simplificado en sub-componente
   if (result.content_type === "research") {
     return <ResearchResultCard result={result} onRemove={onRemove} onUseSnippet={onUseSnippet} />;
@@ -71,22 +68,28 @@ export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, 
         )}
         <p className="text-[10px] text-amber-600 opacity-0 group-hover:opacity-100 transition">clic para expandir →</p>
         <div className="flex gap-1 pt-1" onClick={(e) => e.stopPropagation()}>
-          {AGENDA_TYPES.has(result.content_type) && (
-            <Button size="sm" onClick={() => onAgendar(result)}
-              className="bg-amber-500 hover:bg-amber-600 text-white gap-1 flex-1 h-7 text-[11px]">
-              <Calendar className="h-3 w-3" />Agendar
+          {AGENDA_TYPES.has(result.content_type) ? (
+            <>
+              <Button size="sm" onClick={() => onAgendar(result)}
+                className="bg-amber-500 hover:bg-amber-600 text-white gap-1 flex-1 h-7 text-[11px]">
+                <Calendar className="h-3 w-3" />Agendar
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => isVideo ? null : onSave(result.id)}
+                disabled={isVideo}
+                title={isVideo ? "Video persistido automáticamente en Storage" : undefined}
+                className={`gap-1 flex-1 h-7 text-[11px] ${result.saved ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600" : ""}`}>
+                {result.saved ? <Check className="h-3 w-3" /> : <Save className="h-3 w-3" />}
+                {result.saved ? "✓" : isVideo ? "Auto" : "Guardar"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => onDownload(result)} className="gap-1 flex-1 h-7 text-[11px]">
+                <Download className="h-3 w-3" />Descargar
+              </Button>
+            </>
+          ) : (
+            <Button size="sm" variant="outline" onClick={() => onCopy(result)} className="gap-1 flex-1 h-7 text-[11px]">
+              <Copy className="h-3 w-3" />Copiar
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={() => isVideo ? null : onSave(result.id)}
-            disabled={isVideo}
-            title={isVideo ? "Video persistido automáticamente en Storage" : undefined}
-            className={`gap-1 flex-1 h-7 text-[11px] ${result.saved ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600" : ""}`}>
-            {result.saved ? <Check className="h-3 w-3" /> : <Save className="h-3 w-3" />}
-            {result.saved ? "✓" : isVideo ? "Auto" : "Guardar"}
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => onDownload(result)} className="gap-1 flex-1 h-7 text-[11px]">
-            <Download className="h-3 w-3" />Descargar
-          </Button>
         </div>
       </CardContent>
     </Card>
