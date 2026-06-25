@@ -36,6 +36,23 @@ _MEDIA_REQUIRED = {"instagram", "tiktok"}
 # Tope de reintentos para fallos TRANSITORIOS de Zernio (5xx/429/timeout · Gap-1 resiliencia SPOF).
 # Constante local (resiliencia operativa, NO guardrail de negocio → no entra en limits_omega).
 MAX_RETRIES = 3
+# B4 · TikTok foto usa el content COMO título del slideshow (cap 90 · sin campo title separado).
+# Constante de PLATAFORMA externa (no business-rule → local, NO limits_omega · igual que MAX_RETRIES).
+_TIKTOK_TITLE_MAX = 90
+
+
+def _cap_tiktok_title(message: str, platform: str, media_url: Optional[str]) -> str:
+    """B4 · TikTok foto usa el content COMO título del slideshow (cap 90). Trunca SOLO TikTok-imagen,
+    en límite de palabra + '…' (total ≤90). IG/FB y TikTok-video → SIN tocar (reciben el caption entero)."""
+    if platform != "tiktok" or not media_url or _media_type(str(media_url)) != "image":
+        return message
+    if len(message) <= _TIKTOK_TITLE_MAX:
+        return message
+    cut = message[:_TIKTOK_TITLE_MAX - 1].rstrip()   # deja lugar al '…' → total ≤90
+    sp = cut.rfind(" ")
+    if sp > 0:
+        cut = cut[:sp].rstrip()                       # corta en límite de palabra (si hay espacio)
+    return cut + "…"
 
 
 class PublishGateError(Exception):
@@ -111,9 +128,12 @@ async def publish_scheduled_post(scheduled_post_id: str, client_id: str) -> Publ
 
     # ── A PARTIR DE ACA el intento de publicacion es REAL → un fallo va a mark_failed ──
     await asyncio.to_thread(repo.mark_publishing, scheduled_post_id)
+    content = _cap_tiktok_title(message, platform, media_url)  # B4 · TikTok-foto: título cap 90 (IG/FB enteros)
+    if content != message:
+        logger.info("tiktok title truncado · client=%s · %d→%d chars (cap 90 · B4)", client_id, len(message), len(content))
     try:
         platform_post_id = await create_post(
-            content=message,
+            content=content,
             platforms=[{"platform": platform, "accountId": account_id}],
             publish_now=True,
             media_urls=[str(media_url)] if media_url else None,

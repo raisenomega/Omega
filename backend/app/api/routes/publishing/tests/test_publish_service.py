@@ -216,3 +216,26 @@ def test_hermes_no_registra_bug_inesperado(monkeypatch):
     out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
     assert out.published is False and "unexpected" in (out.error or "")
     assert rec == []  # NO se registró uso de Zernio (no fue Zernio quien falló)
+
+
+# ── B4 · DEBT-HERMES-TIKTOK-TITLE · truncar título SOLO TikTok-foto (video + IG/FB intactos) ──
+def test_cap_tiktok_title_trunca_foto_largo():
+    msg = "Tu zafacon huele peor que el problema que resuelve y todo el vecindario entero ya lo nota a metros hoy"
+    out = ps._cap_tiktok_title(msg, "tiktok", "https://x.co/img.png")
+    assert len(out) <= 90 and out.endswith("…")
+    assert " " in out and not out[:-1].endswith(" ")          # limite de palabra, no corta a mitad
+
+
+def test_cap_tiktok_title_foto_corto_sin_cambio():
+    msg = "Caption corto bajo noventa"
+    assert ps._cap_tiktok_title(msg, "tiktok", "https://x.co/img.png") == msg
+
+
+def test_cap_tiktok_title_video_sin_cambio():
+    assert ps._cap_tiktok_title("x" * 200, "tiktok", "https://x.co/clip.mp4") == "x" * 200   # video: sin cap
+
+
+def test_cap_tiktok_title_ig_fb_intactos():
+    msg = "x" * 200                                            # el caption largo que truncamos para TikTok
+    assert ps._cap_tiktok_title(msg, "instagram", "https://x.co/img.png") == msg   # IG: entero
+    assert ps._cap_tiktok_title(msg, "facebook",  "https://x.co/img.png") == msg   # FB: entero
