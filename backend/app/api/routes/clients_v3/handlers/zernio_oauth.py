@@ -5,6 +5,7 @@ autoriza cae en SU profile. SEGURIDAD: get_supabase_service usa service_role →
 el guard es user_owns_client en CADA endpoint ANTES de tocar nada (igual que zernio_mapping).
 La etiqueta cara-cliente sale del platform de la red (white-label · 'Zernio' nunca en pantalla).
 """
+import logging
 from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
 
@@ -12,10 +13,12 @@ from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.clients_v3 import _clients_reader as reader, _clients_repository as repo
 from app.api.routes.clients_v3._access_control import user_owns_client
 from app.api.routes.clients_v3._zernio_state import sign_state, build_callback_url
-from app.bc_cognition.infrastructure.zernio_adapter import list_accounts
+from app.api.routes.clients_v3._zernio_http import zernio_error_to_http
+from app.bc_cognition.infrastructure.zernio_adapter import list_accounts, ZernioError
 from app.bc_cognition.infrastructure.zernio_profiles import create_profile, get_connect_url
 from app.config import settings
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -65,12 +68,18 @@ async def zernio_connect_url(client_id: str, platform: str,
                              authorization: Optional[str] = Header(None),
                              origin: Optional[str] = Header(None)) -> dict:
     user, client = await _owned(client_id, authorization)  # JWT + ownership ANTES de firmar el state
-    pid = await _ensure_profile(client_id, client)
-    # firmamos el Origin del navegador SOLO si ya está permitido (si falta/no permitido → "" → callback usa [0]).
-    safe_origin = origin if (origin and origin in settings.cors_origins_list) else ""
-    # user_id FIRMADO en el state → el callback ata el stash FB a quien inició el flujo (defensa-en-profundidad).
-    redirect_url = build_callback_url(sign_state(client_id, platform, safe_origin, str(user["id"])))
-    return {"auth_url": await get_connect_url(platform, pid, redirect_url)}
+    # B2.5 Capa A · cualquier fallo de Zernio (ej. nombre de profile duplicado → 400) sale como HTTP
+    # honesto, NO 500 crudo. _owned queda FUERA del try (sus 404/403 ya son correctos).
+    try:
+        pid = await _ensure_profile(client_id, client)
+        # firmamos el Origin del navegador SOLO si ya está permitido (si falta/no permitido → "" → callback usa [0]).
+        safe_origin = origin if (origin and origin in settings.cors_origins_list) else ""
+        # user_id FIRMADO en el state → el callback ata el stash FB a quien inició el flujo (defensa-en-profundidad).
+        redirect_url = build_callback_url(sign_state(client_id, platform, safe_origin, str(user["id"])))
+        return {"auth_url": await get_connect_url(platform, pid, redirect_url)}
+    except ZernioError as e:
+        logger.warning("zernio connect-url failed · client=%s platform=%s · %s", client_id, platform, e)
+        raise zernio_error_to_http(e) from e
 
 
 @router.get("/{client_id}/connected-accounts")

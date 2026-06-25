@@ -5,6 +5,8 @@ import importlib
 import pytest
 from fastapi import HTTPException
 
+from app.bc_cognition.infrastructure.zernio_adapter import ZernioPublishError
+
 zo = importlib.import_module("app.api.routes.clients_v3.handlers.zernio_oauth")
 
 
@@ -100,3 +102,26 @@ def test_connected_accounts_sin_followers_no_inventa_cero(monkeypatch):
     monkeypatch.setattr(zo, "list_accounts", _la)
     out = asyncio.run(zo.zernio_connected_accounts("c1", "auth"))
     assert out["items"][0]["followers_count"] is None   # '—', no 0
+
+
+# ── B2.5 Capa A · robustez: ZernioError del connect → HTTP honesto, NO 500 crudo ──
+def test_connect_url_409_si_nombre_duplicado(monkeypatch):
+    """Profile name duplicado (Zernio 400 'already exists') → 409 zernio_profile_name_conflict."""
+    _auth(monkeypatch, {"id": "c1", "user_id": "u1", "name": "Zafacones", "zernio_profile_id": None})
+    async def _boom(name, description=""):
+        raise ZernioPublishError('zernio_profiles_400:{"error":"A profile with this name already exists"}')
+    monkeypatch.setattr(zo, "create_profile", _boom)
+    with pytest.raises(HTTPException) as e:
+        asyncio.run(zo.zernio_connect_url("c1", "instagram", "auth", None))
+    assert e.value.status_code == 409 and e.value.detail == "zernio_profile_name_conflict"
+
+
+def test_connect_url_502_si_transporte(monkeypatch):
+    """Fallo de transporte a Zernio → 502 zernio_unavailable (no 500 crudo)."""
+    _auth(monkeypatch, {"id": "c1", "user_id": "u1", "name": "X", "zernio_profile_id": None})
+    async def _boom(name, description=""):
+        raise ZernioPublishError("zernio_transport_error:ConnectTimeout")
+    monkeypatch.setattr(zo, "create_profile", _boom)
+    with pytest.raises(HTTPException) as e:
+        asyncio.run(zo.zernio_connect_url("c1", "instagram", "auth", None))
+    assert e.value.status_code == 502
