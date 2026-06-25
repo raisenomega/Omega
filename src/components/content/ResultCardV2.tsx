@@ -24,6 +24,10 @@ const LABEL_COLORS: Record<string, string> = {
   Conservadora: "bg-slate-500", Balanceada: "bg-blue-500", Atrevida: "bg-rose-500",
 };
 
+// Tipos que van a redes → se agendan. El resto (story/carousel/hashtags/script/email/bio) son
+// de usar-al-momento (commit 3: solo Copiar). content_type acá es el ui_type fino (useGenerateText).
+const AGENDA_TYPES = new Set(["caption", "image", "video", "google_business_post", "thread", "ad"]);
+
 export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, onRemove, onCancel, onUseSnippet }: Props) {
   // Brave Search · render simplificado en sub-componente
   if (result.content_type === "research") {
@@ -67,10 +71,12 @@ export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, 
         )}
         <p className="text-[10px] text-amber-600 opacity-0 group-hover:opacity-100 transition">clic para expandir →</p>
         <div className="flex gap-1 pt-1" onClick={(e) => e.stopPropagation()}>
-          <Button size="sm" onClick={() => onAgendar(result)}
-            className="bg-amber-500 hover:bg-amber-600 text-white gap-1 flex-1 h-7 text-[11px]">
-            <Calendar className="h-3 w-3" />Agendar
-          </Button>
+          {AGENDA_TYPES.has(result.content_type) && (
+            <Button size="sm" onClick={() => onAgendar(result)}
+              className="bg-amber-500 hover:bg-amber-600 text-white gap-1 flex-1 h-7 text-[11px]">
+              <Calendar className="h-3 w-3" />Agendar
+            </Button>
+          )}
           <Button size="sm" variant="outline" onClick={() => isVideo ? null : onSave(result.id)}
             disabled={isVideo}
             title={isVideo ? "Video persistido automáticamente en Storage" : undefined}
