@@ -449,6 +449,39 @@ Nada de esto bloquea el desarrollo actual (hoy el único humano es el owner). TO
 
 **Estado actual sistema · post Sesión 3 (3 jun · cierre):** **Input Sanitizer** central completo (6/6 consumidores · spec PROTOCOLO firmada compliant) + **GUARDIAN end-to-end** (backend 00022/00065 + geo IPinfo activo + UI estilo SENTINEL + 5 acciones owner e2e [smoke 200] + Claude Consultor Sonnet 4.6 con agent_memory audit). **Compliance vs docs firmados:** GUARDIAN_SECURITY_AGENT v1 cubierta + 3 extensiones owner-aprobadas 3 jun (geo activo §7.6, Claude Consultor §7.2, panel operativo SENTINEL-style supersede las 2 cards básicas §8) · PROTOCOLO_SEGURIDAD_INPUT compliant. Cero gaps. **routing_table:** +`guardian_consultor`→Sonnet (I2). **DEBTs nuevas Sub-E:** DEBT-GUARDIAN-CONSULTOR-FULL-CHAT (multi-turno vía Claude Dev page · ~3h) · DEBT-GUARDIAN-CONSULTOR-LEARNING (was_correct realimenta prompts · ~3h) · DEBT-GUARDIAN-CONSULTOR-EXECUTE-SHORTCUT (botón "ejecutar acción recomendada" desde el panel · ~1h). **Próxima: Sesión 4 (decisión owner · 4A cerrar DEBTs heredados / 4B GUARDIAN enterprise con tráfico real / 4C Tier-1 a 10/10 [AWS+GCP failover + pentest]).** Total deuda: ~1,180h → **~1,187h** (+7h follow-ups consultor).
 
+**ARCO CUENTAS-DUEÑO + FIX BRAND-VOICE-CORPUS · CIERRE (24 jun 2026 · verificado EN VIVO por el owner · identidad raisenomega):**
+
+**Concepto permanente — cuentas-dueño (`owner_accounts`):** dos cuentas del dueño — `reseller@omega.com` (`61f88b91`) + `raisen@omega.com` (`84d86286`) — son cuentas de prueba en **Enterprise REAL vitalicio por diseño**. Identificadas por la **tabla `owner_accounts`** (migr 00074 · NO hardcode de emails · DDD). Excepción **ÚNICA**: saltan el **PAGO** de Stripe; todo lo demás es idéntico a un usuario real (plan canónico `client_plans.plan`, features, gating, aislamiento). **Eximen de PAGO, NUNCA de aislamiento** (`is_owner=false` · NO superadmin). **`cliente@omega.com` queda excluida a propósito** (sigue Enterprise real por DB, no por `owner_accounts`). Negocios nuevos de cuenta-dueño **nacen Enterprise** (`promote_client_plan_enterprise` escribe AMBAS columnas · invariante `clients.plan==client_plans.plan` restaurado).
+
+**Qué cerró el arco (trazabilidad · verificado en vivo):**
+- **00074 / 00075** — tabla `owner_accounts` + `raisen@` reseller propio (`0e1fad0f` · `rex_live=true` · `is_owner=false`) + "Mi negocio" Enterprise.
+- **Commit 3/4 (`b9ee818` / `d678377`)** — exención add-on REX en el worker (`is_rex_addon_effective`) + negocio nuevo de cuenta-dueño nace Enterprise (UPDATE post-trigger en onboarding).
+- **A1 / A1.2 (`8b48f66` / `27de010`)** — el toggle REX se MUESTRA y se PUEDE ENCENDER para cuentas-dueño (GET y PATCH usan el add-on efectivo · publicó OK en Facebook en vivo).
+- **A2.1 (`558535c` + migr 00076)** — restaura el invariante `clients.plan==client_plans.plan` (`promote` escribe ambas columnas) + backfill de los 5 negocios de cuentas-dueño a Enterprise. Verificado en vivo: 5 consistentes, 0 fugas.
+- **A2.2 (`bb19bd3`)** — selector demo ELIMINADO (era hardcode `DEMO_EMAILS` anti-DDD) · fuente única `client_plans.plan` (quitado el override demo) · sidebar gatea por negocio ACTIVO (`activeBusinessId`, no el 1ero) · downgrade oculto en enterprise.
+- **Badge sidebar (`2f0da6b`)** — eliminado el badge de plan hardcodeado del sidebar (solo conocía "PRO"/"BÁSICO" → mostraba "PRO" para enterprise · violaba P1).
+- **Estado: CERRADO** · features abren sin candado · badges consistentes (la barra del dashboard muestra el plan real) · REX publica · todo testeado en vivo por el owner.
+
+**Bug BRAND-VOICE-CORPUS (preexistente · global · NO era del arco · encontrado durante las pruebas · CERRADO):** los drafts de imagen guardaban la **URL de la imagen** en `brand_voice_corpus` (no hay caption) → `fetch_recent_corpus` tomaba URLs como `ejemplos_aprobados` → el scorer X5 (Haiku) medía cada caption contra URLs → **score bajo a TODO el negocio** (bloqueaba contenido limpio). Afectaba 4 negocios (cliente@ ×10, raisen@ ×5, Mail Boxes ×3, Omega Raisen ×1). **Fix (`728a4bc` + migr 00077):** guard puro `is_corpus_worthy_text` (`bc_cognition/domain/brand_corpus_guard.py`) rechaza URLs/vacío en los **2 únicos puntos de escritura** al corpus (`insert_brand_voice_corpus_approved` de save_content · Content Lab + Supervisado comparten el endpoint `PATCH /content/{id}/save`; y `insert_brand_voice_samples` de onboarding) + limpieza global de **19 filas-URL** (0 captions reales borrados · 0 negocios vaciados). Verificado en vivo: cero filas-URL global, referencia de Zafacones ahora basada en texto. **NO se tocó la filosofía ni el umbral X5** (vive en `brand_voice_scorer_prompt.py`, NO en `limits_omega` · sagrado intacto). Raíz, global, permanente.
+
+**DEUDAS BLOQUE B (preexistentes · registradas · NO atacadas · cada una su mini-arco):**
+- **DEBT-RLS-APSCHEDULER** 🔴 CRÍTICA — tabla `apscheduler_jobs` sin RLS = agujero de aislamiento. PRÓXIMO mini-arco (B1). ⚠️ **NO usar el botón "Fix" del panel SENTINEL sin diagnóstico**. Cruzar con **DEBT-JOBSTORE-PERSISTENCE** (§6 · la tabla puede no existir en prod → el jobstore cae a in-memory): confirmar primero si la tabla existe antes de aplicar RLS.
+- **DEBT-OAUTH-REDIRECT-MISMATCH** 🟠 — OAuth Google + conexión de cuentas sociales (Zernio tab Cuentas) bloquea conectar/publicar por `redirect_uri_mismatch` · config Railway + Google Cloud · = Fase C/D Arco 2 · más visible tras A2.2 (las cuentas-dueño ya usan el flujo OAuth real al quitarse el intercept demo).
+- **DEBT-RLS-AVATAR-BUCKET** 🟠 — subida de foto de perfil rechazada (`StorageApiError` RLS en el bucket de avatars · policy de INSERT/upload, distinta de la de LIST ya ajustada en migr 00063).
+- **DEBT-HERMES-TIKTOK-TITLE** 🟡 — TikTok rechaza publicación cuando el título supera 90 chars (Zernio/HERMES) · truncar/validar el título.
+- **DEBT-ARIA-OFFTONE** 🟡 — ARIA generó contenido off-tone · el gate X5 lo bloqueó bien (P2 OK) pero ARIA no debería generarlo de entrada.
+
+**DEUDAS MENORES nuevas (de las pruebas · no urgentes):**
+- **DEBT-CORPUS-QUALITY-HISTORICAL** 🟡 — tras el cleanup 00077 (URLs fuera), algunos negocios conservan texto **no-ideal** de referencia (guiones de producción IG Reel, captions agresivos) que el WHERE conservador no tocó (no eran URLs). El gate funciona igual (mide contra texto real) pero la referencia es mejorable · cleanup más fino con WHERE revisado, futuro.
+- **DEBT-X5-CALIBRATION-MULTICLIENT** 🟢 — YA registrada (§6 · 11 jun · baseline n insuficiente). Confirmada, no duplicada. Nota: el cleanup 00077 quitó 10 filas-URL del corpus de `afb9f578` (el cliente de calibración) → re-medir la escala cuando fluya uso real multi-cliente.
+- **DEBT-VITEST-OOM-PREPUSH** 🟡 — YA registrada (§6 · 24 jun · workaround `NODE_OPTIONS=--max-old-space-size=8192`, fix = setear el heap dentro del script del gate). Confirmada, no duplicada. Usada en todos los pushes de este arco.
+
+**DEUDAS pre-launch (registrar · ⚠️ NO CONFIRMADO si ya existían bajo estos IDs en SOT/ESTADO · el owner deduplica si hay entrada previa):**
+- **DEBT-BILLING-ONBOARDING-PAYWALL** 🔴 — crear un negocio no exige pago (las cuentas-dueño quedan exentas por diseño vía `owner_accounts`; el resto debería pasar por paywall antes de operar).
+- **DEBT-ONBOARDING-FIRST-RUN-UX** 🔴 — un usuario nuevo no tiene un primer paso claro tras el signup (falta el first-run guiado).
+
+**Corrección de registro (P1 · honestidad doc):** la nota `ESTADO_OMEGA.md` "Cuentas test owner (enterprise perpetuo · sin paywall · 28 may)" quedó **SUPERSEDED** por este arco: el bypass por **emails hardcodeados** + el `useDemoMode` (toggle VISTA) **ya no existen** (A2.2 los borró). La exención de pago vive ahora en `owner_accounts` (DDD), cubre `reseller@`+`raisen@` (NO `cliente@`, que es Enterprise por DB). Marcada en ESTADO.
+
 ## SECCIÓN 7 — STACK CONFIRMADO
 
 ```

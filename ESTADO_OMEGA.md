@@ -477,10 +477,11 @@ persona_nova vía _context_builder). Leerlas NO es modificarlas. Lo prohibido es
 - **Stripe:** registrar el webhook en el dashboard + crear los productos/prices faltantes → activa checkout créditos/agentes/ARIA/Enterprise (hoy 503 honesto). Pasar a LIVE mode cuando esté listo.
 
 ### Cuentas test owner (enterprise perpetuo · acceso total sin paywall · 28 may)
-- **`cliente@omega.com`** · client `Zafacones Ramos` (`afb9f578-...`) · DB: `clients.plan='enterprise'` + `client_plans.plan='enterprise'` + addons `[video_pack_cinematic_pro, brand_dna_premium, aria_pro]` + `current_period_end=2099-12-31` + `client_agent_credits.budget=$99,999.99/mes` periodo `2099-12-31`. FE: `useDemoMode` default ahora `'enterprise'` (antes `'basic'`); toggle muestra Enterprise/PRO/Básico para testing UX.
+> ⚠️ **SUPERSEDED (24 jun 2026 · arco cuentas-dueño · ver `SOURCE_OF_TRUTH.md §6` cierre 24 jun).** El bypass por **emails hardcodeados** y el `useDemoMode` (toggle VISTA) **ya NO existen** (A2.2 `bb19bd3` los borró). La exención de PAGO vive ahora en la tabla **`owner_accounts`** (migr 00074 · DDD · NO hardcode) y cubre SOLO `reseller@omega.com` (`61f88b91`) + `raisen@omega.com` (`84d86286`). **`cliente@omega.com` NO está en `owner_accounts`** — sigue Enterprise por su fila de DB, no por la exención. Eximen de PAGO, NUNCA de aislamiento (`is_owner=false`). Lo de abajo queda como registro histórico.
+- **`cliente@omega.com`** · client `Zafacones Ramos` (`afb9f578-...`) · DB: `clients.plan='enterprise'` + `client_plans.plan='enterprise'` + addons `[video_pack_cinematic_pro, brand_dna_premium, aria_pro]` + `current_period_end=2099-12-31` + `client_agent_credits.budget=$99,999.99/mes` periodo `2099-12-31`. ~~FE: `useDemoMode` default `'enterprise'`; toggle Enterprise/PRO/Básico~~ (selector demo eliminado en A2.2).
 - **`reseller@omega.com`** · `resellers.plan='enterprise'` (era 'pro')
 - **Owner Ibrain** (`OMEGA Direct` · user `741ace1c-...`) · `plan='enterprise'` + `is_super_owner=True` desde antes — no necesita demo mode.
-- **Política**: estas 3 cuentas NUNCA deben ver paywall ni restricción de plan. Si aparece un nuevo gate, agregar bypass para los emails de arriba o reverter a defaults menos restrictivos.
+- **Política (actualizada)**: la exención de pago se otorga agregando el `user_id` a `owner_accounts` (NO hardcode de emails, NO bypass nuevo por gate). Si aparece un gate de pago, exime vía `owner_accounts`, nunca por email hardcodeado.
 
 ---
 
