@@ -3,7 +3,7 @@
 export const TYPES = [
   "caption", "hashtags", "video_script", "image", "video",
   "email", "story", "ad", "bio", "google_business_post",
-  "thread", "carousel", "linkedin_post",
+  "thread", "carousel",
 ] as const;
 
 export const TONES = ["profesional", "casual", "inspirador", "educativo", "divertido"] as const;
@@ -14,7 +14,7 @@ export const TYPE_LABELS = {
   caption: "Caption", hashtags: "Hashtags", video_script: "Video Script",
   image: "Imagen", video: "Video", email: "Email", story: "Story",
   ad: "Ad Copy", bio: "Bio", google_business_post: "Google Business",
-  thread: "Thread", carousel: "Carousel", linkedin_post: "Post LinkedIn",
+  thread: "Thread", carousel: "Carousel",
 } as const;
 
 export const TONE_LABELS = {
