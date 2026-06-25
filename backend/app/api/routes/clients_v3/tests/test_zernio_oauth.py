@@ -27,8 +27,8 @@ def test_ensure_profile_403_si_no_dueno(monkeypatch):
 def test_ensure_profile_crea_si_falta_y_guarda(monkeypatch):
     _auth(monkeypatch, {"id": "c1", "user_id": "u1", "name": "Zafacones", "zernio_profile_id": None})
     saved = {}
-    async def _create(name, description=""): return "prof_new"
-    monkeypatch.setattr(zo, "create_profile", _create)
+    async def _goc(name): return "prof_new"
+    monkeypatch.setattr(zo, "get_or_create_profile", _goc)
     monkeypatch.setattr(zo.repo, "update_client_by_id", lambda cid, f: saved.update(f) or 1)
     out = asyncio.run(zo.ensure_zernio_profile("c1", "auth"))
     assert out["zernio_profile_id"] == "prof_new" and saved["zernio_profile_id"] == "prof_new"
@@ -37,8 +37,8 @@ def test_ensure_profile_crea_si_falta_y_guarda(monkeypatch):
 def test_ensure_profile_reusa_si_existe(monkeypatch):
     _auth(monkeypatch, {"id": "c1", "user_id": "u1", "zernio_profile_id": "prof_ya"})
     called = {"create": False}
-    async def _create(name, description=""): called["create"] = True; return "X"
-    monkeypatch.setattr(zo, "create_profile", _create)
+    async def _goc(name): called["create"] = True; return "X"
+    monkeypatch.setattr(zo, "get_or_create_profile", _goc)
     out = asyncio.run(zo.ensure_zernio_profile("c1", "auth"))
     assert out["zernio_profile_id"] == "prof_ya" and called["create"] is False   # NO recrea
 
@@ -104,13 +104,38 @@ def test_connected_accounts_sin_followers_no_inventa_cero(monkeypatch):
     assert out["items"][0]["followers_count"] is None   # '—', no 0
 
 
+# ── B2.5 Capa B · nombre ÚNICO por business_id (dos negocios homónimos no colisionan) ──
+def test_profile_name_unico_por_negocio_mismo_nombre():
+    """Dos negocios con el MISMO clients.name -> names de profile DISTINTOS (sufijo client_id=PK)."""
+    cid1 = "b8d1b9f5-dde0-41be-8e7f-c35a1a5cfded"
+    cid2 = "afb9f578-85fb-438b-a2d3-dd11db7c5144"
+    n1 = zo._profile_name({"name": "Zafacones Ramos"}, cid1)
+    n2 = zo._profile_name({"name": "Zafacones Ramos"}, cid2)
+    assert n1 != n2
+    assert cid1 in n1 and cid2 in n2            # uuid COMPLETO presente (unicidad innegociable)
+
+
+def test_profile_name_trunca_nombre_largo_conserva_uuid():
+    """Nombre largo -> base truncada PERO uuid completo intacto (cualquier nombre conecta)."""
+    cid = "b8d1b9f5-dde0-41be-8e7f-c35a1a5cfded"
+    long_name = "Distribuidora de Productos Alimenticios del Caribe Sociedad Anonima Internacional"
+    name = zo._profile_name({"name": long_name}, cid)
+    assert name.endswith(cid)                   # uuid completo, al final, intacto
+    assert len(name) <= 40 + 3 + 36             # base[:40] + ' · ' + uuid
+
+
+def test_profile_name_sin_nombre_usa_client_id():
+    cid = "b8d1b9f5-dde0-41be-8e7f-c35a1a5cfded"
+    assert zo._profile_name({"name": ""}, cid) == cid   # sin name -> client_id solo (único, limpio)
+
+
 # ── B2.5 Capa A · robustez: ZernioError del connect → HTTP honesto, NO 500 crudo ──
 def test_connect_url_409_si_nombre_duplicado(monkeypatch):
     """Profile name duplicado (Zernio 400 'already exists') → 409 zernio_profile_name_conflict."""
     _auth(monkeypatch, {"id": "c1", "user_id": "u1", "name": "Zafacones", "zernio_profile_id": None})
-    async def _boom(name, description=""):
+    async def _boom(name):
         raise ZernioPublishError('zernio_profiles_400:{"error":"A profile with this name already exists"}')
-    monkeypatch.setattr(zo, "create_profile", _boom)
+    monkeypatch.setattr(zo, "get_or_create_profile", _boom)
     with pytest.raises(HTTPException) as e:
         asyncio.run(zo.zernio_connect_url("c1", "instagram", "auth", None))
     assert e.value.status_code == 409 and e.value.detail == "zernio_profile_name_conflict"
@@ -119,9 +144,9 @@ def test_connect_url_409_si_nombre_duplicado(monkeypatch):
 def test_connect_url_502_si_transporte(monkeypatch):
     """Fallo de transporte a Zernio → 502 zernio_unavailable (no 500 crudo)."""
     _auth(monkeypatch, {"id": "c1", "user_id": "u1", "name": "X", "zernio_profile_id": None})
-    async def _boom(name, description=""):
+    async def _boom(name):
         raise ZernioPublishError("zernio_transport_error:ConnectTimeout")
-    monkeypatch.setattr(zo, "create_profile", _boom)
+    monkeypatch.setattr(zo, "get_or_create_profile", _boom)
     with pytest.raises(HTTPException) as e:
         asyncio.run(zo.zernio_connect_url("c1", "instagram", "auth", None))
     assert e.value.status_code == 502

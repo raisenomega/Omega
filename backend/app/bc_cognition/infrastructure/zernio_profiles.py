@@ -29,6 +29,33 @@ async def create_profile(name: str, description: str = "") -> str:
     return str(pid)
 
 
+async def find_profile_by_name(name: str) -> Optional[str]:
+    """GET /profiles → _id del profile cuyo name == `name` (exact match) · None si no existe.
+    Como el name lleva el client_id (PK · B2.5 Capa B), un match exacto es SIEMPRE de ESTE negocio
+    (NO cross-tenant · es lo que hace seguro el reuse idempotente)."""
+    headers, base = _conf()
+    async with httpx.AsyncClient(timeout=_HTTP_TIMEOUT, headers=headers) as client:
+        try:
+            resp = await client.get(f"{base}/profiles")
+        except httpx.HTTPError as e:
+            raise ZernioPublishError(f"zernio_transport_error:{type(e).__name__}") from e
+    if resp.status_code != 200:
+        raise ZernioPublishError(f"zernio_profiles_list_{resp.status_code}:{resp.text[:200]}")
+    data = resp.json()
+    profiles = data.get("profiles") if isinstance(data, dict) else data
+    for p in (profiles or []):
+        if p.get("name") == name and p.get("_id"):
+            return str(p["_id"])
+    return None
+
+
+async def get_or_create_profile(name: str) -> str:
+    """Idempotente (B2.5 Capa B): reusa el profile existente con ESE nombre (único por client_id →
+    cierra el huérfano si un create previo no persistió el id) · si no existe, lo crea."""
+    existing = await find_profile_by_name(name)
+    return existing if existing else await create_profile(name)
+
+
 async def get_connect_url(platform: str, profile_id: str, redirect_url: Optional[str] = None) -> str:
     """GET /connect/<platform>?profileId(&headless=true&redirectUrl=...) → authUrl del OAuth.
     redirect_url dado → modo HEADLESS: el OAuth vuelve a NUESTRO dominio (B-2 fix · cierra aislamiento +

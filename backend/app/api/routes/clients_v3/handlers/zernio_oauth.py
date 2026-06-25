@@ -1,10 +1,6 @@
-"""B-2 · profile + OAuth connect URL + estado real de conexión (por negocio · aislado).
-
-Cada negocio = un profile Zernio. getConnectUrl es profile-scoped → la red que el cliente
-autoriza cae en SU profile. SEGURIDAD: get_supabase_service usa service_role → BYPASSA RLS;
-el guard es user_owns_client en CADA endpoint ANTES de tocar nada (igual que zernio_mapping).
-La etiqueta cara-cliente sale del platform de la red (white-label · 'Zernio' nunca en pantalla).
-"""
+"""B-2 · profile + connect-url + estado de conexión por negocio (aislado · white-label).
+Guard = user_owns_client en CADA endpoint ANTES de tocar nada (service_role bypassa RLS).
+La etiqueta cara-cliente sale del platform de la red ('Zernio' nunca en pantalla)."""
 import logging
 from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
@@ -15,7 +11,7 @@ from app.api.routes.clients_v3._access_control import user_owns_client
 from app.api.routes.clients_v3._zernio_state import sign_state, build_callback_url
 from app.api.routes.clients_v3._zernio_http import zernio_error_to_http
 from app.bc_cognition.infrastructure.zernio_adapter import list_accounts, ZernioError
-from app.bc_cognition.infrastructure.zernio_profiles import create_profile, get_connect_url
+from app.bc_cognition.infrastructure.zernio_profiles import get_or_create_profile, get_connect_url
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -23,10 +19,8 @@ router = APIRouter()
 
 
 def _account_followers(account: dict, profile_id: str) -> Optional[int]:
-    """followersCount REAL del account SOLO si pertenece a ESTE profile (aislamiento · mismo
-    criterio que _analytics_assembler.followers_total · NUNCA page_follows). None si el profile
-    no casa o no hay dato → la fila muestra '—', JAMÁS 0 inventado: el número real de Zernio es
-    la única fuente (P1 · cero sintético)."""
+    """followersCount REAL solo si el account es de ESTE profile (aislamiento · NUNCA page_follows).
+    None si no casa o falta dato → la UI muestra '—', JAMÁS 0 inventado (P1 · cero sintético)."""
     p = account.get("profileId")
     acc_pid = str(p.get("_id")) if isinstance(p, dict) else (str(p) if p else None)
     if acc_pid != profile_id:
@@ -47,12 +41,22 @@ async def _owned(client_id: str, authorization: Optional[str]) -> tuple[dict, di
     return user, client
 
 
+_NAME_BASE_MAX = 40  # B2.5 Capa B · cap del nombre legible · el uuid (36) SIEMPRE entra intacto
+
+
+def _profile_name(client: dict, client_id: str) -> str:
+    """Nombre ÚNICO por negocio (B2.5 Capa B): client_id (PK) → dos homónimos nunca colisionan.
+    Base truncada (cualquier nombre conecta) · uuid intacto · INTERNO a Zernio (white-label)."""
+    base = (client.get("name") or "").strip()[:_NAME_BASE_MAX]
+    return f"{base} · {client_id}" if base else client_id
+
+
 async def _ensure_profile(client_id: str, client: dict) -> str:
-    """Devuelve el zernio_profile_id del negocio · lo crea (POST /profiles) y persiste si falta."""
+    """zernio_profile_id del negocio · crea (nombre único + idempotente) + persiste si falta · cierra huérfanos."""
     pid = client.get("zernio_profile_id")
     if pid:
         return str(pid)
-    pid = await create_profile(client.get("name") or client_id)
+    pid = await get_or_create_profile(_profile_name(client, client_id))
     repo.update_client_by_id(client_id, {"zernio_profile_id": pid})
     return pid
 
@@ -67,14 +71,12 @@ async def ensure_zernio_profile(client_id: str, authorization: Optional[str] = H
 async def zernio_connect_url(client_id: str, platform: str,
                              authorization: Optional[str] = Header(None),
                              origin: Optional[str] = Header(None)) -> dict:
-    user, client = await _owned(client_id, authorization)  # JWT + ownership ANTES de firmar el state
-    # B2.5 Capa A · cualquier fallo de Zernio (ej. nombre de profile duplicado → 400) sale como HTTP
-    # honesto, NO 500 crudo. _owned queda FUERA del try (sus 404/403 ya son correctos).
+    user, client = await _owned(client_id, authorization)  # 404/403 quedan FUERA del try (ya correctos)
+    # B2.5 Capa A · fallo de Zernio → HTTP honesto (no 500 crudo · ej. nombre duplicado → 409).
     try:
         pid = await _ensure_profile(client_id, client)
-        # firmamos el Origin del navegador SOLO si ya está permitido (si falta/no permitido → "" → callback usa [0]).
+        # Origin firmado solo si ya está permitido (si no → "" → callback usa cors_origins_list[0]).
         safe_origin = origin if (origin and origin in settings.cors_origins_list) else ""
-        # user_id FIRMADO en el state → el callback ata el stash FB a quien inició el flujo (defensa-en-profundidad).
         redirect_url = build_callback_url(sign_state(client_id, platform, safe_origin, str(user["id"])))
         return {"auth_url": await get_connect_url(platform, pid, redirect_url)}
     except ZernioError as e:

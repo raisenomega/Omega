@@ -61,3 +61,37 @@ def test_list_accounts_filtra_por_profile(monkeypatch):
     out = asyncio.run(za.list_accounts("prof_123"))
     assert out == [{"_id": "a1", "platform": "facebook"}]
     assert "profileId=prof_123" in _Fake.last_url
+
+
+# ── B2.5 Capa B · find-by-name (exacto, seguro por el sufijo=PK) + get-or-create idempotente ──
+def test_find_profile_by_name_exact_match(monkeypatch):
+    _patch(monkeypatch, _Resp(200, {"profiles": [
+        {"name": "Otro", "_id": "p_otro"},
+        {"name": "Zafacones Ramos · uuid1", "_id": "p_mio"},
+    ]}))
+    out = asyncio.run(zp.find_profile_by_name("Zafacones Ramos · uuid1"))
+    assert out == "p_mio"
+
+
+def test_find_profile_by_name_none_si_no_existe(monkeypatch):
+    _patch(monkeypatch, _Resp(200, {"profiles": [{"name": "Otro", "_id": "p_otro"}]}))
+    assert asyncio.run(zp.find_profile_by_name("No existe")) is None
+
+
+def test_get_or_create_reusa_si_existe(monkeypatch):
+    """Idempotencia: find encuentra el profile (mismo sufijo=suyo) -> reusa, NO crea (cierra huerfano)."""
+    created = {"n": 0}
+    async def _find(name): return "prof_existente"
+    async def _create(name, description=""): created["n"] += 1; return "NUEVO"
+    monkeypatch.setattr(zp, "find_profile_by_name", _find)
+    monkeypatch.setattr(zp, "create_profile", _create)
+    out = asyncio.run(zp.get_or_create_profile("X · uuid"))
+    assert out == "prof_existente" and created["n"] == 0
+
+
+def test_get_or_create_crea_si_no_existe(monkeypatch):
+    async def _find(name): return None
+    async def _create(name, description=""): return "NUEVO"
+    monkeypatch.setattr(zp, "find_profile_by_name", _find)
+    monkeypatch.setattr(zp, "create_profile", _create)
+    assert asyncio.run(zp.get_or_create_profile("X · uuid")) == "NUEVO"
