@@ -35,7 +35,8 @@ class ScheduledPostV3Create(BaseModel):
     Atomic insert · todos o ninguno.
     """
     client_id: str = Field(..., description="Client UUID")
-    platform: str = Field(..., max_length=32, description="instagram/facebook/...")
+    platform: str = Field(..., max_length=32, description="instagram/facebook/... (seed FormBar · legacy single-red)")
+    platforms: Optional[list[str]] = Field(default=None, description="E · redes marcadas (fan-out). Si presente y no vacia -> 1 row por red active resuelta. None/vacio -> usa 'platform' (flujo legacy single-red · honra social_account_id)")
     content_ids: list[str] = Field(..., min_length=1, description="content_lab_generated.id de cada anchor del bloque · 1+")
     scheduled_for: datetime = Field(..., description="Timestamp UTC del PRIMER post · backend espacia los siguientes")
     media_url: Optional[str] = Field(default=None, description="URL Storage compartida entre todos los N posts del bloque")

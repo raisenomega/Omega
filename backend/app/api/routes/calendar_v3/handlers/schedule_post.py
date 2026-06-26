@@ -17,6 +17,7 @@ from app.api.routes.calendar_v3._access import (
     resolve_account_by_id_or_403,
 )
 from app.api.routes.calendar_v3._timestamp_spacer import space_timestamps
+from app.api.routes.calendar_v3._fanout import build_fanout_rows
 from app.api.routes.calendar_v3._schedule_response import to_responses
 from app.api.routes.calendar_v3.models.calendar_models import (
     ScheduledPostV3Create, ScheduledPostV3Response,
@@ -34,11 +35,6 @@ async def schedule_post_v3(
     user = await get_current_user(authorization)
     user_id = user["id"]
     resolve_client_or_403(user_id, request.client_id)
-    # DEBT-CL-015: prioridad social_account_id (user eligió en dropdown) → fallback primera activa
-    if request.social_account_id:
-        account = resolve_account_by_id_or_403(request.client_id, request.social_account_id)
-    else:
-        account = resolve_account_by_client_platform_or_404(request.client_id, request.platform)
     n = len(request.content_ids)
 
     # Valida que los content_ids existan Y sean del client ANTES del insert · evita FK 500
@@ -53,17 +49,29 @@ async def schedule_post_v3(
     bv = await brand_gate.check_or_raise(user_id, request.client_id, request.content_ids, request.force_brand_voice)
 
     timestamps = space_timestamps(request.scheduled_for, n)
-    rows_to_insert = [
-        {
-            "client_id": request.client_id,
-            "social_account_id": str(account["id"]),
-            "content_id": cid,
-            "scheduled_for": ts.isoformat(),
-            "status": "pending",
-            "media_url": request.media_url,
-        }
-        for cid, ts in zip(request.content_ids, timestamps)
-    ]
+    if request.platforms:
+        # E · fan-out multi-red: N content_ids x M redes resueltas (primera active por red · omite sin-cuenta)
+        rows_to_insert = build_fanout_rows(
+            request.client_id, request.platforms, request.content_ids, timestamps, request.media_url)
+        if not rows_to_insert:
+            raise HTTPException(422, "no_account_for_any_platform")  # 0 redes resuelven · 0 rows basura
+    else:
+        # Legacy single-red · DEBT-CL-015: prioridad social_account_id (dropdown) → fallback primera activa
+        if request.social_account_id:
+            account = resolve_account_by_id_or_403(request.client_id, request.social_account_id)
+        else:
+            account = resolve_account_by_client_platform_or_404(request.client_id, request.platform)
+        rows_to_insert = [
+            {
+                "client_id": request.client_id,
+                "social_account_id": str(account["id"]),
+                "content_id": cid,
+                "scheduled_for": ts.isoformat(),
+                "status": "pending",
+                "media_url": request.media_url,
+            }
+            for cid, ts in zip(request.content_ids, timestamps)
+        ]
 
     try:
         rows = repo.insert_scheduled_posts_bulk(rows_to_insert)
@@ -71,5 +79,5 @@ async def schedule_post_v3(
         logger.error(f"schedule_bulk_v3 failed · user={user_id} client={request.client_id} n={n}: {e}", exc_info=True)
         raise HTTPException(500, f"schedule_bulk_failed:{type(e).__name__}:{str(e)[:200]}")
 
-    logger.info(f"V3 bulk_schedule {n} rows · user={user_id} · client={request.client_id} · platform={request.platform}")
+    logger.info(f"V3 bulk_schedule {len(rows)} rows (n={n}) · user={user_id} · client={request.client_id} · platforms={request.platforms or request.platform}")
     return to_responses(rows, bv["skipped"], bv["below_brand_bar"])

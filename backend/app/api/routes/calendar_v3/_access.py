@@ -7,7 +7,7 @@ funcionando intacto).
 cross-BC helper · candidato a app.shared.access_control cuando crezca
 el número de consumidores (>=3 BCs distintos).
 """
-from typing import Any
+from typing import Any, Optional
 from fastapi import HTTPException
 
 # cross-BC helper · candidato a app.shared.access_control
@@ -24,6 +24,20 @@ def resolve_client_or_403(user_id: str, client_id: str) -> dict[str, Any]:
     if not user_owns_client(user_id, client):
         raise HTTPException(status_code=403, detail="client_access_denied")
     return client
+
+
+def first_active_account_id_or_none(client_id: str, platform: str) -> Optional[str]:
+    """E (fan-out multi-red) · gemelo NO-LANZANTE de resolve_account_by_client_platform_or_404.
+    Misma query que _supervised_approve._first_active_account_id (probada en prod): primera cuenta
+    status='active' de la plataforma. None si no hay -> la red marcada se OMITE del fan-out (jamas
+    se inventa cuenta · invariante social_account_id NUNCA NULL). Vive aca (no en content_v3) para
+    no acoplar bounded contexts."""
+    if not platform:
+        return None
+    sb = get_supabase_service().client
+    r = sb.table("social_accounts").select("id").eq("client_id", client_id).eq(
+        "platform", platform).eq("status", "active").order("created_at").limit(1).execute()
+    return str(r.data[0]["id"]) if r.data else None
 
 
 def resolve_account_by_client_platform_or_404(client_id: str, platform: str) -> dict[str, Any]:

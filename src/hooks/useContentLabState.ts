@@ -7,6 +7,7 @@ import { useVideoJobPolling } from "@/hooks/useVideoJobPolling";
 import { useSaveContent } from "@/hooks/useContentActions";
 import { downloadResult } from "@/lib/download-result";
 import { useScheduleBlock, MAX_PIECES } from "@/hooks/useScheduleBlock";
+import { useConnectedNetworks } from "@/hooks/useMyAccounts";
 import { useResearch } from "@/hooks/useResearch";
 import { loadPersistedResults, persistResults } from "@/lib/content-lab-persistence";
 import { brandVoiceScheduleError } from "@/lib/schedule-error";
@@ -67,6 +68,11 @@ export function useContentLabState(activeBusinessId: string | null) {
   const [modalState, setModalState] = useState<ModalState>("closed");
   const [scheduledAt, setScheduledAt] = useState("");
   const [expandedResult, setExpandedResult] = useState<ResultV2 | null>(null);
+  // E · fan-out multi-red: redes active del negocio (checkbox source) + redes marcadas (siembra form.platform).
+  const { data: accounts = [] } = useConnectedNetworks(activeBusinessId ?? undefined);
+  const connectedNetworks = Array.from(new Set(accounts.map(a => a.platform.toLowerCase())));
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const togglePlatform = (p: string) => setSelectedPlatforms(cur => cur.includes(p) ? cur.filter(x => x !== p) : [...cur, p]);
 
   const generateText = useGenerateText();
   const generateImage = useGenerateImage();
@@ -107,6 +113,8 @@ export function useContentLabState(activeBusinessId: string | null) {
 
   const handleAgendar = (r: ResultV2) => {
     if (block.items.length >= MAX_PIECES) { toast({ title: `Máximo ${MAX_PIECES} piezas en un bloque · quitá una para agregar otra`, variant: "destructive" }); return; }
+    // E · Opción 2: al abrir bloque fresco, sembrar la red del dropdown del FormBar como default tildado.
+    if (block.items.length === 0) setSelectedPlatforms([form.platform]);
     setBlock(prev => ({ items: [...prev.items, r] })); setModalState("open"); setExpandedResult(null);
   };
   const handleRemoveItem = (i: number) => setBlock(prev => ({ items: prev.items.filter((_, j) => j !== i) }));
@@ -126,8 +134,11 @@ export function useContentLabState(activeBusinessId: string | null) {
   const handleConfirm = async () => {
     // clientId siempre = activeBusinessId (Switcher V1 · sync en ContentLabPageV2) · guard defensivo
     if (!form.clientId) { toast({ title: "Falta seleccionar cliente", variant: "destructive" }); return; }
+    // E · fan-out: mandar solo redes marcadas Y conectadas (front-side de la doble guarda · backend omite sin-cuenta)
+    const platforms = selectedPlatforms.filter(p => connectedNetworks.includes(p));
+    if (platforms.length === 0) { toast({ title: "Marcá al menos una red conectada", variant: "destructive" }); return; }
     try {
-      await scheduleBlock.mutateAsync({ block, clientId: form.clientId, platform: form.platform, scheduledAt, accountId: form.accountId });
+      await scheduleBlock.mutateAsync({ block, clientId: form.clientId, platform: form.platform, platforms, scheduledAt, accountId: form.accountId });
       const ids = block.items.map(i => i.id);
       setResults(prev => prev.filter(r => !ids.includes(r.id)));
       setBlock(INITIAL_BLOCK); setModalState("closed"); setScheduledAt("");
@@ -182,6 +193,7 @@ export function useContentLabState(activeBusinessId: string | null) {
   return {
     form, setForm, variations, setVariations, results, setResults,
     block, modalState, setModalState, scheduledAt, setScheduledAt,
+    connectedNetworks, selectedPlatforms, togglePlatform,
     expandedResult, setExpandedResult, slots: Math.max(4, results.length), isPending,
     scheduling: scheduleBlock.isPending,  // BUG 11 jun · feedback de progreso en "Agendar bloque"
     handleGenerate, handleAgendar, handleRemoveItem, handleSave, handleDownload, handleCopy, handleConfirm, handleResearch, handleCancelVideo,

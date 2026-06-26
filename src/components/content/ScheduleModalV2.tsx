@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import type { ModalState, BlockState } from "@/components/content/ResultCardV2";
 import { computeSpread, SPREAD_HOURS, SPREAD_MAX_DAY } from "@/lib/schedule-spread";
 import { MEDIA_TYPES } from "@/hooks/useScheduleBlock";
+import { NetworkPicker } from "@/components/content/NetworkPicker";
 
 interface Props {
   state: ModalState;
@@ -16,13 +17,16 @@ interface Props {
   onClose: () => void;
   onConfirm: () => void;
   onRemoveItem: (i: number) => void;
+  connectedNetworks: string[];      // E · redes active del negocio (fan-out picker)
+  selectedPlatforms: string[];      // E · redes marcadas (siembra form.platform · Opción 2)
+  onTogglePlatform: (p: string) => void;
   loading?: boolean;  // BUG 11 jun · request en vuelo → botón con spinner (no parece colgado)
 }
 
 const MIN_PIECES = 2;  // mínimo real = 1 caption + 1 imagen/video (no 2 piezas cualquiera)
 const NON_TEXT = ["image", "video", "hashtags"];
 
-export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onMinimize, onRestore, onClose, onConfirm, onRemoveItem, loading = false }: Props) {
+export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onMinimize, onRestore, onClose, onConfirm, onRemoveItem, connectedNetworks, selectedPlatforms, onTogglePlatform, loading = false }: Props) {
   if (state === "closed") return null;
 
   const count = block.items.length;
@@ -31,7 +35,8 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
   const hasMin = textCount >= 1 && mediaCount >= 1;  // 1 caption + 1 imagen/video
   const missing = hasMin ? "" : textCount < 1 && mediaCount < 1 ? "1 caption + 1 imagen/video" : textCount < 1 ? "1 caption" : "1 imagen/video";
   const spread = textCount > 1 && scheduledAt ? computeSpread(scheduledAt, textCount) : [];
-  const ready = hasMin && scheduledAt && new Date(scheduledAt) > new Date();
+  const validNetworks = selectedPlatforms.filter(p => connectedNetworks.includes(p));  // E · doble guarda front
+  const ready = hasMin && scheduledAt && new Date(scheduledAt) > new Date() && validNetworks.length >= 1;
 
   if (state === "minimized") {
     return (
@@ -69,6 +74,7 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
               ))
             )}
           </div>
+          <div className="pt-2 border-t"><NetworkPicker networks={connectedNetworks} selected={selectedPlatforms} onToggle={onTogglePlatform} /></div>
           <div className="space-y-1 pt-2 border-t">
             <Label className="text-xs">Fecha y hora</Label>
             <input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} disabled={!hasMin}
