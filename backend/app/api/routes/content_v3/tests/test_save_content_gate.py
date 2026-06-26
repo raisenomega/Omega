@@ -16,6 +16,14 @@ from app.api.routes.content_v3.models.content_models import SaveContentRequest
 _DRAFT = {"id": "d1", "client_id": "cli-A", "status": "draft", "generated_text": "post"}
 
 
+def _item(ui_type=None):
+    """Draft con metadata.ui_type (el tipo fino · el corpus solo aprende de 'caption')."""
+    it = {"id": "d1", "client_id": "cli-A", "status": "draft", "generated_text": "post"}
+    if ui_type is not None:
+        it["metadata"] = {"ui_type": ui_type}
+    return it
+
+
 def _run(is_saved, *, item=None, gate_raises=False):
     item = item if item is not None else dict(_DRAFT)
     calls = {"safe_insert": [], "gate": 0}
@@ -52,7 +60,7 @@ def test_approve_danino_422_no_cambia_nada():
 
 
 def test_approve_ok_procede_y_aprende():
-    calls, code = _run(True, gate_raises=False)
+    calls, code = _run(True, item=_item("caption"), gate_raises=False)
     assert code is None and calls["gate"] == 1
     assert "update_status" in calls["safe_insert"] and "corpus" in calls["safe_insert"]
 
@@ -60,3 +68,27 @@ def test_approve_ok_procede_y_aprende():
 def test_unapprove_no_corre_gate():
     calls, code = _run(False)   # approved->draft (is_saved=false) · no se gatea des-aprobar
     assert code is None and calls["gate"] == 0
+
+
+# ── Corpus solo-caption (B · la raíz · solo metadata.ui_type=='caption' aprende voz de marca) ──
+def test_approve_caption_entra_al_corpus():
+    calls, code = _run(True, item=_item("caption"))
+    assert code is None and "corpus" in calls["safe_insert"]   # caption SÍ aprende
+
+
+def test_approve_video_script_no_entra_al_corpus():
+    calls, code = _run(True, item=_item("video_script"))
+    assert code is None
+    assert "corpus" not in calls["safe_insert"]                # script NO contamina la referencia
+    assert "update_status" in calls["safe_insert"]             # aprobar/agendar intactos
+    assert "memory" in calls["safe_insert"]                    # memory NO se gatea (solo el corpus)
+
+
+def test_approve_hashtags_no_entra_al_corpus():
+    calls, code = _run(True, item=_item("hashtags"))
+    assert code is None and "corpus" not in calls["safe_insert"]
+
+
+def test_approve_sin_uitype_no_entra_al_corpus():
+    calls, code = _run(True, item=_item(None))                 # metadata vacío → fail-closed
+    assert code is None and "corpus" not in calls["safe_insert"]

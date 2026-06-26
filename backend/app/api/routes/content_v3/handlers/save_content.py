@@ -44,7 +44,11 @@ async def save_content(
     if request.is_saved and not was_approved:
         text = item.get("generated_text") or ""  # col real
         client_id = str(item["client_id"])
-        await repo.safe_insert("corpus", repo.insert_brand_voice_corpus_approved, client_id, text, None)
+        # Solo los CAPTIONS alimentan la voz de marca (la referencia del scorer X5). Scripts,
+        # hashtags, emails, etc. NO son captions → NO entran (cierra la contaminación de raíz ·
+        # filtro por ui_type fino, NO content_type que colapsa a 'text'). Sin ui_type → fail-closed.
+        if (item.get("metadata") or {}).get("ui_type") == "caption":
+            await repo.safe_insert("corpus", repo.insert_brand_voice_corpus_approved, client_id, text, None)
         await repo.safe_insert("memory", repo.insert_agent_memory_approved, user["id"], client_id, text)
         # P2: draft supervisado con fecha_sugerida → al calendario (best-effort · no rompe el approve)
         scheduled = await repo.safe_insert("schedule_on_approve", _sync_schedule, item)
