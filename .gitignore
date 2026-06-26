@@ -163,6 +163,8 @@ OMEGA_MCP_*.md
 OMEGA_ROLES_*.md
 # 1 jun · HERMES diseño (quedó fuera del patrón de SENTINEL_GUARDIAN_*_COMPLETE)
 HERMES_*.md
+# 26 jun · referencia interna Zernio/LUAN/Analytics (el doc se autodeclaraba ignorado sin estarlo · bug cerrado)
+ZERNIO_LUAN_REFERENCE.md
 ANALISIS_*.md
 SECURITY_SHIELD_*.md
 MODELO_NEGOCIO_OMEGA_CLIENTE.md
