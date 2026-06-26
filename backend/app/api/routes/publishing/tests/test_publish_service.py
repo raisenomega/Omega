@@ -239,3 +239,65 @@ def test_cap_tiktok_title_ig_fb_intactos():
     msg = "x" * 200                                            # el caption largo que truncamos para TikTok
     assert ps._cap_tiktok_title(msg, "instagram", "https://x.co/img.png") == msg   # IG: entero
     assert ps._cap_tiktok_title(msg, "facebook",  "https://x.co/img.png") == msg   # FB: entero
+
+
+# ── Pieza 3 · story/placement · platformSpecificData.contentType:"story" (STEP 0 en vivo) ──
+# story SOLO en IG/FB (doc oficial) · filtro en OMEGA (nunca a redes sin story) · guard de ratio
+# saltado cuando is_story (el 9:16 ES válido como historia · no lo matamos antes de Zernio).
+
+def test_story_psd_instagram():
+    assert ps.story_psd(True, "instagram") == {"contentType": "story"}
+
+
+def test_story_psd_facebook():
+    assert ps.story_psd(True, "facebook") == {"contentType": "story"}
+
+
+def test_story_psd_tiktok_none():       # tiktok NO soporta story → filtro → None (post normal)
+    assert ps.story_psd(True, "tiktok") is None
+
+
+def test_story_psd_linkedin_none():     # linkedin NO soporta story → None
+    assert ps.story_psd(True, "linkedin") is None
+
+
+def test_story_psd_not_story_none():    # sin flag → None (retrocompat · flujo de hoy)
+    assert ps.story_psd(False, "instagram") is None
+
+
+def test_story_9x16_ig_salta_guard_y_manda_psd(monkeypatch):  # ANTI-SILENCIO #1+#2
+    repo = _Repo({**_post(media="https://x/y.png"), "is_story": True}, platform="instagram")
+    cap = {}
+    async def _cap(**kw): cap.update(kw); return "zpost_s"
+    _wire(monkeypatch, repo, create=_cap, ratio=0.5625)  # 9:16 · guard rechazaría si NO fuera story
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is True
+    assert cap["platforms"][0].get("platformSpecificData") == {"contentType": "story"}  # #2 · psd a Zernio
+    assert repo.calls == ["publishing", ("published", "zpost_s")]           # #1 · guard NO marcó failed
+
+
+def test_story_fb_manda_psd(monkeypatch):
+    repo = _Repo({**_post(media="https://x/y.png"), "is_story": True}, platform="facebook")
+    cap = {}
+    async def _cap(**kw): cap.update(kw); return "zp"
+    _wire(monkeypatch, repo, create=_cap, ratio=0.5625)
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is True and cap["platforms"][0].get("platformSpecificData") == {"contentType": "story"}
+
+
+def test_story_tiktok_psd_none_post_normal(monkeypatch):  # filtro: story marcada pero tiktok → psd None
+    repo = _Repo({**_post(media="https://x/y.mp4"), "is_story": True}, platform="tiktok")
+    cap = {}
+    async def _cap(**kw): cap.update(kw); return "zp"
+    _wire(monkeypatch, repo, create=_cap)
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is True and cap["platforms"][0].get("platformSpecificData") is None
+
+
+def test_no_story_ig_sin_psd(monkeypatch):  # retrocompat: sin flag → create_post SIN psd · guard corrió
+    repo = _Repo(_post(media="https://x/y.png"), platform="instagram")
+    cap = {}
+    async def _cap(**kw): cap.update(kw); return "zp"
+    _wire(monkeypatch, repo, create=_cap, ratio=1.0)  # cuadrada · guard pasa
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is True and cap["platforms"][0].get("platformSpecificData") is None

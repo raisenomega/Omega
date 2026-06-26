@@ -33,6 +33,9 @@ _PUBLISHABLE_STATUS = "pending"
 # Redes que exigen media (validacion de PRESENCIA · IG=imagen, TikTok=video). La validacion de TIPO
 # la hace Zernio (si la media no sirve, lo rechaza → mark_failed honesto · decision owner #3).
 _MEDIA_REQUIRED = {"instagram", "tiktok"}
+# Pieza 3 · redes que soportan contentType:"story" (doc oficial Zernio · IG+FB · STEP 0 en vivo).
+# El resto NO lo soporta → psd=None → post normal (filtro: jamás story a una red sin historias).
+_STORY_PLATFORMS = {"instagram", "facebook"}
 # Tope de reintentos para fallos TRANSITORIOS de Zernio (5xx/429/timeout · Gap-1 resiliencia SPOF).
 # Constante local (resiliencia operativa, NO guardrail de negocio → no entra en limits_omega).
 MAX_RETRIES = 3
@@ -53,6 +56,12 @@ def _cap_tiktok_title(message: str, platform: str, media_url: Optional[str]) -> 
     if sp > 0:
         cut = cut[:sp].rstrip()                       # corta en límite de palabra (si hay espacio)
     return cut + "…"
+
+
+def story_psd(is_story: bool, platform: str) -> Optional[dict]:
+    """platformSpecificData de Zernio si la pieza es story Y la red lo soporta (IG/FB · estructura STEP 0).
+    None si no es story o la red no tiene historias → post normal (filtro · decisión owner)."""
+    return {"contentType": "story"} if is_story and platform in _STORY_PLATFORMS else None
 
 
 class PublishGateError(Exception):
@@ -99,6 +108,7 @@ async def publish_scheduled_post(scheduled_post_id: str, client_id: str) -> Publ
     content_id = post.get("content_id")
     message = await asyncio.to_thread(repo.get_content_text, str(content_id)) if content_id else ""
     media_url = post.get("media_url")
+    is_story = bool(post.get("is_story"))  # Pieza 3 · placement (col 00079) · viaja desde el agendado
     if platform in _MEDIA_REQUIRED and not media_url:
         # media faltante = el post NO puede salir en esta red → fallo real del post → failed honesto.
         err = f"zernio_media_requerida:{platform}"
@@ -109,7 +119,9 @@ async def publish_scheduled_post(scheduled_post_id: str, client_id: str) -> Publ
     # ("requires media content") cuando la imagen es vertical pero la red exige feed (IG: [0.8, 1.91]).
     # Solo imagenes (no video) · solo redes con rango de feed · fail-open si no se puede medir el ratio.
     # Per-fila: esta fila falla honesto; las demas del fan-out (TikTok/FB) publican normal (no se abortan).
-    if media_url and needs_ratio_check(platform) and _media_type(str(media_url)) == "image":
+    # ANTI-SILENCIO #1 (Pieza 3): si is_story, el 9:16 ES válido como historia → NO se aplica el guard de
+    # feed (si no, se mark_failed antes de llegar a Zernio · el guard que mató la prueba en vivo).
+    if media_url and needs_ratio_check(platform) and _media_type(str(media_url)) == "image" and not is_story:
         ratio = await fetch_image_ratio(str(media_url))
         if ratio is not None:
             ar_err = aspect_error(platform, ratio)
@@ -132,9 +144,13 @@ async def publish_scheduled_post(scheduled_post_id: str, client_id: str) -> Publ
     if content != message:
         logger.info("tiktok title truncado · client=%s · %d→%d chars (cap 90 · B4)", client_id, len(message), len(content))
     try:
+        plat: dict = {"platform": platform, "accountId": account_id}
+        psd = story_psd(is_story, platform)  # ANTI-SILENCIO #2 · story SOLO IG/FB (None en el resto)
+        if psd:
+            plat["platformSpecificData"] = psd  # se pasa verbatim a Zernio (estructura STEP 0)
         platform_post_id = await create_post(
             content=content,
-            platforms=[{"platform": platform, "accountId": account_id}],
+            platforms=[plat],
             publish_now=True,
             media_urls=[str(media_url)] if media_url else None,
         )

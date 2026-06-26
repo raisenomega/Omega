@@ -26,8 +26,10 @@ def build_fanout_rows(
     timestamps: list[datetime],
     media_url: Optional[str],
     resolve: Callable[[str, str], Optional[str]] = first_active_account_id_or_none,
+    is_story: bool = False,
 ) -> list[dict[str, Any]]:
-    """1 row por (red resuelta, content_id). resolve inyectable (tests). [] si ninguna red resuelve."""
+    """1 row por (red resuelta, content_id). resolve inyectable (tests). [] si ninguna red resuelve.
+    is_story (Pieza 3) viaja en cada fila · el filtro por-red (story solo IG/FB) lo aplica REX al publicar."""
     rows: list[dict[str, Any]] = []
     for platform in normalize_platforms(platforms):
         account_id = resolve(client_id, platform)
@@ -41,5 +43,6 @@ def build_fanout_rows(
                 "scheduled_for": ts.isoformat(),
                 "status": "pending",
                 "media_url": media_url,
+                "is_story": is_story,
             })
     return rows

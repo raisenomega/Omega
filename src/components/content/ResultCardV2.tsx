@@ -1,10 +1,11 @@
-import { Calendar, Save, Download, Check, X, Copy } from "lucide-react";
+import { Save, Download, Check, X, Copy } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TYPE_LABELS, AGENDA_TYPES } from "@/lib/content-lab-constants";
 import { PendingVideoCard } from "./PendingVideoCard";
 import { ResearchResultCard } from "./ResearchResultCard";
+import { StoryAgendarButton } from "./StoryAgendarButton";
 import type { ResultV2, ModalState, BlockState } from "./result-types";
 
 export type { ResultV2, ModalState, BlockState };
@@ -70,10 +71,7 @@ export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, 
         <div className="flex gap-1 pt-1" onClick={(e) => e.stopPropagation()}>
           {AGENDA_TYPES.has(result.content_type) ? (
             <>
-              <Button size="sm" onClick={() => onAgendar(result)}
-                className="bg-amber-500 hover:bg-amber-600 text-white gap-1 flex-1 h-7 text-[11px]">
-                <Calendar className="h-3 w-3" />Agendar
-              </Button>
+              <StoryAgendarButton result={result} onAgendar={onAgendar} />
               <Button size="sm" variant="outline" onClick={() => isVideo ? null : onSave(result.id)}
                 disabled={isVideo}
                 title={isVideo ? "Video persistido automáticamente en Storage" : undefined}

@@ -74,8 +74,8 @@ def _media_type(url: str) -> str:
 async def create_post(content: str, platforms: list[dict], publish_now: bool = True,
                       scheduled_for: Optional[str] = None,
                       media_urls: Optional[list[str]] = None) -> str:
-    """Publica de verdad en Zernio. platforms = [{"platform": str, "accountId": str}].
-    Devuelve el post _id real · raise ZernioPublishError si Zernio no confirma (jamas finge exito)."""
+    """Publica en Zernio. platforms=[{"platform","accountId",...}] · el caller puede incluir
+    'platformSpecificData' (ej {"contentType":"story"} · Pieza 3) verbatim. raise ZernioPublishError si no confirma."""
     body: dict[str, object] = {"content": content, "platforms": platforms}
     if media_urls:
         # Zernio exige mediaItems:[{url,type}] al top-level (NO mediaUrls · verificado docs.zernio.com

@@ -52,7 +52,8 @@ async def schedule_post_v3(
     if request.platforms:
         # E · fan-out multi-red: N content_ids x M redes resueltas (primera active por red · omite sin-cuenta)
         rows_to_insert = build_fanout_rows(
-            request.client_id, request.platforms, request.content_ids, timestamps, request.media_url)
+            request.client_id, request.platforms, request.content_ids, timestamps, request.media_url,
+            is_story=request.is_story)
         if not rows_to_insert:
             raise HTTPException(422, "no_account_for_any_platform")  # 0 redes resuelven · 0 rows basura
     else:
@@ -69,6 +70,7 @@ async def schedule_post_v3(
                 "scheduled_for": ts.isoformat(),
                 "status": "pending",
                 "media_url": request.media_url,
+                "is_story": request.is_story,
             }
             for cid, ts in zip(request.content_ids, timestamps)
         ]

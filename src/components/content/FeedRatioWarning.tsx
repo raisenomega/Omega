@@ -11,7 +11,9 @@ import { feedRejectsRatio } from "@/lib/feed-aspect";
 
 export function FeedRatioWarning({ block, igSelected }: { block: BlockState; igSelected: boolean }) {
   // La imagen del bloque (el fan-out comparte 1 media_url · primera imagen · video no aplica).
-  const imageUrl = block.items.find(i => i.content_type === "image")?.generated_text ?? null;
+  const image = block.items.find(i => i.content_type === "image");
+  const imageUrl = image?.generated_text ?? null;
+  const isStory = image?.is_story === true;  // Pieza 3 · si va como historia, el 9:16 ya tiene salida → no avisar
   // Ratio real leído del header de la imagen (naturalWidth/Height) · mismo método que DraftEditForm.
   const [ratio, setRatio] = useState<number | null>(null);
   useEffect(() => {
@@ -23,7 +25,7 @@ export function FeedRatioWarning({ block, igSelected }: { block: BlockState; igS
     return () => { img.onload = null; img.onerror = null; };
   }, [imageUrl]);
 
-  const feedConflict = ratio !== null && igSelected && feedRejectsRatio("instagram", ratio);
+  const feedConflict = ratio !== null && igSelected && !isStory && feedRejectsRatio("instagram", ratio);
   if (!feedConflict) return null;
   return (
     <div className="flex items-start gap-2 rounded-md border border-amber-500/60 bg-amber-500/10 p-2.5 text-[11px] text-amber-700 dark:text-amber-300">
