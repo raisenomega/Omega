@@ -265,6 +265,37 @@ def test_story_psd_not_story_none():    # sin flag → None (retrocompat · fluj
     assert ps.story_psd(False, "instagram") is None
 
 
+# ── Fix dedup 24h Zernio · story REAL apenda sufijo único del id de la fila (STEP 0 diff-global=201) ──
+# Zernio hashea (platform, accountId, content+media) · la story comparte media+cuenta con su feed-gemela
+# → 409. Sufijo único por fila = fingerprint distinto SIEMPRE. SOLO story real (IG/FB): la story NO
+# muestra el caption → invisible. Feed y TikTok-is_story (post normal · caption visible) → content INTACTO.
+def test_story_dedup_content_ig_apenda_sufijo():
+    assert ps.story_dedup_content("hola", True, "instagram", "abcd1234-ef56") == "hola ·abcd1234"
+
+
+def test_story_dedup_content_fb_apenda_sufijo():
+    assert ps.story_dedup_content("hola", True, "facebook", "deadbeef-0000") == "hola ·deadbeef"
+
+
+def test_story_dedup_content_feed_intacto():            # is_story=false → content sin tocar (caption real)
+    assert ps.story_dedup_content("hola", False, "instagram", "abcd1234") == "hola"
+
+
+def test_story_dedup_content_tiktok_is_story_intacto():  # tiktok publica post NORMAL → sin sufijo (no leak)
+    assert ps.story_dedup_content("hola", True, "tiktok", "abcd1234") == "hola"
+
+
+def test_story_dedup_content_sufijo_unico_por_fila():    # cada fila su sufijo (deriva del id)
+    a = ps.story_dedup_content("x", True, "instagram", "11111111-a")
+    b = ps.story_dedup_content("x", True, "instagram", "22222222-b")
+    assert a != b
+
+
+def test_story_dedup_content_feed_vacia_sigue_distinta():  # feed="" vs story=""+sufijo → distintos
+    assert ps.story_dedup_content("", True, "instagram", "abcd1234") == " ·abcd1234"
+    assert ps.story_dedup_content("", False, "instagram", "abcd1234") == ""
+
+
 def test_story_9x16_ig_salta_guard_y_manda_psd(monkeypatch):  # ANTI-SILENCIO #1+#2
     repo = _Repo({**_post(media="https://x/y.png"), "is_story": True}, platform="instagram")
     cap = {}
@@ -292,6 +323,33 @@ def test_story_tiktok_psd_none_post_normal(monkeypatch):  # filtro: story marcad
     _wire(monkeypatch, repo, create=_cap)
     out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
     assert out.published is True and cap["platforms"][0].get("platformSpecificData") is None
+
+
+def test_story_ig_content_lleva_sufijo(monkeypatch):  # fix dedup · story IG → content con sufijo del id
+    repo = _Repo({**_post(media="https://x/y.png"), "is_story": True}, platform="instagram")
+    cap = {}
+    async def _cap(**kw): cap.update(kw); return "zp"
+    _wire(monkeypatch, repo, create=_cap, ratio=0.5625)
+    asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert cap["content"] == "hola ·p1"  # message "hola" + " ·" + post_id[:8] (id="p1")
+
+
+def test_feed_ig_content_sin_sufijo(monkeypatch):  # feed (no story) → content intacto (caption real)
+    repo = _Repo(_post(media="https://x/y.png"), platform="instagram")
+    cap = {}
+    async def _cap(**kw): cap.update(kw); return "zp"
+    _wire(monkeypatch, repo, create=_cap, ratio=1.0)
+    asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert cap["content"] == "hola"
+
+
+def test_story_tiktok_content_sin_sufijo(monkeypatch):  # tiktok-is_story = post normal → caption sin sufijo
+    repo = _Repo({**_post(media="https://x/y.mp4"), "is_story": True}, platform="tiktok")
+    cap = {}
+    async def _cap(**kw): cap.update(kw); return "zp"
+    _wire(monkeypatch, repo, create=_cap)
+    asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert cap["content"] == "hola"
 
 
 def test_no_story_ig_sin_psd(monkeypatch):  # retrocompat: sin flag → create_post SIN psd · guard corrió

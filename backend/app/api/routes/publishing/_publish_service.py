@@ -64,6 +64,19 @@ def story_psd(is_story: bool, platform: str) -> Optional[dict]:
     return {"contentType": "story"} if is_story and platform in _STORY_PLATFORMS else None
 
 
+def story_dedup_content(content: str, is_story: bool, platform: str, post_id: str) -> str:
+    """Fix dedup 24h Zernio (sellado en vivo · STEP 0 diff-global=201). Zernio hashea
+    (platform, accountId, content+media) y rechaza duplicados con 409 · la fila story comparte
+    media+cuenta con su feed-gemela ("ambas") → colisiona. Solución: apendar al content un sufijo
+    único derivado del id de ESTA fila → fingerprint distinto SIEMPRE (incluso con feed vacía).
+    SOLO en story REAL (is_story Y red con historia · misma condición que story_psd): la story NO
+    muestra el caption → el sufijo es invisible. Feed (is_story=false) y TikTok/LinkedIn-is_story
+    (post normal · caption VISIBLE) → content INTACTO (jamás leak del sufijo)."""
+    if is_story and platform in _STORY_PLATFORMS:
+        return f"{content} ·{post_id[:8]}"
+    return content
+
+
 class PublishGateError(Exception):
     """Precondicion/config faltante · el handler mapea a 4xx · el post QUEDA 'pending' (reintentable).
     code ∈ {post_not_found, post_access_denied, post_not_publishable:<status>, sin_red,
@@ -143,6 +156,9 @@ async def publish_scheduled_post(scheduled_post_id: str, client_id: str) -> Publ
     content = _cap_tiktok_title(message, platform, media_url)  # B4 · TikTok-foto: título cap 90 (IG/FB enteros)
     if content != message:
         logger.info("tiktok title truncado · client=%s · %d→%d chars (cap 90 · B4)", client_id, len(message), len(content))
+    # Fix dedup 24h Zernio · story REAL (IG/FB) apenda sufijo único del id → esquiva el 409 contra su
+    # feed-gemela (mismo media+cuenta). Invisible (la historia no muestra caption). Feed/no-story = intacto.
+    content = story_dedup_content(content, is_story, platform, scheduled_post_id)
     try:
         plat: dict = {"platform": platform, "accountId": account_id}
         psd = story_psd(is_story, platform)  # ANTI-SILENCIO #2 · story SOLO IG/FB (None en el resto)
