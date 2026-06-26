@@ -16,7 +16,8 @@ export interface ScheduleBlockInput {
   accountId?: string;  // DEBT-CL-015 · vacío = backend resuelve primera activa
 }
 
-const MEDIA_TYPES = ["image", "video"];
+export const MEDIA_TYPES = ["image", "video"];
+export const MAX_PIECES = 12;  // tope de piezas por bloque (A+B · gateado al agregar en useContentLabState)
 const TEXT_EXCLUDED = ["image", "video", "hashtags"];
 
 export function useScheduleBlock() {

@@ -6,7 +6,7 @@ import { useGenerateImage } from "@/hooks/useGenerateImage";
 import { useVideoJobPolling } from "@/hooks/useVideoJobPolling";
 import { useSaveContent } from "@/hooks/useContentActions";
 import { downloadResult } from "@/lib/download-result";
-import { useScheduleBlock } from "@/hooks/useScheduleBlock";
+import { useScheduleBlock, MAX_PIECES } from "@/hooks/useScheduleBlock";
 import { useResearch } from "@/hooks/useResearch";
 import { loadPersistedResults, persistResults } from "@/lib/content-lab-persistence";
 import { brandVoiceScheduleError } from "@/lib/schedule-error";
@@ -105,7 +105,10 @@ export function useContentLabState(activeBusinessId: string | null) {
     }
   };
 
-  const handleAgendar = (r: ResultV2) => { setBlock(prev => ({ items: [...prev.items, r] })); setModalState("open"); setExpandedResult(null); };
+  const handleAgendar = (r: ResultV2) => {
+    if (block.items.length >= MAX_PIECES) { toast({ title: `Máximo ${MAX_PIECES} piezas en un bloque · quitá una para agregar otra`, variant: "destructive" }); return; }
+    setBlock(prev => ({ items: [...prev.items, r] })); setModalState("open"); setExpandedResult(null);
+  };
   const handleRemoveItem = (i: number) => setBlock(prev => ({ items: prev.items.filter((_, j) => j !== i) }));
   const handleSave = (id: string) => {
     saveContent.mutate({ id, is_saved: true }, {
