@@ -6,6 +6,7 @@ import type { ModalState, BlockState } from "@/components/content/ResultCardV2";
 import { computeSpread, SPREAD_HOURS, SPREAD_MAX_DAY } from "@/lib/schedule-spread";
 import { MEDIA_TYPES } from "@/hooks/useScheduleBlock";
 import { NetworkPicker } from "@/components/content/NetworkPicker";
+import { FeedRatioWarning } from "@/components/content/FeedRatioWarning";
 
 interface Props {
   state: ModalState;
@@ -74,7 +75,7 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
               ))
             )}
           </div>
-          <div className="pt-2 border-t"><NetworkPicker networks={connectedNetworks} selected={selectedPlatforms} onToggle={onTogglePlatform} /></div>
+          <div className="pt-2 border-t space-y-2"><NetworkPicker networks={connectedNetworks} selected={selectedPlatforms} onToggle={onTogglePlatform} /><FeedRatioWarning block={block} igSelected={selectedPlatforms.includes("instagram")} /></div>
           <div className="space-y-1 pt-2 border-t">
             <Label className="text-xs">Fecha y hora</Label>
             <input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} disabled={!hasMin}
