@@ -19,12 +19,6 @@ interface Props {
   loading?: boolean;  // BUG 11 jun · request en vuelo → botón con spinner (no parece colgado)
 }
 
-const ICON_BY_TYPE: Record<string, string> = {
-  caption: "📝", hashtags: "#", image: "🖼️", video: "🎬",
-  email: "✉️", story: "📱", ad: "📢", bio: "👤",
-  video_script: "🎬", google_business_post: "🏢", thread: "🧵", carousel: "🎠", linkedin_post: "💼",
-};
-
 const MIN_PIECES = 2;  // mínimo real = 1 caption + 1 imagen/video (no 2 piezas cualquiera)
 const NON_TEXT = ["image", "video", "hashtags"];
 
@@ -64,7 +58,6 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
             ) : (
               block.items.map((item, i) => (
                 <div key={item.id} className="flex items-center gap-2 p-2 rounded-md border border-emerald-300 bg-emerald-50 dark:bg-emerald-950/30">
-                  <span className="text-lg">{ICON_BY_TYPE[item.content_type] ?? "📄"}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium capitalize">{item.content_type}</p>
                     {item.content_type === "image" ? <img src={item.generated_text} alt="" className="h-16 w-16 rounded object-cover" />
@@ -88,6 +81,7 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
               </div>
             )}
           </div>
+          <p className="text-[10px] text-muted-foreground">Este bloque se programa en el calendario · REX lo publica automáticamente a la hora elegida.</p>
           <Button onClick={onConfirm} disabled={!ready || loading} className="w-full gap-1 bg-amber-500 hover:bg-amber-600 text-white">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calendar className="h-4 w-4" />}{loading ? "Agendando…" : "Agendar bloque"}
           </Button>
