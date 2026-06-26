@@ -49,7 +49,7 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onMinimize}>
-      <Card className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+      <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-sm flex items-center gap-2"><Calendar className="h-4 w-4" />Bloque · {count} {count === 1 ? "pieza" : "piezas"} {hasMin ? "✓" : `· falta ${missing}`}</h3>
@@ -58,7 +58,7 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
               <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onClose}><X className="h-3.5 w-3.5" /></Button>
             </div>
           </div>
-          <div className="space-y-2 max-h-[40vh] overflow-y-auto">
+          <div className="space-y-2 max-h-[55vh] overflow-y-auto">
             {count === 0 ? (
               <p className="text-xs text-center text-muted-foreground py-4">Agendá resultados desde las cards para empezar tu bloque</p>
             ) : (
@@ -67,7 +67,9 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
                   <span className="text-lg">{ICON_BY_TYPE[item.content_type] ?? "📄"}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium capitalize">{item.content_type}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{item.generated_text.slice(0, 80)}</p>
+                    {item.content_type === "image" ? <img src={item.generated_text} alt="" className="h-16 w-16 rounded object-cover" />
+                      : item.content_type === "video" ? <video src={item.generated_text} className="h-16 w-16 rounded object-cover" />
+                      : <p className="text-[10px] text-muted-foreground truncate">{item.generated_text.slice(0, 80)}</p>}
                   </div>
                   <button onClick={() => onRemoveItem(i)} className="text-muted-foreground hover:text-destructive" aria-label="Quitar"><X className="h-3.5 w-3.5" /></button>
                 </div>
