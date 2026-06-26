@@ -1,8 +1,9 @@
-// Pieza 3 · botón "Agendar" de la tarjeta con diálogo de placement SOLO para foto vertical 9:16.
-// Lee el ratio (new Image()/naturalWidth/Height · espejo de FeedRatioWarning). Si la foto es 9:16
-// (ratio < 0.8 · fuera del feed) → diálogo "¿usar en historia? Sí/No" (avisa: el caption no se ve en
-// story · IG/FB van como historia, las demás como post normal). Cuadrada/horizontal/no-imagen →
-// "Agendar" idéntico a hoy, cero diálogo. El flag is_story viaja en el result al bloque.
+// AMBAS · botón "Agendar" con diálogo de placement para TODA imagen (no solo 9:16). Lee el ratio
+// (new Image()/naturalWidth/Height · espejo de FeedRatioWarning) solo para adaptar el texto:
+//   - apta-feed (ratio ≥ 0.8 · o no medible/fail-open): "¿también en historia?" → No="feed" · Sí="both".
+//   - vertical 9:16 (ratio < 0.8): el feed de IG la rechaza → "¿solo historia, o también feed donde
+//     la red lo permita?" → "Solo historia"="story" · "También feed"="both".
+// No-imagen → "Agendar" plano (cero diálogo). El placement viaja en el result al bloque.
 import { useEffect, useState } from "react";
 import { Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,8 +12,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import type { ResultV2 } from "./result-types";
+import type { Placement } from "@/lib/placement";
 
-const STORY_RATIO_MAX = 0.8;  // < 0.8 (w/h) = vertical fuera del feed → candidata a historia (9:16 = 0.56)
+const FEED_RATIO_MIN = 0.8;  // < 0.8 (w/h) = vertical fuera del feed de IG (9:16 = 0.56)
 const BTN = "bg-amber-500 hover:bg-amber-600 text-white gap-1 flex-1 h-7 text-[11px]";
 
 export function StoryAgendarButton({ result, onAgendar }: { result: ResultV2; onAgendar: (r: ResultV2) => void }) {
@@ -27,18 +29,16 @@ export function StoryAgendarButton({ result, onAgendar }: { result: ResultV2; on
     return () => { img.onload = null; img.onerror = null; };
   }, [isImage, result.generated_text]);
 
-  const isStoryCandidate = isImage && ratio !== null && ratio < STORY_RATIO_MAX;
+  const agendar = (placement: Placement) => onAgendar({ ...result, placement });
 
-  // Foto cuadrada/horizontal/no-imagen → Agendar como hoy (cero diálogo).
-  if (!isStoryCandidate) {
-    return (
-      <Button size="sm" onClick={() => onAgendar(result)} className={BTN}>
-        <Calendar className="h-3 w-3" />Agendar
-      </Button>
-    );
+  // No-imagen → Agendar plano (cero diálogo · texto/video no tienen placement de historia).
+  if (!isImage) {
+    return <Button size="sm" onClick={() => onAgendar(result)} className={BTN}><Calendar className="h-3 w-3" />Agendar</Button>;
   }
 
-  // 9:16 → diálogo de placement (Sí = historia · No = post normal · ambos agendan · Escape = no agenda).
+  // fail-open: ratio null (no medible / cargando) → rama apta-feed (asume que entra al feed).
+  const isVertical = ratio !== null && ratio < FEED_RATIO_MIN;
+
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -46,15 +46,20 @@ export function StoryAgendarButton({ result, onAgendar }: { result: ResultV2; on
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Usar esta imagen en tu historia?</AlertDialogTitle>
+          <AlertDialogTitle>{isVertical ? "Imagen vertical (9:16)" : "¿Publicar también en historia?"}</AlertDialogTitle>
           <AlertDialogDescription>
-            Es vertical (9:16). En la historia el texto del caption no se muestra. Se publicará como
-            historia en Instagram y Facebook, y como post normal en las demás redes marcadas.
+            {isVertical
+              ? "En Instagram el feed rechaza el 9:16. ¿La publicás solo en historia, o también en el feed donde la red lo permita (Facebook/TikTok)? En la historia el texto del caption no se muestra."
+              : "Se publicará en el feed. Si elegís \"también en historia\", se publica además como historia en Instagram y Facebook (en la historia el texto del caption no se muestra)."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => onAgendar(result)}>No, post normal</AlertDialogCancel>
-          <AlertDialogAction onClick={() => onAgendar({ ...result, is_story: true })}>Sí, historia</AlertDialogAction>
+          <AlertDialogCancel onClick={() => agendar(isVertical ? "story" : "feed")}>
+            {isVertical ? "Solo historia" : "No, solo feed"}
+          </AlertDialogCancel>
+          <AlertDialogAction onClick={() => agendar("both")}>
+            {isVertical ? "También feed" : "Sí, también historia"}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

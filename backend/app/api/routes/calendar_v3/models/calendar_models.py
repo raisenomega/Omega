@@ -1,8 +1,8 @@
 """Pydantic models · GET /calendar/ + PATCH /calendar/{id}/status +
 POST /calendar-v3/schedule/ (DEBT-CL-017 + path X)."""
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, Field, field_validator
+from typing import Literal, Optional
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class CalendarPost(BaseModel):
@@ -40,7 +40,8 @@ class ScheduledPostV3Create(BaseModel):
     content_ids: list[str] = Field(..., min_length=1, description="content_lab_generated.id de cada anchor del bloque · 1+")
     scheduled_for: datetime = Field(..., description="Timestamp UTC del PRIMER post · backend espacia los siguientes")
     media_url: Optional[str] = Field(default=None, description="URL Storage compartida entre todos los N posts del bloque")
-    is_story: bool = Field(default=False, description="Pieza 3 · placement · al publicar va como historia en IG/FB (resto: post normal). Default false = post normal (retrocompat)")
+    placement: Literal["feed", "story", "both"] = Field(default="feed", description="AMBAS · feed=post normal · story=historia (IG/FB) · both=feed+historia (2 filas/red que soporte story). Default feed = retrocompat")
+    is_story: bool = Field(default=False, description="DEPRECADO (Pieza 3) · alias de placement='story' · solo para deploy-skew (front viejo). Usar 'placement'. Se quita el próximo cleanup")
     social_account_id: Optional[str] = Field(default=None, description="DEBT-CL-015 · si user eligió cuenta específica (N>1 cuentas por platform) · sino backend resuelve primera activa")
     force_brand_voice: bool = Field(default=False, description="X5 · override humano del gate de voz de marca · agenda bajo responsabilidad (queda auditado en agent_memory)")
 
@@ -52,6 +53,14 @@ class ScheduledPostV3Create(BaseModel):
         if v.tzinfo is None:
             raise ValueError("scheduled_for_must_be_tz_aware · enviá la hora con offset o Z (no se asume UTC)")
         return v
+
+    @model_validator(mode="after")
+    def _derive_placement_from_alias(self) -> "ScheduledPostV3Create":
+        """Deploy-skew: front viejo manda is_story=True sin placement → placement='story'.
+        El placement explícito SIEMPRE gana (el alias solo actúa si placement quedó en el default)."""
+        if self.is_story and self.placement == "feed":
+            self.placement = "story"
+        return self
 
 
 class ScheduledPostV3Response(BaseModel):

@@ -43,7 +43,7 @@ export function useScheduleBlock() {
         content_ids: textItems.map(t => t.id),
         scheduled_for: scheduledForIso,
         media_url: mediaItem?.generated_text ?? null,
-        is_story: mediaItem?.is_story ?? false,  // Pieza 3 · placement (REX filtra a IG/FB al publicar)
+        placement: mediaItem?.placement ?? "feed",  // AMBAS · backend expande a 1-2 filas/red (feed/story/both)
         social_account_id: accountId || undefined,  // DEBT-CL-015 (solo legacy single-red · ignorado en fan-out)
       });
     },

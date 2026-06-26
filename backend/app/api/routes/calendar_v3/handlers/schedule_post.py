@@ -17,7 +17,7 @@ from app.api.routes.calendar_v3._access import (
     resolve_account_by_id_or_403,
 )
 from app.api.routes.calendar_v3._timestamp_spacer import space_timestamps
-from app.api.routes.calendar_v3._fanout import build_fanout_rows
+from app.api.routes.calendar_v3._fanout import build_fanout_rows, rows_for_account
 from app.api.routes.calendar_v3._schedule_response import to_responses
 from app.api.routes.calendar_v3.models.calendar_models import (
     ScheduledPostV3Create, ScheduledPostV3Response,
@@ -51,9 +51,10 @@ async def schedule_post_v3(
     timestamps = space_timestamps(request.scheduled_for, n)
     if request.platforms:
         # E · fan-out multi-red: N content_ids x M redes resueltas (primera active por red · omite sin-cuenta)
+        # AMBAS · placement expande a 1-2 filas/red (feed/story/both) dentro de build_fanout_rows.
         rows_to_insert = build_fanout_rows(
             request.client_id, request.platforms, request.content_ids, timestamps, request.media_url,
-            is_story=request.is_story)
+            placement=request.placement)
         if not rows_to_insert:
             raise HTTPException(422, "no_account_for_any_platform")  # 0 redes resuelven · 0 rows basura
     else:
@@ -62,18 +63,10 @@ async def schedule_post_v3(
             account = resolve_account_by_id_or_403(request.client_id, request.social_account_id)
         else:
             account = resolve_account_by_client_platform_or_404(request.client_id, request.platform)
-        rows_to_insert = [
-            {
-                "client_id": request.client_id,
-                "social_account_id": str(account["id"]),
-                "content_id": cid,
-                "scheduled_for": ts.isoformat(),
-                "status": "pending",
-                "media_url": request.media_url,
-                "is_story": request.is_story,
-            }
-            for cid, ts in zip(request.content_ids, timestamps)
-        ]
+        # AMBAS · misma expansión placement→filas que el fan-out (DRY · rows_for_account)
+        rows_to_insert = rows_for_account(
+            request.client_id, str(account["id"]), request.platform,
+            request.content_ids, timestamps, request.media_url, request.placement)
 
     try:
         rows = repo.insert_scheduled_posts_bulk(rows_to_insert)

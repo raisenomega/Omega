@@ -9,7 +9,7 @@ export interface ResultV2 {
   virality_estimated?: boolean;
   brand_dna_score?: number;
   saved?: boolean;
-  is_story?: boolean;  // Pieza 3 · foto 9:16 marcada para historia (default undefined = post normal · retrocompat)
+  placement?: "feed" | "story" | "both";  // AMBAS · feed=post normal · story=historia · both=feed+historia (default undefined = "feed")
   status?: "pending" | "completed" | "failed";
   // Brave Search · content_type='research' usa estos campos en lugar de generated_text
   url?: string;

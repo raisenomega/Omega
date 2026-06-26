@@ -7,7 +7,7 @@ import { computeSpread, SPREAD_HOURS, SPREAD_MAX_DAY } from "@/lib/schedule-spre
 import { MEDIA_TYPES } from "@/hooks/useScheduleBlock";
 import { NetworkPicker } from "@/components/content/NetworkPicker";
 import { FeedRatioWarning } from "@/components/content/FeedRatioWarning";
-
+import { placementPubCount } from "@/lib/placement";
 interface Props {
   state: ModalState;
   block: BlockState;
@@ -29,7 +29,6 @@ const NON_TEXT = ["image", "video", "hashtags"];
 
 export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onMinimize, onRestore, onClose, onConfirm, onRemoveItem, connectedNetworks, selectedPlatforms, onTogglePlatform, loading = false }: Props) {
   if (state === "closed") return null;
-
   const count = block.items.length;
   const textCount = block.items.filter(i => !NON_TEXT.includes(i.content_type)).length;
   const mediaCount = block.items.filter(i => MEDIA_TYPES.includes(i.content_type)).length;
@@ -38,6 +37,8 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
   const spread = textCount > 1 && scheduledAt ? computeSpread(scheduledAt, textCount) : [];
   const validNetworks = selectedPlatforms.filter(p => connectedNetworks.includes(p));  // E · doble guarda front
   const ready = hasMin && scheduledAt && new Date(scheduledAt) > new Date() && validNetworks.length >= 1;
+  const imgPlacement = block.items.find(i => i.content_type === "image")?.placement ?? "feed";  // AMBAS
+  const realPosts = textCount * validNetworks.reduce((s, n) => s + placementPubCount(imgPlacement, n), 0);
 
   if (state === "minimized") {
     return (
@@ -80,7 +81,7 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
             <Label className="text-xs">Fecha y hora</Label>
             <input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} disabled={!hasMin}
               className="w-full px-2 py-1.5 text-sm border rounded-md bg-background disabled:opacity-50" />
-            <p className="text-[10px] text-muted-foreground">{!hasMin ? `Necesitás ${missing} (mín. ${MIN_PIECES}: caption + media)` : `Listo · ${textCount} post${textCount === 1 ? "" : "s"} (1 row por item de texto)`}</p>
+            <p className="text-[10px] text-muted-foreground">{!hasMin ? `Necesitás ${missing} (mín. ${MIN_PIECES}: caption + media)` : `Listo · ${realPosts} publicación${realPosts === 1 ? "" : "es"} (${textCount} texto × ${validNetworks.length} red${validNetworks.length === 1 ? "" : "es"}${imgPlacement === "both" ? " · feed+historia" : ""})`}</p>
             {spread.length > 1 && (
               <div className="text-[10px] text-amber-700 dark:text-amber-300 pt-1 border-l-2 border-amber-400 pl-2 space-y-0.5">
                 <div className="font-medium">Spread automático ({SPREAD_HOURS}h gap · max {SPREAD_MAX_DAY}/día):</div>
