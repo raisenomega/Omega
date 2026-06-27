@@ -2,7 +2,8 @@
 _brand_block construye instrucción visual instructiva ("use #X as primary...") solo con los colores
 que EXISTEN · _enhance_prompt la concatena. Sin paleta → prompt byte-idéntico a hoy (retrocompat dura).
 El hex en DB está limpio (#rrggbb · picker + regex zod) → A6 NO normaliza. G9 exime tests."""
-from app.api.routes.content_lab_v3.handlers.generate_image import _brand_block, _enhance_prompt
+from app.api.routes.content_lab_v3._brand_prompt import _brand_block  # A2.1 · movido a la utilidad reusable
+from app.api.routes.content_lab_v3.handlers.generate_image import _enhance_prompt
 
 
 def test_marca_presente_inyecta_colores():

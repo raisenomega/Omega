@@ -20,6 +20,7 @@ from app.api.routes.content_lab_v3.models.content_lab_models import (
 )
 from app.api.routes.clients_v3 import _clients_reader as clients_reader
 from app.api.routes.clients_v3._access_control import user_owns_client
+from app.api.routes.content_lab_v3._brand_prompt import fetch_brand_block  # A2.1 · marca reusable (D2)
 from app.bc_cognition.infrastructure._image_compat import generate_image_compat
 from app.bc_cognition.application.input_sanitizer import sanitize_input
 from app.bc_cognition.domain.input_threats import InputContext, SanitizerAction
@@ -48,21 +49,6 @@ _STYLE_SUFFIXES = {
 _ASPECT_TO_SIZE = {"1:1": "1024x1024", "9:16": "1024x1792", "16:9": "1792x1024", "4:5": "1024x1280"}
 
 
-def _brand_block(palette: dict) -> str:
-    """A6 · eslabón 4 · instrucción visual instructiva (NO descriptiva como el bloque de ARIA del chat) con
-    SOLO los colores que existen. Sin primary → "" (cliente sin paleta · prompt idéntico a hoy · retrocompat).
-    Hex limpio en DB (#rrggbb · picker+regex zod) → se concatena directo, sin normalizar. Fuentes/logo fuera de A6."""
-    primary = palette.get("primary_color")
-    if not primary:
-        return ""
-    parts = [f"use {primary} as primary"]
-    if palette.get("secondary_color"):
-        parts.append(f"{palette['secondary_color']} as secondary")
-    if palette.get("accent_color"):
-        parts.append(f"{palette['accent_color']} as accent color")
-    return ", brand color palette: " + ", ".join(parts)
-
-
 def _enhance_prompt(prompt: str, style: str, brand_block: str = "") -> str:
     suffix = _STYLE_SUFFIXES.get(style, _STYLE_SUFFIXES["realistic"])
     enhanced = f"{prompt}{suffix}{brand_block}"
@@ -89,9 +75,9 @@ async def generate_image(
     request.prompt = si.clean_text
 
     # A6 · eslabón 4: inyecta la paleta de marca del cliente al prompt (siempre que exista · sin flag).
-    # Lectura en to_thread (patrón del logo) · cubre AMBOS paths (síncrono + job async) porque enriquece `enhanced`.
-    palette = await asyncio.to_thread(repo.find_client_brand_palette, client_id)
-    enhanced = _enhance_prompt(request.prompt, request.style, _brand_block(palette))
+    # A2.1 · vía la utilidad reusable fetch_brand_block (misma fuente que el puente del carrusel · enhanced idéntico).
+    brand = await fetch_brand_block(client_id)
+    enhanced = _enhance_prompt(request.prompt, request.style, brand)
     # DEBT-CL-020: si attachment text → append al prompt como contexto adicional
     if request.reference_attachment_b64 and request.reference_mime_type:
         try:
