@@ -159,6 +159,10 @@ async def publish_scheduled_post(scheduled_post_id: str, client_id: str) -> Publ
     # Fix dedup 24h Zernio · story REAL (IG/FB) apenda sufijo único del id → esquiva el 409 contra su
     # feed-gemela (mismo media+cuenta). Invisible (la historia no muestra caption). Feed/no-story = intacto.
     content = story_dedup_content(content, is_story, platform, scheduled_post_id)
+    # Pieza 2 · carrusel: si la fila trae el array media_urls (col 00080) poblado → manda los N al adapter;
+    # si NULL/vacío → cae a [media_url] (filas previas a 00080 · path single-photo de HOY intacto). str()
+    # defensivo igual que el path single. El guard de ratio (arriba) sigue validando la 1ª imagen (media_url).
+    media_list = [str(u) for u in (post.get("media_urls") or [])] or ([str(media_url)] if media_url else None)
     try:
         plat: dict = {"platform": platform, "accountId": account_id}
         psd = story_psd(is_story, platform)  # ANTI-SILENCIO #2 · story SOLO IG/FB (None en el resto)
@@ -168,7 +172,7 @@ async def publish_scheduled_post(scheduled_post_id: str, client_id: str) -> Publ
             content=content,
             platforms=[plat],
             publish_now=True,
-            media_urls=[str(media_url)] if media_url else None,
+            media_urls=media_list,
         )
     except ZernioError as e:
         _hermes_zernio(False, str(e)[:200])  # HERMES f1.5 · CADA intento fallido se ve (aunque luego reintente)

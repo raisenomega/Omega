@@ -25,9 +25,9 @@ class _Repo:
         self.calls.append(("retry", attempts)); self._post["attempts"] = attempts; self._post["status"] = "pending"
 
 
-def _post(status="pending", sa="sa1", media=None, attempts=0):
+def _post(status="pending", sa="sa1", media=None, attempts=0, media_urls=None):
     return {"id": "p1", "client_id": "c1", "status": status, "attempts": attempts,
-            "social_account_id": sa, "content_id": "ct1", "media_url": media}
+            "social_account_id": sa, "content_id": "ct1", "media_url": media, "media_urls": media_urls}
 
 
 async def _resolve_ok(platform, mapped): return "acc1"
@@ -359,3 +359,43 @@ def test_no_story_ig_sin_psd(monkeypatch):  # retrocompat: sin flag → create_p
     _wire(monkeypatch, repo, create=_cap, ratio=1.0)  # cuadrada · guard pasa
     out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
     assert out.published is True and cap["platforms"][0].get("platformSpecificData") is None
+
+
+# ── Pieza 2 · carrusel · selección de media: media_urls (N) con fallback retrocompat a [media_url] ──
+# El array media_urls (col 00080) lleva el carrusel completo. Precedencia: si está poblado → manda los N
+# al adapter; si NULL/vacío → cae a [media_url] (filas previas a 00080 · comportamiento de HOY intacto).
+def test_media_urls_array_manda_N(monkeypatch):  # carrusel: 3 media → el adapter recibe los 3, no 1
+    urls = ["https://x/1.png", "https://x/2.png", "https://x/3.png"]
+    repo = _Repo(_post(media="https://x/1.png", media_urls=urls), platform="facebook")
+    cap = {}
+    async def _cap(**kw): cap.update(kw); return "zp"
+    _wire(monkeypatch, repo, create=_cap)
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is True and cap["media_urls"] == urls  # los 3, no [media_url]
+
+
+def test_media_urls_null_fallback_single(monkeypatch):  # fila vieja típica (media_urls NULL) → [media_url]
+    repo = _Repo(_post(media="https://x/1.png", media_urls=None), platform="facebook")
+    cap = {}
+    async def _cap(**kw): cap.update(kw); return "zp"
+    _wire(monkeypatch, repo, create=_cap)
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is True and cap["media_urls"] == ["https://x/1.png"]  # retrocompat dura
+
+
+def test_media_urls_vacio_fallback_single(monkeypatch):  # [] (lista vacía) → [media_url] ([] or [u] = [u])
+    repo = _Repo(_post(media="https://x/1.png", media_urls=[]), platform="facebook")
+    cap = {}
+    async def _cap(**kw): cap.update(kw); return "zp"
+    _wire(monkeypatch, repo, create=_cap)
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is True and cap["media_urls"] == ["https://x/1.png"]
+
+
+def test_sin_media_alguna_fb(monkeypatch):  # FB no exige media · ambos None → media_urls=None (path de hoy)
+    repo = _Repo(_post(media=None, media_urls=None), platform="facebook")
+    cap = {}
+    async def _cap(**kw): cap.update(kw); return "zp"
+    _wire(monkeypatch, repo, create=_cap)
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is True and cap["media_urls"] is None
