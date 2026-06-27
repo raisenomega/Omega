@@ -11,9 +11,11 @@ import logging
 import asyncio
 from typing import Optional
 from app.infrastructure.supabase_service import get_supabase_service
-from app.bc_billing.domain.credit_costs import RECHARGE_THRESHOLD
+from app.bc_billing.domain.credit_costs import RECHARGE_THRESHOLD, cost_for_image
 
 logger = logging.getLogger(__name__)
+
+_CAROUSEL_BUDGET_FRACTION: float = 0.80  # A2.3 · un carrusel usa ≤80% del restante (colchón 20% · regla owner)
 
 
 def _get_row(client_id: str) -> Optional[dict]:
@@ -37,6 +39,21 @@ async def check_budget(client_id: str) -> bool:
     if row is None:
         return True
     return float(row.get("consumido_usd") or 0) < float(row.get("budget_usd_mensual") or 0)
+
+
+async def check_budget_for_n(client_id: str, n: int, route: str = "default") -> bool:
+    """A2.3 · pre-check para N placas (carrusel): True si N×costo_placa cabe en el 80% del restante
+    (colchón 20% · un carrusel no agota el día del cliente). Evita el carrusel a medias (todo-o-nada).
+    Fail-open idéntico a check_budget: no enrolado / sin fila / error → True. NO debita (eso es A2.4)."""
+    try:
+        row = await asyncio.to_thread(_get_row, client_id)
+    except Exception as e:
+        logger.warning(f"check_budget_for_n fail-open · client={client_id}: {e}")
+        return True
+    if row is None:
+        return True
+    remaining = float(row.get("budget_usd_mensual") or 0) - float(row.get("consumido_usd") or 0)
+    return n * cost_for_image(route) <= _CAROUSEL_BUDGET_FRACTION * remaining
 
 
 def _debit_sync(client_id: str, agent_code: str, cost_usd: float,
