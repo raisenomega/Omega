@@ -33,6 +33,7 @@ async def generate(
     max_tokens: int = 1024,
     temperature: float = 1.0,
     tools: list[dict[str, Any]] | None = None,   # 1b · None → ruta byte-idéntica a hoy
+    tool_choice: dict[str, Any] | None = None,   # A1.1 · forzar tool-use · None → ruta byte-idéntica a hoy
 ) -> tuple[ClaudeResponse | None, ClaudeError | None]:
     """Llama a Claude resolviendo modelo por agent_code. Nunca lanza."""
     try:
@@ -53,6 +54,8 @@ async def generate(
                                     "cache_control": {"type": "ephemeral"}}]
     if tools is not None:
         create_kwargs["tools"] = tools   # solo si hay tools · sin esto = llamada idéntica a hoy
+    if tool_choice is not None:
+        create_kwargs["tool_choice"] = tool_choice   # A1.1 · fuerza la tool (guion garantizado) · None = idéntico a hoy
     try:
         # Capa 7-A · el router aplica el timeout (wait_for) y el failover · re-lanza estos mismos
         # tipos de excepción en fallo total → los except de abajo siguen funcionando igual.
