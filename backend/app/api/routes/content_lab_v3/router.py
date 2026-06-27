@@ -6,6 +6,7 @@ from app.api.routes.content_lab_v3.handlers.generate_video import router as vide
 from app.api.routes.content_lab_v3.handlers.improve_prompt import router as improve_router
 from app.api.routes.content_lab_v3.handlers.research import router as research_router
 from app.api.routes.content_lab_v3.handlers.carousel_script import router as carousel_router
+from app.api.routes.content_lab_v3.handlers.carousel_render import router as carousel_render_router
 
 router = APIRouter(prefix="/content-lab", tags=["Content Lab V3"])
 router.include_router(gen_router)
@@ -14,3 +15,4 @@ router.include_router(video_router)
 router.include_router(improve_router)
 router.include_router(research_router)
 router.include_router(carousel_router)
+router.include_router(carousel_render_router)

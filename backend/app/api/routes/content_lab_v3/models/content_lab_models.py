@@ -123,6 +123,20 @@ class GenerateCarouselScriptResponse(BaseModel):
     slides: list[CarouselSlide]
 
 
+class GenerateCarouselRenderRequest(BaseModel):
+    """A2.4 · renderiza el guion (editado en el front) a N placas · slides 3-10 (D5 por Pydantic)."""
+    carousel_title: str = Field(..., min_length=1, max_length=200)
+    slides: list[CarouselSlide] = Field(..., min_length=3, max_length=10)
+    client_id: Optional[str] = Field(default=None)  # DEBT-CL-005
+
+
+class GenerateCarouselRenderResponse(BaseModel):
+    id: str
+    content_type: str  # "carousel"
+    carousel_title: str
+    media_urls: list[str]  # N URLs de las placas (el front renderiza el carrusel · Pieza 2 lo agenda)
+
+
 class ImprovePromptRequest(BaseModel):
     original_prompt: str = Field(..., min_length=1, max_length=2000)
     platform: Optional[str] = Field(default=None, max_length=32)
