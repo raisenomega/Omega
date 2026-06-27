@@ -52,7 +52,7 @@ class GenerateTextResponse(BaseModel):
 class GenerateImageRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=2000)
     style: str = Field(default="realistic", max_length=32)  # realistic|cartoon|minimal
-    aspect_ratio: str = Field(default="1:1", max_length=8)  # 1:1|9:16|16:9 (UX-3)
+    aspect_ratio: str = Field(default="1:1", max_length=8)  # 1:1|4:5|9:16|16:9 (UX-3 · 4:5=feed IG vertical A7)
     reference_image_b64: Optional[str] = Field(default=None)  # base64 sin prefix data: (UX-6)
     client_id: Optional[str] = Field(default=None)  # DEBT-CL-005 · si presente, usar este (multi-client reseller)
     reference_attachment_b64: Optional[str] = Field(default=None)  # DEBT-CL-020 · PDF/docx/md/txt como contexto extra

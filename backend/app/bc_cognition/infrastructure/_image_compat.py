@@ -25,6 +25,7 @@ _SIZE_TO_ASPECT: dict[str, str] = {
     "1024x1024": "1:1",
     "1024x1792": "9:16",
     "1792x1024": "16:9",
+    "1024x1280": "4:5",   # A7 · feed IG vertical (inverso de _ASPECT_TO_SIZE · ambos o cae a 1:1)
 }
 _DEFAULT_ASPECT = "1:1"
 

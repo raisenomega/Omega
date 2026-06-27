@@ -19,7 +19,7 @@ from app.bc_cognition.infrastructure.hermes_usage import record_mcp_use  # HERME
 
 # google-genai 2.6 ImageConfig.aspect_ratio · supported values (DEBT-CL-011)
 _VALID_ASPECT_RATIOS: frozenset[str] = frozenset({
-    "1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "21:9",
+    "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "9:16", "16:9", "21:9",
 })
 
 # DEBT-069 · asyncio.wait_for cap sobre SDK google-genai (28 may: 90→120→180s · parche DEBT-IMAGE-ASYNC).
@@ -44,7 +44,7 @@ async def generate(
     reference_images_b64: list[str] | None = None,
     aspect_ratio: str = "1:1",
 ) -> tuple[ImageResponse | None, ImageError | None]:
-    """Genera imagen vía Nano Banana. aspect_ratio: 1:1|16:9|9:16|4:3|21:9."""
+    """Genera imagen vía Nano Banana. aspect_ratio: 1:1|4:5|16:9|9:16|4:3|21:9 (4:5 = feed IG vertical)."""
     if not prompt or len(prompt) > 8000:
         return None, ImageError("invalid_input", "prompt vacío o >8000 chars")
     if aspect_ratio not in _VALID_ASPECT_RATIOS:

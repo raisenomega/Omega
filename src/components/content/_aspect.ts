@@ -1,3 +1,3 @@
-export const ASPECTS = ["1:1", "9:16", "16:9"] as const;
+export const ASPECTS = ["1:1", "4:5", "9:16", "16:9"] as const;
 export type Aspect = typeof ASPECTS[number];
-export const ASPECT_LABELS: Record<Aspect, string> = { "1:1": "Cuadrado", "9:16": "Story", "16:9": "Landscape" };
+export const ASPECT_LABELS: Record<Aspect, string> = { "1:1": "Cuadrado", "4:5": "Feed vertical", "9:16": "Story", "16:9": "Landscape" };

@@ -44,7 +44,8 @@ _STYLE_SUFFIXES = {
 # UX-3 · aspect ratio → resolution (compat con _SIZE_TO_ASPECT en _image_compat).
 # DEBT-CL-011 cerrada Sprint 3: nano_banana_adapter ya pasa aspect_ratio al SDK
 # vía ImageConfig (google-genai 2.6) · aspect respetado end-to-end.
-_ASPECT_TO_SIZE = {"1:1": "1024x1024", "9:16": "1024x1792", "16:9": "1792x1024"}
+# 4:5 (feed IG vertical · A7) · el px es solo llave de round-trip · Gemini rinde su resolución nativa (~928x1152).
+_ASPECT_TO_SIZE = {"1:1": "1024x1024", "9:16": "1024x1792", "16:9": "1792x1024", "4:5": "1024x1280"}
 
 
 def _enhance_prompt(prompt: str, style: str) -> str:
