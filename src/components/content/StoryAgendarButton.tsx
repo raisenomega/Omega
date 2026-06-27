@@ -5,7 +5,7 @@
 //     la red lo permita?" → "Solo historia"="story" · "También feed"="both".
 // No-imagen → "Agendar" plano (cero diálogo). El placement viaja en el result al bloque.
 import { useEffect, useState } from "react";
-import { Calendar } from "lucide-react";
+import { Calendar, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -45,6 +45,10 @@ export function StoryAgendarButton({ result, onAgendar, className = BTN }: { res
         <Button size="sm" className={className}><Calendar className="h-3 w-3" />Agendar</Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
+        {/* X = cerrar sin elegir (cancela · no agenda) · espeja la X de ScheduleModalV2 · AlertDialogCancel cierra solo */}
+        <AlertDialogCancel asChild>
+          <Button size="icon" variant="ghost" className="absolute right-2 top-2 h-7 w-7" aria-label="Cerrar"><X className="h-3.5 w-3.5" /></Button>
+        </AlertDialogCancel>
         <AlertDialogHeader>
           <AlertDialogTitle>{isVertical ? "Imagen vertical (9:16)" : "¿Publicar también en historia?"}</AlertDialogTitle>
           <AlertDialogDescription>
