@@ -54,7 +54,7 @@ async def schedule_post_v3(
         # AMBAS · placement expande a 1-2 filas/red (feed/story/both) dentro de build_fanout_rows.
         rows_to_insert = build_fanout_rows(
             request.client_id, request.platforms, request.content_ids, timestamps, request.media_url,
-            placement=request.placement)
+            placement=request.placement, media_urls=request.media_urls)
         if not rows_to_insert:
             raise HTTPException(422, "no_account_for_any_platform")  # 0 redes resuelven · 0 rows basura
     else:
@@ -66,7 +66,8 @@ async def schedule_post_v3(
         # AMBAS · misma expansión placement→filas que el fan-out (DRY · rows_for_account)
         rows_to_insert = rows_for_account(
             request.client_id, str(account["id"]), request.platform,
-            request.content_ids, timestamps, request.media_url, request.placement)
+            request.content_ids, timestamps, request.media_url, request.placement,
+            media_urls=request.media_urls)
 
     try:
         rows = repo.insert_scheduled_posts_bulk(rows_to_insert)

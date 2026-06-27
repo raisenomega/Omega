@@ -100,3 +100,23 @@ def test_no_media_urls_sets_media_url_none(monkeypatch):  # texto puro -> media_
     sa.maybe_schedule_on_approve(_item({"supervisado": True, "fecha_sugerida": "2026-06-01T15:00",
                                         "platforms": ["instagram"]}))
     assert rows["r"][0]["media_url"] is None
+
+
+# ─── Pieza 2 capa 3 · carrusel · Path B deja de colapsar a [0]: propaga el array completo + media_url=[0] ───
+def test_media_urls_plural_propaga(monkeypatch):  # array completo a la fila + media_url=1ª (doble-escritura)
+    rows = {}
+    monkeypatch.setattr(sa, "_first_active_account_id", _accounts({"instagram": "ig-1", "facebook": "fb-1"}))
+    monkeypatch.setattr(sa.cal_repo, "insert_scheduled_posts_bulk", lambda r: rows.update(r=r) or r)
+    item = {**_item({"supervisado": True, "fecha_sugerida": "2026-06-01T15:00", "platforms": ["instagram", "facebook"]}),
+            "media_urls": ["u1", "u2"]}
+    sa.maybe_schedule_on_approve(item)
+    assert all(row["media_urls"] == ["u1", "u2"] and row["media_url"] == "u1" for row in rows["r"])
+
+
+def test_media_urls_vacio_path_b(monkeypatch):  # texto puro (sin media) → media_urls None + media_url None (sin IndexError)
+    rows = {}
+    monkeypatch.setattr(sa, "_first_active_account_id", _accounts({"instagram": "ig-1"}))
+    monkeypatch.setattr(sa.cal_repo, "insert_scheduled_posts_bulk", lambda r: rows.update(r=r) or r)
+    sa.maybe_schedule_on_approve(_item({"supervisado": True, "fecha_sugerida": "2026-06-01T15:00",
+                                        "platforms": ["instagram"]}))
+    assert rows["r"][0]["media_urls"] is None and rows["r"][0]["media_url"] is None

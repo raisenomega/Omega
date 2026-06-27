@@ -51,7 +51,12 @@ def maybe_schedule_on_approve(item: dict[str, Any]) -> Optional[dict[str, Any]]:
     if not fecha:
         return None  # B2: sin fecha sugerida -> no agenda · queda approved
     client_id = str(item.get("client_id") or "")
-    media_url = (item.get("media_urls") or [None])[0]  # foto adjunta -> publisher (ya lee media_url)
+    # Pieza 2 · carrusel: deja de colapsar a [0] · propaga el array completo + doble-escritura media_url=[0].
+    # Guarda `if media_urls_list else` = sin IndexError con []/None (caso borde F). media_url poblado con la
+    # 1ª para que los consumidores de media_url sigan viendo 1 imagen · el publicador (capa 2) manda los N.
+    media_urls_list = item.get("media_urls") or []
+    media_urls_final = media_urls_list if media_urls_list else None
+    media_url = media_urls_list[0] if media_urls_list else None
     rows = []
     for platform in _target_platforms(meta):
         account_id = _first_active_account_id(client_id, platform)
@@ -64,6 +69,7 @@ def maybe_schedule_on_approve(item: dict[str, Any]) -> Optional[dict[str, Any]]:
             "scheduled_for": str(fecha),
             "status": "pending",
             "media_url": media_url,
+            "media_urls": media_urls_final,
         })
     if not rows:
         # 'general'/sin red marcada o ninguna resuelve -> NO agenda (queda approved · cliente marca red)

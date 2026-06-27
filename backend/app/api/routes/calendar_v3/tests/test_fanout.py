@@ -36,24 +36,22 @@ def test_one_network_without_active_account_skipped_two_rows():
 
 def test_zero_networks_resolve_no_rows():
     rows = _fanout.build_fanout_rows(
-        "client-A", ["instagram", "facebook"], ["c1"], _TS, None,
-        resolve=_accounts({}))  # ninguna resuelve
+        "client-A", ["instagram", "facebook"], ["c1"], _TS, None, resolve=_accounts({}))
     assert rows == []  # handler -> 422 (error claro · 0 rows)
 
 
 def test_single_network_one_row_backcompat():
     rows = _fanout.build_fanout_rows(
-        "client-A", ["instagram"], ["c1"], _TS, None,
-        resolve=_accounts({"instagram": "ig-1"}))
+        "client-A", ["instagram"], ["c1"], _TS, None, resolve=_accounts({"instagram": "ig-1"}))
     assert len(rows) == 1 and rows[0]["social_account_id"] == "ig-1"  # single-red no se rompio
 
 
 # ─── "AMBAS" · placement feed/story/both → _fanout emite 1-2 filas por red ───
 @pytest.mark.parametrize("placement,plats,mapping,expected_is_story", [
-    ("feed", ["instagram"], {"instagram": "ig-1"}, [False]),                 # feed → 1 fila normal
-    ("story", ["instagram"], {"instagram": "ig-1"}, [True]),                 # story → 1 fila historia
-    ("both", ["instagram"], {"instagram": "ig-1"}, [False, True]),           # both IG/FB → feed + story
-    ("both", ["tiktok"], {"tiktok": "tk-1"}, [False]),                       # both TikTok → solo feed (sin historia)
+    ("feed", ["instagram"], {"instagram": "ig-1"}, [False]),        # feed → 1 fila normal
+    ("story", ["instagram"], {"instagram": "ig-1"}, [True]),        # story → 1 fila historia
+    ("both", ["instagram"], {"instagram": "ig-1"}, [False, True]),  # both IG → feed + story
+    ("both", ["tiktok"], {"tiktok": "tk-1"}, [False]),              # both TikTok → solo feed (sin historia)
 ])
 def test_placement_single_network_rows(placement, plats, mapping, expected_is_story):
     rows = _fanout.build_fanout_rows("client-A", plats, ["c1"], _TS, None,
@@ -68,27 +66,30 @@ def test_placement_default_no_kwarg_one_feed_row():
     assert len(rows) == 1 and rows[0]["is_story"] is False
 
 
-def test_placement_both_ig_fb_four_rows():
-    """IG+FB ambas → 4 publicaciones (feed+story por red que soporta story)."""
-    rows = _fanout.build_fanout_rows("client-A", ["instagram", "facebook"], ["c1"], _TS, None,
-                                     resolve=_accounts({"instagram": "ig-1", "facebook": "fb-1"}), placement="both")
-    assert len(rows) == 4
-    assert sorted(r["is_story"] for r in rows if r["social_account_id"] == "ig-1") == [False, True]
-    assert sorted(r["is_story"] for r in rows if r["social_account_id"] == "fb-1") == [False, True]
+# both multi-red: cada red con historia emite [feed,story]; TikTok solo feed; red sin cuenta → 0 filas (invariante E).
+@pytest.mark.parametrize("plats,mapping,expected", [
+    (["instagram", "facebook"], {"instagram": "ig-1", "facebook": "fb-1"}, {"ig-1": [False, True], "fb-1": [False, True]}),
+    (["instagram", "tiktok"], {"instagram": "ig-1", "tiktok": "tk-1"}, {"ig-1": [False, True], "tk-1": [False]}),
+    (["instagram", "facebook"], {"instagram": "ig-1"}, {"ig-1": [False, True]}),  # fb sin cuenta → omitido por completo
+])
+def test_placement_both_multired(plats, mapping, expected):
+    rows = _fanout.build_fanout_rows("client-A", plats, ["c1"], _TS, None,
+                                     resolve=_accounts(mapping), placement="both")
+    assert {r["social_account_id"] for r in rows} == set(expected)  # solo redes resueltas (jamas NULL)
+    for acc, exp in expected.items():
+        assert sorted(r["is_story"] for r in rows if r["social_account_id"] == acc) == exp
 
 
-def test_placement_both_ig_tiktok_three_rows():
-    """IG (feed+story) + TikTok (solo feed) = 3 filas."""
-    rows = _fanout.build_fanout_rows("client-A", ["instagram", "tiktok"], ["c1"], _TS, None,
-                                     resolve=_accounts({"instagram": "ig-1", "tiktok": "tk-1"}), placement="both")
-    assert len(rows) == 3
-    assert sorted(r["is_story"] for r in rows if r["social_account_id"] == "ig-1") == [False, True]
-    assert [r["is_story"] for r in rows if r["social_account_id"] == "tk-1"] == [False]
-
-
-def test_placement_both_network_without_account_zero_rows_invariant():
-    """Invariante E intacto en 'both': red sin cuenta active → 0 filas de esa red (ni feed ni story)."""
-    rows = _fanout.build_fanout_rows("client-A", ["instagram", "facebook"], ["c1"], _TS, None,
-                                     resolve=_accounts({"instagram": "ig-1"}), placement="both")  # fb no resuelve
-    assert {r["social_account_id"] for r in rows} == {"ig-1"}  # fb omitido por completo
-    assert all(r["social_account_id"] is not None for r in rows)
+# ─── Pieza 2 capa 3 · carrusel · media_urls (array) + doble-escritura media_url=array[0] (caso F · sin IndexError) ───
+# Contrato: row["media_urls"]=array si presente else None · row["media_url"]=array[0] si presente else single legacy.
+@pytest.mark.parametrize("media_urls,plats,mapping,placement,exp_urls,exp_url,exp_n", [
+    (["u1", "u2", "u3"], ["instagram"], {"instagram": "ig-1"}, "feed", ["u1", "u2", "u3"], "u1", 1),  # array → fila
+    (None, ["instagram"], {"instagram": "ig-1"}, "feed", None, "u1", 1),                              # None → single legacy
+    (["u1", "u2"], ["instagram", "facebook"], {"instagram": "ig-1", "facebook": "fb-1"}, "both", ["u1", "u2"], "u1", 4),  # replica N×red×placement
+    ([], ["instagram"], {"instagram": "ig-1"}, "feed", None, "u1", 1),                                # [] → fallback single
+])
+def test_media_urls_doble_escritura(media_urls, plats, mapping, placement, exp_urls, exp_url, exp_n):
+    rows = _fanout.build_fanout_rows("client-A", plats, ["c1"], _TS, "u1",
+                                     resolve=_accounts(mapping), placement=placement, media_urls=media_urls)
+    assert len(rows) == exp_n
+    assert all(r["media_urls"] == exp_urls and r["media_url"] == exp_url for r in rows)
