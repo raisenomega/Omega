@@ -37,43 +37,29 @@ _DEFAULT_ROUTE: ImageRoute = "default"
 logger = logging.getLogger(__name__)
 
 
-async def generate_image_compat(
-    prompt: str,
+async def generate_images_compat(
+    prompts: List[str],
     size: str = "1024x1024",
     quality: str = "standard",
-    n: int = 1,
     reference_images_b64: Optional[List[str]] = None,
     client_id: Optional[str] = None,
 ) -> List[str]:
-    """Image generation (compat V1) backed by Nano Banana + Supabase Storage.
-
-    Returns una lista de URLs públicas persistidas (post DEBT-018 · ya no data URIs).
-    Imágenes van a bucket 'generated-images/{client_id|shared}/{uuid}.{ext}'.
-
-    Si `client_id` se provee (V3 handlers), las imágenes van al folder del tenant.
-    Sin client_id (legacy callers · LV1 handler · content_creator agent), van a
-    'shared/'. No breaking change para callers existentes.
-
-    Si `reference_images_b64` se provee, Nano Banana las usa como contexto visual
-    (edit mode · max 20 imágenes per Nano Banana adapter limit).
-    """
+    """Pieza 1 · A3 · MOTOR N: 1 imagen por prompt DISTINTO de la lista (NO el mismo N veces) → sube cada
+    una a Storage → devuelve las N URLs en orden. Lista vacía → [] (no-op defensivo · sin tocar el adapter).
+    Imágenes a bucket 'generated-images/{client_id|shared}/{uuid}.{ext}' (post DEBT-018 · URLs persistidas).
+    reference_images_b64: contexto edit-mode COMPARTIDO por todas (max 20 · NO encadena · eso es Fase C)."""
     aspect_ratio = _SIZE_TO_ASPECT.get(size, _DEFAULT_ASPECT)
     route = _QUALITY_TO_ROUTE.get(quality, _DEFAULT_ROUTE)
-
-    data_uris: List[str] = []
-    for _ in range(max(1, n)):
+    urls: List[str] = []
+    for prompt in prompts:
         response, error = await _nano_banana_generate(
-            prompt=prompt,
-            route=route,
-            reference_images_b64=reference_images_b64,
-            aspect_ratio=aspect_ratio,
+            prompt=prompt, route=route,
+            reference_images_b64=reference_images_b64, aspect_ratio=aspect_ratio,
         )
         if error is not None or response is None:
             code = error.code if error else "unknown"
             message = error.message if error else "no response"
-            raise RuntimeError(
-                f"Nano Banana generation failed: {code} · {message}"
-            )
+            raise RuntimeError(f"Nano Banana generation failed: {code} · {message}")
         image_bytes = base64.b64decode(response.image_b64)
         _t_up = time.monotonic()
         url = await upload_image_bytes(image_bytes, response.mime_type, client_id=client_id)  # DEBT-068
@@ -82,5 +68,21 @@ async def generate_image_compat(
             f"image_gen timing · gemini={response.latency_ms}ms upload="
             f"{int((time.monotonic() - _t_up) * 1000)}ms route={route} model={response.model_used} client={client_id or 'shared'}"
         )
-        data_uris.append(url)
-    return data_uris
+        urls.append(url)
+    return urls
+
+
+async def generate_image_compat(
+    prompt: str,
+    size: str = "1024x1024",
+    quality: str = "standard",
+    n: int = 1,
+    reference_images_b64: Optional[List[str]] = None,
+    client_id: Optional[str] = None,
+) -> List[str]:
+    """Compat single (retrocompat DURA · firma intacta para los 4 callers actuales): n copias del MISMO
+    prompt (comportamiento legacy intacto · n=1 → 1 imagen idéntica a hoy). Delega en el motor N."""
+    return await generate_images_compat(
+        [prompt] * max(1, n), size=size, quality=quality,
+        reference_images_b64=reference_images_b64, client_id=client_id,
+    )
