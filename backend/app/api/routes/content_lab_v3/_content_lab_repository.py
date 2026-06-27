@@ -45,6 +45,15 @@ def find_client_logo_url(client_id: str) -> Optional[str]:
     return f.data[0].get("storage_url") if f.data else None
 
 
+def find_client_brand_palette(client_id: str) -> dict[str, Any]:
+    """A6 · paleta de marca del cliente · client_brand_assets (SOLO los 3 colores · NO fuentes/logo).
+    {} si no hay fila (cliente sin paleta · el prompt sale sin marca). Hex limpio (#rrggbb · NO normaliza)."""
+    r = _sb().table("client_brand_assets").select(
+        "primary_color, secondary_color, accent_color"
+    ).eq("client_id", client_id).limit(1).execute()
+    return r.data[0] if r.data else {}
+
+
 def insert_generated_content(client_id: str, payload: dict[str, Any]) -> Optional[str]:
     """INSERT content_lab_generated · retorna id del nuevo draft."""
     r = _sb().table("content_lab_generated").insert({**payload, "client_id": client_id}).execute()

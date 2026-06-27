@@ -24,6 +24,7 @@ def _common(monkeypatch, async_enabled):
     monkeypatch.setattr(gi, "resolve_client_or_403", lambda uid, cid: {"id": "c1"})
     monkeypatch.setattr(gi, "check_budget", _budget_ok)
     monkeypatch.setattr(gi, "get_feature_flags", lambda: SimpleNamespace(image_async_enabled=async_enabled))
+    monkeypatch.setattr(gi.repo, "find_client_brand_palette", lambda cid: {})  # A6 · sin paleta → prompt sin marca (no toca DB)
 
 
 def test_flag_off_devuelve_imagen_sincrono(monkeypatch):

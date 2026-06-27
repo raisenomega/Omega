@@ -48,9 +48,24 @@ _STYLE_SUFFIXES = {
 _ASPECT_TO_SIZE = {"1:1": "1024x1024", "9:16": "1024x1792", "16:9": "1792x1024", "4:5": "1024x1280"}
 
 
-def _enhance_prompt(prompt: str, style: str) -> str:
+def _brand_block(palette: dict) -> str:
+    """A6 · eslabón 4 · instrucción visual instructiva (NO descriptiva como el bloque de ARIA del chat) con
+    SOLO los colores que existen. Sin primary → "" (cliente sin paleta · prompt idéntico a hoy · retrocompat).
+    Hex limpio en DB (#rrggbb · picker+regex zod) → se concatena directo, sin normalizar. Fuentes/logo fuera de A6."""
+    primary = palette.get("primary_color")
+    if not primary:
+        return ""
+    parts = [f"use {primary} as primary"]
+    if palette.get("secondary_color"):
+        parts.append(f"{palette['secondary_color']} as secondary")
+    if palette.get("accent_color"):
+        parts.append(f"{palette['accent_color']} as accent color")
+    return ", brand color palette: " + ", ".join(parts)
+
+
+def _enhance_prompt(prompt: str, style: str, brand_block: str = "") -> str:
     suffix = _STYLE_SUFFIXES.get(style, _STYLE_SUFFIXES["realistic"])
-    enhanced = f"{prompt}{suffix}"
+    enhanced = f"{prompt}{suffix}{brand_block}"
     return enhanced[:8000] if len(enhanced) > 8000 else enhanced
 
 
@@ -73,7 +88,10 @@ async def generate_image(
         raise HTTPException(status_code=400, detail="unsafe_input:prompt")
     request.prompt = si.clean_text
 
-    enhanced = _enhance_prompt(request.prompt, request.style)
+    # A6 · eslabón 4: inyecta la paleta de marca del cliente al prompt (siempre que exista · sin flag).
+    # Lectura en to_thread (patrón del logo) · cubre AMBOS paths (síncrono + job async) porque enriquece `enhanced`.
+    palette = await asyncio.to_thread(repo.find_client_brand_palette, client_id)
+    enhanced = _enhance_prompt(request.prompt, request.style, _brand_block(palette))
     # DEBT-CL-020: si attachment text → append al prompt como contexto adicional
     if request.reference_attachment_b64 and request.reference_mime_type:
         try:
