@@ -38,6 +38,31 @@ _DEFAULT_ROUTE: ImageRoute = "default"
 logger = logging.getLogger(__name__)
 
 
+async def _generate_one(
+    prompt: str, route: ImageRoute, reference_images_b64: Optional[List[str]],
+    aspect_ratio: str, client_id: Optional[str],
+) -> str:
+    """1 placa: genera vía adapter + sube a Storage → URL. Lanza RuntimeError si el adapter falla (lo usa
+    el motor secuencial A3 Y el paralelo A2.2 · cuerpo por-placa ÚNICO · sin duplicar)."""
+    response, error = await _nano_banana_generate(
+        prompt=prompt, route=route,
+        reference_images_b64=reference_images_b64, aspect_ratio=aspect_ratio,
+    )
+    if error is not None or response is None:
+        code = error.code if error else "unknown"
+        message = error.message if error else "no response"
+        raise RuntimeError(f"Nano Banana generation failed: {code} · {message}")
+    image_bytes = base64.b64decode(response.image_b64)
+    _t_up = time.monotonic()
+    url = await upload_image_bytes(image_bytes, response.mime_type, client_id=client_id)  # DEBT-068
+    # DEBT-IMAGE-ASYNC · observabilidad: split del tiempo (Gemini vs nuestro upload) · sin cambiar lógica
+    logger.info(
+        f"image_gen timing · gemini={response.latency_ms}ms upload="
+        f"{int((time.monotonic() - _t_up) * 1000)}ms route={route} model={response.model_used} client={client_id or 'shared'}"
+    )
+    return url
+
+
 async def generate_images_compat(
     prompts: List[str],
     size: str = "1024x1024",
@@ -52,24 +77,8 @@ async def generate_images_compat(
     aspect_ratio = _SIZE_TO_ASPECT.get(size, _DEFAULT_ASPECT)
     route = _QUALITY_TO_ROUTE.get(quality, _DEFAULT_ROUTE)
     urls: List[str] = []
-    for prompt in prompts:
-        response, error = await _nano_banana_generate(
-            prompt=prompt, route=route,
-            reference_images_b64=reference_images_b64, aspect_ratio=aspect_ratio,
-        )
-        if error is not None or response is None:
-            code = error.code if error else "unknown"
-            message = error.message if error else "no response"
-            raise RuntimeError(f"Nano Banana generation failed: {code} · {message}")
-        image_bytes = base64.b64decode(response.image_b64)
-        _t_up = time.monotonic()
-        url = await upload_image_bytes(image_bytes, response.mime_type, client_id=client_id)  # DEBT-068
-        # DEBT-IMAGE-ASYNC · observabilidad: split del tiempo (Gemini vs nuestro upload) · sin cambiar lógica
-        logger.info(
-            f"image_gen timing · gemini={response.latency_ms}ms upload="
-            f"{int((time.monotonic() - _t_up) * 1000)}ms route={route} model={response.model_used} client={client_id or 'shared'}"
-        )
-        urls.append(url)
+    for prompt in prompts:  # SECUENCIAL (A3) · el paralelo todo-o-nada es A2.2 (_carousel_images)
+        urls.append(await _generate_one(prompt, route, reference_images_b64, aspect_ratio, client_id))
     return urls
 
 
