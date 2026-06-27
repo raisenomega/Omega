@@ -103,6 +103,26 @@ class VideoJobStatusResponse(BaseModel):
     metadata: dict = {}
 
 
+class CarouselSlide(BaseModel):
+    order: Optional[int] = None
+    slide_type: Optional[str] = None  # portada|punto|cierre|cta
+    text: str          # copy EN la placa · español
+    visual_note: str   # instrucción inglés para el generador (A2) · garantizado no-vacío por el backstop
+
+
+class GenerateCarouselScriptRequest(BaseModel):
+    """A1.2 · guion del carrusel · `idea` por su PROPIO campo (max 4000) · NO el prompt de imagen (2000) → sin 422."""
+    idea: str = Field(..., min_length=1, max_length=4000)
+    client_id: Optional[str] = Field(default=None)  # DEBT-CL-005
+    n_slides: Optional[int] = Field(default=5, ge=3, le=10)  # D5 · default 5 · rango 3-10
+    tone: Optional[str] = Field(default=None, max_length=32)
+
+
+class GenerateCarouselScriptResponse(BaseModel):
+    carousel_title: str
+    slides: list[CarouselSlide]
+
+
 class ImprovePromptRequest(BaseModel):
     original_prompt: str = Field(..., min_length=1, max_length=2000)
     platform: Optional[str] = Field(default=None, max_length=32)
