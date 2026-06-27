@@ -1,7 +1,8 @@
-import { X, Calendar, Save, Download, Check, Copy } from "lucide-react";
+import { X, Save, Download, Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TYPE_LABELS, AGENDA_TYPES } from "@/lib/content-lab-constants";
+import { StoryAgendarButton } from "./StoryAgendarButton";
 import type { ResultV2 } from "./ResultCardV2";
 
 interface Props {
@@ -37,10 +38,8 @@ export function ResultExpandedModal({ result, onClose, onAgendar, onSave, onDown
         </div>
         {AGENDA_TYPES.has(result.content_type) ? (
           <div className="grid grid-cols-3 gap-2 pt-2">
-            <Button onClick={() => onAgendar(result)}
-              className="bg-amber-500 hover:bg-amber-600 text-white gap-1.5 font-semibold">
-              <Calendar className="h-4 w-4" /> Agendar
-            </Button>
+            <StoryAgendarButton result={result} onAgendar={onAgendar}
+              className="bg-amber-500 hover:bg-amber-600 text-white gap-1.5 font-semibold" />{/* mismo diálogo que la tarjeta */}
             <Button variant="outline" onClick={() => isVideo ? null : onSave(result.id)}
               disabled={isVideo}
               title={isVideo ? "Video persistido automáticamente en Storage" : undefined}

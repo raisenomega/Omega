@@ -15,9 +15,9 @@ import type { ResultV2 } from "./result-types";
 import type { Placement } from "@/lib/placement";
 
 const FEED_RATIO_MIN = 0.8;  // < 0.8 (w/h) = vertical fuera del feed de IG (9:16 = 0.56)
-const BTN = "bg-amber-500 hover:bg-amber-600 text-white gap-1 flex-1 h-7 text-[11px]";
+const BTN = "bg-amber-500 hover:bg-amber-600 text-white gap-1 flex-1 h-7 text-[11px]";  // default · estilo tarjeta
 
-export function StoryAgendarButton({ result, onAgendar }: { result: ResultV2; onAgendar: (r: ResultV2) => void }) {
+export function StoryAgendarButton({ result, onAgendar, className = BTN }: { result: ResultV2; onAgendar: (r: ResultV2) => void; className?: string }) {
   const isImage = result.content_type === "image";
   const [ratio, setRatio] = useState<number | null>(null);
   useEffect(() => {
@@ -33,7 +33,7 @@ export function StoryAgendarButton({ result, onAgendar }: { result: ResultV2; on
 
   // No-imagen → Agendar plano (cero diálogo · texto/video no tienen placement de historia).
   if (!isImage) {
-    return <Button size="sm" onClick={() => onAgendar(result)} className={BTN}><Calendar className="h-3 w-3" />Agendar</Button>;
+    return <Button size="sm" onClick={() => onAgendar(result)} className={className}><Calendar className="h-3 w-3" />Agendar</Button>;
   }
 
   // fail-open: ratio null (no medible / cargando) → rama apta-feed (asume que entra al feed).
@@ -42,7 +42,7 @@ export function StoryAgendarButton({ result, onAgendar }: { result: ResultV2; on
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button size="sm" className={BTN}><Calendar className="h-3 w-3" />Agendar</Button>
+        <Button size="sm" className={className}><Calendar className="h-3 w-3" />Agendar</Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
