@@ -25,7 +25,7 @@ export function ResultExpandedModal({ result, onClose, onAgendar, onSave, onDown
   return (
     <div onClick={onClose} className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
       <div onClick={(e) => e.stopPropagation()}
-        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border space-y-3 p-4">
+        className="bg-card rounded-lg shadow-2xl max-w-2xl w-full border space-y-3 p-4">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold flex-1">{typeLabel}</h2>
           {result.variation_label && <Badge>{result.variation_label}</Badge>}
