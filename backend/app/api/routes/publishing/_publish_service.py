@@ -42,6 +42,14 @@ MAX_RETRIES = 3
 # B4 · TikTok foto usa el content COMO título del slideshow (cap 90 · sin campo title separado).
 # Constante de PLATAFORMA externa (no business-rule → local, NO limits_omega · igual que MAX_RETRIES).
 _TIKTOK_TITLE_MAX = 90
+# Firma EXACTA del 409 dedup-24h de Zernio · SOLO este mensaje prueba que el contenido YA salió antes.
+_ZERNIO_DEDUP_409 = "already scheduled, publishing, or was posted"
+
+
+def _is_already_published(e: ZernioError) -> bool:
+    """True SOLO si el error es el 409 dedup-24h de Zernio (el contenido salió en un intento previo · el
+    timeout comió el post_id). Cualquier otro error (otros 409, 4xx, 5xx, timeout) → False (failed/retry)."""
+    return getattr(e, "status_code", None) == 409 and _ZERNIO_DEDUP_409 in str(e)
 
 
 def _cap_tiktok_title(message: str, platform: str, media_url: Optional[str]) -> str:
@@ -175,6 +183,14 @@ async def publish_scheduled_post(scheduled_post_id: str, client_id: str) -> Publ
             media_urls=media_list,
         )
     except ZernioError as e:
+        # 409 dedup-24h = el contenido YA salió en un intento previo (el timeout comió el post_id). Verdad
+        # honesta: PUBLISHED, no failed · post_id=None. Cierra el estado-mentira tipo A. La red del dedup
+        # de Zernio sigue intacta (es justo lo que nos avisa). SOLO este 409 exacto · ningún otro error.
+        if _is_already_published(e):
+            logger.warning(f"auto-publish · 409 already-posted → published (post_id perdido en timeout previo) · post={scheduled_post_id} client={client_id}")
+            await asyncio.to_thread(repo.mark_published, scheduled_post_id, None)
+            _hermes_zernio(True)  # el contenido está vivo en la plataforma → señal de éxito honesta
+            return PublishResult(published=True, platform_post_id=None)
         _hermes_zernio(False, str(e)[:200])  # HERMES f1.5 · CADA intento fallido se ve (aunque luego reintente)
         # TRANSITORIO (5xx/429/timeout) y aún hay margen → vuelve a 'pending', REX reintenta al próximo
         # tick (sin perder el post). TERMINAL (4xx/media) o tope agotado → mark_failed honesto como hoy.

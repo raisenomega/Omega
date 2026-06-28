@@ -44,8 +44,9 @@ def mark_publishing(post_id: str) -> None:
     _sb().table("scheduled_posts").update({"status": "publishing"}).eq("id", post_id).execute()
 
 
-def mark_published(post_id: str, platform_post_id: str) -> dict[str, Any]:
-    """Éxito real confirmado por Meta · persiste el id del post en la plataforma.
+def mark_published(post_id: str, platform_post_id: Optional[str]) -> dict[str, Any]:
+    """Éxito real confirmado · persiste el id del post en la plataforma (None si se perdió en un
+    timeout y Zernio luego confirmó via 409-dedup que ya salió · la columna es nullable).
     Raise si 0 filas (no miente éxito sin persistir · P1)."""
     r = (_sb().table("scheduled_posts")
          .update({"status": "published", "platform_post_id": platform_post_id, "error_message": None})

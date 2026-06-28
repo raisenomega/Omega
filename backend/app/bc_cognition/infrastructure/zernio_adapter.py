@@ -14,7 +14,7 @@ import httpx
 from app.bc_cognition.infrastructure.zernio_config import get_zernio_settings
 
 logger = logging.getLogger(__name__)
-_HTTP_TIMEOUT = 40.0
+_HTTP_TIMEOUT = 120.0  # carrusel de 5 placas SIEMPRE tarda >40s (medido) · 120s cabe en la ventana del cron (300s)
 
 
 class ZernioError(Exception):

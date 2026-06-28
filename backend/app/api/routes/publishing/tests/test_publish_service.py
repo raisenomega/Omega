@@ -7,6 +7,7 @@ import asyncio
 import pytest
 
 from app.api.routes.publishing import _publish_service as ps
+from app.bc_cognition.infrastructure import zernio_adapter as za
 from app.bc_cognition.infrastructure.zernio_adapter import ZernioPublishError
 from app.bc_cognition.infrastructure.zernio_resolver import ZernioAccountResolutionError
 
@@ -399,3 +400,65 @@ def test_sin_media_alguna_fb(monkeypatch):  # FB no exige media · ambos None �
     _wire(monkeypatch, repo, create=_cap)
     out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
     assert out.published is True and cap["media_urls"] is None
+
+
+# ── Commit 5a · estado-mentira tipo A: timeout 40→120 + 409-already-posted = published (no failed) ──
+# Bug confirmado 3 veces (03:06/07:06/22:00): el post sale a IG pero el timeout corta la respuesta →
+# falso 'failed' + post_id perdido · el reintento da 409 dedup → hoy mark_failed (la DB miente).
+_DUP_409 = ('zernio_409:{"error":"This exact content is already scheduled, publishing, or was '
+            'posted to this account within the last 24 hours.","details":{"accountId":"x"}}')
+
+
+def test_timeout_120():
+    # El timeout subió 40→120s (carrusel de 5 placas SIEMPRE tarda >40s · cabe en la ventana del cron 300s).
+    assert za._HTTP_TIMEOUT == 120.0
+
+
+def test_409_already_posted_es_published(monkeypatch):
+    # El reintento recibe el 409 dedup 24h → el contenido YA salió antes → mark_published HONESTO (no failed) ·
+    # post_id=None (el timeout lo comió). Cierra el estado-mentira: la DB deja de decir 'failed' sobre un post real.
+    repo = _Repo(_post(attempts=1))
+    async def _dup(**kw): raise ZernioPublishError(_DUP_409, status_code=409)
+    _wire(monkeypatch, repo, create=_dup)
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is True and out.platform_post_id is None
+    assert repo.calls == ["publishing", ("published", None)]  # PUBLISHED, no failed
+
+
+def test_otro_error_no_es_published(monkeypatch):
+    # Anti falso-positivo: un 400 terminal NO es el dedup → sigue failed · un timeout de transporte → retry.
+    # NINGUNO se marca published (solo el 409-already-posted exacto lo hace).
+    repo400 = _Repo(_post(attempts=0))
+    async def _b400(**kw): raise ZernioPublishError("zernio_400:contenido_invalido", status_code=400)
+    _wire(monkeypatch, repo400, create=_b400)
+    out400 = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out400.published is False
+    assert repo400.calls == ["publishing", ("failed", "zernio_400:contenido_invalido")]
+    assert ("published", None) not in repo400.calls
+
+    repo_to = _Repo(_post(attempts=0))
+    async def _to(**kw): raise ZernioPublishError("zernio_transport_error:ReadTimeout", transport=True)
+    _wire(monkeypatch, repo_to, create=_to)
+    out_to = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out_to.published is False and (out_to.error or "").startswith("retry:")  # timeout → retry, no published
+    assert ("published", None) not in repo_to.calls
+
+
+def test_409_distinto_no_published(monkeypatch):
+    # SOLO el 409-already-posted exacto → published. Otro 409 (causa distinta) → failed honesto, NUNCA published.
+    repo = _Repo(_post(attempts=0))
+    other = 'zernio_409:{"error":"some other conflict"}'
+    async def _other(**kw): raise ZernioPublishError(other, status_code=409)
+    _wire(monkeypatch, repo, create=_other)
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is False
+    assert repo.calls == ["publishing", ("failed", other)]  # otro 409 → failed, no published
+
+
+def test_no_rompe_publish_normal(monkeypatch):
+    # Cero regresión: publicación normal exitosa sigue marcando published con su post_id REAL.
+    repo = _Repo(_post())
+    _wire(monkeypatch, repo)  # _create_ok → "zpost_1"
+    out = asyncio.run(ps.publish_scheduled_post("p1", "c1"))
+    assert out.published is True and out.platform_post_id == "zpost_1"
+    assert repo.calls == ["publishing", ("published", "zpost_1")]
