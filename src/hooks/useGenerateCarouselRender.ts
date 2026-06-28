@@ -15,13 +15,15 @@ export interface CarouselRenderInput {
   carouselTitle: string;
   slides: CarouselSlideData[];
   clientId?: string;
+  applyLogo?: boolean;  // Commit A · opt-in · overlay del logo sobre las N placas (default sin logo)
 }
 
 export function useGenerateCarouselRender() {
   return useMutation<CarouselRenderResult, Error, CarouselRenderInput>({
-    mutationFn: ({ carouselTitle, slides, clientId }) =>
+    mutationFn: ({ carouselTitle, slides, clientId, applyLogo }) =>
       apiPost<CarouselRenderResult>("/content-lab/carousel-render", {
         carousel_title: carouselTitle, slides, client_id: clientId || undefined,
+        apply_logo: !!applyLogo,
       }),
   });
 }

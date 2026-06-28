@@ -64,4 +64,27 @@ describe("CarouselWizardModal · 2 pasos (F.2)", () => {
     expect(got!.content_type).toBe("carousel");
     expect(got!.media_urls).toEqual(["u0", "u1", "u2"]);
   });
+
+  it("test_checkbox_dispara_apply_logo · marcar 'Usar mi logo' → render con apply_logo=true (opt-in)", async () => {
+    render(<CarouselWizardModal open idea="ahorro" clientId="c1" onClose={() => {}} onGenerated={() => {}} />, { wrapper });
+    await screen.findByDisplayValue("Tip uno");
+    fireEvent.click(screen.getByRole("checkbox"));            // opt-in "Usar mi logo"
+    fireEvent.click(screen.getByText("Generar placas"));
+    await waitFor(() => {
+      const call = vi.mocked(apiPost).mock.calls.find(c => String(c[0]).includes("carousel-render"));
+      expect(call).toBeTruthy();
+      expect((call![1] as { apply_logo?: boolean }).apply_logo).toBe(true);
+    });
+  });
+
+  it("sin marcar el checkbox → apply_logo=false (default · sin logo, como hoy)", async () => {
+    render(<CarouselWizardModal open idea="ahorro" clientId="c1" onClose={() => {}} onGenerated={() => {}} />, { wrapper });
+    await screen.findByDisplayValue("Tip uno");
+    fireEvent.click(screen.getByText("Generar placas"));
+    await waitFor(() => {
+      const call = vi.mocked(apiPost).mock.calls.find(c => String(c[0]).includes("carousel-render"));
+      expect(call).toBeTruthy();
+      expect((call![1] as { apply_logo?: boolean }).apply_logo).toBe(false);
+    });
+  });
 });

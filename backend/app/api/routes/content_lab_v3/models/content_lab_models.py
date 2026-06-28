@@ -128,6 +128,7 @@ class GenerateCarouselRenderRequest(BaseModel):
     carousel_title: str = Field(..., min_length=1, max_length=200)
     slides: list[CarouselSlide] = Field(..., min_length=3, max_length=10)
     client_id: Optional[str] = Field(default=None)  # DEBT-CL-005
+    apply_logo: bool = Field(default=False)  # Commit A · opt-in · overlay del logo sobre las N placas (paridad imagen suelta)
 
 
 class GenerateCarouselRenderResponse(BaseModel):

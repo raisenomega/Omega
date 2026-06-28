@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { useGenerateCarouselScript, type CarouselSlideData } from "@/hooks/useGenerateCarouselScript";
 import { useGenerateCarouselRender } from "@/hooks/useGenerateCarouselRender";
 import type { ResultV2 } from "@/components/content/result-types";
@@ -25,13 +27,14 @@ export function CarouselWizardModal({ open, idea, clientId, tone, onClose, onGen
   const render = useGenerateCarouselRender();
   const [title, setTitle] = useState("");
   const [slides, setSlides] = useState<CarouselSlideData[]>([]);
+  const [applyLogo, setApplyLogo] = useState(false);  // Commit A · opt-in del logo (default off · paridad imagen suelta)
 
   const runScript = () =>
     script.mutate({ idea, clientId, tone }, { onSuccess: (s) => { setTitle(s.carousel_title); setSlides(s.slides); } });
 
   // Paso 1 · al abrir genera el guion (1 vez por apertura) · al cerrar limpia el estado.
   useEffect(() => {
-    if (!open) { setSlides([]); setTitle(""); script.reset(); render.reset(); return; }
+    if (!open) { setSlides([]); setTitle(""); setApplyLogo(false); script.reset(); render.reset(); return; }
     runScript();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -40,7 +43,7 @@ export function CarouselWizardModal({ open, idea, clientId, tone, onClose, onGen
   const ready = slides.length >= 3 && title.trim() !== "" && slides.every((s) => s.text.trim() !== "");
 
   const generate = () =>
-    render.mutate({ carouselTitle: title, slides, clientId }, {
+    render.mutate({ carouselTitle: title, slides, clientId, applyLogo }, {
       onSuccess: (r) => {
         onGenerated({ id: r.id, content_type: "carousel", generated_text: r.carousel_title, media_urls: r.media_urls });
         onClose();
@@ -73,6 +76,11 @@ export function CarouselWizardModal({ open, idea, clientId, tone, onClose, onGen
                 <Textarea value={s.text} onChange={(e) => setText(i, e.target.value)} rows={2} className="mt-1 text-sm" /></label>
             ))}
             {render.isError && <p className="text-sm text-destructive">No se pudieron generar las placas. Probá de nuevo.</p>}
+            <div className="flex items-center gap-2 pt-1">
+              <Checkbox id="carousel-apply-logo" checked={applyLogo} onCheckedChange={(c) => setApplyLogo(!!c)}
+                disabled={render.isPending} className="h-3.5 w-3.5" />
+              <Label htmlFor="carousel-apply-logo" className="text-[11px] cursor-pointer leading-none">Usar mi logo</Label>
+            </div>
             <div className="flex justify-end gap-2 pt-1">
               <Button variant="ghost" onClick={onClose} disabled={render.isPending}>Cancelar</Button>
               <Button onClick={generate} disabled={!ready || render.isPending}

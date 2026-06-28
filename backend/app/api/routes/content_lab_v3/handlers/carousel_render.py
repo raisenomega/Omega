@@ -5,6 +5,7 @@ Q1-A → A2.2 (paralelo todo-o-nada) → persist 1 draft con media_urls de N →
 NO regenera el guion (no llama A1.2/RAFA) · NO toca credits_service · NO toca Pieza 2 (el agendar ya
 lee media_urls). Sync (rate limit medido 10s). F1: el guion fue gratis · el cobro es solo aquí.
 """
+import asyncio
 from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
 from app.api.routes.auth.auth_utils import get_current_user
@@ -12,6 +13,7 @@ from app.api.routes.content_lab_v3 import _content_lab_repository as repo
 from app.api.routes.content_lab_v3._client_resolver import resolve_client_or_403
 from app.api.routes.content_lab_v3._brand_prompt import fetch_brand_block
 from app.api.routes.content_lab_v3._carousel_render import build_placa_prompts
+from app.api.routes.content_lab_v3._carousel_logo import apply_logo_to_urls
 from app.api.routes.content_lab_v3.models.content_lab_models import (
     GenerateCarouselRenderRequest, GenerateCarouselRenderResponse,
 )
@@ -61,6 +63,13 @@ async def carousel_render(
         raise HTTPException(status_code=503, detail=f"carousel_render_error:{e}")
     if not urls:
         raise HTTPException(status_code=503, detail="carousel_render_empty")
+
+    # Commit A · overlay opt-in del logo (paridad imagen suelta) · POST-generación · best-effort por placa.
+    # find_client_logo_url (DB sync) en to_thread. Sin logo del cliente → placas sin logo, sin error.
+    if request.apply_logo:
+        logo_url = await asyncio.to_thread(repo.find_client_logo_url, client_id)
+        if logo_url:
+            urls = await apply_logo_to_urls(urls, logo_url, client_id)
 
     content_id = await repo.safe_insert(
         "insert_carousel", repo.insert_generated_content, client_id, {
