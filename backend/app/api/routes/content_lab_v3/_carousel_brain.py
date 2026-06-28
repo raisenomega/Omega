@@ -10,6 +10,7 @@ Garantía de 3 capas: (1) tool_choice forzado + (2) required en el schema + (3) 
 """
 from typing import Any
 
+from app.api.routes.content_lab_v3._carousel_context import build_user_message as _build_user_message
 from app.bc_cognition.infrastructure.anthropic_adapter import generate
 
 _MIN_SLIDES = 3
@@ -65,15 +66,6 @@ class CarouselScriptError(Exception):
     def __init__(self, code: str) -> None:
         super().__init__(code)
         self.code = code
-
-
-def _build_user_message(idea: str, ctx: dict[str, Any], n_slides: int) -> str:
-    parts = [f"Idea del carrusel: {idea}", f"Cantidad de placas: {n_slides}"]
-    for key, label in (("niche", "Nicho"), ("target_audience", "Audiencia"),
-                       ("tone", "Tono"), ("client_name", "Cliente")):
-        if ctx.get(key):
-            parts.append(f"{label}: {ctx[key]}")
-    return "\n".join(parts)
 
 
 async def generate_carousel_script(idea: str, ctx: dict[str, Any], n_slides: int) -> dict[str, Any]:

@@ -27,9 +27,12 @@ def find_client_for_user(user_id: str) -> Optional[dict[str, Any]]:
 
 
 def find_client_context(client_id: str) -> dict[str, Any]:
-    """Carga client_context para system prompt (tono, keywords, audiencia)."""
+    """Carga client_context RICO para el guion (qué ofrece, diferenciador, a quién, temas, evitar).
+    DEBT-CAROUSEL-THIN-CONTEXT · campos relevantes, NO las 30 columnas (el cerebro trunca por campo)."""
     r = _sb().table("client_context").select(
-        "tone, brand_voice, target_audience, audience_age_range, primary_goal"
+        "tone, brand_voice, target_audience, audience_age_range, primary_goal, "
+        "business_what, business_diff, business_to_whom, content_themes, "
+        "avoided_topics, avoided_words, custom_instructions"
     ).eq("client_id", client_id).limit(1).execute()
     return r.data[0] if r.data else {}
 
