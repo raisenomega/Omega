@@ -6,6 +6,7 @@ import { ContentLabFormBar } from "@/components/content/ContentLabFormBar";
 import { ResultCardV2 } from "@/components/content/ResultCardV2";
 import { ResultExpandedModal } from "@/components/content/ResultExpandedModal";
 import { ScheduleModalV2 } from "@/components/content/ScheduleModalV2";
+import { CarouselWizardModal } from "@/components/content/CarouselWizardModal";
 import { useContentLabState } from "@/hooks/useContentLabState";
 import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -60,6 +61,8 @@ export default function ContentLabPageV2() {
         onClose={() => s.setModalState("closed")} onConfirm={s.handleConfirm} onRemoveItem={s.handleRemoveItem}
         connectedNetworks={s.connectedNetworks} selectedPlatforms={s.selectedPlatforms} onTogglePlatform={s.togglePlatform}
         loading={s.scheduling} />
+      <CarouselWizardModal open={s.carouselOpen} idea={s.form.topic} clientId={s.form.clientId} tone={s.form.tone}
+        onClose={() => s.setCarouselOpen(false)} onGenerated={s.handleCarouselGenerated} />
     </div>
   );
 }

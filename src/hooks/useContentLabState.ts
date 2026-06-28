@@ -68,6 +68,7 @@ export function useContentLabState(activeBusinessId: string | null) {
   const [modalState, setModalState] = useState<ModalState>("closed");
   const [scheduledAt, setScheduledAt] = useState("");
   const [expandedResult, setExpandedResult] = useState<ResultV2 | null>(null);
+  const [carouselOpen, setCarouselOpen] = useState(false);  // F.2 · wizard del carrusel (2 pasos)
   // E · fan-out multi-red: redes active del negocio (checkbox source) + redes marcadas (siembra form.platform).
   const { data: accounts = [] } = useConnectedNetworks(activeBusinessId ?? undefined);
   const connectedNetworks = Array.from(new Set(accounts.map(a => a.platform.toLowerCase())));
@@ -84,6 +85,10 @@ export function useContentLabState(activeBusinessId: string | null) {
   useEffect(() => () => { generateVideo.cancel(); }, [generateVideo]);
 
   const handleGenerate = async () => {
+    if (form.type === "carousel") {  // F.2 · carrusel = wizard 2 pasos (NO la rama de texto plano)
+      if (!form.topic.trim()) { toast({ title: "Escribí la idea del carrusel", variant: "destructive" }); return; }
+      setCarouselOpen(true); return;
+    }
     const selected = VARIATIONS.filter(v => variations[v]);
     if (selected.length === 0) { toast({ title: "Seleccioná al menos una variación", variant: "destructive" }); return; }
     if (!form.topic.trim()) return;
@@ -189,6 +194,11 @@ export function useContentLabState(activeBusinessId: string | null) {
     toast({ title: "Video cancelado" });
   };
 
+  const handleCarouselGenerated = (r: ResultV2) => {  // F.2 · el render del wizard cae a la grilla como tarjeta F.1
+    setResults(prev => [...prev, r]);
+    toast({ title: "Carrusel generado · revisalo y agendalo" });
+  };
+
   const isPending = generateText.isPending || generateImage.isPending || generateVideo.isPending;
   return {
     form, setForm, variations, setVariations, results, setResults,
@@ -197,6 +207,7 @@ export function useContentLabState(activeBusinessId: string | null) {
     expandedResult, setExpandedResult, slots: Math.max(4, results.length), isPending,
     scheduling: scheduleBlock.isPending,  // BUG 11 jun · feedback de progreso en "Agendar bloque"
     handleGenerate, handleAgendar, handleRemoveItem, handleSave, handleDownload, handleCopy, handleConfirm, handleResearch, handleCancelVideo,
+    carouselOpen, setCarouselOpen, handleCarouselGenerated,
     isResearching: research.isPending, appendSnippetToTopic,
   };
 }
