@@ -123,6 +123,9 @@ export function useContentLabState(activeBusinessId: string | null) {
     setBlock(prev => ({ items: [...prev.items, r] })); setModalState("open"); setExpandedResult(null);
   };
   const handleRemoveItem = (i: number) => setBlock(prev => ({ items: prev.items.filter((_, j) => j !== i) }));
+  // La X del modal = descartar el bloque ENTERO (items + fecha), no solo ocultarlo. Sin esto el bloque
+  // quedaba vivo y la próxima pieza se sumaba al fantasma. Minimizar (onMinimize) sigue conservando.
+  const handleCloseModal = () => { setBlock(INITIAL_BLOCK); setScheduledAt(""); setModalState("closed"); };
   const handleSave = (id: string) => {
     saveContent.mutate({ id, is_saved: true }, {
       onSuccess: () => setResults(prev => prev.map(r => r.id === id ? { ...r, saved: true } : r)),
@@ -206,7 +209,7 @@ export function useContentLabState(activeBusinessId: string | null) {
     connectedNetworks, selectedPlatforms, togglePlatform,
     expandedResult, setExpandedResult, slots: Math.max(4, results.length), isPending,
     scheduling: scheduleBlock.isPending,  // BUG 11 jun · feedback de progreso en "Agendar bloque"
-    handleGenerate, handleAgendar, handleRemoveItem, handleSave, handleDownload, handleCopy, handleConfirm, handleResearch, handleCancelVideo,
+    handleGenerate, handleAgendar, handleRemoveItem, handleCloseModal, handleSave, handleDownload, handleCopy, handleConfirm, handleResearch, handleCancelVideo,
     carouselOpen, setCarouselOpen, handleCarouselGenerated,
     isResearching: research.isPending, appendSnippetToTopic,
   };
