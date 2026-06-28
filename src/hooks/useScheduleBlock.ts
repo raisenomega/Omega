@@ -30,6 +30,9 @@ export function useScheduleBlock() {
       if (block.items.length === 0) throw new Error("Bloque vacío");
       const textItems = block.items.filter(i => !TEXT_EXCLUDED.includes(i.content_type));
       const mediaItem = block.items.find(i => MEDIA_TYPES.includes(i.content_type));
+      // F.3 · el carrusel trae N placas en media_urls (NO en MEDIA_TYPES · su draft ya es el content_id).
+      // El backend acepta media_urls[] y deriva media_url=media_urls[0] (_fanout · Pieza 2 lista).
+      const carousel = block.items.find(i => i.content_type === "carousel");
       if (textItems.length === 0) {
         throw new Error("Bloque sin items de texto · agregá al menos 1 caption/post/email/etc");
       }
@@ -42,7 +45,8 @@ export function useScheduleBlock() {
         platforms: platforms?.length ? platforms : undefined,  // E · fan-out multi-red (si vacío → backend usa platform)
         content_ids: textItems.map(t => t.id),
         scheduled_for: scheduledForIso,
-        media_url: mediaItem?.generated_text ?? null,
+        media_urls: carousel?.media_urls ?? undefined,  // F.3 · array de N placas (el cambio que carga el peso)
+        media_url: carousel?.media_urls?.[0] ?? mediaItem?.generated_text ?? null,  // 1ª placa o media suelta (retrocompat)
         placement: mediaItem?.placement ?? "feed",  // AMBAS · backend expande a 1-2 filas/red (feed/story/both)
         social_account_id: accountId || undefined,  // DEBT-CL-015 (solo legacy single-red · ignorado en fan-out)
       });

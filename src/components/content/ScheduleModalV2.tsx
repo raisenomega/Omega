@@ -7,6 +7,7 @@ import { computeSpread, SPREAD_HOURS, SPREAD_MAX_DAY } from "@/lib/schedule-spre
 import { MEDIA_TYPES } from "@/hooks/useScheduleBlock";
 import { NetworkPicker } from "@/components/content/NetworkPicker";
 import { FeedRatioWarning } from "@/components/content/FeedRatioWarning";
+import { BlockItemPreview } from "@/components/content/BlockItemPreview";
 import { placementPubCount } from "@/lib/placement";
 interface Props {
   state: ModalState;
@@ -32,7 +33,8 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
   const count = block.items.length;
   const textCount = block.items.filter(i => !NON_TEXT.includes(i.content_type)).length;
   const mediaCount = block.items.filter(i => MEDIA_TYPES.includes(i.content_type)).length;
-  const hasMin = textCount >= 1 && mediaCount >= 1;  // 1 caption + 1 imagen/video
+  const hasCarousel = block.items.some(i => i.content_type === "carousel");  // F.3 · trae sus N placas (auto-suficiente)
+  const hasMin = textCount >= 1 && (mediaCount >= 1 || hasCarousel);  // 1 caption+media · o un carrusel solo
   const missing = hasMin ? "" : textCount < 1 && mediaCount < 1 ? "1 caption + 1 imagen/video" : textCount < 1 ? "1 caption" : "1 imagen/video";
   const spread = textCount > 1 && scheduledAt ? computeSpread(scheduledAt, textCount) : [];
   const validNetworks = selectedPlatforms.filter(p => connectedNetworks.includes(p));  // E · doble guarda front
@@ -65,12 +67,7 @@ export function ScheduleModalV2({ state, block, scheduledAt, setScheduledAt, onM
             ) : (
               block.items.map((item, i) => (
                 <div key={item.id} className="flex items-center gap-2 p-2 rounded-md border border-emerald-300 bg-emerald-50 dark:bg-emerald-950/30">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium capitalize">{item.content_type}</p>
-                    {item.content_type === "image" ? <img src={item.generated_text} alt="" className="h-16 w-16 rounded object-cover" />
-                      : item.content_type === "video" ? <video src={item.generated_text} className="h-16 w-16 rounded object-cover" />
-                      : <p className="text-[10px] text-muted-foreground truncate">{item.generated_text.slice(0, 80)}</p>}
-                  </div>
+                  <BlockItemPreview item={item} />
                   <button onClick={() => onRemoveItem(i)} className="text-muted-foreground hover:text-destructive" aria-label="Quitar"><X className="h-3.5 w-3.5" /></button>
                 </div>
               ))
