@@ -19,7 +19,25 @@ _UNAVAILABLE_DETAIL = (
     "brand_voice_check_unavailable · usa force_brand_voice=true para agendar "
     "bajo responsabilidad humana (queda auditado)"
 )
-_NON_TEXT_TYPES = {"image", "video", "carousel"}  # sin copy que scorear · skip con rastro
+_NON_TEXT_TYPES = {"image", "video"}  # sin copy que scorear · skip con rastro (el carrusel SÍ tiene guion → se puntúa)
+
+
+def build_carousel_brand_text(title: str, slides: list) -> str:
+    """Texto evaluable del carrusel = título + el copy de cada placa (el GUION real, no solo el título corto)."""
+    parts = [t for t in [(title or "").strip()] if t]
+    for s in slides or []:
+        txt = (s.get("text") or "").strip() if isinstance(s, dict) else ""
+        if txt:
+            parts.append(txt)
+    return "\n\n".join(parts)
+
+
+def _scorable_text(row: dict) -> str:
+    """Qué texto puntúa el scorer: el carrusel concatena título+guion (metadata.slides); el resto, su generated_text."""
+    if row.get("content_type") == "carousel":
+        slides = (row.get("metadata") or {}).get("slides") or []
+        return build_carousel_brand_text(row.get("generated_text") or "", slides)
+    return row.get("generated_text") or ""
 
 
 async def check_or_raise(user_id: str, client_id: str,
@@ -40,12 +58,12 @@ async def check_or_raise(user_id: str, client_id: str,
     for cid in content_ids:
         row = rows.get(cid)
         if row and row.get("content_type") in _NON_TEXT_TYPES:
-            non_text.append(cid)   # imagen/video/carousel · no tiene copy → skip
+            non_text.append(cid)   # imagen/video · no tiene copy → skip (el carrusel NO entra acá · se puntúa)
             continue
         if row and cache.is_fresh(row):
             scores[cid] = float(row["brand_voice_score"])
             continue
-        ok, val, _err = await score_brand_voice(client_id, (row or {}).get("generated_text") or "")
+        ok, val, _err = await score_brand_voice(client_id, _scorable_text(row or {}))
         if not ok:
             if not force:
                 raise HTTPException(503, _UNAVAILABLE_DETAIL)

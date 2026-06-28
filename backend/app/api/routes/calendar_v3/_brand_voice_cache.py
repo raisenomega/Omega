@@ -13,7 +13,7 @@ from app.infrastructure.supabase_service import get_supabase_service
 
 logger = logging.getLogger(__name__)
 
-_COLS = "id, content_type, generated_text, brand_voice_score, brand_voice_scored_at, updated_at"
+_COLS = "id, content_type, generated_text, metadata, brand_voice_score, brand_voice_scored_at, updated_at"
 
 
 def _sb():
