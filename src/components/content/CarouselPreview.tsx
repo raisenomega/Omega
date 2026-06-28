@@ -36,7 +36,9 @@ export function CarouselPreview({ urls, caption, imgClassName, showArrows = fals
           <CarouselContent>
             {urls.map((u, i) => (
               <CarouselItem key={i}>
-                <img src={u} alt={`Placa ${i + 1}`} className={imgClassName ?? "rounded-md w-full object-cover"} />
+                <div className="flex items-center justify-center">
+                  <img src={u} alt={`Placa ${i + 1}`} className={imgClassName ?? "rounded-md w-full object-cover"} />
+                </div>
               </CarouselItem>
             ))}
           </CarouselContent>

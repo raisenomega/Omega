@@ -25,8 +25,16 @@ afterEach(cleanup);
 describe("ResultExpandedModal · carrusel navegable (H1)", () => {
   it("muestra las N placas y las flechas prev/next (adelante y atrás)", () => {
     render(<ResultExpandedModal result={CAROUSEL} onClose={noop} onAgendar={noop} onSave={noop} onDownload={noop} onCopy={noop} />);
-    expect(screen.getAllByRole("img")).toHaveLength(3);
+    const imgs = screen.getAllByRole("img");
+    expect(imgs).toHaveLength(3);
     expect(screen.getByText("Previous slide")).toBeTruthy();   // flecha atrás (sr-only · sí se renderiza)
     expect(screen.getByText("Next slide")).toBeTruthy();       // flecha adelante
+  });
+
+  it("la placa entra por ALTO del viewport (object-contain · sin scroll · no recorta)", () => {
+    render(<ResultExpandedModal result={CAROUSEL} onClose={noop} onAgendar={noop} onSave={noop} onDownload={noop} onCopy={noop} />);
+    const cls = screen.getAllByRole("img")[0].className;
+    expect(cls).toContain("object-contain");   // ajusta al alto · NO recorta (object-cover) ni desborda
+    expect(cls).toContain("max-h-[70vh]");
   });
 });

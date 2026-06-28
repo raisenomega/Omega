@@ -33,10 +33,12 @@ export function ResultExpandedModal({ result, onClose, onAgendar, onSave, onDown
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="max-h-[60vh] overflow-y-auto">
-          {isImage ? <img src={result.generated_text} alt="" className="rounded-md w-full" />
-            : isVideo ? <video src={result.generated_text} controls className="rounded-md w-full" />
-            : isCarousel ? <CarouselPreview urls={result.media_urls ?? []} caption={result.generated_text} showArrows imgClassName="rounded-md w-full" />
+        {/* media (imagen/video/carrusel) entra COMPLETA por alto del viewport (object-contain · sin scroll);
+            solo el texto largo scrollea */}
+        <div className={isCarousel ? "" : isImage || isVideo ? "flex justify-center" : "max-h-[60vh] overflow-y-auto"}>
+          {isImage ? <img src={result.generated_text} alt="" className="rounded-md max-h-[75vh] w-auto object-contain" />
+            : isVideo ? <video src={result.generated_text} controls className="rounded-md max-h-[75vh]" />
+            : isCarousel ? <CarouselPreview urls={result.media_urls ?? []} caption={result.generated_text} showArrows imgClassName="rounded-md max-h-[70vh] w-auto object-contain" />
             : <p className="text-sm whitespace-pre-wrap leading-relaxed">{result.generated_text}</p>}
         </div>
         {AGENDA_TYPES.has(result.content_type) ? (
