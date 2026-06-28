@@ -44,6 +44,11 @@ async def schedule_post_v3(
     if missing:
         raise HTTPException(409, f"content_not_found:{','.join(missing)}")
 
+    # La pieza dueña del media del bloque = el carrusel (sus N placas). Sin él, media_urls no se
+    # adjunta a ninguna fila (un caption no hereda las placas · cierra el bleed de _fanout).
+    media_content_id = next(
+        (cid for cid in request.content_ids if existing.get(cid) == "carousel"), None)
+
     # X5 · gate brand voice (422 <0.7 · 503 con válvula force · override auditado ·
     # skipped=cliente sin voz de marca → PASS con rastro)
     bv = await brand_gate.check_or_raise(user_id, request.client_id, request.content_ids, request.force_brand_voice)
@@ -54,7 +59,7 @@ async def schedule_post_v3(
         # AMBAS · placement expande a 1-2 filas/red (feed/story/both) dentro de build_fanout_rows.
         rows_to_insert = build_fanout_rows(
             request.client_id, request.platforms, request.content_ids, timestamps, request.media_url,
-            placement=request.placement, media_urls=request.media_urls)
+            placement=request.placement, media_urls=request.media_urls, media_content_id=media_content_id)
         if not rows_to_insert:
             raise HTTPException(422, "no_account_for_any_platform")  # 0 redes resuelven · 0 rows basura
     else:
@@ -67,7 +72,7 @@ async def schedule_post_v3(
         rows_to_insert = rows_for_account(
             request.client_id, str(account["id"]), request.platform,
             request.content_ids, timestamps, request.media_url, request.placement,
-            media_urls=request.media_urls)
+            media_urls=request.media_urls, media_content_id=media_content_id)
 
     try:
         rows = repo.insert_scheduled_posts_bulk(rows_to_insert)

@@ -65,10 +65,12 @@ def get_scheduled_post(post_id: str) -> Optional[dict[str, Any]]:
     return r.data[0] if r.data else None
 
 
-def fetch_existing_content_ids(client_id: str, content_ids: list[str]) -> set[str]:
-    """Ids de content_lab_generated que existen Y pertenecen al client · valida pre-schedule
-    (evita FK 500 con ids stale del localStorage del frontend · cierra ownership a la vez)."""
+def fetch_existing_content_ids(client_id: str, content_ids: list[str]) -> dict[str, Optional[str]]:
+    """{id: content_type} de content_lab_generated que existen Y pertenecen al client · valida
+    pre-schedule (evita FK 500 con ids stale del front · cierra ownership). El content_type ubica la
+    pieza dueña del media del bloque (el carrusel) · el check `cid in existing` sigue intacto (claves)."""
     if not content_ids:
-        return set()
-    r = _sb().table("content_lab_generated").select("id").eq("client_id", client_id).in_("id", content_ids).execute()
-    return {str(row["id"]) for row in (r.data or [])}
+        return {}
+    r = _sb().table("content_lab_generated").select("id, content_type").eq(
+        "client_id", client_id).in_("id", content_ids).execute()
+    return {str(row["id"]): row.get("content_type") for row in (r.data or [])}
