@@ -6,6 +6,7 @@ import { TYPE_LABELS, AGENDA_TYPES } from "@/lib/content-lab-constants";
 import { PendingVideoCard } from "./PendingVideoCard";
 import { ResearchResultCard } from "./ResearchResultCard";
 import { StoryAgendarButton } from "./StoryAgendarButton";
+import { CarouselPreview } from "./CarouselPreview";
 import type { ResultV2, ModalState, BlockState } from "./result-types";
 
 export type { ResultV2, ModalState, BlockState };
@@ -38,6 +39,7 @@ export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, 
 
   const isImage = result.content_type === "image";
   const isVideo = result.content_type === "video";
+  const isCarousel = result.content_type === "carousel";
   const score = result.virality_score ?? 0;
   const labelClass = result.variation_label ? LABEL_COLORS[result.variation_label] ?? "bg-amber-500" : "bg-amber-500";
   const typeLabel = TYPE_LABELS[result.content_type] ?? result.content_type;
@@ -59,6 +61,7 @@ export function ResultCardV2({ result, onExpand, onAgendar, onSave, onDownload, 
         </div>
         {isImage ? <img src={result.generated_text} alt="" className="rounded-md w-full max-h-[100px] object-cover" />
           : isVideo ? <video src={result.generated_text} controls className="rounded-md w-full max-h-[100px] object-cover" />
+          : isCarousel ? <CarouselPreview urls={result.media_urls ?? []} caption={result.generated_text} imgClassName="rounded-md w-full max-h-[100px] object-cover" />
           : <p className="text-sm line-clamp-3 whitespace-pre-wrap">{result.generated_text}</p>}
         {(score > 0 || (result.brand_dna_score ?? 0) > 0) && (
           <div className="flex items-center gap-2 flex-wrap">

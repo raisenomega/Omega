@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TYPE_LABELS, AGENDA_TYPES } from "@/lib/content-lab-constants";
 import { StoryAgendarButton } from "./StoryAgendarButton";
+import { CarouselPreview } from "./CarouselPreview";
 import type { ResultV2 } from "./ResultCardV2";
 
 interface Props {
@@ -18,6 +19,7 @@ export function ResultExpandedModal({ result, onClose, onAgendar, onSave, onDown
   if (!result) return null;
   const isImage = result.content_type === "image";
   const isVideo = result.content_type === "video";
+  const isCarousel = result.content_type === "carousel";
   const typeLabel = TYPE_LABELS[result.content_type] ?? result.content_type;
 
   return (
@@ -34,6 +36,7 @@ export function ResultExpandedModal({ result, onClose, onAgendar, onSave, onDown
         <div className="max-h-[60vh] overflow-y-auto">
           {isImage ? <img src={result.generated_text} alt="" className="rounded-md w-full" />
             : isVideo ? <video src={result.generated_text} controls className="rounded-md w-full" />
+            : isCarousel ? <CarouselPreview urls={result.media_urls ?? []} caption={result.generated_text} showArrows imgClassName="rounded-md w-full" />
             : <p className="text-sm whitespace-pre-wrap leading-relaxed">{result.generated_text}</p>}
         </div>
         {AGENDA_TYPES.has(result.content_type) ? (
