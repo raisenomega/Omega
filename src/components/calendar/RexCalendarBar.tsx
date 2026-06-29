@@ -16,7 +16,7 @@ export function RexCalendarBar({ clientId }: { clientId: string }) {
   return (
     <div className="flex items-center gap-2 sm:ml-auto">
       <img src="/Agentes/Rex.jpg" alt="REX" className="h-7 w-7 rounded-md object-cover shrink-0" />
-      <p className="hidden lg:block max-w-[230px] truncate text-xs text-muted-foreground">
+      <p className="hidden lg:block whitespace-nowrap text-xs text-muted-foreground">
         REX publica tus posts a su hora — solo los que apruebas
       </p>
       {!isLoading && (hasAddon ? (
