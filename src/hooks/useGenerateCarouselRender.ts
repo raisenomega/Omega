@@ -9,6 +9,9 @@ export interface CarouselRenderResult {
   content_type: string;   // "carousel"
   carousel_title: string;
   media_urls: string[];   // N URLs de las placas
+  virality_score?: number;       // Commit 5b · chip "XX/100" (paridad caption)
+  virality_estimated?: boolean;  // Commit 5b · chip "Estimado"
+  brand_dna_score?: number;      // Commit 5b · chip "% voz de marca"
 }
 
 export interface CarouselRenderInput {

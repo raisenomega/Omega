@@ -136,6 +136,9 @@ class GenerateCarouselRenderResponse(BaseModel):
     content_type: str  # "carousel"
     carousel_title: str
     media_urls: list[str]  # N URLs de las placas (el front renderiza el carrusel · Pieza 2 lo agenda)
+    virality_score: int = 0          # Commit 5b · paridad caption · chip "XX/100"
+    virality_estimated: bool = True  # Commit 5b · chip "Estimado"
+    brand_dna_score: float = 0.0     # Commit 5b · chip "% voz de marca" (= dna.score del cliente · 0 si corpus vacío)
 
 
 class ImprovePromptRequest(BaseModel):

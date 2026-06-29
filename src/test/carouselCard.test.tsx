@@ -51,4 +51,18 @@ describe("ResultCardV2 · carrusel (F.1)", () => {
     expect(screen.getByText("5 tips de ahorro")).toBeTruthy();
     expect(screen.getByText("3 placas")).toBeTruthy();
   });
+
+  it("test_carousel_card_muestra_chips · virality + brand_dna → '🔥 XX/100', 'Estimado', '% voz de marca'", () => {
+    renderCard({ ...CAROUSEL, virality_score: 64, virality_estimated: true, brand_dna_score: 0.73 });
+    expect(screen.getByText(/64\/100/)).toBeTruthy();          // chip viral (reusa ResultCardV2, cero cambio)
+    expect(screen.getByText("Estimado")).toBeTruthy();
+    expect(screen.getByText(/73% voz de marca/)).toBeTruthy(); // brand_dna_score → % voz de marca
+  });
+
+  it("test_carousel_sin_score_no_rompe · sin virality/brand_dna → no pinta la fila de chips (como hoy)", () => {
+    renderCard(CAROUSEL);  // sin los campos → undefined → 0
+    expect(screen.queryByText(/\/100/)).toBeNull();
+    expect(screen.queryByText("Estimado")).toBeNull();
+    expect(screen.queryByText(/voz de marca/)).toBeNull();
+  });
 });

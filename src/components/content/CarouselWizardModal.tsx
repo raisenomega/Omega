@@ -45,7 +45,10 @@ export function CarouselWizardModal({ open, idea, clientId, tone, onClose, onGen
   const generate = () =>
     render.mutate({ carouselTitle: title, slides, clientId, applyLogo }, {
       onSuccess: (r) => {
-        onGenerated({ id: r.id, content_type: "carousel", generated_text: r.carousel_title, media_urls: r.media_urls });
+        onGenerated({
+          id: r.id, content_type: "carousel", generated_text: r.carousel_title, media_urls: r.media_urls,
+          virality_score: r.virality_score, virality_estimated: r.virality_estimated, brand_dna_score: r.brand_dna_score,
+        });
         onClose();
       },
     });

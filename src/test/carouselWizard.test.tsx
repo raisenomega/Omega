@@ -26,7 +26,7 @@ const SCRIPT = {
     { order: 2, slide_type: "cierre", text: "Tip tres", visual_note: "cta bg" },
   ],
 };
-const RENDER_RESP = { id: "draft1", content_type: "carousel", carousel_title: "5 tips de ahorro", media_urls: ["u0", "u1", "u2"] };
+const RENDER_RESP = { id: "draft1", content_type: "carousel", carousel_title: "5 tips de ahorro", media_urls: ["u0", "u1", "u2"], virality_score: 64, virality_estimated: true, brand_dna_score: 0.73 };
 
 function wrapper({ children }: { children: ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
@@ -86,5 +86,15 @@ describe("CarouselWizardModal · 2 pasos (F.2)", () => {
       expect(call).toBeTruthy();
       expect((call![1] as { apply_logo?: boolean }).apply_logo).toBe(false);
     });
+  });
+  it("test_mapea_score_al_result · onGenerated recibe virality_score + brand_dna_score de la respuesta", async () => {
+    let got: ResultV2 | null = null;
+    render(<CarouselWizardModal open idea="ahorro" clientId="c1" onClose={() => {}} onGenerated={(r) => { got = r; }} />, { wrapper });
+    await screen.findByDisplayValue("Tip uno");
+    fireEvent.click(screen.getByText("Generar placas"));
+    await waitFor(() => expect(got).not.toBeNull());
+    expect(got!.virality_score).toBe(64);              // mapea el score al result → la tarjeta pinta el chip
+    expect(got!.virality_estimated).toBe(true);
+    expect(got!.brand_dna_score).toBe(0.73);
   });
 });

@@ -14,6 +14,7 @@ from app.api.routes.content_lab_v3._client_resolver import resolve_client_or_403
 from app.api.routes.content_lab_v3._brand_prompt import fetch_brand_block
 from app.api.routes.content_lab_v3._carousel_render import build_placa_prompts
 from app.api.routes.content_lab_v3._carousel_logo import apply_logo_to_urls
+from app.api.routes.content_lab_v3._carousel_score import score_guion
 from app.api.routes.content_lab_v3.models.content_lab_models import (
     GenerateCarouselRenderRequest, GenerateCarouselRenderResponse,
 )
@@ -82,7 +83,11 @@ async def carousel_render(
     )
     if content_id:  # F1 · débito N×costo atómico DESPUÉS del persist exitoso (cierra DEBT-A12 · guion gratis)
         await debit(client_id, "content_creator", n * cost_for_image("default"), "nano-banana", content_id)
+    # Commit 5b · puntúa el guion al generar (paridad caption) → la tarjeta pinta los chips. Best-effort
+    # (fallo → 0/0.0 · NO tumba el render que ya pasó). Reusa el scorer del caption · NO el gate de agendar.
+    virality_score, brand_dna_score = score_guion(client_id, request.carousel_title, clean)
     return GenerateCarouselRenderResponse(
         id=content_id or "", content_type="carousel",
         carousel_title=request.carousel_title, media_urls=urls,
+        virality_score=virality_score, virality_estimated=True, brand_dna_score=brand_dna_score,
     )
