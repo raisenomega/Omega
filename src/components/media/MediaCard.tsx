@@ -1,6 +1,6 @@
 import { File as FileIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { MediaCardActions } from "./MediaCardActions";
+import { MediaCardMenu } from "./MediaCardMenu";
 
 export interface MediaFile {
   id: string;
@@ -25,7 +25,7 @@ function formatBytes(bytes: number): string {
 // Tarjeta de un archivo de la Biblioteca (C1 · extraída del render inline de Media.tsx).
 // Thumbnail por tipo: imagen → <img>; video → <video src#t=0.5 preload=metadata muted> que
 // pinta el primer frame como preview estático (cero backend); otro → ícono genérico.
-// Las acciones siguen como overlay hover (MediaCardActions · se reubican al menú en C2).
+// Las acciones viven en un botón [Ver] (primary) que abre un mini-menú (MediaCardMenu · C2).
 export function MediaCard({ file, publicUrl, onDelete }: MediaCardProps) {
   const mime = file.metadata?.mimetype ?? "";
   const isImage = mime.startsWith("image");
@@ -40,7 +40,7 @@ export function MediaCard({ file, publicUrl, onDelete }: MediaCardProps) {
         ) : (
           <FileIcon className="h-12 w-12 text-muted-foreground/30" />
         )}
-        <MediaCardActions fileName={file.name} publicUrl={publicUrl} isImage={isImage} onDelete={onDelete} />
+        <MediaCardMenu fileName={file.name} publicUrl={publicUrl} isImage={isImage} onDelete={onDelete} />
       </div>
       <CardContent className="p-3">
         <p className="text-xs font-medium truncate">{file.name}</p>
