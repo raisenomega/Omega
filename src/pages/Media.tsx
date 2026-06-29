@@ -9,30 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 import { EmptyState } from "@/components/common/EmptyState";
-import { MediaCardActions } from "@/components/media/MediaCardActions";
-import {
-  ImageIcon,
-  Upload,
-  Loader2,
-  Search,
-  FileImage,
-  FileVideo,
-  File,
-} from "lucide-react";
-
-function getFileIcon(type: string) {
-  if (type.startsWith("image")) return FileImage;
-  if (type.startsWith("video")) return FileVideo;
-  return File;
-}
-
-function formatBytes(bytes: number) {
-  if (bytes === 0) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
-}
+import { MediaCard } from "@/components/media/MediaCard";
+import { ImageIcon, Upload, Loader2, Search } from "lucide-react";
 
 export default function Media() {
   useTrackOnMount("feature_open", { feature: "media" });
@@ -175,40 +153,14 @@ export default function Media() {
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {filtered.map((file) => {
-            const isImage = file.metadata?.mimetype?.startsWith("image");
-            const Icon = getFileIcon(file.metadata?.mimetype || "");
-            return (
-              <Card
-                key={file.id}
-                className="border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden group"
-              >
-                <div className="aspect-square bg-secondary flex items-center justify-center relative">
-                  {isImage ? (
-                    <img
-                      src={getPublicUrl(file.name)}
-                      alt={file.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <Icon className="h-12 w-12 text-muted-foreground/30" />
-                  )}
-                  <MediaCardActions
-                    fileName={file.name}
-                    publicUrl={getPublicUrl(file.name)}
-                    isImage={!!isImage}
-                    onDelete={handleDelete}
-                  />
-                </div>
-                <CardContent className="p-3">
-                  <p className="text-xs font-medium truncate">{file.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatBytes(file.metadata?.size || 0)}
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {filtered.map((file) => (
+            <MediaCard
+              key={file.id}
+              file={file}
+              publicUrl={getPublicUrl(file.name)}
+              onDelete={handleDelete}
+            />
+          ))}
         </div>
       )}
     </div>
