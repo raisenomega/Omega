@@ -33,6 +33,21 @@ def list_strategies(supabase: SupabaseService, client_ids: list[str], estado: st
     return r.data or []
 
 
+def record_use(supabase: SupabaseService, strategy_id: str, last_used: dict[str, str],
+               mark_used: bool, client_ids: list[str]) -> int:
+    """Registra el ultimo uso (CAPA 1): SET last_used (+ estado='used'/used_at si mark_used). Scopeado
+    a client_ids (ownership en el WHERE) → 0 filas si no es del usuario. last_used se sobreescribe."""
+    if not client_ids:
+        return 0
+    patch: dict[str, object] = {"last_used": last_used}
+    if mark_used:
+        patch["estado"] = "used"
+        patch["used_at"] = datetime.now(timezone.utc).isoformat()
+    r = supabase.client.table("strategies").update(patch).eq(
+        "id", strategy_id).in_("client_id", client_ids).execute()
+    return len(r.data or [])
+
+
 def update_strategy_status(supabase: SupabaseService, strategy_id: str, estado: str,
                            client_ids: list[str]) -> int:
     """Cambia estado + sella timestamp (used_at/archived_at). Scopeado a client_ids (ownership en el
