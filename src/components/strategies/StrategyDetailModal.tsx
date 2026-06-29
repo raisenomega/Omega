@@ -1,18 +1,12 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Lightbulb } from "lucide-react";
+import { StrategyIdeaBoxes } from "@/components/strategies/StrategyIdeaBoxes";
 import type { Strategy } from "@/hooks/useStrategies";
 
 function fmtDate(iso: string): string {
   if (!iso) return "";
   return new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
-}
-
-// posts_sugeridos: forma esperada {plataforma, idea} pero es JSON de LLM (parse_strategy NO valida
-// su forma) → render defensivo: lo que haya, fallback por campo. SIN CTA por idea (estrategia != post
-// · evita la trampa de Agendar) · el "Usar" de la card sigue siendo el único camino a Content Lab.
-function ideaLine(p: { plataforma?: string; idea?: string }): { red: string; idea: string } {
-  return { red: (p?.plataforma ?? "").trim(), idea: (p?.idea ?? "").trim() };
 }
 
 export function StrategyDetailModal({ strategy, onClose }: { strategy: Strategy | null; onClose: () => void }) {
@@ -54,15 +48,9 @@ export function StrategyDetailModal({ strategy, onClose }: { strategy: Strategy 
             </p>
             <p className="text-[11px] text-muted-foreground">
               Sugerencias de posts por red social — aún no son posts reales, son puntos de partida.
+              Usá la flecha de una red para llevar solo esa idea a Content Lab.
             </p>
-            {ideas.map((p, i) => {
-              const { red, idea } = ideaLine(p);
-              return (
-                <p key={i} className="text-sm">
-                  {red && <span className="font-medium">{red}: </span>}{idea || "(idea sin texto)"}
-                </p>
-              );
-            })}
+            <StrategyIdeaBoxes posts={ideas} />
           </div>
         )}
       </DialogContent>

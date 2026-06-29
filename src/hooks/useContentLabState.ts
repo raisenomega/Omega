@@ -13,6 +13,7 @@ import { loadPersistedResults, persistResults } from "@/lib/content-lab-persiste
 import { brandVoiceScheduleError } from "@/lib/schedule-error";
 import { VARIATIONS, type VariationLabel, type FormState } from "@/components/content/ContentLabFormV2";
 import type { ResultV2, BlockState, ModalState } from "@/components/content/ResultCardV2";
+import { PLATFORMS } from "@/lib/onboarding-constants";
 
 const INITIAL_FORM: FormState = { platform: "instagram", type: "caption", tone: "casual", topic: "", braveQuery: "", clientId: "", aspect: "1:1", accountId: "", applyLogo: false };
 const INITIAL_BLOCK: BlockState = { items: [] };
@@ -22,15 +23,20 @@ export function useContentLabState(activeBusinessId: string | null) {
   // Brief CTA (Centro de Inteligencia): si llegamos con location.state.brief, lo pre-cargamos en el topic.
   // Defensivo: si no hay brief válido → INITIAL_FORM intacto.
   const location = useLocation();
-  const navState = location.state as { brief?: unknown; referenceImageUrl?: unknown } | null;
+  const navState = location.state as { brief?: unknown; referenceImageUrl?: unknown; platform?: unknown } | null;
   const refImageUrl = typeof navState?.referenceImageUrl === "string" && navState.referenceImageUrl.trim()
     ? navState.referenceImageUrl : undefined;
+  // C3 · pre-selección de red (ADITIVA): si una flecha de Estrategias manda state.platform Y es una
+  // red válida del form → el form arranca en esa red. Sin platform (entrada normal o "Usar") → default.
+  const platformFromState = typeof navState?.platform === "string" && (PLATFORMS as readonly string[]).includes(navState.platform)
+    ? navState.platform : undefined;
   const [form, setForm] = useState<FormState>(() => {
     const brief = navState?.brief;
     const base = typeof brief === "string" && brief.trim() ? { ...INITIAL_FORM, topic: brief } : INITIAL_FORM;
+    const withPlatform = platformFromState ? { ...base, platform: platformFromState } : base;
     // TAREA 2 · si llegamos con referenceImageUrl, arrancamos en type=image desde el 1er render.
     // Así el reset por cambio de type (DEBT-CL-020) NO se dispara al setear la imagen async (evita wipe).
-    return refImageUrl ? { ...base, type: "image" } : base;
+    return refImageUrl ? { ...withPlatform, type: "image" } : withPlatform;
   });
   // TAREA 2 · "Usar en Content Lab" desde Media: fetch de referenceImageUrl → base64 raw
   // (sin prefijo data: · igual que PromptAttachmentControls) → reference_image_b64.

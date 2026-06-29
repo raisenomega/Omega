@@ -5,6 +5,9 @@
 import { describe, it, expect, vi, beforeAll, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 
+// El modal ahora incluye StrategyIdeaBoxes (C3) que usa useNavigate → mock para no exigir Router.
+vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
+
 import { StrategyDetailModal } from "@/components/strategies/StrategyDetailModal";
 import type { Strategy } from "@/hooks/useStrategies";
 
