@@ -25,7 +25,8 @@ function formatBytes(bytes: number): string {
 // Tarjeta de un archivo de la Biblioteca (C1 · extraída del render inline de Media.tsx).
 // Thumbnail por tipo: imagen → <img>; video → <video src#t=0.5 preload=metadata muted> que
 // pinta el primer frame como preview estático (cero backend); otro → ícono genérico.
-// Las acciones viven en un botón [Ver] (primary) que abre un mini-menú (MediaCardMenu · C2).
+// Las acciones viven en un botón [Ver] (primary) en la franja inferior, a la derecha del
+// nombre+peso, que abre un mini-menú (MediaCardMenu · C2 + reubicación).
 export function MediaCard({ file, publicUrl, onDelete }: MediaCardProps) {
   const mime = file.metadata?.mimetype ?? "";
   const isImage = mime.startsWith("image");
@@ -40,11 +41,13 @@ export function MediaCard({ file, publicUrl, onDelete }: MediaCardProps) {
         ) : (
           <FileIcon className="h-12 w-12 text-muted-foreground/30" />
         )}
-        <MediaCardMenu fileName={file.name} publicUrl={publicUrl} isImage={isImage} onDelete={onDelete} />
       </div>
-      <CardContent className="p-3">
-        <p className="text-xs font-medium truncate">{file.name}</p>
-        <p className="text-xs text-muted-foreground">{formatBytes(file.metadata?.size || 0)}</p>
+      <CardContent className="p-3 flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-xs font-medium truncate">{file.name}</p>
+          <p className="text-xs text-muted-foreground">{formatBytes(file.metadata?.size || 0)}</p>
+        </div>
+        <MediaCardMenu fileName={file.name} publicUrl={publicUrl} isImage={isImage} onDelete={onDelete} />
       </CardContent>
     </Card>
   );

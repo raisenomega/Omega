@@ -59,7 +59,7 @@ export function MediaCardMenu({ fileName, publicUrl, isImage, onDelete }: Props)
       <DropdownMenuTrigger asChild>
         <Button
           size="sm"
-          className="absolute top-2 right-2 h-7 px-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+          className="h-7 px-2 bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
           <Eye className="h-3.5 w-3.5 mr-1" />
