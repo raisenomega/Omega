@@ -23,7 +23,7 @@ export function StrategyDetailModal({ strategy, onClose }: { strategy: Strategy 
 
   return (
     <Dialog open={!!strategy} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle className="text-base">{strategy.titulo}</DialogTitle>
           <DialogDescription className="text-[11px]">
@@ -31,18 +31,29 @@ export function StrategyDetailModal({ strategy, onClose }: { strategy: Strategy 
           </DialogDescription>
         </DialogHeader>
 
-        {c.resumen && <p className="text-sm whitespace-pre-wrap">{c.resumen}</p>}
+        {c.resumen && (
+          <div className="space-y-1">
+            <p className="text-[11px] text-muted-foreground">El enfoque general de esta estrategia.</p>
+            <p className="text-sm whitespace-pre-wrap">{c.resumen}</p>
+          </div>
+        )}
 
         {pilares.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {pilares.map((p, i) => <Badge key={`${p}-${i}`} variant="secondary" className="text-[10px]">{p}</Badge>)}
+          <div className="space-y-1.5">
+            <p className="text-[11px] text-muted-foreground">Los ejes de contenido sobre los que construir.</p>
+            <div className="flex flex-wrap gap-1">
+              {pilares.map((p, i) => <Badge key={`${p}-${i}`} variant="secondary" className="text-[10px]">{p}</Badge>)}
+            </div>
           </div>
         )}
 
         {ideas.length > 0 && (
-          <div className="space-y-1.5 border-t border-border/20 pt-3 max-h-60 overflow-y-auto">
-            <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-              <Lightbulb className="h-3.5 w-3.5" /> Ideas de posts (sugerencias · aún no generadas)
+          <div className="space-y-1.5 border-t border-border/20 pt-3 max-h-72 overflow-y-auto">
+            <p className="text-xs font-medium flex items-center gap-1">
+              <Lightbulb className="h-3.5 w-3.5" /> Ideas de posts
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              Sugerencias de posts por red social — aún no son posts reales, son puntos de partida.
             </p>
             {ideas.map((p, i) => {
               const { red, idea } = ideaLine(p);
