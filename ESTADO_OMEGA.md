@@ -1076,8 +1076,27 @@ Simplificación + multi-red del modal de bloque de Content Lab. 6 commits en pro
 
 ### Deudas del arco (registradas · NO atacadas)
 - **DEBT-PLACEMENT** ✅ **CERRADA (26 jun · Pieza 3 + AMBAS · ver log 26 jun arriba):** el 9:16 ya se publica como story en vez de rechazarse · diálogo de placement (feed/story/both) en prod · verificado en vivo.
-- **DEBT-CONTENTLAB-STORY-CAROUSEL-AGENDA** 🟡 **(actualizada 26 jun):** la parte **story** quedó RESUELTA (story agendable · Pieza 3 + AMBAS en prod) · la parte **carousel** sigue en no-agenda hasta construir las Piezas 1+2 (NO implementado).
+- **DEBT-CONTENTLAB-STORY-CAROUSEL-AGENDA** ✅ **CERRADA TOTAL (29 jun):** la parte **story** quedó RESUELTA el 26 jun (Pieza 3 + AMBAS en prod) · la parte **carousel** quedó RESUELTA el 29 jun (Piezas 1+2 construidas + en prod · ver SOT "ARCO CARRUSEL · CIERRE" · 8 commits `893e186`→`bf5f0fe`).
 
-### Pendiente · próximo arco (NO en este)
-- **CARRUSEL (N media en 1 post) — PENDIENTE DE CONSTRUIR (NO implementado · solo mapeado):** arco distinto y ortogonal al fan-out (E = N REDES · carrusel = N MEDIA en 1 post). **DOS NIVELES (no mezclar):** (1) *"Zernio renderiza carrusel"* → **CONFIRMADO EN VIVO** (STEP 0 · 26 jun · @wudi.app · 2 fotos deslizables vistas · pero con un **probe scratch**, NO con el código de OMEGA). (2) *"OMEGA publica carrusel"* → **NO IMPLEMENTADO**: las 3 capas siguen SIN destapar (`useScheduleBlock.ts` `.find`→`filter` · `scheduled_posts.media_url` singular→array · `_publish_service` lista-de-1→lista-de-N · el `zernio_adapter` YA itera `mediaItems[]`) · **sin migración · sin código · solo diseñado**. Pieza 1 (generación coherente de N placas) → solo INVESTIGADA · cero código. Orden por dependencia 3→2→1 · NO arranca hasta una sesión dedicada de construcción.
+### Carrusel (Piezas 1+2) — ✅ CONSTRUIDO (29 jun · en prod · ver SOT "ARCO CARRUSEL · CIERRE")
+- **CARRUSEL (N media en 1 post) — CONSTRUIDO Y EN PROD (8 commits `893e186`→`bf5f0fe` + cierre doc `cc2a869`):** las 3 capas destapadas (`useScheduleBlock` array de placas · `scheduled_posts.media_urls` · `_publish_service` lista-de-N · `zernio_adapter` itera `mediaItems[]`) + el carrusel cuenta como MEDIA (caption + carrusel = 1 post). Pieza 1 (generación de N placas) + Pieza 2 (publicación) en vivo. Detalle narrativo y deudas en SOT §6 "ARCO CARRUSEL · CIERRE". [Corrección 29 jun: esta entrada decía "PENDIENTE · NO implementado" — quedó stale porque el registro del carrusel solo tocó SOT, no ESTADO_OMEGA · reconciliado.]
 - **Cierre Zernio pendiente (sesiones previas):** UNIQUE PARCIAL `clients.zernio_profile_id` · resto Bloque B (B3 RLS-AVATAR 🟠 · B5 ARIA-OFFTONE 🟡) · derivadas Zernio · 🚩 pre-launch.
+
+## 🗓️ ARCO REDISEÑO CALENDARIO · CIERRE · 29 jun 2026 (verificado en vivo · HEAD `4426b04`)
+
+Rediseño UX completo de la página Calendario (`/calendar`). **SOLO frontend · CERO backend** — la funcionalidad (lectura de posts, REX/publicación, estados, toggle autónomo) quedó intacta; solo cambió la presentación + navegación de estado local. 8 commits en prod, gate 15/15 c/u, sagrado intacto (limits `213e3c01` · personas NOVA `bef773c9` / ARIA `054a17f3`).
+
+- **`bdaa86b`** — extracción `PostCard` desde `PostsList` (refactor invisible · prop `variant: compact|spacious`).
+- **`31effcc`** — barra superior: `FilterChips` genérico (primary) + `RexCalendarBar` compactado + estado `view` local.
+- **`799c918`** — espaciado de la barra (chips al centro · REX sin truncar).
+- **`909b9ae`** — full-width (quita el panel 2-col) + navegación Mes→Día + vista Día (PostCard spacious) + REX centrado.
+- **`be8d3e3`** — vista Semana (7 columnas · reusa `PostsList` por columna).
+- **`1675093`** — pulido (mes sin scroll · flechas + chip activo primary · REX `shrink-0` sin truncar).
+- **`347131a`** — ajustes finales (mes `h-24` 1.5× · "Marcar publicado" solo en Día/spacious · header "Lunes 29" clickable→Día · hoy sombreado · Día sin "Volver al mes" + flechas día±1 · helper `lib/calendar-dates.ts`).
+- **`4426b04`** — navegación consistente: las 3 vistas usan el molde MonthView (título al centro · flechas en los extremos).
+
+**Estado de la página:** las **3 vistas en prod** — **Mes** (panorámica · solo puntos de status · `h-24` · sin scroll) → **Semana** (7 columnas · tarjetas por día · header clickable→Día · hoy sombreado) → **Día** (tarjetas spacious + flechas día±1). Navegación fluida con un solo handler `openDay` (click celda Mes · click header Semana · flechas Día · cruza-mes reusa `useCalendarList` con otro mes · cero endpoint nuevo). Barra con chips de marca (primary). Cero backend en todo el arco.
+
+### Deudas del arco (registradas · NO atacadas)
+- **DEBT-CALENDAR-BAR-WRAP** 🟡 — la barra "una línea siempre" no se garantiza en anchos lg medianos (~1024-1280px) · REX baja a 2ª línea (completo · sin colisión · sin truncar) · el truncado SÍ está resuelto de raíz (REX `shrink-0`). Caminos: (a) quitar texto REX de la barra · (b) mostrarlo solo en `xl` ≥1280px. Trigger: si el owner lo ve molesto.
+- **DEBT-OBS-HOLD-CALENDAR** (ya registrada · arco carrusel) — mostrar `hold_reason` en las tarjetas requiere mini-arco backend (JOIN a `rex_publish_log`). Referencia · NO duplicada.
