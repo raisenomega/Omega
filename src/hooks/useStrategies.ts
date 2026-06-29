@@ -14,11 +14,13 @@ export interface Strategy {
   };
   estado: string;
   created_at: string;
+  used_at?: string;       // estampado por el backend al marcar "used" (migr 00043)
+  archived_at?: string;   // estampado al archivar
 }
 
 interface ListResult { items: Strategy[]; cadence?: string | null }
 
-export function useStrategiesList(estado: "active" | "archived") {
+export function useStrategiesList(estado: "active" | "used" | "archived") {
   return useQuery<ListResult>({
     queryKey: ["strategies_list", estado],
     queryFn: () => apiGet<ListResult>(`/strategies/?estado=${estado}`),

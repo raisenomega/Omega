@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Loader2, AlertCircle, Lightbulb, ChevronDown, Sparkles } from "lucide-react";
+import { Loader2, AlertCircle, Lightbulb, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { FilterChips } from "@/components/ui/FilterChips";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import { useStrategiesList, useGenerateStrategy } from "@/hooks/useStrategies";
 import { StrategyCard } from "@/components/strategies/StrategyCard";
@@ -14,17 +14,27 @@ import { EmptyState } from "@/components/common/EmptyState";
 // honesta para cualquier plan, incluido Adopción que no recibe automáticas).
 const SUBTITLE = "ARIA prepara estrategias con tu contexto y las tendencias del momento y recibes automáticamente según tu plan.";
 
+type Estado = "active" | "used" | "archived";
+const CHIPS = [
+  { id: "active", label: "Activas" },
+  { id: "used", label: "Usadas" },
+  { id: "archived", label: "Archivadas" },
+];
+const EMPTY: Record<Estado, string> = {
+  active: 'Tocá "Generar estrategia" y ARIA preparará una con tu contexto.',
+  used: "Las estrategias que uses aparecerán acá · podés volver a usarlas.",
+  archived: "Las estrategias que archives aparecerán acá.",
+};
+
 export default function Strategies() {
-  const active = useStrategiesList("active");
-  const archived = useStrategiesList("archived");
+  const [estado, setEstado] = useState<Estado>("active");
+  const list = useStrategiesList(estado);
   const generate = useGenerateStrategy();
-  const [histOpen, setHistOpen] = useState(false);
   const [packOpen, setPackOpen] = useState(false);
   useTrackOnMount("feature_open", { feature: "strategies" });
   const { activeBusinessId, isReady } = useActiveBusiness();
 
-  const items = (active.data?.items ?? []).filter((s) => s.client_id === activeBusinessId);
-  const past = (archived.data?.items ?? []).filter((s) => s.client_id === activeBusinessId);
+  const items = (list.data?.items ?? []).filter((s) => s.client_id === activeBusinessId);
 
   if (!isReady) return null;
   if (!activeBusinessId) return <EmptyState feature="Estrategias" />;
@@ -47,36 +57,26 @@ export default function Strategies() {
         </div>
       </header>
 
-      {active.isLoading ? (
+      <FilterChips items={CHIPS} active={estado} onSelect={(id) => setEstado(id as Estado)} />
+
+      {list.isLoading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-      ) : active.isError ? (
+      ) : list.isError ? (
         <Card><CardContent className="flex flex-col items-center gap-3 py-10 text-center">
           <AlertCircle className="h-10 w-10 text-destructive" />
           <p className="text-sm font-medium">No se pudieron cargar las estrategias</p>
-          <Button size="sm" variant="outline" onClick={() => active.refetch()}>Reintentar</Button>
+          <Button size="sm" variant="outline" onClick={() => list.refetch()}>Reintentar</Button>
         </CardContent></Card>
       ) : items.length === 0 ? (
         <Card><CardContent className="flex flex-col items-center gap-3 py-10 text-center">
           <Lightbulb className="h-10 w-10 text-muted-foreground/30" />
           <p className="text-sm font-medium">Todavía no hay estrategias</p>
-          <p className="text-xs text-muted-foreground">Tocá "Generar estrategia" y ARIA preparará una con tu contexto.</p>
+          <p className="text-xs text-muted-foreground">{EMPTY[estado]}</p>
         </CardContent></Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {items.map((s) => <StrategyCard key={s.id} strategy={s} />)}
+          {items.map((s) => <StrategyCard key={s.id} strategy={s} variant={estado} />)}
         </div>
-      )}
-
-      {past.length > 0 && (
-        <Collapsible open={histOpen} onOpenChange={setHistOpen} className="pt-2">
-          <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${histOpen ? "" : "-rotate-90"}`} />
-            Historial ({past.length})
-          </CollapsibleTrigger>
-          <CollapsibleContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-3">
-            {past.map((s) => <StrategyCard key={s.id} strategy={s} archived />)}
-          </CollapsibleContent>
-        </Collapsible>
       )}
 
       <PackOfStrategiesModal open={packOpen} onClose={() => setPackOpen(false)} />

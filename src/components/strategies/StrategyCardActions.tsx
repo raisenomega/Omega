@@ -14,7 +14,8 @@ function briefFrom(s: Strategy): string {
   return [s.titulo, c.resumen, pilares].filter(Boolean).join(" · ");
 }
 
-export function StrategyCardActions({ strategy }: { strategy: Strategy }) {
+// variant "used" = solo "Usar" (re-usar · idempotente). "active" = las 3 acciones.
+export function StrategyCardActions({ strategy, variant = "active" }: { strategy: Strategy; variant?: "active" | "used" }) {
   const navigate = useNavigate();
   const { openARIAWith } = useARIA();
   const setStatus = useSetStrategyStatus();
@@ -30,19 +31,23 @@ export function StrategyCardActions({ strategy }: { strategy: Strategy }) {
       >
         <Sparkles className="h-3.5 w-3.5" /> Usar
       </Button>
-      <Button
-        size="sm" variant="ghost" className="gap-1 h-8"
-        onClick={() => openARIAWith(`Ajustá esta estrategia: ${strategy.titulo}`)}
-      >
-        <MessageCircle className="h-3.5 w-3.5" /> Ajuste
-      </Button>
-      <Button
-        size="sm" variant="ghost" className="gap-1 h-8 text-muted-foreground hover:text-destructive"
-        disabled={setStatus.isPending}
-        onClick={() => setStatus.mutate({ id: strategy.id, estado: "archived" })}
-      >
-        <Archive className="h-3.5 w-3.5" /> Archivar
-      </Button>
+      {variant === "active" && (
+        <>
+          <Button
+            size="sm" variant="ghost" className="gap-1 h-8"
+            onClick={() => openARIAWith(`Ajustá esta estrategia: ${strategy.titulo}`)}
+          >
+            <MessageCircle className="h-3.5 w-3.5" /> Ajuste
+          </Button>
+          <Button
+            size="sm" variant="ghost" className="gap-1 h-8 text-muted-foreground hover:text-destructive"
+            disabled={setStatus.isPending}
+            onClick={() => setStatus.mutate({ id: strategy.id, estado: "archived" })}
+          >
+            <Archive className="h-3.5 w-3.5" /> Archivar
+          </Button>
+        </>
+      )}
     </div>
   );
 }
