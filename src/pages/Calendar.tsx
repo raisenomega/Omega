@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import { useCalendarList, groupByDay } from "@/hooks/useCalendarData";
 import { MonthView } from "@/components/calendar/MonthView";
+import { WeekView } from "@/components/calendar/WeekView";
 import { DayView } from "@/components/calendar/DayView";
 import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -64,6 +65,8 @@ export default function Calendar() {
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
       ) : view === "day" ? (
         <DayView day={viewDay} posts={grouped.get(viewDay) ?? []} onBack={() => setView("month")} />
+      ) : view === "week" ? (
+        <WeekView anchorDay={viewDay} month={month} setMonth={setMonth} grouped={grouped} />
       ) : (
         <MonthView month={month} setMonth={setMonth} selectedDay={selectedDay} grouped={grouped} onSelectDay={openDay} />
       )}
