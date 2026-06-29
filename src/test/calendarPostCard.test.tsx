@@ -37,12 +37,20 @@ describe("PostCard · extracción invisible (Commit 1)", () => {
     expect(getByText("Mi post de prueba")).toBeTruthy();         // preview del contenido
   });
 
-  it("test_postcard_acciones · botones pending + marcar publicado llama el mismo hook", async () => {
+  it("test_postcard_acciones · marcar publicado (Día/spacious) llama el mismo hook", async () => {
     mPatch.mockResolvedValue({});
-    const { getByText } = render(<PostCard post={PENDING} />, { wrapper: wrap });
+    const { getByText } = render(<PostCard post={PENDING} variant="spacious" />, { wrapper: wrap });
     expect(getByText("Publicar Auto")).toBeTruthy();             // AutoPublishButton reusado
     fireEvent.click(getByText("Marcar como publicado"));
     await waitFor(() => expect(mPatch).toHaveBeenCalledWith("/calendar/p1/status", { status: "published_manual" }));
+  });
+  it("test_postcard_marcar_solo_spacious · 'Marcar como publicado' solo en Día (spacious)", () => {
+    const compact = render(<PostCard post={PENDING} variant="compact" />, { wrapper: wrap });
+    expect(compact.queryByText("Marcar como publicado")).toBeNull();   // Semana (compact): oculto
+    expect(compact.getByText("Publicar Auto")).toBeTruthy();           // Publicar Auto sí queda
+    cleanup();
+    const spacious = render(<PostCard post={PENDING} variant="spacious" />, { wrapper: wrap });
+    expect(spacious.getByText("Marcar como publicado")).toBeTruthy();  // Día (spacious): visible
   });
 
   it("test_postcard_published_sin_acciones · un post publicado NO muestra botones", () => {

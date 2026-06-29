@@ -47,11 +47,15 @@ describe("Calendar · full-width + navegación Mes→Día (Commit 3)", () => {
     expect(container.querySelector(".md\\:grid-cols-3")).toBeNull();           // ya no hay 2-col
   });
   it("test_click_dia_abre_dia · click en un día → vista Día (view='day')", () => {
-    const { container, getByText } = render(<Calendar />, { wrapper: wrap });
+    const { container } = render(<Calendar />, { wrapper: wrap });
     const cells = container.querySelectorAll(".grid-cols-7")[1];               // [0]=header L-D · [1]=celdas día
     fireEvent.click(cells.querySelector("button") as HTMLElement);
-    expect(getByText(/volver al mes/i)).toBeTruthy();                          // DayView montada
+    expect(container.querySelector('[aria-label="Día siguiente"]')).toBeTruthy(); // DayView montada (flecha de día)
     expect(container.querySelector(".grid-cols-7")).toBeNull();                // el grid del mes ya no está
+  });
+  it("test_mes_h24 · celdas del Mes más altas (h-24)", () => {
+    const { container } = render(<Calendar />, { wrapper: wrap });
+    expect(container.querySelector(".h-24")).toBeTruthy();                     // celda h-24 (1.5x · sin scroll)
   });
   it("test_rex_centrado · barra intacta · toggle sigue llamando setMode", () => {
     const { getByText, container } = render(<Calendar />, { wrapper: wrap });
@@ -68,21 +72,27 @@ describe("Calendar · full-width + navegación Mes→Día (Commit 3)", () => {
   });
 });
 
-describe("DayView · tarjetas desplegadas (Commit 3)", () => {
+describe("DayView · tarjetas + navegación día (ajustes finales)", () => {
   it("test_dayview_tarjetas · PostCard spacious por cada post", () => {
-    const { getByText, container } = render(<DayView day="2026-06-10" posts={POSTS} onBack={() => {}} />, { wrapper: wrap });
+    const { getByText, container } = render(<DayView day="2026-06-10" posts={POSTS} onChangeDay={() => {}} />, { wrapper: wrap });
     expect(getByText("Post uno")).toBeTruthy();
     expect(getByText("Post dos")).toBeTruthy();
     expect(container.querySelector(".p-3")).toBeTruthy();                      // variant spacious (p-3)
   });
-  it("test_dayview_volver · botón volver → onBack", () => {
-    const onBack = vi.fn();
-    const { getByText } = render(<DayView day="2026-06-10" posts={POSTS} onBack={onBack} />, { wrapper: wrap });
-    fireEvent.click(getByText(/volver al mes/i));
-    expect(onBack).toHaveBeenCalled();
+  it("test_day_flechas · ‹ › cambian el día ±1", () => {
+    const onChangeDay = vi.fn();
+    const { getByLabelText } = render(<DayView day="2026-06-10" posts={POSTS} onChangeDay={onChangeDay} />, { wrapper: wrap });
+    fireEvent.click(getByLabelText("Día siguiente"));
+    expect(onChangeDay).toHaveBeenCalledWith("2026-06-11");
+    fireEvent.click(getByLabelText("Día anterior"));
+    expect(onChangeDay).toHaveBeenCalledWith("2026-06-09");
+  });
+  it("test_day_sin_volver · ya no existe 'Volver al mes'", () => {
+    const { queryByText } = render(<DayView day="2026-06-10" posts={POSTS} onChangeDay={() => {}} />, { wrapper: wrap });
+    expect(queryByText(/volver al mes/i)).toBeNull();
   });
   it("test_dayview_empty · día sin posts → empty honesto (sin crash)", () => {
-    const { getByText } = render(<DayView day="2026-06-10" posts={[]} onBack={() => {}} />, { wrapper: wrap });
+    const { getByText } = render(<DayView day="2026-06-10" posts={[]} onChangeDay={() => {}} />, { wrapper: wrap });
     expect(getByText(/Sin posts ese día/i)).toBeTruthy();
   });
 });

@@ -69,6 +69,20 @@ describe("WeekView · 7 columnas (Commit 4)", () => {
     fireEvent.click(getByLabelText("Semana siguiente"));
     expect(setMonth).toHaveBeenCalledWith("2026-07");
   });
+  it("test_week_header_completo · header dice 'Lunes 29' (no 'L 29')", () => {
+    const { getByText } = render(<WeekView anchorDay="2026-06-10" month="2026-06" setMonth={() => {}} grouped={new Map()} />, { wrapper: wrap });
+    expect(getByText(/Lunes \d+/)).toBeTruthy();
+  });
+  it("test_week_header_click_dia · click en el header → onOpenDay(dk)", () => {
+    const onOpenDay = vi.fn();
+    const { getByText } = render(<WeekView anchorDay="2026-06-10" month="2026-06" setMonth={() => {}} grouped={new Map()} onOpenDay={onOpenDay} />, { wrapper: wrap });
+    fireEvent.click(getByText(/Lunes \d+/));
+    expect(onOpenDay).toHaveBeenCalledWith(expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/));
+  });
+  it("test_week_hoy_sombreado · la columna de hoy tiene fondo leve", () => {
+    const { container } = render(<WeekView anchorDay={todayIso} month={todayIso.slice(0, 7)} setMonth={() => {}} grouped={new Map()} />, { wrapper: wrap });
+    expect(container.querySelector(".bg-primary\\/5")).toBeTruthy();
+  });
 });
 
 describe("Calendar · chip Semana pinta WeekView (Commit 4)", () => {

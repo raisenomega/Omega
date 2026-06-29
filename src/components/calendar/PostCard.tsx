@@ -50,10 +50,12 @@ export function PostCard({ post: p, variant = "compact" }: PostCardProps) {
         <p className="text-xs text-muted-foreground line-clamp-2">{p.content_preview || "(sin contenido)"}</p>
         {p.status === "pending" && (
           <div className="flex items-center gap-1">
-            <Button size="sm" variant="default" className="h-7 flex-1 gap-1 text-[11px]" disabled={update.isPending}
-              onClick={() => update.mutate({ id: p.id, status: "published_manual" })}>
-              <ClipboardCheck className="h-3.5 w-3.5" />Marcar como publicado
-            </Button>
+            {variant === "spacious" && (
+              <Button size="sm" variant="default" className="h-7 flex-1 gap-1 text-[11px]" disabled={update.isPending}
+                onClick={() => update.mutate({ id: p.id, status: "published_manual" })}>
+                <ClipboardCheck className="h-3.5 w-3.5" />Marcar como publicado
+              </Button>
+            )}
             <span className="flex-1">
               <AutoPublishButton postId={p.id} />
             </span>

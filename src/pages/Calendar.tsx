@@ -38,7 +38,11 @@ export default function Calendar() {
   );
   const today = new Date().toISOString().slice(0, 10);
   const viewDay = selectedDay ?? today;              // entrar al chip Día sin elegir → hoy
-  const openDay = (dk: string) => { setSelectedDay(dk); setView("day"); };
+  const openDay = (dk: string) => {
+    setSelectedDay(dk);
+    if (dk.slice(0, 7) !== month) setMonth(dk.slice(0, 7));  // cruza mes → pedir ese mes (cero backend nuevo)
+    setView("day");
+  };
 
   if (!isReady) return null;
   if (!activeBusinessId) return <EmptyState feature="Calendario" />;
@@ -65,9 +69,9 @@ export default function Calendar() {
       ) : q.isLoading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
       ) : view === "day" ? (
-        <DayView day={viewDay} posts={grouped.get(viewDay) ?? []} onBack={() => setView("month")} />
+        <DayView day={viewDay} posts={grouped.get(viewDay) ?? []} onChangeDay={openDay} />
       ) : view === "week" ? (
-        <WeekView anchorDay={viewDay} month={month} setMonth={setMonth} grouped={grouped} />
+        <WeekView anchorDay={viewDay} month={month} setMonth={setMonth} grouped={grouped} onOpenDay={openDay} />
       ) : (
         <MonthView month={month} setMonth={setMonth} selectedDay={selectedDay} grouped={grouped} onSelectDay={openDay} />
       )}
