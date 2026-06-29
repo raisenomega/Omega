@@ -28,12 +28,15 @@ export function useScheduleBlock() {
   return useMutation<SchedulePostResponse[], Error, ScheduleBlockInput>({
     mutationFn: async ({ block, clientId, platform, platforms, scheduledAt, accountId }) => {
       if (block.items.length === 0) throw new Error("Bloque vacío");
-      const textItems = block.items.filter(i => !TEXT_EXCLUDED.includes(i.content_type));
-      const mediaItem = block.items.find(i => MEDIA_TYPES.includes(i.content_type));
-      // F.3 · el carrusel trae N placas en media_urls (NO en MEDIA_TYPES · su draft ya es el content_id).
-      // El backend acepta media_urls[] y deriva media_url=media_urls[0] (_fanout · Pieza 2 lista).
       const carousel = block.items.find(i => i.content_type === "carousel");
-      if (textItems.length === 0) {
+      const mediaItem = block.items.find(i => MEDIA_TYPES.includes(i.content_type));
+      // El carrusel = MEDIA (N placas = 1 imagen): NO es content_id propio · sus media_urls se cuelgan del/los
+      // caption(s), igual que la imagen suelta (:48-49). Si hay caption(s) → ese(os) es(son) el content. Carrusel
+      // SOLO (sin caption) → se lleva a sí mismo (su título es el texto del post). El texto dibujado en las placas
+      // (Gemini) NUNCA cuenta como texto del post.
+      const captionItems = block.items.filter(i => !TEXT_EXCLUDED.includes(i.content_type) && i.content_type !== "carousel");
+      const contentItems = captionItems.length > 0 ? captionItems : (carousel ? [carousel] : []);
+      if (contentItems.length === 0) {
         throw new Error("Bloque sin items de texto · agregá al menos 1 caption/post/email/etc");
       }
       // Bug tz (11 jun): convertir la hora LOCAL del usuario a UTC explícito (Z) ·
@@ -43,7 +46,7 @@ export function useScheduleBlock() {
         client_id: clientId,
         platform,                                        // seed · satisface campo requerido + retrocompat
         platforms: platforms?.length ? platforms : undefined,  // E · fan-out multi-red (si vacío → backend usa platform)
-        content_ids: textItems.map(t => t.id),
+        content_ids: contentItems.map(t => t.id),
         scheduled_for: scheduledForIso,
         media_urls: carousel?.media_urls ?? undefined,  // F.3 · array de N placas (el cambio que carga el peso)
         media_url: carousel?.media_urls?.[0] ?? mediaItem?.generated_text ?? null,  // 1ª placa o media suelta (retrocompat)
