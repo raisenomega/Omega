@@ -26,9 +26,9 @@ export function MonthView({ month, setMonth, selectedDay, grouped, onSelectDay }
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Mes anterior"><ChevronLeft className="h-4 w-4" /></Button>
+        <Button size="icon" variant="outline" className="h-8 w-8 border-primary text-primary" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Mes anterior"><ChevronLeft className="h-4 w-4" /></Button>
         <h2 className="text-lg font-medium flex-1 text-center tabular-nums">{MONTH_LABELS[m - 1]} {y}</h2>
-        <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Mes siguiente"><ChevronRight className="h-4 w-4" /></Button>
+        <Button size="icon" variant="outline" className="h-8 w-8 border-primary text-primary" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Mes siguiente"><ChevronRight className="h-4 w-4" /></Button>
       </div>
       <CalendarGrid month={month} selectedDay={selectedDay} grouped={grouped} onSelectDay={onSelectDay} />
     </div>

@@ -43,7 +43,7 @@ export function CalendarGrid({ month, selectedDay, grouped, onSelectDay }: Calen
       </div>
       <div className="grid grid-cols-7 gap-1">
         {cells.map((c, i) => {
-          if (!c.dateKey) return <div key={i} className="aspect-square" />;
+          if (!c.dateKey) return <div key={i} className="h-16" />;
           const posts = grouped.get(c.dateKey) ?? [];
           const isToday = c.dateKey === today;
           const isSelected = c.dateKey === selectedDay;
@@ -53,7 +53,7 @@ export function CalendarGrid({ month, selectedDay, grouped, onSelectDay }: Calen
               type="button"
               onClick={() => onSelectDay(c.dateKey!)}
               className={cn(
-                "aspect-square rounded border border-border/40 p-1 flex flex-col items-center justify-start text-xs hover:bg-muted/50 transition",
+                "h-16 rounded border border-border/40 p-1 flex flex-col items-center justify-start text-xs hover:bg-muted/50 transition",
                 isToday && "ring-1 ring-primary",
                 isSelected && "bg-primary/10 border-primary",
               )}

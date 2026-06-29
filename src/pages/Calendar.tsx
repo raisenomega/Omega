@@ -48,9 +48,10 @@ export default function Calendar() {
       <header className="space-y-1">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-display font-bold tracking-tight">Calendario</h1>
-          <div className="hidden sm:block sm:flex-1" />
-          <FilterChips items={VIEW_CHIPS} active={view} onSelect={(id) => setView(id as ViewMode)} />
-          <RexCalendarBar clientId={activeBusinessId} className="sm:flex-1" />
+          <div className="sm:mx-auto">
+            <FilterChips items={VIEW_CHIPS} active={view} onSelect={(id) => setView(id as ViewMode)} />
+          </div>
+          <RexCalendarBar clientId={activeBusinessId} />
         </div>
         <p className="text-sm text-muted-foreground">Posts programados · click en un día para ver detalles.</p>
       </header>

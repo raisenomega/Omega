@@ -35,10 +35,12 @@ beforeEach(() => vi.clearAllMocks());
 afterEach(cleanup);
 
 describe("FilterChips · chip genérico oficial (primary)", () => {
-  it("test_filterchips_render · activo=primary · inactivo=muted", () => {
+  it("test_filterchips_render · activo=primary SÓLIDO · inactivo=muted", () => {
     const { getByText } = render(<FilterChips items={ITEMS} active="month" onSelect={() => {}} />);
     expect(getByText("Mes").className).toMatch(/border-primary/);
-    expect(getByText("Mes").className).toMatch(/bg-primary\/10/);
+    expect(getByText("Mes").className).toMatch(/bg-primary/);                  // fondo primary sólido
+    expect(getByText("Mes").className).toMatch(/text-primary-foreground/);     // texto sobre el sólido
+    expect(getByText("Mes").className).not.toMatch(/bg-primary\/10/);          // ya NO es el translúcido
     expect(getByText("Semana").className).toMatch(/text-muted-foreground/);
   });
   it("test_filterchips_onselect · click → onSelect(id)", () => {

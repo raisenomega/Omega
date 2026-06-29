@@ -48,9 +48,10 @@ describe("Calendar · full-width + navegación Mes→Día (Commit 3)", () => {
   });
   it("test_click_dia_abre_dia · click en un día → vista Día (view='day')", () => {
     const { container, getByText } = render(<Calendar />, { wrapper: wrap });
-    fireEvent.click(container.querySelector("button.aspect-square") as HTMLElement);
+    const cells = container.querySelectorAll(".grid-cols-7")[1];               // [0]=header L-D · [1]=celdas día
+    fireEvent.click(cells.querySelector("button") as HTMLElement);
     expect(getByText(/volver al mes/i)).toBeTruthy();                          // DayView montada
-    expect(container.querySelector("button.aspect-square")).toBeNull();        // el grid del mes ya no está
+    expect(container.querySelector(".grid-cols-7")).toBeNull();                // el grid del mes ya no está
   });
   it("test_rex_centrado · barra intacta · toggle sigue llamando setMode", () => {
     const { getByText, container } = render(<Calendar />, { wrapper: wrap });

@@ -26,7 +26,7 @@ export function FilterChips({ items, active, onSelect }: FilterChipsProps) {
           className={cn(
             "rounded-full border px-3 py-1.5 text-sm transition-colors",
             active === it.id
-              ? "border-primary bg-primary/10 text-foreground"
+              ? "border-primary bg-primary text-primary-foreground"
               : "border-border/40 text-muted-foreground hover:border-primary/50",
           )}
         >

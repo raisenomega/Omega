@@ -14,15 +14,15 @@ export function RexCalendarBar({ clientId, className }: { clientId: string; clas
   const hasAddon = !!data?.rex_addon_active;
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn("flex items-center gap-2 shrink-0", className)}>
       <img src="/Agentes/Rex.jpg" alt="REX" className="h-7 w-7 rounded-md object-cover shrink-0" />
       <p className="hidden lg:block whitespace-nowrap text-xs text-muted-foreground">
         REX publica tus posts a su hora — solo los que apruebas
       </p>
       {!isLoading && (hasAddon ? (
-        <span className="sm:ml-auto"><AutonomousModeToggle clientId={clientId} /></span>
+        <AutonomousModeToggle clientId={clientId} />
       ) : (
-        <Button size="sm" className="shrink-0 sm:ml-auto" onClick={() => navigate("/add-ons#rex")}>
+        <Button size="sm" className="shrink-0" onClick={() => navigate("/add-ons#rex")}>
           Activar REX
         </Button>
       ))}
