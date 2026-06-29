@@ -30,9 +30,9 @@ export function WeekView({ anchorDay, month, setMonth, grouped, onOpenDay }: Wee
   };
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-center gap-2">
+      <div className="flex items-center gap-2">
         <Button size="icon" variant="outline" className="h-8 w-8 border-primary text-primary" onClick={() => shift(-1)} aria-label="Semana anterior"><ChevronLeft className="h-4 w-4" /></Button>
-        <span className="text-sm font-medium tabular-nums">{days[0]} — {days[6]}</span>
+        <span className="text-sm font-medium flex-1 text-center tabular-nums">{days[0]} — {days[6]}</span>
         <Button size="icon" variant="outline" className="h-8 w-8 border-primary text-primary" onClick={() => shift(1)} aria-label="Semana siguiente"><ChevronRight className="h-4 w-4" /></Button>
       </div>
       <div className="grid grid-cols-7 gap-2">

@@ -25,7 +25,7 @@ export function DayView({ day, posts, onChangeDay }: DayViewProps) {
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Button size="icon" variant="outline" className="h-8 w-8 border-primary text-primary" onClick={() => onChangeDay(addDays(day, -1))} aria-label="Día anterior"><ChevronLeft className="h-4 w-4" /></Button>
-        <h2 className="text-lg font-medium capitalize tabular-nums">{dayLabel(day)}</h2>
+        <h2 className="text-lg font-medium flex-1 text-center capitalize tabular-nums">{dayLabel(day)}</h2>
         <Button size="icon" variant="outline" className="h-8 w-8 border-primary text-primary" onClick={() => onChangeDay(addDays(day, 1))} aria-label="Día siguiente"><ChevronRight className="h-4 w-4" /></Button>
       </div>
       {posts.length === 0 ? (
