@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PLATFORM_LABELS } from "@/lib/onboarding-constants";
 import type { Strategy } from "@/hooks/useStrategies";
 import { StrategyCardActions } from "@/components/strategies/StrategyCardActions";
 import { StrategyDetailModal } from "@/components/strategies/StrategyDetailModal";
@@ -15,6 +16,13 @@ function fmtDate(iso: string): string {
 export function StrategyCard({ strategy, variant = "active" }: { strategy: Strategy; variant?: Variant }) {
   const c = strategy.contenido || {};
   const [open, setOpen] = useState(false);
+  const lu = strategy.last_used;
+  // CAPA 1 · en Usadas pintamos lo que se USO de verdad (last_used.brief). Fallback al resumen si
+  // last_used es null (estrategias marcadas usadas antes del arco · honesto: no se registro el detalle).
+  const showUsed = variant === "used" && !!lu?.brief;
+  const usedLabel = !lu?.platform || lu.platform === "completa"
+    ? "Usaste la estrategia completa:"
+    : `Usaste (${PLATFORM_LABELS[lu.platform as keyof typeof PLATFORM_LABELS] ?? lu.platform}):`;
   return (
     <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
       <CardContent className="p-3 space-y-2">
@@ -29,7 +37,14 @@ export function StrategyCard({ strategy, variant = "active" }: { strategy: Strat
               {strategy.used_at && <span className="text-[10px] text-muted-foreground">{fmtDate(strategy.used_at)}</span>}
             </div>
           )}
-          {c.resumen && <p className="text-sm text-muted-foreground line-clamp-3">{c.resumen}</p>}
+          {showUsed ? (
+            <div className="space-y-0.5">
+              <p className="text-[10px] font-medium text-muted-foreground">{usedLabel}</p>
+              <p className="text-sm line-clamp-3">{lu!.brief}</p>
+            </div>
+          ) : (
+            c.resumen && <p className="text-sm text-muted-foreground line-clamp-3">{c.resumen}</p>
+          )}
           {Array.isArray(c.pilares) && c.pilares.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {c.pilares.slice(0, 4).map((p, i) => (

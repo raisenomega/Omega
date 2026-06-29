@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PLATFORM_LABELS } from "@/lib/onboarding-constants";
+import { useRecordStrategyUse } from "@/hooks/useRecordStrategyUse";
 
 // Estrategias C3 · agrupa las ideas de posts en CUADROS por red social y, por cuadro, una flecha
 // que lleva SOLO esa red a Content Lab (brief = la idea de ese cuadro + platform pre-seleccionada).
@@ -38,13 +39,17 @@ function buildBoxes(posts: IdeaPost[]): Box[] {
   return [...map.values()];
 }
 
-export function StrategyIdeaBoxes({ posts }: { posts: IdeaPost[] }) {
+export function StrategyIdeaBoxes({ strategyId, posts }: { strategyId: string; posts: IdeaPost[] }) {
   const navigate = useNavigate();
+  const recordUse = useRecordStrategyUse();
   const boxes = buildBoxes(Array.isArray(posts) ? posts : []);
   if (boxes.length === 0) return null;
 
   const go = (box: Box) => {
     const brief = box.ideas.join("\n\n") || box.label;
+    // CAPA 1 · registra el uso (la estrategia va a Usadas · mark_used=true) · best-effort: si /use
+    // falla NO bloquea la navegacion (lo critico es llegar al generador).
+    try { recordUse.mutate({ id: strategyId, platform: box.platform ?? box.label, brief, mark_used: true }); } catch { /* best-effort */ }
     navigate("/content-lab", { state: { brief, ...(box.platform ? { platform: box.platform } : {}) } });
   };
 

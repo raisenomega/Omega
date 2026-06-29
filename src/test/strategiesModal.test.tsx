@@ -7,6 +7,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 
 // El modal ahora incluye StrategyIdeaBoxes (C3) que usa useNavigate → mock para no exigir Router.
 vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
+// CAPA 1 · StrategyIdeaBoxes usa useRecordStrategyUse (react-query) → mock para no exigir provider.
+vi.mock("@/hooks/useRecordStrategyUse", () => ({ useRecordStrategyUse: () => ({ mutate: vi.fn() }) }));
 
 import { StrategyDetailModal } from "@/components/strategies/StrategyDetailModal";
 import type { Strategy } from "@/hooks/useStrategies";

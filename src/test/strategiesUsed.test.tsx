@@ -10,6 +10,7 @@ const { listSpy, setStatusSpy } = vi.hoisted(() => ({ listSpy: vi.fn(), setStatu
 const navigateSpy = vi.fn();
 
 vi.mock("react-router-dom", () => ({ useNavigate: () => navigateSpy }));
+vi.mock("@/hooks/useRecordStrategyUse", () => ({ useRecordStrategyUse: () => ({ mutate: vi.fn() }) }));
 vi.mock("@/contexts/ARIAContext", () => ({ useARIA: () => ({ openARIAWith: vi.fn() }) }));
 vi.mock("@/hooks/useBehavioralTracking", () => ({ useTrackOnMount: () => {} }));
 vi.mock("@/contexts/ActiveBusinessContext", () => ({
@@ -63,18 +64,18 @@ describe("Estrategias · chips de estado + vista usadas", () => {
     expect(screen.getByText(/10 jun/i)).toBeTruthy();           // used_at formateado (≠ created_at 01 jun)
   });
 
-  it("test_card_usada_solo_usar · una usada muestra SOLO 'Usar' (no Ajuste/Archivar)", () => {
+  it("test_card_usada_solo_reusar · una usada muestra SOLO 'Re-usar' (no Ajuste/Archivar)", () => {
     render(<Strategies />);
     fireEvent.click(chip(/usadas/i));
-    expect(screen.getByRole("button", { name: /^usar$/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /re-?usar/i })).toBeTruthy();
     expect(screen.queryByRole("button", { name: /ajuste/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /archivar/i })).toBeNull();
   });
 
-  it("test_reusar · 'Usar' en una usada → re-navega a Content Lab (re-uso)", () => {
+  it("test_reusar · 'Re-usar' en una usada → re-navega a Content Lab (re-uso · sin last_used → fallback resumen)", () => {
     render(<Strategies />);
     fireEvent.click(chip(/usadas/i));
-    fireEvent.click(screen.getByRole("button", { name: /^usar$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /re-?usar/i }));
     expect(navigateSpy).toHaveBeenCalledWith("/content-lab", { state: { brief: expect.stringContaining("T-used") } });
   });
 

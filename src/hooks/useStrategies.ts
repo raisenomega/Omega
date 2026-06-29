@@ -16,6 +16,7 @@ export interface Strategy {
   created_at: string;
   used_at?: string;       // estampado por el backend al marcar "used" (migr 00043)
   archived_at?: string;   // estampado al archivar
+  last_used?: { platform?: string; brief?: string; at?: string } | null;  // CAPA 1 · ultimo uso (migr 00081)
 }
 
 interface ListResult { items: Strategy[]; cadence?: string | null }

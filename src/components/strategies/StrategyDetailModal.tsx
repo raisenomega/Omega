@@ -50,7 +50,7 @@ export function StrategyDetailModal({ strategy, onClose }: { strategy: Strategy 
               Sugerencias de posts por red social — aún no son posts reales, son puntos de partida.
               Usá la flecha de una red para llevar solo esa idea a Content Lab.
             </p>
-            <StrategyIdeaBoxes posts={ideas} />
+            <StrategyIdeaBoxes strategyId={strategy.id} posts={ideas} />
           </div>
         )}
       </DialogContent>
