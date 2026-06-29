@@ -10,16 +10,9 @@ import { PackOfStrategiesModal } from "@/components/strategies/PackOfStrategiesM
 import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 import { EmptyState } from "@/components/common/EmptyState";
 
-// Subtítulo unificado en UN párrafo · cadencia del backend (single-source). El INTRO se muestra
-// durante el load (sin pantalla muda ni flicker) y se completa con la cadencia al cargar.
-const INTRO = "ARIA prepara estrategias con tu contexto y las tendencias.";
-const USAR = " Usalas, archivá las que no apliquen, o pedí ajustes.";
-const CADENCE_TAIL: Record<string, string> = {
-  semanal: ` Tu plan incluye 1 estrategia por semana, que recibirás automáticamente los lunes.${USAR}`,
-  tres_semana: ` Tu plan incluye 3 estrategias por semana, que recibirás automáticamente los lunes, miércoles y viernes.${USAR}`,
-  diaria: ` Tu plan incluye 1 estrategia por día, que recibirás automáticamente cada mañana.${USAR}`,
-};
-const UPGRADE_TAIL = " Tu plan Adopción es para configurar tu ARIA — subí tu plan para recibir estrategias automáticas adaptadas a tu negocio.";
+// Subtítulo · frase fija y corta (no se compone por cadencia · "según tu plan" lo cubre de forma
+// honesta para cualquier plan, incluido Adopción que no recibe automáticas).
+const SUBTITLE = "ARIA prepara estrategias con tu contexto y las tendencias del momento y recibes automáticamente según tu plan.";
 
 export default function Strategies() {
   const active = useStrategiesList("active");
@@ -32,20 +25,18 @@ export default function Strategies() {
 
   const items = (active.data?.items ?? []).filter((s) => s.client_id === activeBusinessId);
   const past = (archived.data?.items ?? []).filter((s) => s.client_id === activeBusinessId);
-  const cadence = active.data?.cadence;
-  const subtitle = !active.data ? INTRO : INTRO + (cadence ? CADENCE_TAIL[cadence] : UPGRADE_TAIL);
 
   if (!isReady) return null;
   if (!activeBusinessId) return <EmptyState feature="Estrategias" />;
 
   return (
     <div className="space-y-6">
-      <header className="flex items-start justify-between gap-3 flex-wrap">
-        <div className="space-y-1">
+      <header className="flex items-start justify-between gap-3">
+        <div className="space-y-1 min-w-0">
           <h1 className="text-2xl font-display font-bold tracking-tight">Estrategias</h1>
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
+          <p className="text-sm text-muted-foreground">{SUBTITLE}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0 whitespace-nowrap">
           <Button onClick={() => generate.mutate(activeBusinessId ?? undefined)} disabled={generate.isPending} className="gap-1">
             {generate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lightbulb className="h-4 w-4" />}
             Generar estrategia
