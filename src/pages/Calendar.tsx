@@ -9,8 +9,16 @@ import { PostsList } from "@/components/calendar/PostsList";
 import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 import { EmptyState } from "@/components/common/EmptyState";
 import { RexCalendarBar } from "@/components/calendar/RexCalendarBar";
+import { FilterChips, type ChipItem } from "@/components/ui/FilterChips";
 
 const MONTH_LABELS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+type ViewMode = "month" | "week" | "day";
+const VIEW_CHIPS: ChipItem[] = [
+  { id: "month", label: "Mes" },
+  { id: "week", label: "Semana" },
+  { id: "day", label: "Día" },
+];
 
 function currentMonthKey(): string {
   const d = new Date();
@@ -26,6 +34,7 @@ function shiftMonth(month: string, delta: number): string {
 export default function Calendar() {
   const [month, setMonth] = useState<string>(currentMonthKey);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [view, setView] = useState<ViewMode>("month");  // local · Mes default · Semana/Día reales en C3/C4
   useTrackOnMount("feature_open", { feature: "calendar" });
   const { activeBusinessId, isReady } = useActiveBusiness();
 
@@ -43,11 +52,13 @@ export default function Calendar() {
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-display font-bold tracking-tight">Calendario</h1>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-2xl font-display font-bold tracking-tight">Calendario</h1>
+          <FilterChips items={VIEW_CHIPS} active={view} onSelect={(id) => setView(id as ViewMode)} />
+          <RexCalendarBar clientId={activeBusinessId} />
+        </div>
         <p className="text-sm text-muted-foreground">Posts programados · click en un día para ver detalles.</p>
       </header>
-
-      <RexCalendarBar clientId={activeBusinessId} />
 
       <div className="flex items-center gap-2">
         <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Mes anterior"><ChevronLeft className="h-4 w-4" /></Button>
