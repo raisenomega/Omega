@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { File as FileIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { MediaCardMenu } from "./MediaCardMenu";
+import { MediaPreviewModal } from "./MediaPreviewModal";
 
 export interface MediaFile {
   id: string;
@@ -26,14 +28,19 @@ function formatBytes(bytes: number): string {
 // Thumbnail por tipo: imagen → <img>; video → <video src#t=0.5 preload=metadata muted> que
 // pinta el primer frame como preview estático (cero backend); otro → ícono genérico.
 // Las acciones viven en un botón [Ver] (primary) en la franja inferior, a la derecha del
-// nombre+peso, que abre un mini-menú (MediaCardMenu · C2 + reubicación).
+// nombre+peso, que abre un mini-menú (MediaCardMenu · C2 + reubicación). Click en el thumbnail
+// (zona separada del [Ver]) abre un pop-up de preview (MediaPreviewModal · C3).
 export function MediaCard({ file, publicUrl, onDelete }: MediaCardProps) {
   const mime = file.metadata?.mimetype ?? "";
   const isImage = mime.startsWith("image");
   const isVideo = mime.startsWith("video");
+  const [preview, setPreview] = useState(false);
   return (
     <Card className="border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden group">
-      <div className="aspect-square bg-secondary flex items-center justify-center relative">
+      <div
+        className="aspect-square bg-secondary flex items-center justify-center relative cursor-pointer"
+        onClick={() => setPreview(true)}
+      >
         {isImage ? (
           <img src={publicUrl} alt={file.name} className="h-full w-full object-cover" />
         ) : isVideo ? (
@@ -49,6 +56,14 @@ export function MediaCard({ file, publicUrl, onDelete }: MediaCardProps) {
         </div>
         <MediaCardMenu fileName={file.name} publicUrl={publicUrl} isImage={isImage} onDelete={onDelete} />
       </CardContent>
+      <MediaPreviewModal
+        open={preview}
+        onOpenChange={setPreview}
+        name={file.name}
+        publicUrl={publicUrl}
+        isImage={isImage}
+        isVideo={isVideo}
+      />
     </Card>
   );
 }
