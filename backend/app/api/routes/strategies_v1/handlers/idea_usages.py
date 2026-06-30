@@ -4,7 +4,7 @@
 - GET  /api/v1/strategies/used-ideas   · lista las ideas usadas del cliente (Fase B · vista Usadas).
 Ownership: client_ids del servidor en el WHERE → 404 sin fuga (patron update_status/use/delete)."""
 from typing import Optional
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException, Query
 from pydantic import BaseModel, Field
 from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.content_v3 import _content_reader as reader
@@ -40,7 +40,19 @@ async def use_idea(strategy_id: str, body: UseIdeaBody,
 
 
 @router.get("/used-ideas")
-async def used_ideas(authorization: Optional[str] = Header(None)) -> dict[str, object]:
+async def used_ideas(archived: bool = Query(False),
+                     authorization: Optional[str] = Header(None)) -> dict[str, object]:
     user = await get_current_user(authorization)
     client_ids = reader.get_accessible_client_ids(user["id"])
-    return {"items": usages.list_idea_usages(get_supabase_service(), client_ids)}
+    return {"items": usages.list_idea_usages(get_supabase_service(), client_ids, archived)}
+
+
+@router.patch("/used-ideas/{usage_id}/archive")
+async def archive_idea(usage_id: str,
+                       authorization: Optional[str] = Header(None)) -> dict[str, object]:
+    user = await get_current_user(authorization)
+    client_ids = reader.get_accessible_client_ids(user["id"])
+    n = usages.archive_idea_usage(get_supabase_service(), usage_id, client_ids)
+    if n == 0:
+        raise HTTPException(status_code=404, detail="idea_usage_not_found")
+    return {"archived": True, "id": usage_id}

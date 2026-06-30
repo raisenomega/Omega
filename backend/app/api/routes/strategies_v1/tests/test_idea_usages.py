@@ -26,9 +26,9 @@ def test_count_idea_usages():
 
 
 def test_list_idea_usages_scope():
-    """list scope .in_('client_id', client_ids); sin client_ids → [] (defensivo)."""
+    """list scope .in_('client_id', client_ids) + filtro archived_at IS NULL (Usadas); sin client_ids → []."""
     sb = MagicMock()
-    sb.client.table.return_value.select.return_value.in_.return_value.order.return_value.limit.return_value.execute.return_value.data = [{"id": "u1"}]
+    sb.client.table.return_value.select.return_value.in_.return_value.is_.return_value.order.return_value.limit.return_value.execute.return_value.data = [{"id": "u1"}]
     assert usages.list_idea_usages(sb, ["biz1"])[0]["id"] == "u1"
     sb.client.table.return_value.select.return_value.in_.assert_called_with("client_id", ["biz1"])
     assert usages.list_idea_usages(MagicMock(), []) == []
@@ -81,6 +81,6 @@ def test_use_idea_ownership(monkeypatch):
 def test_list_used_ideas(monkeypatch):
     """GET used-ideas → las ideas usadas del cliente (scope client_ids del servidor)."""
     _auth(monkeypatch, ["biz1"]); cap = {}
-    monkeypatch.setattr(iu.usages, "list_idea_usages", lambda sb, cids: cap.update(cids=cids) or [{"id": "u1", "brief": "idea"}])
-    out = asyncio.run(iu.used_ideas("auth"))
+    monkeypatch.setattr(iu.usages, "list_idea_usages", lambda sb, cids, arch: cap.update(cids=cids) or [{"id": "u1", "brief": "idea"}])
+    out = asyncio.run(iu.used_ideas(False, "auth"))
     assert out["items"][0]["brief"] == "idea" and cap["cids"] == ["biz1"]

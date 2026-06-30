@@ -5,8 +5,8 @@ from unittest.mock import MagicMock
 from app.bc_cognition.infrastructure import strategy_idea_usage_repository as usages
 
 
-def _rows(sb):
-    return sb.client.table.return_value.select.return_value.in_.return_value.order.return_value.limit.return_value.execute
+def _rows(sb):  # cadena con el filtro archived_at IS NULL (Usadas · default archived=false)
+    return sb.client.table.return_value.select.return_value.in_.return_value.is_.return_value.order.return_value.limit.return_value.execute
 
 
 def test_used_ideas_incluye_titulo():

@@ -13,5 +13,5 @@ router.include_router(generate_router)
 router.include_router(list_router)
 router.include_router(update_router)
 router.include_router(use_router)
+router.include_router(idea_usages_router)  # ANTES de delete · ruta literal used-ideas/... gana al {strategy_id}
 router.include_router(delete_router)
-router.include_router(idea_usages_router)
