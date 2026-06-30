@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 // ARCO MEDICION CAPA 1 · Commit 2 (frontend) · wire POST /strategies/{id}/use + pinta lo usado.
-// CAMBIO del owner: la flecha ahora mark_used=TRUE (la estrategia VA a Usadas). El boton "Usar"
-// guarda platform="completa". La tarjeta usada muestra last_used.brief + "Re-usar" (fallback al
-// resumen si last_used es null · estrategias viejas). best-effort: /use NUNCA rompe la navegacion.
+// REDISEÑO Fase 0: la flecha de una idea ahora mark_used=FALSE (NO consume · la estrategia sigue en
+// Activas). El boton "Usar" completa guarda platform="completa" + mark_used=TRUE (sin cambio). La
+// tarjeta usada muestra last_used.brief + "Re-usar". best-effort: /use NUNCA rompe la navegacion.
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 
@@ -27,22 +27,22 @@ beforeEach(() => vi.clearAllMocks());
 afterEach(cleanup);
 
 describe("CAPA 1 Commit 2 · flecha + Usar llaman /use", () => {
-  it("test_flecha_llama_use · flecha IG → /use {platform:instagram, brief, mark_used:true}", () => {
+  it("test_flecha_llama_use · flecha de idea → /use {platform:instagram, brief, mark_used:FALSE}", () => {
     render(<StrategyIdeaBoxes strategyId="s1" posts={[{ plataforma: "Instagram", idea: "idea-ig" }]} />);
-    fireEvent.click(screen.getByRole("button", { name: /usar la idea de instagram/i }));
-    expect(recordUseMutate).toHaveBeenCalledWith({ id: "s1", platform: "instagram", brief: "idea-ig", mark_used: true });
+    fireEvent.click(screen.getByRole("button", { name: /idea-ig/i }));
+    expect(recordUseMutate).toHaveBeenCalledWith({ id: "s1", platform: "instagram", brief: "idea-ig", mark_used: false });
   });
 
   it("test_flecha_navega_igual · la navegacion a Content Lab ocurre (best-effort)", () => {
     render(<StrategyIdeaBoxes strategyId="s1" posts={[{ plataforma: "Instagram", idea: "idea-ig" }]} />);
-    fireEvent.click(screen.getByRole("button", { name: /usar la idea de instagram/i }));
+    fireEvent.click(screen.getByRole("button", { name: /idea-ig/i }));
     expect(navigateSpy).toHaveBeenCalledWith("/content-lab", { state: { brief: "idea-ig", platform: "instagram" } });
   });
 
   it("test_flecha_use_falla_navega · si /use lanza → la navegacion IGUAL ocurre", () => {
     recordUseMutate.mockImplementationOnce(() => { throw new Error("use failed"); });
     render(<StrategyIdeaBoxes strategyId="s1" posts={[{ plataforma: "Instagram", idea: "idea-ig" }]} />);
-    fireEvent.click(screen.getByRole("button", { name: /usar la idea de instagram/i }));
+    fireEvent.click(screen.getByRole("button", { name: /idea-ig/i }));
     expect(navigateSpy).toHaveBeenCalledWith("/content-lab", { state: { brief: "idea-ig", platform: "instagram" } });
   });
 

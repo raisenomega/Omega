@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
-// Estrategias C3 · cuadros por red + flecha -> Content Lab. RIGUROSO: normalizacion tolerante
-// (plataforma = texto libre del LLM), red rara no rompe, 1 idea no asume 3, la flecha lleva SOLO
-// esa red (brief = idea de ese cuadro + platform), y el boton "Usar" sigue llevando la estrategia
-// COMPLETA (convivencia). CAPA 1: el uso se registra via /use (recordUse · mark_used=true), NO via
-// /status. Cero backend.
+// Estrategias · agrupacion VISUAL por red (encabezado) + 1 flecha POR IDEA (Fase 0 · la idea es la
+// unidad). RIGUROSO: normalizacion tolerante (plataforma = texto libre del LLM), red rara no rompe,
+// las ideas no se pierden. La flecha lleva SOLO esa idea (brief = idea + platform) con mark_used=FALSE
+// (NO consume la estrategia). El boton "Usar" sigue llevando la estrategia COMPLETA. Cero backend.
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 
@@ -22,9 +21,9 @@ import type { Strategy } from "@/hooks/useStrategies";
 beforeEach(() => vi.clearAllMocks());
 afterEach(cleanup);
 
-const arrows = () => screen.getAllByRole("button", { name: /usar la idea de/i });
+const arrows = () => screen.getAllByRole("button", { name: /usar en content lab/i });
 
-describe("StrategyIdeaBoxes · cuadros por red (C3)", () => {
+describe("StrategyIdeaBoxes · agrupacion visual por red + 1 flecha por idea (Fase 0)", () => {
   it("test_ideaboxes_agrupa · IG + TikTok + Facebook -> 3 cuadros", () => {
     render(<StrategyIdeaBoxes strategyId="s1" posts={[
       { plataforma: "Instagram", idea: "a" },
@@ -43,8 +42,8 @@ describe("StrategyIdeaBoxes · cuadros por red (C3)", () => {
       { plataforma: "insta", idea: "dos" },
       { plataforma: "Instagram", idea: "tres" },
     ]} />);
-    expect(arrows()).toHaveLength(1);                       // todas caen en el mismo cuadro
-    expect(screen.getAllByText("Instagram")).toHaveLength(1);
+    expect(screen.getAllByText("Instagram")).toHaveLength(1);   // un solo encabezado IG (agrupacion)
+    expect(arrows()).toHaveLength(3);                       // pero 1 flecha por idea (3 ideas)
     expect(screen.getByText(/uno/)).toBeTruthy();
     expect(screen.getByText(/dos/)).toBeTruthy();
     expect(screen.getByText(/tres/)).toBeTruthy();          // ninguna idea se pierde
@@ -62,20 +61,20 @@ describe("StrategyIdeaBoxes · cuadros por red (C3)", () => {
     expect(arrows()).toHaveLength(1);
   });
 
-  it("test_flecha_navega_solo_esa_red · click IG -> brief = idea IG + platform instagram", () => {
+  it("test_flecha_navega_solo_esa_idea · click idea IG -> brief = SOLO esa idea + platform instagram", () => {
     render(<StrategyIdeaBoxes strategyId="s1" posts={[
       { plataforma: "Instagram", idea: "idea-ig" },
       { plataforma: "TikTok", idea: "idea-tt" },
     ]} />);
-    fireEvent.click(screen.getByRole("button", { name: /usar la idea de instagram/i }));
+    fireEvent.click(screen.getByRole("button", { name: /idea-ig/i }));
     expect(navigateSpy).toHaveBeenCalledWith("/content-lab", { state: { brief: "idea-ig", platform: "instagram" } });
-    expect(navigateSpy).toHaveBeenCalledTimes(1);           // solo navega (no la estrategia completa)
+    expect(navigateSpy).toHaveBeenCalledTimes(1);           // solo esa idea (no las otras)
   });
 
-  it("test_flecha_registra_use · CAPA 1: la flecha registra el uso via /use (mark_used=true), NO via /status", () => {
+  it("test_flecha_no_consume · Fase 0: la flecha registra via /use con mark_used=FALSE (NO consume · NO /status)", () => {
     render(<StrategyIdeaBoxes strategyId="s1" posts={[{ plataforma: "Instagram", idea: "x" }]} />);
     fireEvent.click(arrows()[0]);
-    expect(recordUseSpy).toHaveBeenCalledWith({ id: "s1", platform: "instagram", brief: "x", mark_used: true });
+    expect(recordUseSpy).toHaveBeenCalledWith({ id: "s1", platform: "instagram", brief: "x", mark_used: false });
     expect(setStatusSpy).not.toHaveBeenCalled();            // el uso pasa por /use, no por /status
   });
 });

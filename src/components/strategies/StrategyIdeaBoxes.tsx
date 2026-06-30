@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { PLATFORM_LABELS } from "@/lib/onboarding-constants";
 import { useRecordStrategyUse } from "@/hooks/useRecordStrategyUse";
 
-// Estrategias C3 · agrupa las ideas de posts en CUADROS por red social y, por cuadro, una flecha
-// que lleva SOLO esa red a Content Lab (brief = la idea de ese cuadro + platform pre-seleccionada).
-// NO marca la estrategia "used" (idea suelta · ≠ botón "Usar" que lleva la estrategia completa).
-// NORMALIZACIÓN TOLERANTE: la plataforma es texto libre del LLM (no enum · strategy_prompt.py).
+// Estrategias · REDISEÑO Fase 0 "la idea es la unidad" · agrupa visualmente por red (encabezado)
+// pero cada IDEA tiene su PROPIA flecha → lleva SOLO esa idea a Content Lab (no el join de la red).
+// mark_used:FALSE → la flecha NO consume la estrategia (sigue en Activas con sus demás ideas · el
+// estado por-idea llega en la Fase A). NORMALIZACIÓN TOLERANTE: la plataforma es texto libre del LLM.
 interface IdeaPost { plataforma?: string; idea?: string }
 interface Box { key: string; label: string; platform: string | null; ideas: string[] }
 
@@ -45,31 +45,32 @@ export function StrategyIdeaBoxes({ strategyId, posts }: { strategyId: string; p
   const boxes = buildBoxes(Array.isArray(posts) ? posts : []);
   if (boxes.length === 0) return null;
 
-  const go = (box: Box) => {
-    const brief = box.ideas.join("\n\n") || box.label;
-    // CAPA 1 · registra el uso (la estrategia va a Usadas · mark_used=true) · best-effort: si /use
-    // falla NO bloquea la navegacion (lo critico es llegar al generador).
-    try { recordUse.mutate({ id: strategyId, platform: box.platform ?? box.label, brief, mark_used: true }); } catch { /* best-effort */ }
-    navigate("/content-lab", { state: { brief, ...(box.platform ? { platform: box.platform } : {}) } });
+  // Fase 0 · manda SOLO esta idea (no el join de la red) y NO consume la estrategia (mark_used:false
+  // · sigue en Activas). best-effort: si /use falla NO bloquea la navegacion al generador.
+  const go = (box: Box, idea: string) => {
+    try { recordUse.mutate({ id: strategyId, platform: box.platform ?? box.label, brief: idea, mark_used: false }); } catch { /* best-effort */ }
+    navigate("/content-lab", { state: { brief: idea, ...(box.platform ? { platform: box.platform } : {}) } });
   };
 
   return (
     <div className="grid gap-2 sm:grid-cols-2">
       {boxes.map((box) => (
         <div key={box.key} className="rounded-lg border border-border/40 bg-card/50 p-3 space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-semibold">{box.label}</span>
-            <Button
-              size="sm" variant="ghost"
-              className="h-7 px-2 gap-1 text-primary hover:text-primary"
-              aria-label={`Usar la idea de ${box.label} en Content Lab`}
-              onClick={() => go(box)}
-            >
-              Usar <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+          <span className="text-xs font-semibold">{box.label}</span>
           {box.ideas.length > 0 ? (
-            box.ideas.map((idea, i) => <p key={i} className="text-sm">{idea}</p>)
+            box.ideas.map((idea, i) => (
+              <div key={i} className="flex items-start justify-between gap-2">
+                <p className="text-sm flex-1">{idea}</p>
+                <Button
+                  size="sm" variant="ghost"
+                  className="h-7 px-2 gap-1 text-primary hover:text-primary shrink-0"
+                  aria-label={`Usar en Content Lab: ${idea}`}
+                  onClick={() => go(box, idea)}
+                >
+                  Usar <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))
           ) : (
             <p className="text-sm text-muted-foreground">(idea sin texto)</p>
           )}
