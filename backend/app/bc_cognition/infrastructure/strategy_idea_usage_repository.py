@@ -37,6 +37,17 @@ def list_idea_usages(supabase: SupabaseService, client_ids: list[str],
     return r.data or []
 
 
+def delete_idea_usage(supabase: SupabaseService, usage_id: str, client_ids: list[str]) -> int:
+    """⚠️ HARD DELETE permanente de UNA idea usada (irreversible · Fase C.3). Borra la fila SOLO si es
+    del cliente (client_id IN client_ids del servidor en el WHERE) → 0 filas si es ajena (sin fuga ·
+    patron DELETE /strategies/{id} · Fase 2). Seguro: strategy_idea_usages no es padre de ningun FK."""
+    if not client_ids:
+        return 0
+    r = supabase.client.table("strategy_idea_usages").delete().eq(
+        "id", usage_id).in_("client_id", client_ids).execute()
+    return len(r.data or [])
+
+
 def archive_idea_usage(supabase: SupabaseService, usage_id: str, client_ids: list[str]) -> int:
     """Archiva UNA idea usada (setea archived_at = now → pasa de Usadas a Archivadas). Idempotente
     (re-archivar re-setea). Ownership en el WHERE (client_id IN client_ids del servidor) → 0 filas si

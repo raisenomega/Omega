@@ -56,3 +56,14 @@ async def archive_idea(usage_id: str,
     if n == 0:
         raise HTTPException(status_code=404, detail="idea_usage_not_found")
     return {"archived": True, "id": usage_id}
+
+
+@router.delete("/used-ideas/{usage_id}")
+async def delete_idea(usage_id: str,
+                      authorization: Optional[str] = Header(None)) -> dict[str, object]:
+    user = await get_current_user(authorization)
+    client_ids = reader.get_accessible_client_ids(user["id"])
+    n = usages.delete_idea_usage(get_supabase_service(), usage_id, client_ids)
+    if n == 0:
+        raise HTTPException(status_code=404, detail="idea_usage_not_found")
+    return {"deleted": True, "id": usage_id}
