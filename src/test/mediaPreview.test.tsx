@@ -57,9 +57,9 @@ describe("MediaCard · click en thumbnail → preview modal (C3)", () => {
     expect(video.getAttribute("src")).toBe("https://pub/clip.mp4");  // url limpia, sin #t
   });
 
-  it("test_ver_no_abre_preview · click en [Ver] abre el menú, NO el preview", () => {
+  it("test_menu_no_abre_preview · click en ⋮ (más opciones) abre el menú, NO el preview", () => {
     render(<MediaCard file={IMG} publicUrl="https://pub/foto.png" onDelete={() => {}} />);
-    fireEvent.click(screen.getByRole("button", { name: /ver/i }));   // franja inferior
-    expect(screen.queryByRole("dialog")).toBeNull();                // zonas separadas
+    fireEvent.click(screen.getByRole("button", { name: /más opciones/i }));   // franja inferior
+    expect(screen.queryByRole("dialog")).toBeNull();                          // zonas separadas
   });
 });

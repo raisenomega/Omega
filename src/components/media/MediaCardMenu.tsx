@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Eye, Copy, Wand2, Download, Trash2 } from "lucide-react";
+import { MoreVertical, Copy, Wand2, Download, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -58,12 +58,12 @@ export function MediaCardMenu({ fileName, publicUrl, isImage, onDelete }: Props)
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          size="sm"
-          className="h-7 px-2 bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+          size="icon"
+          aria-label="Más opciones"
+          className="h-7 w-7 bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
-          <Eye className="h-3.5 w-3.5 mr-1" />
-          Ver
+          <MoreVertical className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>

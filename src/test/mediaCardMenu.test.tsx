@@ -28,15 +28,15 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 function openMenu() {
   // jsdom no implementa PointerEvent.button → Radix abre por teclado de forma fiable.
-  const trigger = screen.getByRole("button", { name: /ver/i });
+  const trigger = screen.getByRole("button", { name: /más opciones/i });
   fireEvent.keyDown(trigger, { key: "Enter" });
   return trigger;
 }
 
-describe("MediaCardMenu · botón [Ver] + mini-menú (C2)", () => {
-  it("test_ver_button · botón [Ver] visible (no hover) con color primary", () => {
+describe("MediaCardMenu · botón ⋮ (más opciones) + mini-menú (C2)", () => {
+  it("test_trigger_button · botón ⋮ visible (aria-label) con color primary", () => {
     render(<MediaCardMenu fileName="foto.png" publicUrl="https://pub/foto.png" isImage onDelete={() => {}} />);
-    const trigger = screen.getByRole("button", { name: /ver/i });
+    const trigger = screen.getByRole("button", { name: /más opciones/i });
     expect(trigger).toBeTruthy();
     expect(trigger.className).toMatch(/bg-primary/);                 // amarillo de marca, no verde
     expect(trigger.className).toMatch(/text-primary-foreground/);
@@ -83,9 +83,9 @@ describe("MediaCardMenu · botón [Ver] + mini-menú (C2)", () => {
 
 describe("MediaCard · ya NO usa overlay hover de acciones (C2)", () => {
   const IMG = { id: "1", name: "foto.png", metadata: { mimetype: "image/png", size: 2048 } };
-  it("test_no_overlay · sin overlay group-hover de acciones, con botón [Ver]", () => {
+  it("test_no_overlay · sin overlay group-hover de acciones, con botón ⋮", () => {
     const { container } = render(<MediaCard file={IMG} publicUrl="https://pub/foto.png" onDelete={() => {}} />);
     expect(container.querySelector('[class*="group-hover:opacity-100"]')).toBeNull();
-    expect(screen.getByRole("button", { name: /ver/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /más opciones/i })).toBeTruthy();
   });
 });
