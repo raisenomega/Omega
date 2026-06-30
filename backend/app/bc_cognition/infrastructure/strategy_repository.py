@@ -48,6 +48,18 @@ def record_use(supabase: SupabaseService, strategy_id: str, last_used: dict[str,
     return len(r.data or [])
 
 
+def get_strategy_owned(supabase: SupabaseService, strategy_id: str,
+                       client_ids: list[str]) -> Optional[dict[str, Any]]:
+    """La estrategia SOLO si pertenece a client_ids (ownership en el WHERE) → None si es ajena (sin
+    fuga). Trae client_id + contenido (para resolver client_id real + contar ideas totales · Fase A)."""
+    if not client_ids:
+        return None
+    r = supabase.client.table("strategies").select("id, client_id, contenido").eq(
+        "id", strategy_id).in_("client_id", client_ids).limit(1).execute()
+    rows = r.data or []
+    return rows[0] if rows else None
+
+
 def delete_strategy(supabase: SupabaseService, strategy_id: str, client_ids: list[str]) -> int:
     """⚠️ HARD DELETE permanente (irreversible). Borra la fila SOLO si pertenece a client_ids
     (ownership en el WHERE · client_ids del servidor · NUNCA del input) → 0 filas si es ajena (sin
