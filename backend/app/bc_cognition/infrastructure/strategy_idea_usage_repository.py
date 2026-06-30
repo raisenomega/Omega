@@ -24,9 +24,11 @@ def count_idea_usages(supabase: SupabaseService, strategy_id: str) -> int:
 
 
 def list_idea_usages(supabase: SupabaseService, client_ids: list[str]) -> list[dict[str, Any]]:
-    """Ideas usadas de los clientes accesibles (Fase B · vista Usadas). Scope client_id en el WHERE."""
+    """Ideas usadas de los clientes accesibles (Fase B · vista Usadas). Scope client_id en el WHERE.
+    Embed strategies(titulo): PostgREST resuelve el FK strategy_id→strategies y anida el titulo de
+    origen ('De: {titulo}') · funciona en cualquier estado de la estrategia · null defensivo si falta."""
     if not client_ids:
         return []
-    r = supabase.client.table("strategy_idea_usages").select("*").in_(
+    r = supabase.client.table("strategy_idea_usages").select("*, strategies(titulo)").in_(
         "client_id", client_ids).order("used_at", desc=True).limit(200).execute()
     return r.data or []
