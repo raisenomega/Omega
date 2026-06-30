@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Archive } from "lucide-react";
 import { PLATFORM_LABELS } from "@/lib/onboarding-constants";
 import { useArchiveIdea } from "@/hooks/useArchiveIdea";
+import { DeleteIdeaButton } from "@/components/strategies/DeleteIdeaButton";
 import type { UsedIdea } from "@/hooks/useUsedIdeas";
 
-// Fase B.2/C.2 · tarjeta de una IDEA usada (no una estrategia): red + texto + "De: {título}".
+// Fase B.2/C.2/C.3 · tarjeta de una IDEA usada (no una estrategia): red + texto + "De: {título}".
 // En Usadas (archived=false): Re-usar + Archivar (PATCH .../archive → la idea pasa a Archivadas).
-// En Archivadas (archived=true): solo lectura · sin botones (Eliminar = C.3). Fallback honesto si
-// falta el título. SIN tipo de post (no existe el dato · decisión del owner).
+// En Archivadas (archived=true): Eliminar (DELETE · con confirm obligatorio · C.3). Fallback honesto
+// si falta el título. SIN tipo de post (no existe el dato · decisión del owner).
 export function IdeaUsageCard({ idea, archived = false }: { idea: UsedIdea; archived?: boolean }) {
   const navigate = useNavigate();
   const archive = useArchiveIdea();
@@ -28,7 +29,9 @@ export function IdeaUsageCard({ idea, archived = false }: { idea: UsedIdea; arch
         <Badge variant="secondary" className="text-[10px]">{red}</Badge>
         {idea.brief && <p className="text-sm line-clamp-4">{idea.brief}</p>}
         <p className="text-[10px] text-muted-foreground line-clamp-1">De: {origen}</p>
-        {!archived && (
+        {archived ? (
+          <DeleteIdeaButton id={idea.id} />
+        ) : (
           <div className="flex gap-1.5">
             <Button size="sm" className="gap-1 h-8 flex-1" onClick={reusar}>
               <Sparkles className="h-3.5 w-3.5" /> Re-usar

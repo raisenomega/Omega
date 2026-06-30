@@ -14,6 +14,7 @@ vi.mock("@/hooks/useBehavioralTracking", () => ({ useTrackOnMount: () => {} }));
 vi.mock("@/contexts/ActiveBusinessContext", () => ({ useActiveBusiness: () => ({ activeBusinessId: "biz1", isReady: true }) }));
 vi.mock("@/hooks/useRecordStrategyUse", () => ({ useRecordStrategyUse: () => ({ mutate: vi.fn() }) }));
 vi.mock("@/hooks/useArchiveIdea", () => ({ useArchiveIdea: () => ({ mutate: vi.fn(), isPending: false }) }));
+vi.mock("@/hooks/useDeleteIdea", () => ({ useDeleteIdea: () => ({ mutate: vi.fn(), isPending: false }) }));
 vi.mock("@/hooks/useUsedIdeas", () => ({ useUsedIdeas: (_b: string, archived = false) => ({ data: archived ? archivedIdeas.current : ideas.current, isLoading: false, isError: false }) }));
 vi.mock("@/hooks/useStrategies", () => ({
   useStrategiesList: (estado: string) => {
