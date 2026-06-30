@@ -10,6 +10,7 @@ const navigateSpy = vi.fn();
 
 vi.mock("react-router-dom", () => ({ useNavigate: () => navigateSpy }));
 vi.mock("@/hooks/useRecordStrategyUse", () => ({ useRecordStrategyUse: () => ({ mutate: vi.fn() }) }));
+vi.mock("@/hooks/useArchiveIdea", () => ({ useArchiveIdea: () => ({ mutate: vi.fn(), isPending: false }) }));
 vi.mock("@/hooks/useUsedIdeas", () => ({ useUsedIdeas: () => ({ data: [], isLoading: false, isError: false, refetch: vi.fn() }) }));
 vi.mock("@/contexts/ARIAContext", () => ({ useARIA: () => ({ openARIAWith: vi.fn() }) }));
 vi.mock("@/hooks/useBehavioralTracking", () => ({ useTrackOnMount: () => {} }));
@@ -59,10 +60,11 @@ describe("Estrategias · chips de estado + vista usadas", () => {
     expect(screen.queryByRole("button", { name: /archivar/i })).toBeNull();
   });
 
-  it("test_archivadas_en_chip · 'Archivadas' las muestra (ya no en acordeon Historial)", () => {
+  it("test_archivadas_ideas · 'Archivadas' ahora muestra IDEAS archivadas, no estrategias (C.2)", () => {
     render(<Strategies />);
     expect(screen.queryByText(/Historial/i)).toBeNull();        // acordeon eliminado
     fireEvent.click(chip(/archivadas/i));
-    expect(screen.getByText("T-archived")).toBeTruthy();
+    expect(screen.queryByText("T-archived")).toBeNull();        // ya no muestra estrategias archivadas
+    expect(screen.getByText(/no hay ideas/i)).toBeTruthy();     // vista de ideas (mock vacio → empty)
   });
 });

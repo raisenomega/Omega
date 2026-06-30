@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Loader2, AlertCircle, Lightbulb, Sparkles } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Loader2, Lightbulb, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
@@ -8,6 +7,7 @@ import { useStrategiesList, useGenerateStrategy } from "@/hooks/useStrategies";
 import { useUsedIdeas } from "@/hooks/useUsedIdeas";
 import { StrategyCard } from "@/components/strategies/StrategyCard";
 import { IdeaUsageCard } from "@/components/strategies/IdeaUsageCard";
+import { StrategiesGrid } from "@/components/strategies/StrategiesGrid";
 import { PackOfStrategiesModal } from "@/components/strategies/PackOfStrategiesModal";
 import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -25,28 +25,30 @@ const CHIPS = [
 const EMPTY: Record<Estado, string> = {
   active: 'Tocá "Generar estrategia" y ARIA preparará una con tu contexto.',
   used: "Aún no has usado ideas de tus estrategias. Usá la flecha de una idea y aparecerá acá.",
-  archived: "Las estrategias que archives aparecerán acá.",
+  archived: "Las ideas que archives desde Usadas aparecerán acá.",
 };
 
 export default function Strategies() {
   const [estado, setEstado] = useState<Estado>("active");
   const { activeBusinessId, isReady } = useActiveBusiness();
   const list = useStrategiesList(estado);
-  const usedIdeas = useUsedIdeas(activeBusinessId);          // Usadas = ideas sueltas (fuente distinta)
+  const usedIdeas = useUsedIdeas(activeBusinessId, false);    // Usadas + contador de Activas
+  const archivedIdeas = useUsedIdeas(activeBusinessId, true); // Archivadas (ideas archivadas · C.2)
   const generate = useGenerateStrategy();
   const [packOpen, setPackOpen] = useState(false);
   useTrackOnMount("feature_open", { feature: "strategies" });
 
-  // Usadas usa una fuente distinta (ideas sueltas) · Activas/Archivadas siguen con estrategias.
-  const isUsed = estado === "used";
+  // Activas = estrategias (StrategyCard) · Usadas/Archivadas = ideas sueltas (IdeaUsageCard · C.2).
+  const isIdeaChip = estado !== "active";
   const items = (list.data?.items ?? []).filter((s) => s.client_id === activeBusinessId);
-  const ideas = usedIdeas.data ?? [];
-  // Activas (C.1): idx de ideas usadas por estrategia → contador "quedan" + ocultar usadas del modal.
+  const ideaQuery = estado === "archived" ? archivedIdeas : usedIdeas;
+  const viewIdeas = ideaQuery.data ?? [];
+  // Activas (C.1): idx de ideas usadas (NO archivadas) por estrategia → contador "quedan" + ocultar usadas del modal.
   const usedIdxByStrategy: Record<string, number[]> = {};
-  ideas.forEach((i) => { (usedIdxByStrategy[i.strategy_id] ??= []).push(i.idea_idx); });
-  const loading = isUsed ? usedIdeas.isLoading : list.isLoading;
-  const isError = isUsed ? usedIdeas.isError : list.isError;
-  const empty = isUsed ? ideas.length === 0 : items.length === 0;
+  (usedIdeas.data ?? []).forEach((i) => { (usedIdxByStrategy[i.strategy_id] ??= []).push(i.idea_idx); });
+  const loading = isIdeaChip ? ideaQuery.isLoading : list.isLoading;
+  const isError = isIdeaChip ? ideaQuery.isError : list.isError;
+  const empty = isIdeaChip ? viewIdeas.length === 0 : items.length === 0;
 
   if (!isReady) return null;
   if (!activeBusinessId) return <EmptyState feature="Estrategias" />;
@@ -71,28 +73,17 @@ export default function Strategies() {
 
       <FilterChips items={CHIPS} active={estado} onSelect={(id) => setEstado(id as Estado)} />
 
-      {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-      ) : isError ? (
-        <Card><CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-          <AlertCircle className="h-10 w-10 text-destructive" />
-          <p className="text-sm font-medium">No se pudieron cargar las estrategias</p>
-          <Button size="sm" variant="outline" onClick={() => (isUsed ? usedIdeas.refetch() : list.refetch())}>Reintentar</Button>
-        </CardContent></Card>
-      ) : empty ? (
-        <Card><CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-          <Lightbulb className="h-10 w-10 text-muted-foreground/30" />
-          <p className="text-sm font-medium">{isUsed ? "Todavía no hay ideas usadas" : "Todavía no hay estrategias"}</p>
-          <p className="text-xs text-muted-foreground">{EMPTY[estado]}</p>
-        </CardContent></Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {isUsed
-            ? ideas.map((idea) => <IdeaUsageCard key={idea.id} idea={idea} />)
-            : items.map((s) => <StrategyCard key={s.id} strategy={s} variant={estado}
-                usedCount={(usedIdxByStrategy[s.id] ?? []).length} usedIdxs={usedIdxByStrategy[s.id] ?? []} />)}
-        </div>
-      )}
+      <StrategiesGrid
+        loading={loading} isError={isError} empty={empty}
+        emptyTitle={isIdeaChip ? "Todavía no hay ideas acá" : "Todavía no hay estrategias"}
+        emptyMsg={EMPTY[estado]}
+        onRetry={() => (isIdeaChip ? ideaQuery.refetch() : list.refetch())}
+      >
+        {isIdeaChip
+          ? viewIdeas.map((idea) => <IdeaUsageCard key={idea.id} idea={idea} archived={estado === "archived"} />)
+          : items.map((s) => <StrategyCard key={s.id} strategy={s} variant={estado}
+              usedCount={(usedIdxByStrategy[s.id] ?? []).length} usedIdxs={usedIdxByStrategy[s.id] ?? []} />)}
+      </StrategiesGrid>
 
       <PackOfStrategiesModal open={packOpen} onClose={() => setPackOpen(false)} />
     </div>

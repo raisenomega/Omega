@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 
-const { listSpy, ideas } = vi.hoisted(() => ({ listSpy: vi.fn(), ideas: { current: [] as unknown[] } }));
+const { listSpy, ideas, archivedIdeas } = vi.hoisted(() => ({ listSpy: vi.fn(), ideas: { current: [] as unknown[] }, archivedIdeas: { current: [] as unknown[] } }));
 const navigateSpy = vi.fn();
 
 vi.mock("react-router-dom", () => ({ useNavigate: () => navigateSpy }));
@@ -13,7 +13,8 @@ vi.mock("@/contexts/ARIAContext", () => ({ useARIA: () => ({ openARIAWith: vi.fn
 vi.mock("@/hooks/useBehavioralTracking", () => ({ useTrackOnMount: () => {} }));
 vi.mock("@/contexts/ActiveBusinessContext", () => ({ useActiveBusiness: () => ({ activeBusinessId: "biz1", isReady: true }) }));
 vi.mock("@/hooks/useRecordStrategyUse", () => ({ useRecordStrategyUse: () => ({ mutate: vi.fn() }) }));
-vi.mock("@/hooks/useUsedIdeas", () => ({ useUsedIdeas: () => ({ data: ideas.current, isLoading: false, isError: false }) }));
+vi.mock("@/hooks/useArchiveIdea", () => ({ useArchiveIdea: () => ({ mutate: vi.fn(), isPending: false }) }));
+vi.mock("@/hooks/useUsedIdeas", () => ({ useUsedIdeas: (_b: string, archived = false) => ({ data: archived ? archivedIdeas.current : ideas.current, isLoading: false, isError: false }) }));
 vi.mock("@/hooks/useStrategies", () => ({
   useStrategiesList: (estado: string) => {
     listSpy(estado);
@@ -28,7 +29,7 @@ import Strategies from "@/pages/Strategies";
 
 const mkIdea = (extra = {}) => ({ id: "u1", strategy_id: "s1", client_id: "biz1", idea_idx: 0, platform: "instagram", brief: "texto de la idea", used_at: "2026-06-10T00:00:00Z", strategies: { titulo: "Mi estrategia" }, ...extra });
 
-beforeEach(() => { vi.clearAllMocks(); ideas.current = []; });
+beforeEach(() => { vi.clearAllMocks(); ideas.current = []; archivedIdeas.current = []; });
 afterEach(cleanup);
 
 const chip = (name: RegExp) => screen.getByRole("button", { name });
@@ -63,6 +64,14 @@ describe("Estrategias Fase B.2 · Usadas = ideas sueltas", () => {
     render(<Strategies />);
     expect(screen.getByText("T-active")).toBeTruthy();
     expect(screen.queryByRole("button", { name: /^usar$/i })).toBeNull();   // C.1 · tarjeta activa sin acciones
+  });
+
+  it("test_archivadas_muestra_ideas · chip Archivadas → ideas archivadas (C.2 · no estrategias)", () => {
+    archivedIdeas.current = [mkIdea({ id: "a1", brief: "idea archivada" })];
+    render(<Strategies />);
+    fireEvent.click(chip(/archivadas/i));
+    expect(screen.getByText("idea archivada")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /archivar/i })).toBeNull();   // archived → sin botones
   });
 
   it("test_usadas_empty · sin ideas usadas → empty state honesto", () => {

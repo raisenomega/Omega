@@ -17,10 +17,12 @@ export interface UsedIdea {
 
 interface UsedIdeasResult { items: UsedIdea[] }
 
-export function useUsedIdeas(businessId: string | null) {
+// archived=false → Usadas (archived_at IS NULL) · true → Archivadas (Fase C.2). queryKey distinta por
+// flag → cache separada y la mutacion de archivar (invalida ["used_ideas"]) refresca ambos filtros.
+export function useUsedIdeas(businessId: string | null, archived = false) {
   return useQuery({
-    queryKey: ["used_ideas", businessId],
-    queryFn: () => apiGet<UsedIdeasResult>("/strategies/used-ideas"),
+    queryKey: ["used_ideas", businessId, archived],
+    queryFn: () => apiGet<UsedIdeasResult>(`/strategies/used-ideas?archived=${archived}`),
     enabled: !!businessId,
     select: (data): UsedIdea[] => (data.items ?? []).filter((i) => i.client_id === businessId),
     retry: 1,
