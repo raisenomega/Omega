@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from "vite
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 
 vi.mock("@/hooks/useBehavioralTracking", () => ({ useTrackOnMount: () => {} }));
+vi.mock("@/hooks/useUsedIdeas", () => ({ useUsedIdeas: () => ({ data: [], isLoading: false, isError: false, refetch: vi.fn() }) }));
 vi.mock("@/contexts/ActiveBusinessContext", () => ({
   useActiveBusiness: () => ({ activeBusinessId: "biz1", isReady: true }),
 }));

@@ -12,6 +12,8 @@ const setStatusSpy = vi.fn();
 vi.mock("@/hooks/useStrategies", () => ({ useSetStrategyStatus: () => ({ mutate: setStatusSpy, isPending: false }) }));
 const recordUseSpy = vi.fn();
 vi.mock("@/hooks/useRecordStrategyUse", () => ({ useRecordStrategyUse: () => ({ mutate: recordUseSpy }) }));
+const recordIdeaSpy = vi.fn();
+vi.mock("@/hooks/useRecordIdeaUse", () => ({ useRecordIdeaUse: () => ({ mutate: recordIdeaSpy }) }));
 vi.mock("@/contexts/ARIAContext", () => ({ useARIA: () => ({ openARIAWith: vi.fn() }) }));
 
 import { StrategyIdeaBoxes } from "@/components/strategies/StrategyIdeaBoxes";
@@ -71,11 +73,11 @@ describe("StrategyIdeaBoxes · agrupacion visual por red + 1 flecha por idea (Fa
     expect(navigateSpy).toHaveBeenCalledTimes(1);           // solo esa idea (no las otras)
   });
 
-  it("test_flecha_no_consume · Fase 0: la flecha registra via /use con mark_used=FALSE (NO consume · NO /status)", () => {
+  it("test_flecha_registra_idea · B.3: la flecha registra via /use-idea (idx 0) · NO /status", () => {
     render(<StrategyIdeaBoxes strategyId="s1" posts={[{ plataforma: "Instagram", idea: "x" }]} />);
     fireEvent.click(arrows()[0]);
-    expect(recordUseSpy).toHaveBeenCalledWith({ id: "s1", platform: "instagram", brief: "x", mark_used: false });
-    expect(setStatusSpy).not.toHaveBeenCalled();            // el uso pasa por /use, no por /status
+    expect(recordIdeaSpy).toHaveBeenCalledWith({ id: "s1", idea_idx: 0, platform: "instagram", brief: "x" });
+    expect(setStatusSpy).not.toHaveBeenCalled();            // el uso pasa por /use-idea, no por /status
   });
 });
 

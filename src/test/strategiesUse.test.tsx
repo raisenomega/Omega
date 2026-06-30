@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-// ARCO MEDICION CAPA 1 · Commit 2 (frontend) · wire POST /strategies/{id}/use + pinta lo usado.
-// REDISEÑO Fase 0: la flecha de una idea ahora mark_used=FALSE (NO consume · la estrategia sigue en
-// Activas). El boton "Usar" completa guarda platform="completa" + mark_used=TRUE (sin cambio). La
-// tarjeta usada muestra last_used.brief + "Re-usar". best-effort: /use NUNCA rompe la navegacion.
+// CAPA 1 / REDISEÑO · la tarjeta usada pinta lo usado (last_used) y el boton "Usar" completa llama
+// /use (useRecordStrategyUse · platform="completa" · mark_used=TRUE). REDISEÑO B.3: la flecha de una
+// idea ahora llama /use-idea (useRecordIdeaUse · idx + platform + brief), NO el /use viejo. best-
+// effort: el registro NUNCA rompe la navegacion.
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 
@@ -10,6 +10,8 @@ const navigateSpy = vi.fn();
 vi.mock("react-router-dom", () => ({ useNavigate: () => navigateSpy }));
 const recordUseMutate = vi.fn();
 vi.mock("@/hooks/useRecordStrategyUse", () => ({ useRecordStrategyUse: () => ({ mutate: recordUseMutate }) }));
+const recordIdeaMutate = vi.fn();
+vi.mock("@/hooks/useRecordIdeaUse", () => ({ useRecordIdeaUse: () => ({ mutate: recordIdeaMutate }) }));
 vi.mock("@/contexts/ARIAContext", () => ({ useARIA: () => ({ openARIAWith: vi.fn() }) }));
 vi.mock("@/hooks/useStrategies", () => ({ useSetStrategyStatus: () => ({ mutate: vi.fn(), isPending: false }) }));
 
@@ -27,10 +29,10 @@ beforeEach(() => vi.clearAllMocks());
 afterEach(cleanup);
 
 describe("CAPA 1 Commit 2 · flecha + Usar llaman /use", () => {
-  it("test_flecha_llama_use · flecha de idea → /use {platform:instagram, brief, mark_used:FALSE}", () => {
+  it("test_flecha_llama_use_idea · flecha de idea → /use-idea {idea_idx:0, platform, brief}", () => {
     render(<StrategyIdeaBoxes strategyId="s1" posts={[{ plataforma: "Instagram", idea: "idea-ig" }]} />);
     fireEvent.click(screen.getByRole("button", { name: /idea-ig/i }));
-    expect(recordUseMutate).toHaveBeenCalledWith({ id: "s1", platform: "instagram", brief: "idea-ig", mark_used: false });
+    expect(recordIdeaMutate).toHaveBeenCalledWith({ id: "s1", idea_idx: 0, platform: "instagram", brief: "idea-ig" });
   });
 
   it("test_flecha_navega_igual · la navegacion a Content Lab ocurre (best-effort)", () => {
@@ -39,8 +41,8 @@ describe("CAPA 1 Commit 2 · flecha + Usar llaman /use", () => {
     expect(navigateSpy).toHaveBeenCalledWith("/content-lab", { state: { brief: "idea-ig", platform: "instagram" } });
   });
 
-  it("test_flecha_use_falla_navega · si /use lanza → la navegacion IGUAL ocurre", () => {
-    recordUseMutate.mockImplementationOnce(() => { throw new Error("use failed"); });
+  it("test_flecha_use_falla_navega · si /use-idea lanza → la navegacion IGUAL ocurre", () => {
+    recordIdeaMutate.mockImplementationOnce(() => { throw new Error("use failed"); });
     render(<StrategyIdeaBoxes strategyId="s1" posts={[{ plataforma: "Instagram", idea: "idea-ig" }]} />);
     fireEvent.click(screen.getByRole("button", { name: /idea-ig/i }));
     expect(navigateSpy).toHaveBeenCalledWith("/content-lab", { state: { brief: "idea-ig", platform: "instagram" } });

@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
-// Estrategias · vista "usadas" con chips de estado (Activas/Usadas/Archivadas · FilterChips).
-// Resuelve el dolor: las estrategias que desaparecen al "Usar" se recuperan. Cero backend (el
-// endpoint ya sirve estado=used · confirmado en la sonda). Una usada: badge "Usada" + used_at +
-// solo "Usar" (re-usar, idempotente). Reemplaza el acordeon "Historial".
+// Estrategias · chips de estado (Activas/Usadas/Archivadas · FilterChips) + Activas/Archivadas con
+// StrategyCard. ⚠️ La vista de Usadas (ahora IDEAS sueltas · Fase B.2) se prueba en
+// strategiesUsedIdeas.test.tsx; aquí solo cubrimos los chips y que Activas/Archivadas no regresionen.
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 
@@ -11,6 +10,7 @@ const navigateSpy = vi.fn();
 
 vi.mock("react-router-dom", () => ({ useNavigate: () => navigateSpy }));
 vi.mock("@/hooks/useRecordStrategyUse", () => ({ useRecordStrategyUse: () => ({ mutate: vi.fn() }) }));
+vi.mock("@/hooks/useUsedIdeas", () => ({ useUsedIdeas: () => ({ data: [], isLoading: false, isError: false, refetch: vi.fn() }) }));
 vi.mock("@/contexts/ARIAContext", () => ({ useARIA: () => ({ openARIAWith: vi.fn() }) }));
 vi.mock("@/hooks/useBehavioralTracking", () => ({ useTrackOnMount: () => {} }));
 vi.mock("@/contexts/ActiveBusinessContext", () => ({
@@ -49,34 +49,6 @@ describe("Estrategias · chips de estado + vista usadas", () => {
     expect(chip(/activas/i)).toBeTruthy();
     expect(chip(/usadas/i)).toBeTruthy();
     expect(chip(/archivadas/i)).toBeTruthy();
-  });
-
-  it("test_chip_usadas_query · click Usadas → useStrategiesList con estado='used'", () => {
-    render(<Strategies />);
-    fireEvent.click(chip(/usadas/i));
-    expect(listSpy).toHaveBeenCalledWith("used");
-  });
-
-  it("test_card_usada_badge · una usada muestra badge 'Usada' + su used_at", () => {
-    render(<Strategies />);
-    fireEvent.click(chip(/usadas/i));
-    expect(screen.getByText("Usada")).toBeTruthy();
-    expect(screen.getByText(/10 jun/i)).toBeTruthy();           // used_at formateado (≠ created_at 01 jun)
-  });
-
-  it("test_card_usada_reusar_archivar · una usada muestra 'Re-usar' + 'Archivar' (no Ajuste)", () => {
-    render(<Strategies />);
-    fireEvent.click(chip(/usadas/i));
-    expect(screen.getByRole("button", { name: /re-?usar/i })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /archivar/i })).toBeTruthy();   // Fase 1 Commit A
-    expect(screen.queryByRole("button", { name: /ajuste/i })).toBeNull();      // Ajuste sigue solo en Activas
-  });
-
-  it("test_reusar · 'Re-usar' en una usada → re-navega a Content Lab (re-uso · sin last_used → fallback resumen)", () => {
-    render(<Strategies />);
-    fireEvent.click(chip(/usadas/i));
-    fireEvent.click(screen.getByRole("button", { name: /re-?usar/i }));
-    expect(navigateSpy).toHaveBeenCalledWith("/content-lab", { state: { brief: expect.stringContaining("T-used") } });
   });
 
   it("test_activas_intactas · 'Activas' (default) muestra activas con todas las acciones", () => {

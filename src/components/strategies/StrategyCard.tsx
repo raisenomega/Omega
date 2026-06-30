@@ -13,10 +13,12 @@ function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString("es", { day: "2-digit", month: "short" });
 }
 
-export function StrategyCard({ strategy, variant = "active" }: { strategy: Strategy; variant?: Variant }) {
+export function StrategyCard({ strategy, variant = "active", usedCount = 0 }: { strategy: Strategy; variant?: Variant; usedCount?: number }) {
   const c = strategy.contenido || {};
   const [open, setOpen] = useState(false);
   const lu = strategy.last_used;
+  // Fase B.3 · contador "X de N ideas usadas" en Activas (N = total de ideas · X = usadas de ESTA estrategia).
+  const totalIdeas = Array.isArray(c.posts_sugeridos) ? c.posts_sugeridos.length : 0;
   // CAPA 1 · en Usadas pintamos lo que se USO de verdad (last_used.brief). Fallback al resumen si
   // last_used es null (estrategias marcadas usadas antes del arco · honesto: no se registro el detalle).
   const showUsed = variant === "used" && !!lu?.brief;
@@ -53,6 +55,9 @@ export function StrategyCard({ strategy, variant = "active" }: { strategy: Strat
                 <Badge key={`${p}-${i}`} variant="secondary" className="text-[10px]">{p}</Badge>
               ))}
             </div>
+          )}
+          {variant === "active" && totalIdeas > 0 && (
+            <p className="text-[10px] text-muted-foreground">{usedCount} de {totalIdeas} ideas usadas</p>
           )}
         </div>
         {/* Archivadas = solo lectura. Activas = todas las acciones. Usadas = solo "Usar" (re-usar). */}

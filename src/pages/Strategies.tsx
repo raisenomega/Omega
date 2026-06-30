@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { useTrackOnMount } from "@/hooks/useBehavioralTracking";
 import { useStrategiesList, useGenerateStrategy } from "@/hooks/useStrategies";
+import { useUsedIdeas } from "@/hooks/useUsedIdeas";
 import { StrategyCard } from "@/components/strategies/StrategyCard";
+import { IdeaUsageCard } from "@/components/strategies/IdeaUsageCard";
 import { PackOfStrategiesModal } from "@/components/strategies/PackOfStrategiesModal";
 import { useActiveBusiness } from "@/contexts/ActiveBusinessContext";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -22,19 +24,29 @@ const CHIPS = [
 ];
 const EMPTY: Record<Estado, string> = {
   active: 'Tocá "Generar estrategia" y ARIA preparará una con tu contexto.',
-  used: "Las estrategias que uses aparecerán acá · podés volver a usarlas.",
+  used: "Aún no has usado ideas de tus estrategias. Usá la flecha de una idea y aparecerá acá.",
   archived: "Las estrategias que archives aparecerán acá.",
 };
 
 export default function Strategies() {
   const [estado, setEstado] = useState<Estado>("active");
+  const { activeBusinessId, isReady } = useActiveBusiness();
   const list = useStrategiesList(estado);
+  const usedIdeas = useUsedIdeas(activeBusinessId);          // Usadas = ideas sueltas (fuente distinta)
   const generate = useGenerateStrategy();
   const [packOpen, setPackOpen] = useState(false);
   useTrackOnMount("feature_open", { feature: "strategies" });
-  const { activeBusinessId, isReady } = useActiveBusiness();
 
+  // Usadas usa una fuente distinta (ideas sueltas) · Activas/Archivadas siguen con estrategias.
+  const isUsed = estado === "used";
   const items = (list.data?.items ?? []).filter((s) => s.client_id === activeBusinessId);
+  const ideas = usedIdeas.data ?? [];
+  // Contador "X de N" en Activas: cuántas ideas usadas por estrategia (mapa strategy_id → count).
+  const usedByStrategy: Record<string, number> = {};
+  ideas.forEach((i) => { usedByStrategy[i.strategy_id] = (usedByStrategy[i.strategy_id] ?? 0) + 1; });
+  const loading = isUsed ? usedIdeas.isLoading : list.isLoading;
+  const isError = isUsed ? usedIdeas.isError : list.isError;
+  const empty = isUsed ? ideas.length === 0 : items.length === 0;
 
   if (!isReady) return null;
   if (!activeBusinessId) return <EmptyState feature="Estrategias" />;
@@ -59,23 +71,25 @@ export default function Strategies() {
 
       <FilterChips items={CHIPS} active={estado} onSelect={(id) => setEstado(id as Estado)} />
 
-      {list.isLoading ? (
+      {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-      ) : list.isError ? (
+      ) : isError ? (
         <Card><CardContent className="flex flex-col items-center gap-3 py-10 text-center">
           <AlertCircle className="h-10 w-10 text-destructive" />
           <p className="text-sm font-medium">No se pudieron cargar las estrategias</p>
-          <Button size="sm" variant="outline" onClick={() => list.refetch()}>Reintentar</Button>
+          <Button size="sm" variant="outline" onClick={() => (isUsed ? usedIdeas.refetch() : list.refetch())}>Reintentar</Button>
         </CardContent></Card>
-      ) : items.length === 0 ? (
+      ) : empty ? (
         <Card><CardContent className="flex flex-col items-center gap-3 py-10 text-center">
           <Lightbulb className="h-10 w-10 text-muted-foreground/30" />
-          <p className="text-sm font-medium">Todavía no hay estrategias</p>
+          <p className="text-sm font-medium">{isUsed ? "Todavía no hay ideas usadas" : "Todavía no hay estrategias"}</p>
           <p className="text-xs text-muted-foreground">{EMPTY[estado]}</p>
         </CardContent></Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {items.map((s) => <StrategyCard key={s.id} strategy={s} variant={estado} />)}
+          {isUsed
+            ? ideas.map((idea) => <IdeaUsageCard key={idea.id} idea={idea} />)
+            : items.map((s) => <StrategyCard key={s.id} strategy={s} variant={estado} usedCount={usedByStrategy[s.id] ?? 0} />)}
         </div>
       )}
 

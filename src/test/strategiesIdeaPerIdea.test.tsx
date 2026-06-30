@@ -1,15 +1,14 @@
 // @vitest-environment jsdom
-// REDISEÑO ESTRATEGIAS · FASE 0 · "la idea es la unidad": el modal agrupa por red (encabezado)
+// REDISEÑO ESTRATEGIAS · FASE 0/B.3 · "la idea es la unidad": el modal agrupa por red (encabezado)
 // PERO cada idea tiene su PROPIA flecha (no una por red que manda todas juntas). La flecha manda
-// SOLO esa idea + mark_used:FALSE → NO consume la estrategia (sigue en Activas con sus demas ideas).
-// Solo frontend · revierte la decision del Commit 2 (la flecha ya no flipa a used).
+// SOLO esa idea + la registra via /use-idea (B.3 · idx correcto). Solo frontend.
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 
 const navigateSpy = vi.fn();
 vi.mock("react-router-dom", () => ({ useNavigate: () => navigateSpy }));
-const recordUseSpy = vi.fn();
-vi.mock("@/hooks/useRecordStrategyUse", () => ({ useRecordStrategyUse: () => ({ mutate: recordUseSpy }) }));
+const recordIdeaSpy = vi.fn();
+vi.mock("@/hooks/useRecordIdeaUse", () => ({ useRecordIdeaUse: () => ({ mutate: recordIdeaSpy }) }));
 
 import { StrategyIdeaBoxes } from "@/components/strategies/StrategyIdeaBoxes";
 
@@ -37,10 +36,10 @@ describe("Estrategias Fase 0 · modal por-idea + flecha no consume", () => {
     expect(navigateSpy).toHaveBeenCalledWith("/content-lab", { state: { brief: "idea-ig-2", platform: "instagram" } });
   });
 
-  it("test_flecha_no_consume · flecha → /use con mark_used:FALSE (la estrategia NO va a used)", () => {
+  it("test_flecha_registra_idea · flecha → /use-idea con el idx correcto (idea-ig-2 = idx 1)", () => {
     render(<StrategyIdeaBoxes strategyId="s1" posts={POSTS} />);
     fireEvent.click(screen.getByRole("button", { name: /idea-ig-2/i }));
-    expect(recordUseSpy).toHaveBeenCalledWith({ id: "s1", platform: "instagram", brief: "idea-ig-2", mark_used: false });
+    expect(recordIdeaSpy).toHaveBeenCalledWith({ id: "s1", idea_idx: 1, platform: "instagram", brief: "idea-ig-2" });
   });
 
   it("test_agrupacion_visual · las ideas siguen agrupadas bajo su red (un solo encabezado por red)", () => {
@@ -49,8 +48,8 @@ describe("Estrategias Fase 0 · modal por-idea + flecha no consume", () => {
     expect(screen.getByText("TikTok")).toBeTruthy();
   });
 
-  it("test_navega_igual · la navegacion ocurre aunque /use lance (best-effort)", () => {
-    recordUseSpy.mockImplementationOnce(() => { throw new Error("use failed"); });
+  it("test_navega_igual · la navegacion ocurre aunque /use-idea lance (best-effort)", () => {
+    recordIdeaSpy.mockImplementationOnce(() => { throw new Error("use failed"); });
     render(<StrategyIdeaBoxes strategyId="s1" posts={POSTS} />);
     fireEvent.click(screen.getByRole("button", { name: /idea-tt-1/i }));
     expect(navigateSpy).toHaveBeenCalledWith("/content-lab", { state: { brief: "idea-tt-1", platform: "tiktok" } });
