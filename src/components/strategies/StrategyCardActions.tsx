@@ -27,15 +27,29 @@ export function StrategyCardActions({ strategy, variant = "active" }: { strategy
     navigate("/content-lab", { state: { brief, ...(valid ? { platform } : {}) } });
   };
 
+  // Archivar (PATCH /status existente) · disponible en Activas y Usadas → mueve a Archivadas.
+  const archiveBtn = (
+    <Button
+      size="sm" variant="ghost" className="gap-1 h-8 text-muted-foreground hover:text-destructive"
+      disabled={setStatus.isPending}
+      onClick={() => setStatus.mutate({ id: strategy.id, estado: "archived" })}
+    >
+      <Archive className="h-3.5 w-3.5" /> Archivar
+    </Button>
+  );
+
   return (
     <div className="flex flex-wrap gap-1.5 pt-1">
       {variant === "used" ? (
-        <Button
-          size="sm" className="gap-1 h-8 flex-1"
-          onClick={() => go(strategy.last_used?.platform || "completa", strategy.last_used?.brief || briefFrom(strategy))}
-        >
-          <Sparkles className="h-3.5 w-3.5" /> Re-usar
-        </Button>
+        <>
+          <Button
+            size="sm" className="gap-1 h-8 flex-1"
+            onClick={() => go(strategy.last_used?.platform || "completa", strategy.last_used?.brief || briefFrom(strategy))}
+          >
+            <Sparkles className="h-3.5 w-3.5" /> Re-usar
+          </Button>
+          {archiveBtn}
+        </>
       ) : (
         <>
           <Button size="sm" className="gap-1 h-8 flex-1" onClick={() => go("completa", briefFrom(strategy))}>
@@ -47,13 +61,7 @@ export function StrategyCardActions({ strategy, variant = "active" }: { strategy
           >
             <MessageCircle className="h-3.5 w-3.5" /> Ajuste
           </Button>
-          <Button
-            size="sm" variant="ghost" className="gap-1 h-8 text-muted-foreground hover:text-destructive"
-            disabled={setStatus.isPending}
-            onClick={() => setStatus.mutate({ id: strategy.id, estado: "archived" })}
-          >
-            <Archive className="h-3.5 w-3.5" /> Archivar
-          </Button>
+          {archiveBtn}
         </>
       )}
     </div>

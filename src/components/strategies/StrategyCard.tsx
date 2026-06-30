@@ -45,7 +45,9 @@ export function StrategyCard({ strategy, variant = "active" }: { strategy: Strat
           ) : (
             c.resumen && <p className="text-sm text-muted-foreground line-clamp-3">{c.resumen}</p>
           )}
-          {Array.isArray(c.pilares) && c.pilares.length > 0 && (
+          {/* En Usadas con detalle (showUsed) mostramos SOLO el cuadro de lo usado · sin pilares.
+              Usada sin last_used (fallback CAPA 1) y activas/archivadas → conservan los pilares. */}
+          {!showUsed && Array.isArray(c.pilares) && c.pilares.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {c.pilares.slice(0, 4).map((p, i) => (
                 <Badge key={`${p}-${i}`} variant="secondary" className="text-[10px]">{p}</Badge>

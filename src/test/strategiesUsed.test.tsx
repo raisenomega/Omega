@@ -64,12 +64,12 @@ describe("Estrategias · chips de estado + vista usadas", () => {
     expect(screen.getByText(/10 jun/i)).toBeTruthy();           // used_at formateado (≠ created_at 01 jun)
   });
 
-  it("test_card_usada_solo_reusar · una usada muestra SOLO 'Re-usar' (no Ajuste/Archivar)", () => {
+  it("test_card_usada_reusar_archivar · una usada muestra 'Re-usar' + 'Archivar' (no Ajuste)", () => {
     render(<Strategies />);
     fireEvent.click(chip(/usadas/i));
     expect(screen.getByRole("button", { name: /re-?usar/i })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: /ajuste/i })).toBeNull();
-    expect(screen.queryByRole("button", { name: /archivar/i })).toBeNull();
+    expect(screen.getByRole("button", { name: /archivar/i })).toBeTruthy();   // Fase 1 Commit A
+    expect(screen.queryByRole("button", { name: /ajuste/i })).toBeNull();      // Ajuste sigue solo en Activas
   });
 
   it("test_reusar · 'Re-usar' en una usada → re-navega a Content Lab (re-uso · sin last_used → fallback resumen)", () => {
