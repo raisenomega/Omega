@@ -41,10 +41,15 @@ export function buildBoxes(posts: IdeaPost[]): Box[] {
   return [...map.values()];
 }
 
-export function StrategyIdeaBoxes({ strategyId, posts }: { strategyId: string; posts: IdeaPost[] }) {
+export function StrategyIdeaBoxes({ strategyId, posts, usedIdxs = [] }: { strategyId: string; posts: IdeaPost[]; usedIdxs?: number[] }) {
   const navigate = useNavigate();
   const recordIdea = useRecordIdeaUse();
-  const boxes = buildBoxes(Array.isArray(posts) ? posts : []);
+  // Fase C.1 · ocultar las ideas YA usadas (idx ∈ usedIdxs · cruce exacto con posts_sugeridos) y
+  // descartar los cuadros de red que queden sin ideas disponibles.
+  const usedSet = new Set(usedIdxs);
+  const boxes = buildBoxes(Array.isArray(posts) ? posts : [])
+    .map((b) => ({ ...b, ideas: b.ideas.filter((i) => !usedSet.has(i.idx)) }))
+    .filter((b) => b.ideas.length > 0);
   if (boxes.length === 0) return null;
 
   // Fase B.3 · manda SOLO esta idea + la registra via /use-idea (idx correcto · el backend flipea a
@@ -59,23 +64,19 @@ export function StrategyIdeaBoxes({ strategyId, posts }: { strategyId: string; p
       {boxes.map((box) => (
         <div key={box.key} className="rounded-lg border border-border/40 bg-card/50 p-3 space-y-2">
           <span className="text-xs font-semibold">{box.label}</span>
-          {box.ideas.length > 0 ? (
-            box.ideas.map((item) => (
-              <div key={item.idx} className="flex items-start justify-between gap-2">
-                <p className="text-sm flex-1">{item.text}</p>
-                <Button
-                  size="sm" variant="ghost"
-                  className="h-7 px-2 gap-1 text-primary hover:text-primary shrink-0"
-                  aria-label={`Usar en Content Lab: ${item.text}`}
-                  onClick={() => go(box, item)}
-                >
-                  Usar <ArrowRight className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            ))
-          ) : (
-            <p className="text-sm text-muted-foreground">(idea sin texto)</p>
-          )}
+          {box.ideas.map((item) => (
+            <div key={item.idx} className="flex items-start justify-between gap-2">
+              <p className="text-sm flex-1">{item.text}</p>
+              <Button
+                size="sm" variant="ghost"
+                className="h-7 px-2 gap-1 text-primary hover:text-primary shrink-0"
+                aria-label={`Usar en Content Lab: ${item.text}`}
+                onClick={() => go(box, item)}
+              >
+                Usar <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ))}
         </div>
       ))}
     </div>

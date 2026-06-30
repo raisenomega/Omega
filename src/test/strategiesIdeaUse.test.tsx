@@ -59,13 +59,13 @@ describe("Fase B.3 · flecha → use-idea (idx correcto) + contador X de N", () 
     expect(navigateSpy).toHaveBeenCalledWith("/content-lab", { state: { brief: "ig-0", platform: "instagram" } });
   });
 
-  it("test_contador_activa · 1 idea usada de 3 → '1 de 3 ideas usadas'", () => {
+  it("test_contador_quedan · 1 idea usada de 3 → '2 de 3 ideas disponibles' (las que quedan · C.1)", () => {
     render(<StrategyCard strategy={STRAT3} variant="active" usedCount={1} />);
-    expect(screen.getByText(/1 de 3 ideas usadas/i)).toBeTruthy();
+    expect(screen.getByText(/2 de 3 ideas disponibles/i)).toBeTruthy();
   });
 
-  it("test_contador_cero · sin ideas usadas → '0 de 3 ideas usadas'", () => {
+  it("test_contador_cero · sin ideas usadas → '3 de 3 ideas disponibles'", () => {
     render(<StrategyCard strategy={STRAT3} variant="active" usedCount={0} />);
-    expect(screen.getByText(/0 de 3 ideas usadas/i)).toBeTruthy();
+    expect(screen.getByText(/3 de 3 ideas disponibles/i)).toBeTruthy();
   });
 });

@@ -41,9 +41,9 @@ export default function Strategies() {
   const isUsed = estado === "used";
   const items = (list.data?.items ?? []).filter((s) => s.client_id === activeBusinessId);
   const ideas = usedIdeas.data ?? [];
-  // Contador "X de N" en Activas: cuántas ideas usadas por estrategia (mapa strategy_id → count).
-  const usedByStrategy: Record<string, number> = {};
-  ideas.forEach((i) => { usedByStrategy[i.strategy_id] = (usedByStrategy[i.strategy_id] ?? 0) + 1; });
+  // Activas (C.1): idx de ideas usadas por estrategia → contador "quedan" + ocultar usadas del modal.
+  const usedIdxByStrategy: Record<string, number[]> = {};
+  ideas.forEach((i) => { (usedIdxByStrategy[i.strategy_id] ??= []).push(i.idea_idx); });
   const loading = isUsed ? usedIdeas.isLoading : list.isLoading;
   const isError = isUsed ? usedIdeas.isError : list.isError;
   const empty = isUsed ? ideas.length === 0 : items.length === 0;
@@ -89,7 +89,8 @@ export default function Strategies() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {isUsed
             ? ideas.map((idea) => <IdeaUsageCard key={idea.id} idea={idea} />)
-            : items.map((s) => <StrategyCard key={s.id} strategy={s} variant={estado} usedCount={usedByStrategy[s.id] ?? 0} />)}
+            : items.map((s) => <StrategyCard key={s.id} strategy={s} variant={estado}
+                usedCount={(usedIdxByStrategy[s.id] ?? []).length} usedIdxs={usedIdxByStrategy[s.id] ?? []} />)}
         </div>
       )}
 

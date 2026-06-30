@@ -9,7 +9,7 @@ function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-export function StrategyDetailModal({ strategy, onClose }: { strategy: Strategy | null; onClose: () => void }) {
+export function StrategyDetailModal({ strategy, onClose, usedIdxs = [] }: { strategy: Strategy | null; onClose: () => void; usedIdxs?: number[] }) {
   if (!strategy) return null;
   const c = strategy.contenido || {};
   const pilares = Array.isArray(c.pilares) ? c.pilares : [];
@@ -50,7 +50,7 @@ export function StrategyDetailModal({ strategy, onClose }: { strategy: Strategy 
               Sugerencias de posts por red social — aún no son posts reales, son puntos de partida.
               Usá la flecha de una red para llevar solo esa idea a Content Lab.
             </p>
-            <StrategyIdeaBoxes strategyId={strategy.id} posts={ideas} />
+            <StrategyIdeaBoxes strategyId={strategy.id} posts={ideas} usedIdxs={usedIdxs} />
           </div>
         )}
       </DialogContent>

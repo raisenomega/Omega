@@ -13,11 +13,11 @@ function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString("es", { day: "2-digit", month: "short" });
 }
 
-export function StrategyCard({ strategy, variant = "active", usedCount = 0 }: { strategy: Strategy; variant?: Variant; usedCount?: number }) {
+export function StrategyCard({ strategy, variant = "active", usedCount = 0, usedIdxs = [] }: { strategy: Strategy; variant?: Variant; usedCount?: number; usedIdxs?: number[] }) {
   const c = strategy.contenido || {};
   const [open, setOpen] = useState(false);
   const lu = strategy.last_used;
-  // Fase B.3 · contador "X de N ideas usadas" en Activas (N = total de ideas · X = usadas de ESTA estrategia).
+  // Fase C.1 · contador "X de N ideas disponibles" en Activas = las que QUEDAN sin usar (total - usadas).
   const totalIdeas = Array.isArray(c.posts_sugeridos) ? c.posts_sugeridos.length : 0;
   // CAPA 1 · en Usadas pintamos lo que se USO de verdad (last_used.brief). Fallback al resumen si
   // last_used es null (estrategias marcadas usadas antes del arco · honesto: no se registro el detalle).
@@ -26,7 +26,7 @@ export function StrategyCard({ strategy, variant = "active", usedCount = 0 }: { 
     ? "Usaste la estrategia completa:"
     : `Usaste (${PLATFORM_LABELS[lu.platform as keyof typeof PLATFORM_LABELS] ?? lu.platform}):`;
   return (
-    <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+    <Card className={`bg-card/80 backdrop-blur-sm ${variant === "active" ? "border-yellow-500/40" : "border-border/50"}`}>
       <CardContent className="p-3 space-y-2">
         <div className="space-y-2 cursor-pointer" onClick={() => setOpen(true)}>
           <div className="flex items-center justify-between gap-2 text-xs">
@@ -57,13 +57,14 @@ export function StrategyCard({ strategy, variant = "active", usedCount = 0 }: { 
             </div>
           )}
           {variant === "active" && totalIdeas > 0 && (
-            <p className="text-[10px] text-muted-foreground">{usedCount} de {totalIdeas} ideas usadas</p>
+            <p className="text-[10px] text-muted-foreground">{totalIdeas - usedCount} de {totalIdeas} ideas disponibles</p>
           )}
         </div>
-        {/* Archivadas = solo lectura. Activas = todas las acciones. Usadas = solo "Usar" (re-usar). */}
-        {variant !== "archived" && <StrategyCardActions strategy={strategy} variant={variant} />}
+        {/* Fase C.1 · tarjeta activa SIN botones (modelo idea-level · clic abre el modal). Las acciones
+            de la idea-card (Usadas) viven en IdeaUsageCard. StrategyCardActions queda solo para "used". */}
+        {variant === "used" && <StrategyCardActions strategy={strategy} variant={variant} />}
       </CardContent>
-      <StrategyDetailModal strategy={open ? strategy : null} onClose={() => setOpen(false)} />
+      <StrategyDetailModal strategy={open ? strategy : null} usedIdxs={usedIdxs} onClose={() => setOpen(false)} />
     </Card>
   );
 }

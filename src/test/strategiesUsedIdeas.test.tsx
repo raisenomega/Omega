@@ -59,10 +59,10 @@ describe("Estrategias Fase B.2 · Usadas = ideas sueltas", () => {
     expect(screen.getByText(/estrategia eliminada/i)).toBeTruthy();
   });
 
-  it("test_activas_intactas · chip Activas → StrategyCard (cero regresion)", () => {
+  it("test_activas_intactas · chip Activas → StrategyCard sin botones (C.1)", () => {
     render(<Strategies />);
     expect(screen.getByText("T-active")).toBeTruthy();
-    expect(screen.getByRole("button", { name: /^usar$/i })).toBeTruthy();   // accion de StrategyCard
+    expect(screen.queryByRole("button", { name: /^usar$/i })).toBeNull();   // C.1 · tarjeta activa sin acciones
   });
 
   it("test_usadas_empty · sin ideas usadas → empty state honesto", () => {

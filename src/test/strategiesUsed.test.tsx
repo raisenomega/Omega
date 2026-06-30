@@ -51,12 +51,12 @@ describe("Estrategias · chips de estado + vista usadas", () => {
     expect(chip(/archivadas/i)).toBeTruthy();
   });
 
-  it("test_activas_intactas · 'Activas' (default) muestra activas con todas las acciones", () => {
+  it("test_activas_sin_botones · 'Activas' muestra la tarjeta SIN botones (C.1 · modelo idea-level)", () => {
     render(<Strategies />);
     expect(screen.getByText("T-active")).toBeTruthy();
-    expect(screen.getByRole("button", { name: /^usar$/i })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /ajuste/i })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /archivar/i })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^usar$/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /ajuste/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /archivar/i })).toBeNull();
   });
 
   it("test_archivadas_en_chip · 'Archivadas' las muestra (ya no en acordeon Historial)", () => {
