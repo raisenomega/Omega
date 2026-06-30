@@ -48,6 +48,17 @@ def record_use(supabase: SupabaseService, strategy_id: str, last_used: dict[str,
     return len(r.data or [])
 
 
+def delete_strategy(supabase: SupabaseService, strategy_id: str, client_ids: list[str]) -> int:
+    """⚠️ HARD DELETE permanente (irreversible). Borra la fila SOLO si pertenece a client_ids
+    (ownership en el WHERE · client_ids del servidor · NUNCA del input) → 0 filas si es ajena (sin
+    fuga · patron update_status). Seguro: ningun FK referencia strategies como padre (no huerfanos)."""
+    if not client_ids:
+        return 0
+    r = supabase.client.table("strategies").delete().eq(
+        "id", strategy_id).in_("client_id", client_ids).execute()
+    return len(r.data or [])
+
+
 def update_strategy_status(supabase: SupabaseService, strategy_id: str, estado: str,
                            client_ids: list[str]) -> int:
     """Cambia estado + sella timestamp (used_at/archived_at). Scopeado a client_ids (ownership en el
