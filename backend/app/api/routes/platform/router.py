@@ -1,9 +1,6 @@
-"""Platform public routes — landing pública de OMEGA (marca OMEGA · sin auth).
-
-POST /platform/lead: capta leads de plataforma (reseller_id NULL + audience). Espejo del
-patrón resellers/public.py, pero SERVER-SIDE fuerza reseller_id=NULL y source, valida audience,
-aplica honeypot + rate-limit dedicado por IP (más estricto que el global de 300/min).
-"""
+"""Platform public routes (marca OMEGA · sin auth). POST /platform/lead fuerza server-side
+reseller_id=NULL + source, valida audience, honeypot + rate-limit por IP. GET /leads = super_owner."""
+import re
 import time
 import logging
 from datetime import datetime, timezone
@@ -19,11 +16,17 @@ from app.api.routes.auth.super_owner import require_super_owner
 router = APIRouter(prefix="/platform", tags=["platform"])
 logger = logging.getLogger(__name__)
 
-# Rate-limit dedicado: 5 envíos/hora/IP · in-memory fixed-window · single-instance (consistente
-# con rate_limit_middleware · Railway 1 instancia; escalar horizontal requeriría store compartido).
+# Rate-limit dedicado: 5 envíos/hora/IP · in-memory fixed-window · single-instance (Railway 1 inst).
 _WINDOW_S = 3600.0
 _MAX_PER_WINDOW = 5
 _hits: dict[str, list[float]] = {}
+
+# D7 · source = slug corto seguro · NO whitelist fija · lo que no valide cae a 'omega_landing'.
+_SOURCE_RE = re.compile(r"^[a-z0-9_-]{1,50}$")
+
+
+def _safe_source(raw: Optional[str]) -> str:
+    return raw if (raw and _SOURCE_RE.match(raw)) else "omega_landing"
 
 
 def _client_ip(request: Request) -> str:
@@ -47,8 +50,7 @@ def _rate_limited(ip: str) -> bool:
 
 @router.post("/lead", response_model=APIResponse)
 async def create_platform_lead(request: Request, body: CreatePlatformLeadRequest) -> APIResponse:
-    """Lead público de la landing de plataforma (reseller_id NULL · audience pyme|reseller)."""
-    # Honeypot: bots llenan `website`, humanos no → success silencioso SIN insertar (no avisa al bot).
+    """Lead público (reseller_id NULL). Honeypot `website`: si viene lleno → success silencioso sin insertar."""
     if body.website.strip():
         return APIResponse(success=True, data={}, message="Lead received successfully")
 
@@ -64,7 +66,7 @@ async def create_platform_lead(request: Request, body: CreatePlatformLeadRequest
             "email": str(body.email),
             "phone": body.phone,
             "message": body.message,
-            "source": "omega_landing",      # forzado
+            "source": _safe_source(body.source),  # D7 · embudo real validado o default (nunca del body crudo)
             "consent_given": True,          # legítimo: el form muestra el aviso de consentimiento
             "consent_date": datetime.now(timezone.utc).isoformat(),
         }

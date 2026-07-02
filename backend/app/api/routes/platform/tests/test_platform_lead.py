@@ -61,6 +61,24 @@ def test_audience_invalida_rechazada_por_el_modelo():
         CreatePlatformLeadRequest(name="Eve", email="eve@test.com", audience="hacker")
 
 
+def test_safe_source_d7():
+    # válido (slug) se conserva · inválido/None → default (nunca 422 por source)
+    assert mod._safe_source("agendar_demo") == "agendar_demo"
+    assert mod._safe_source("black-friday-2026") == "black-friday-2026"
+    assert mod._safe_source(None) == "omega_landing"
+    assert mod._safe_source("") == "omega_landing"
+    assert mod._safe_source("Con Espacios!") == "omega_landing"
+    assert mod._safe_source("x" * 51) == "omega_landing"  # >50
+
+
+def test_source_llega_al_insert(monkeypatch):
+    mod._hits.clear()
+    captured: list = []
+    body = CreatePlatformLeadRequest(name="Ana", email="ana@test.com", source="agendar_demo")
+    _run(body, ip="7.7.7.7", captured=captured, monkeypatch=monkeypatch)
+    assert captured[0]["source"] == "agendar_demo"
+
+
 def test_rate_limit_por_ip(monkeypatch):
     mod._hits.clear()
     captured: list = []

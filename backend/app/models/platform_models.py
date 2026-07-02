@@ -16,3 +16,6 @@ class CreatePlatformLeadRequest(BaseModel):
     message: Optional[str] = Field(None, max_length=2000)
     audience: Literal["pyme", "reseller"] = "pyme"
     website: str = Field(default="", max_length=255)
+    # Trazabilidad de embudos (D7 · opcional): el handler valida ^[a-z0-9_-]{1,50}$ y cae a
+    # 'omega_landing' si falta o no valida (NO 422 · embudos futuros sin deploy · NO whitelist fija).
+    source: Optional[str] = Field(None, max_length=50)

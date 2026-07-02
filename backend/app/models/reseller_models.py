@@ -167,10 +167,17 @@ class CreateLeadBySlugRequest(BaseModel):
 
 
 class UpdateLeadStatusRequest(BaseModel):
-    """Update de lead: status y/o notes (ambos opcionales · permite guardar SOLO notas sin tocar
-    el status ni resetear contacted_at)."""
+    """Update de lead (CRM · todos opcionales · solo se aplican los campos presentes). status y
+    temperature se validan contra sus CHECK en el handler · el resto son edición libre del owner."""
     status: Optional[str] = Field(None, description="new|contacted|qualified|converted|lost")
+    temperature: Optional[str] = Field(None, description="frio|tibio|caliente|convertido")
     notes: Optional[str] = Field(None, description="Notas internas (string vacío las limpia)")
+    name: Optional[str] = Field(None, max_length=255)
+    email: Optional[str] = Field(None, max_length=255)
+    phone: Optional[str] = Field(None, max_length=50)
+    message: Optional[str] = Field(None, max_length=2000)
+    company: Optional[str] = Field(None, max_length=255)
+    whatsapp_username: Optional[str] = Field(None, max_length=100)
 
 
 # DASHBOARD MODELS

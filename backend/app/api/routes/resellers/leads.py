@@ -17,8 +17,9 @@ import logging
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# Fuente única · alineado con el CHECK de leads.status en DB (incluye 'qualified' · DEBT-LEADS-QUALIFIED).
-VALID_LEAD_STATUSES = ["new", "contacted", "qualified", "converted", "lost"]
+# Fuente única · alineados con los CHECK de leads en DB.
+VALID_LEAD_STATUSES = ["new", "contacted", "qualified", "converted", "lost"]  # incluye 'qualified' · DEBT-LEADS-QUALIFIED
+VALID_TEMPERATURES = ["frio", "tibio", "caliente", "convertido"]  # CHECK leads.temperature · 00089
 
 
 async def _authz_reseller(authorization: Optional[str], reseller_id: str) -> None:
@@ -230,27 +231,43 @@ async def update_lead_status(
             raise HTTPException(status_code=404, detail="Lead not found")
         await _authz_lead(user, lead)  # no-autorizado → 404 (no confirma existencia)
 
-        # Validate status SOLO si viene (permite update de solo-notas · alineado con el CHECK de DB)
+        # Valida status/temperature SOLO si vienen (alineados con sus CHECK en DB)
         if request.status is not None and request.status not in VALID_LEAD_STATUSES:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid status. Must be one of: {', '.join(VALID_LEAD_STATUSES)}"
-            )
+            raise HTTPException(status_code=400, detail=f"Invalid status. One of: {', '.join(VALID_LEAD_STATUSES)}")
+        if request.temperature is not None and request.temperature not in VALID_TEMPERATURES:
+            raise HTTPException(status_code=400, detail=f"Invalid temperature. One of: {', '.join(VALID_TEMPERATURES)}")
 
-        # Update lead status
-        updated_lead = await service.update_lead_status(
-            lead_id,
-            request.status,
-            request.notes
-        )
+        # Solo los campos provistos (None se omiten · el mixin whitelistea columnas)
+        updates = {k: v for k, v in request.model_dump().items() if v is not None}
+        updated_lead = await service.update_lead(lead_id, updates)
 
         return APIResponse(
             success=True,
             data=updated_lead,
-            message="Lead status updated successfully"
+            message="Lead updated successfully"
         )
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error updating lead status: {e}")
+        logger.error(f"Error updating lead: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/leads/{lead_id}", response_model=APIResponse)
+async def delete_lead(lead_id: str, authorization: Optional[str] = Header(None)) -> APIResponse:
+    """Elimina un lead (owner del reseller del lead · plataforma → super_owner). No-autorizado → 404.
+    401 sin token · 404 lead inexistente / no autorizado."""
+    try:
+        user = await get_current_user(authorization)  # 401 si sin token
+        service = get_supabase_service()
+        lead = await service.get_lead_by_id(lead_id)
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        await _authz_lead(user, lead)  # no-autorizado → 404 (no confirma existencia)
+        await service.delete_lead(lead_id)
+        return APIResponse(success=True, data={}, message="Lead deleted successfully")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting lead: {e}")
         raise HTTPException(status_code=500, detail=str(e))
