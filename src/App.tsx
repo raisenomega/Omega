@@ -38,6 +38,7 @@ const WebSectionsPage = lazy(() => import("./pages/web/WebSectionsPage"));
 const WebServicesPage = lazy(() => import("./pages/web/WebServicesPage"));
 const WebProcessPage = lazy(() => import("./pages/web/WebProcessPage"));
 const WebPricingPage = lazy(() => import("./pages/web/WebPricingPage"));
+const WebLeadsPage = lazy(() => import("./pages/web/WebLeadsPage"));
 
 const PageFallback = () => (
   <div className="flex h-[60vh] items-center justify-center text-muted-foreground">
@@ -232,6 +233,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <AppLayout><WebPricingPage /></AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/web/leads"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout><WebLeadsPage /></AppLayout>
                   </ProtectedRoute>
                 }
               />

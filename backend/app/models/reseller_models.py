@@ -167,9 +167,10 @@ class CreateLeadBySlugRequest(BaseModel):
 
 
 class UpdateLeadStatusRequest(BaseModel):
-    """Request to update lead status"""
-    status: str = Field(..., description="new|contacted|converted|lost")
-    notes: Optional[str] = Field(None, description="Optional notes")
+    """Update de lead: status y/o notes (ambos opcionales · permite guardar SOLO notas sin tocar
+    el status ni resetear contacted_at)."""
+    status: Optional[str] = Field(None, description="new|contacted|qualified|converted|lost")
+    notes: Optional[str] = Field(None, description="Notas internas (string vacío las limpia)")
 
 
 # DASHBOARD MODELS

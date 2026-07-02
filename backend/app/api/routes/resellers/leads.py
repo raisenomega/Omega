@@ -230,8 +230,8 @@ async def update_lead_status(
             raise HTTPException(status_code=404, detail="Lead not found")
         await _authz_lead(user, lead)  # no-autorizado → 404 (no confirma existencia)
 
-        # Validate status (fuente única · alineado con el CHECK de DB · incluye 'qualified')
-        if request.status not in VALID_LEAD_STATUSES:
+        # Validate status SOLO si viene (permite update de solo-notas · alineado con el CHECK de DB)
+        if request.status is not None and request.status not in VALID_LEAD_STATUSES:
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid status. Must be one of: {', '.join(VALID_LEAD_STATUSES)}"

@@ -105,22 +105,30 @@ class LeadsMixin:
             logger.error(f"Error getting lead by ID: {e}")
             raise
 
-    async def update_lead_status(self, lead_id: str, status: str, notes: Optional[str] = None) -> Dict[str, Any]:
+    async def update_lead_status(
+        self, lead_id: str, status: Optional[str] = None, notes: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Actualiza status y/o notes. status None → solo notas (no toca contacted_at). notes con
+        string vacío las limpia (por eso `is not None`, no truthiness). Sin nada que cambiar → no-op."""
         try:
-            update_data: Dict[str, Any] = {"status": status}
-            if notes:
-                update_data["notes"] = notes
-            if status == "contacted":
-                update_data["contacted_at"] = datetime.now(timezone.utc).isoformat()
-            elif status == "converted":
-                lead = await self.get_lead_by_id(lead_id)
-                if lead and not lead.get("contacted_at"):
+            update_data: Dict[str, Any] = {}
+            if status is not None:
+                update_data["status"] = status
+                if status == "contacted":
                     update_data["contacted_at"] = datetime.now(timezone.utc).isoformat()
+                elif status == "converted":
+                    lead = await self.get_lead_by_id(lead_id)
+                    if lead and not lead.get("contacted_at"):
+                        update_data["contacted_at"] = datetime.now(timezone.utc).isoformat()
+            if notes is not None:
+                update_data["notes"] = notes
+            if not update_data:
+                return await self.get_lead_by_id(lead_id) or {}
             r = self.client.table("leads").update(update_data).eq("id", lead_id).execute()
-            logger.info(f"Lead {lead_id} status updated to {status}")
+            logger.info(f"Lead {lead_id} updated (status={status})")
             return r.data[0] if r.data else {}
         except Exception as e:
-            logger.error(f"Error updating lead status: {e}")
+            logger.error(f"Error updating lead: {e}")
             raise
 
     # ── User Roles ─────────────────────────────────────────────

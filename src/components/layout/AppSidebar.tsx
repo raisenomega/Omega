@@ -20,6 +20,7 @@ import {
   LayoutGrid,
   Workflow,
   Tags,
+  Inbox,
   type LucideIcon,
 } from "lucide-react";
 import { RaisenLogo } from "@/components/brand/RaisenLogo";
@@ -75,6 +76,7 @@ const SITIO_WEB_ITEMS: NavItemDef[] = [
   { title: "Servicios", url: "/web/servicios", icon: LayoutGrid },
   { title: "Proceso", url: "/web/proceso", icon: Workflow },
   { title: "Precios", url: "/web/precios", icon: Tags },
+  { title: "Leads", url: "/web/leads", icon: Inbox },
 ];
 
 function PlanBadge({ label, lit, color }: { label: string; lit: boolean; color: "amber" | "blue" }) {
