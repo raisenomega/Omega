@@ -13,7 +13,7 @@ export function ProcessSection() {
   const { ref, isVisible } = useScrollReveal();
 
   return (
-    <section id="process" ref={ref} className="relative overflow-hidden px-6 py-24 md:py-32">
+    <section id="process" ref={ref} className="relative overflow-hidden px-6 py-16 md:py-20">
       <div className="absolute left-1/2 top-0 -translate-x-1/2 h-px w-2/3 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <div className="absolute right-0 top-1/2 -translate-y-1/2 h-80 w-80 rounded-full bg-primary/[0.04] blur-[120px] pointer-events-none" />
 

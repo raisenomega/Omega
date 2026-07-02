@@ -12,7 +12,7 @@ export function ServicesSection() {
   const { ref, isVisible } = useScrollReveal();
 
   return (
-    <section id="services" ref={ref} className="relative overflow-hidden px-6 py-24 md:py-32">
+    <section id="services" ref={ref} className="relative overflow-hidden px-6 py-16 md:py-20">
       <div className="absolute left-1/2 top-0 -translate-x-1/2 h-px w-2/3 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-primary/[0.03] blur-[150px]" />
@@ -28,7 +28,7 @@ export function ServicesSection() {
           <p className="mx-auto max-w-lg text-muted-foreground">{t.services.subtitle}</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {services.map((service, index) => (
             <ServiceCard key={service.id} service={service} lang={lang} index={index} isVisible={isVisible} />
           ))}
