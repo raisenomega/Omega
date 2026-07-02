@@ -18,6 +18,7 @@ import {
   Crown,
   LayoutList,
   LayoutGrid,
+  Workflow,
   type LucideIcon,
 } from "lucide-react";
 import { RaisenLogo } from "@/components/brand/RaisenLogo";
@@ -71,6 +72,7 @@ const AVANZADO_ITEMS: NavItemDef[] = [
 const SITIO_WEB_ITEMS: NavItemDef[] = [
   { title: "Secciones", url: "/web/secciones", icon: LayoutList },
   { title: "Servicios", url: "/web/servicios", icon: LayoutGrid },
+  { title: "Proceso", url: "/web/proceso", icon: Workflow },
 ];
 
 function PlanBadge({ label, lit, color }: { label: string; lit: boolean; color: "amber" | "blue" }) {
