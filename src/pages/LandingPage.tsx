@@ -2,6 +2,7 @@ import { lazy, Suspense, Component, type ReactNode } from "react";
 import { LandingLangProvider } from "@/landing/i18n/LandingLangContext";
 import { useLandingSections } from "@/hooks/useLandingSections";
 import { HeroSection } from "@/components/landing/HeroSection";
+import { ServicesSection } from "@/components/landing/ServicesSection";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 
@@ -38,7 +39,10 @@ function LandingContent() {
 
       <div className="relative z-10">
         <LandingHeader />
-        <main>{isVisible("hero") && <HeroSection />}</main>
+        <main>
+          {isVisible("hero") && <HeroSection />}
+          {isVisible("services") && <ServicesSection />}
+        </main>
         <LandingFooter />
       </div>
     </>
