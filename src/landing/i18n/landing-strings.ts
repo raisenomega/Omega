@@ -5,6 +5,7 @@ export type LandingLang = "es" | "en";
 export interface LandingStrings {
   hero: { title: string; subtitle: string; cta: string };
   services: { title: string; subtitle: string }; // encabezado de la sección (los servicios salen de DB)
+  process: { title: string; subtitle: string }; // encabezado de la sección (los pasos salen de DB)
   header: { cta: string };
   footer: { rights: string }; // fallback · el texto real sale de landing_footer_config
 }
@@ -21,6 +22,10 @@ export const LANDING_STRINGS: Record<LandingLang, LandingStrings> = {
       title: "Todo lo que OMEGA hace por ti",
       subtitle: "Una sola plataforma para crear, publicar y medir. Sin saltar entre apps.",
     },
+    process: {
+      title: "Cómo funciona OMEGA",
+      subtitle: "De registrarte a publicar, en cuatro pasos.",
+    },
     header: { cta: "Empieza gratis" },
     footer: { rights: "Una plataforma de Raisen Agency. Todos los derechos reservados." },
   },
@@ -34,6 +39,10 @@ export const LANDING_STRINGS: Record<LandingLang, LandingStrings> = {
     services: {
       title: "Everything OMEGA does for you",
       subtitle: "One platform to create, publish and measure. No more app-juggling.",
+    },
+    process: {
+      title: "How OMEGA works",
+      subtitle: "From sign-up to publishing, in four steps.",
     },
     header: { cta: "Start free" },
     footer: { rights: "A Raisen Agency platform. All rights reserved." },

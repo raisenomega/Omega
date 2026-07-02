@@ -3,6 +3,7 @@ import { LandingLangProvider } from "@/landing/i18n/LandingLangContext";
 import { useLandingSections } from "@/hooks/useLandingSections";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { ServicesSection } from "@/components/landing/ServicesSection";
+import { ProcessSection } from "@/components/landing/ProcessSection";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 
@@ -42,6 +43,7 @@ function LandingContent() {
         <main>
           {isVisible("hero") && <HeroSection />}
           {isVisible("services") && <ServicesSection />}
+          {isVisible("process") && <ProcessSection />}
         </main>
         <LandingFooter />
       </div>
