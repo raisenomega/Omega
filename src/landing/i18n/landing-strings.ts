@@ -6,6 +6,11 @@ export interface LandingStrings {
   hero: { title: string; subtitle: string; cta: string };
   services: { title: string; subtitle: string }; // encabezado de la sección (los servicios salen de DB)
   process: { title: string; subtitle: string }; // encabezado de la sección (los pasos salen de DB)
+  pricing: {
+    title: string; subtitle: string; // encabezado de tiers
+    addonsTitle: string; addonsSubtitle: string; // encabezado de add-ons
+    recommended: string; cta: string; // badge + CTA neutralizado
+  };
   header: { cta: string };
   footer: { rights: string }; // fallback · el texto real sale de landing_footer_config
 }
@@ -26,6 +31,14 @@ export const LANDING_STRINGS: Record<LandingLang, LandingStrings> = {
       title: "Cómo funciona OMEGA",
       subtitle: "De registrarte a publicar, en cuatro pasos.",
     },
+    pricing: {
+      title: "Un plan para cada etapa",
+      subtitle: "Empieza gratis. Crece cuando lo necesites. Cancela cuando quieras.",
+      addonsTitle: "Suma más potencia",
+      addonsSubtitle: "Packs de video con IA para cuando quieras producir más.",
+      recommended: "Recomendado",
+      cta: "Empieza gratis",
+    },
     header: { cta: "Empieza gratis" },
     footer: { rights: "Una plataforma de Raisen Agency. Todos los derechos reservados." },
   },
@@ -43,6 +56,14 @@ export const LANDING_STRINGS: Record<LandingLang, LandingStrings> = {
     process: {
       title: "How OMEGA works",
       subtitle: "From sign-up to publishing, in four steps.",
+    },
+    pricing: {
+      title: "A plan for every stage",
+      subtitle: "Start free. Grow when you need to. Cancel anytime.",
+      addonsTitle: "Add more power",
+      addonsSubtitle: "AI video packs for when you want to produce more.",
+      recommended: "Recommended",
+      cta: "Start free",
     },
     header: { cta: "Start free" },
     footer: { rights: "A Raisen Agency platform. All rights reserved." },

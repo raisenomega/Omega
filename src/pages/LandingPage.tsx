@@ -4,6 +4,7 @@ import { useLandingSections } from "@/hooks/useLandingSections";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { ServicesSection } from "@/components/landing/ServicesSection";
 import { ProcessSection } from "@/components/landing/ProcessSection";
+import { PricingSection } from "@/components/landing/PricingSection";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 
@@ -44,6 +45,7 @@ function LandingContent() {
           {isVisible("hero") && <HeroSection />}
           {isVisible("services") && <ServicesSection />}
           {isVisible("process") && <ProcessSection />}
+          {isVisible("pricing") && <PricingSection />}
         </main>
         <LandingFooter />
       </div>
