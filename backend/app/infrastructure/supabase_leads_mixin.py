@@ -61,6 +61,27 @@ class LeadsMixin:
             logger.error(f"Error getting reseller leads: {e}")
             raise
 
+    async def get_platform_leads(
+        self,
+        audience: Optional[str] = None,
+        status: Optional[str] = None,
+        page: int = 1,
+        limit: int = 20,
+    ) -> tuple[List[Dict[str, Any]], int]:
+        """Leads de PLATAFORMA (reseller_id IS NULL · landing OMEGA) · super_owner only (guard en el router)."""
+        try:
+            query = self.client.table("leads").select("*", count="exact").is_("reseller_id", "null")
+            if audience:
+                query = query.eq("audience", audience)
+            if status:
+                query = query.eq("status", status)
+            offset = (page - 1) * limit
+            r = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
+            return (r.data or []), (r.count if hasattr(r, "count") else 0)
+        except Exception as e:
+            logger.error(f"Error getting platform leads: {e}")
+            raise
+
     async def get_lead_counts(self, reseller_id: str) -> Dict[str, int]:
         try:
             r = self.client.table("leads").select("status").eq("reseller_id", reseller_id).execute()

@@ -7,12 +7,14 @@ aplica honeypot + rate-limit dedicado por IP (más estricto que el global de 300
 import time
 import logging
 from datetime import datetime, timezone
+from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Header
 
 from app.infrastructure.supabase_service import get_supabase_service
 from app.models.shared_models import APIResponse
 from app.models.platform_models import CreatePlatformLeadRequest
+from app.api.routes.auth.super_owner import require_super_owner
 
 router = APIRouter(prefix="/platform", tags=["platform"])
 logger = logging.getLogger(__name__)
@@ -73,3 +75,24 @@ async def create_platform_lead(request: Request, body: CreatePlatformLeadRequest
     except Exception as e:
         logger.error(f"Error creating platform lead: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/leads", response_model=APIResponse)
+async def list_platform_leads(
+    audience: Optional[str] = None,
+    status: Optional[str] = None,
+    page: int = 1,
+    limit: int = 20,
+    authorization: Optional[str] = Header(None),
+) -> APIResponse:
+    """Inbox de leads de plataforma (reseller_id NULL) · SOLO super_owner · lo consume /web/leads."""
+    await require_super_owner(authorization)  # 401 sin token · 403 si no super_owner
+    if limit > 100:
+        limit = 100
+    service = get_supabase_service()
+    leads, total = await service.get_platform_leads(audience, status, page, limit)
+    return APIResponse(
+        success=True,
+        data={"leads": leads, "total": total, "page": page, "limit": limit},
+        message=f"Found {total} leads",
+    )

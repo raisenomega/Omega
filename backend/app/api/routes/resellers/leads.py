@@ -2,7 +2,7 @@
 Reseller Lead Management Routes
 Endpoints for managing leads generated from landing pages
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from typing import Dict, Any, Optional
 from app.infrastructure.supabase_service import get_supabase_service
 from app.models.shared_models import APIResponse
@@ -10,19 +10,46 @@ from app.models.reseller_models import (
     CreateLeadRequest,
     UpdateLeadStatusRequest,
 )
+from app.api.routes.auth.auth_utils import get_current_user
+from app.api.routes.auth.super_owner import is_super_owner_id
 import logging
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+# Fuente única · alineado con el CHECK de leads.status en DB (incluye 'qualified' · DEBT-LEADS-QUALIFIED).
+VALID_LEAD_STATUSES = ["new", "contacted", "qualified", "converted", "lost"]
+
+
+async def _authz_reseller(authorization: Optional[str], reseller_id: str) -> None:
+    """IDOR guard (list/create por reseller): super_owner ve todo · si no, debe ser el owner de ESE
+    reseller. Sin token → 401 (get_current_user) · autenticado ajeno → 403."""
+    user = await get_current_user(authorization)
+    if await is_super_owner_id(user["id"]):
+        return
+    if user.get("reseller_id") != reseller_id:
+        raise HTTPException(status_code=403, detail="forbidden")
+
+
+async def _authz_lead(user: Dict[str, Any], lead: Dict[str, Any]) -> None:
+    """IDOR guard (un lead ya fetcheado): super_owner ve todo · lead de plataforma (reseller_id NULL)
+    → SOLO super_owner · lead de reseller → su owner. No-autorizado → 404 (no confirma el UUID)."""
+    if await is_super_owner_id(user["id"]):
+        return
+    rid = lead.get("reseller_id")
+    if rid is None or user.get("reseller_id") != rid:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
 
 @router.post("/{reseller_id}/leads", response_model=APIResponse)
 async def create_lead(
     reseller_id: str,
-    request: CreateLeadRequest
+    request: CreateLeadRequest,
+    authorization: Optional[str] = Header(None),
 ) -> APIResponse:
     """
-    Create lead from landing page contact form
+    Create lead from landing page contact form (dashboard manual · owner del reseller o super_owner).
+    La captura pública white-label vive en public.py /slug/{slug}/lead (sin auth) · este NO es esa.
 
     Args:
         reseller_id: Reseller UUID
@@ -32,12 +59,10 @@ async def create_lead(
         APIResponse with success status
 
     Raises:
-        HTTPException 404: Reseller not found
-        HTTPException 500: Server error
-
-    Used by authenticated dashboard to manually create leads
+        HTTPException 401/403: sin token / ajeno · 404: Reseller not found · 500: Server error
     """
     try:
+        await _authz_reseller(authorization, reseller_id)
         service = get_supabase_service()
 
         # Verify reseller exists
@@ -73,14 +98,15 @@ async def get_reseller_leads(
     reseller_id: str,
     status: Optional[str] = None,
     page: int = 1,
-    limit: int = 20
+    limit: int = 20,
+    authorization: Optional[str] = Header(None),
 ) -> APIResponse:
     """
-    Get all leads for a reseller with optional filters and pagination
+    Get all leads for a reseller with optional filters and pagination (owner del reseller o super_owner)
 
     Args:
         reseller_id: Reseller UUID
-        status: Optional filter (new|contacted|converted|lost)
+        status: Optional filter (new|contacted|qualified|converted|lost)
         page: Page number (default: 1)
         limit: Results per page (default: 20, max: 100)
 
@@ -88,10 +114,10 @@ async def get_reseller_leads(
         APIResponse with paginated leads and counts by status
 
     Raises:
-        HTTPException 404: Reseller not found
-        HTTPException 500: Server error
+        HTTPException 401/403: sin token / ajeno · 404: Reseller not found · 500: Server error
     """
     try:
+        await _authz_reseller(authorization, reseller_id)
         service = get_supabase_service()
 
         # Verify reseller exists
@@ -133,9 +159,9 @@ async def get_reseller_leads(
 
 
 @router.get("/leads/{lead_id}", response_model=APIResponse)
-async def get_lead(lead_id: str) -> APIResponse:
+async def get_lead(lead_id: str, authorization: Optional[str] = Header(None)) -> APIResponse:
     """
-    Get a specific lead by ID
+    Get a specific lead by ID (owner del reseller del lead · plataforma → super_owner)
 
     Args:
         lead_id: Lead UUID
@@ -144,15 +170,16 @@ async def get_lead(lead_id: str) -> APIResponse:
         APIResponse with complete lead object
 
     Raises:
-        HTTPException 404: Lead not found
-        HTTPException 500: Server error
+        HTTPException 401: sin token · 404: Lead not found / no autorizado · 500: Server error
     """
     try:
+        user = await get_current_user(authorization)  # 401 si sin token (antes de tocar DB)
         service = get_supabase_service()
 
         lead = await service.get_lead_by_id(lead_id)
         if not lead:
             raise HTTPException(status_code=404, detail="Lead not found")
+        await _authz_lead(user, lead)  # no-autorizado → 404 (no confirma existencia)
 
         return APIResponse(
             success=True,
@@ -169,7 +196,8 @@ async def get_lead(lead_id: str) -> APIResponse:
 @router.patch("/leads/{lead_id}/status", response_model=APIResponse)
 async def update_lead_status(
     lead_id: str,
-    request: UpdateLeadStatusRequest
+    request: UpdateLeadStatusRequest,
+    authorization: Optional[str] = Header(None),
 ) -> APIResponse:
     """
     Update lead status and optional notes
@@ -193,19 +221,20 @@ async def update_lead_status(
     Valid statuses: new, contacted, converted, lost
     """
     try:
+        user = await get_current_user(authorization)  # 401 si sin token (antes de tocar DB)
         service = get_supabase_service()
 
         # Verify lead exists
         lead = await service.get_lead_by_id(lead_id)
         if not lead:
             raise HTTPException(status_code=404, detail="Lead not found")
+        await _authz_lead(user, lead)  # no-autorizado → 404 (no confirma existencia)
 
-        # Validate status
-        valid_statuses = ["new", "contacted", "converted", "lost"]
-        if request.status not in valid_statuses:
+        # Validate status (fuente única · alineado con el CHECK de DB · incluye 'qualified')
+        if request.status not in VALID_LEAD_STATUSES:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
+                detail=f"Invalid status. Must be one of: {', '.join(VALID_LEAD_STATUSES)}"
             )
 
         # Update lead status
