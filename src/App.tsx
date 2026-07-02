@@ -34,6 +34,7 @@ import NotFound from "./pages/NotFound";
 // Media + panel SENTINEL (SecurityDevPage, arrastra ~20 cards) salen del chunk inicial.
 const Media = lazy(() => import("./pages/Media"));
 const SecurityDevPage = lazy(() => import("./pages/SecurityDevPage"));
+const WebSectionsPage = lazy(() => import("./pages/web/WebSectionsPage"));
 
 const PageFallback = () => (
   <div className="flex h-[60vh] items-center justify-center text-muted-foreground">
@@ -196,6 +197,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <AppLayout><SecurityDevPage /></AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/web/secciones"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout><WebSectionsPage /></AppLayout>
                   </ProtectedRoute>
                 }
               />

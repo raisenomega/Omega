@@ -16,6 +16,7 @@ import {
   Lock,
   ShieldCheck,
   Crown,
+  LayoutList,
   type LucideIcon,
 } from "lucide-react";
 import { RaisenLogo } from "@/components/brand/RaisenLogo";
@@ -62,6 +63,12 @@ const AVANZADO_ITEMS: NavItemDef[] = [
   { title: "Inteligencia", url: "/intelligence", icon: Brain },
   { title: "Brand Voice", url: "/brand-voice", icon: Mic2 },
   { title: "Crisis Room", url: "/crisis", icon: ShieldAlert },
+];
+
+// SITIO WEB · CMS de la landing pública · owner-only (is_super_owner). Crece rebanada a
+// rebanada (Servicios, Proceso, Precios, CRM/Leads…). Rebanada 1: solo "Secciones".
+const SITIO_WEB_ITEMS: NavItemDef[] = [
+  { title: "Secciones", url: "/web/secciones", icon: LayoutList },
 ];
 
 function PlanBadge({ label, lit, color }: { label: string; lit: boolean; color: "amber" | "blue" }) {
@@ -181,6 +188,30 @@ export function AppSidebar() {
             </CollapsibleContent>
           </SidebarGroup>
         </Collapsible>
+
+        {/* SITIO WEB · solo is_super_owner · mismo patrón colapsable que Principal/Avanzado ·
+            va DESPUÉS de Avanzado, ANTES de Add-Ons · CMS de la landing (crece rebanada a rebanada) */}
+        {isSuperOwner && (
+          <Collapsible defaultOpen className="group/sitioweb">
+            <SidebarGroup>
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex w-full items-center">
+                  <ChevronDown className="mr-1 h-3.5 w-3.5 transition-transform group-data-[state=closed]/sitioweb:-rotate-90" />
+                  Sitio Web
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {SITIO_WEB_ITEMS.map((item) => (
+                      <NavItem key={item.title} item={item} />
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        )}
 
         {/* ADD-ONS · siempre visible (ambos planes) · punto verde */}
         <SidebarGroup>
