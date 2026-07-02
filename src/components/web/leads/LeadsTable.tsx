@@ -7,6 +7,8 @@ const COLS = ["Nombre", "Email", "Audiencia", "Fuente", "Estado", "Temperatura",
 interface Props {
   leads: Lead[];
   onView: (l: Lead) => void;
+  onEmail: (l: Lead) => void;
+  onNotify: (l: Lead) => void;
   onNotes: (l: Lead) => void;
   onEdit: (l: Lead) => void;
   onStatus: (id: string, v: string) => void;

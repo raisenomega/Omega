@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Eye, StickyNote, Pencil, MessageCircle } from "lucide-react";
+import { Eye, StickyNote, Pencil, MessageCircle, Send, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -13,6 +13,8 @@ import {
 interface Props {
   lead: Lead;
   onView: (l: Lead) => void;
+  onEmail: (l: Lead) => void;
+  onNotify: (l: Lead) => void;
   onNotes: (l: Lead) => void;
   onEdit: (l: Lead) => void;
   onStatus: (id: string, v: string) => void;
@@ -20,8 +22,8 @@ interface Props {
   onDelete: (id: string) => void;
 }
 
-// Una fila del CRM · réplica del molde + extensiones (Audiencia D5, Fuente D7, WhatsApp D6).
-export function LeadTableRow({ lead, onView, onNotes, onEdit, onStatus, onTemp, onDelete }: Props) {
+// Una fila del CRM · réplica del molde + extensiones (Audiencia D5, Fuente D7, WhatsApp D6, email/notify).
+export function LeadTableRow({ lead, onView, onEmail, onNotify, onNotes, onEdit, onStatus, onTemp, onDelete }: Props) {
   const wa = waLink(lead);
   return (
     <TableRow>
@@ -39,6 +41,8 @@ export function LeadTableRow({ lead, onView, onNotes, onEdit, onStatus, onTemp, 
       <TableCell>
         <div className="flex justify-end gap-1">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onView(lead)} title="Ver detalle"><Eye size={14} /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEmail(lead)} title="Enviar email"><Send size={14} /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onNotify(lead)} title="Notificar al dashboard"><Bell size={14} /></Button>
           {wa ? (
             <a href={wa} target="_blank" rel="noopener noreferrer" title="WhatsApp">
               <Button variant="ghost" size="icon" className="h-7 w-7 text-green-500"><MessageCircle size={14} /></Button>

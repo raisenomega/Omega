@@ -3,7 +3,7 @@
 // (el AdminLeads del molde escribía directo → NO se replica). Carga todo (limit 100) y filtra en
 // cliente como el molde (useMemo). update acepta cualquier campo editable; remove borra.
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiGet, apiPatch, apiDelete } from "@/lib/api-client";
+import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api-client";
 
 export interface Lead {
   id: string;
@@ -52,5 +52,16 @@ export function useAdminLeads() {
     onSuccess: invalidate,
   });
 
-  return { leads: query.data ?? [], isLoading: query.isLoading, update, remove };
+  // Pieza 2 · email (Resend · el error honesto lo surfacea apiPost al lanzar) · pieza 3 · notify.
+  const email = useMutation({
+    mutationFn: (v: { id: string; subject: string; message: string }) =>
+      apiPost(`/resellers/leads/${v.id}/email`, { subject: v.subject, message: v.message }),
+  });
+  const notify = useMutation({
+    mutationFn: (id: string) =>
+      apiPost<{ data: { notified: boolean; reason?: string } }>(`/resellers/leads/${id}/notify`, {}),
+    onSuccess: invalidate,
+  });
+
+  return { leads: query.data ?? [], isLoading: query.isLoading, update, remove, email, notify };
 }

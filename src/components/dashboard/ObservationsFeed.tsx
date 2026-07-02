@@ -10,6 +10,7 @@ import { useNextScheduledPost, type NextScheduledPost } from "@/hooks/useNextSch
 import { useBrandVoiceSummary } from "@/hooks/useBrandVoiceSummary";
 import { useSessionReport } from "@/hooks/useSessionReport";
 import { NudgeFirstClient } from "./NudgeFirstClient";
+import { NotificationsBlock } from "./NotificationsBlock";
 
 interface Observation {
   id: string;
@@ -73,6 +74,7 @@ export function ObservationsFeed({ clientId }: { clientId: string | null }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        <NotificationsBlock />
         <NudgeFirstClient />
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
