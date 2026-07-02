@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Crown,
   LayoutList,
+  LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
 import { RaisenLogo } from "@/components/brand/RaisenLogo";
@@ -66,9 +67,10 @@ const AVANZADO_ITEMS: NavItemDef[] = [
 ];
 
 // SITIO WEB · CMS de la landing pública · owner-only (is_super_owner). Crece rebanada a
-// rebanada (Servicios, Proceso, Precios, CRM/Leads…). Rebanada 1: solo "Secciones".
+// rebanada (Proceso, Precios, CRM/Leads…). Hoy: Secciones + Servicios.
 const SITIO_WEB_ITEMS: NavItemDef[] = [
   { title: "Secciones", url: "/web/secciones", icon: LayoutList },
+  { title: "Servicios", url: "/web/servicios", icon: LayoutGrid },
 ];
 
 function PlanBadge({ label, lit, color }: { label: string; lit: boolean; color: "amber" | "blue" }) {

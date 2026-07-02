@@ -35,6 +35,7 @@ import NotFound from "./pages/NotFound";
 const Media = lazy(() => import("./pages/Media"));
 const SecurityDevPage = lazy(() => import("./pages/SecurityDevPage"));
 const WebSectionsPage = lazy(() => import("./pages/web/WebSectionsPage"));
+const WebServicesPage = lazy(() => import("./pages/web/WebServicesPage"));
 
 const PageFallback = () => (
   <div className="flex h-[60vh] items-center justify-center text-muted-foreground">
@@ -205,6 +206,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <AppLayout><WebSectionsPage /></AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/web/servicios"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout><WebServicesPage /></AppLayout>
                   </ProtectedRoute>
                 }
               />
