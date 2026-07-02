@@ -180,6 +180,12 @@ class UpdateLeadStatusRequest(BaseModel):
     whatsapp_username: Optional[str] = Field(None, max_length=100)
 
 
+class EmailLeadRequest(BaseModel):
+    """Email al lead vía Resend (D-C · texto plano · límites)."""
+    subject: str = Field(..., min_length=1, max_length=200)
+    message: str = Field(..., min_length=1, max_length=5000)
+
+
 # DASHBOARD MODELS
 
 class ResellerDashboardResponse(BaseModel):

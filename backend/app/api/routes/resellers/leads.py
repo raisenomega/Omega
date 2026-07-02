@@ -2,17 +2,28 @@
 Reseller Lead Management Routes
 Endpoints for managing leads generated from landing pages
 """
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Header
 from typing import Dict, Any, Optional
-from app.infrastructure.supabase_service import get_supabase_service
+from app.infrastructure.supabase_service import get_supabase_service, SupabaseService
+from app.infrastructure.resend_client import send_email
 from app.models.shared_models import APIResponse
 from app.models.reseller_models import (
     CreateLeadRequest,
     UpdateLeadStatusRequest,
+    EmailLeadRequest,
 )
 from app.api.routes.auth.auth_utils import get_current_user
 from app.api.routes.auth.super_owner import is_super_owner_id
 import logging
+
+
+async def _append_note(service: SupabaseService, lead: Dict[str, Any], line: str) -> None:
+    """Apunta una nota automática (fecha + evento) en el lead, preservando las notas previas."""
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    prev = lead.get("notes") or ""
+    note = (prev + "\n" if prev else "") + f"[{stamp}] {line}"
+    await service.update_lead(lead["id"], {"notes": note})
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -270,4 +281,54 @@ async def delete_lead(lead_id: str, authorization: Optional[str] = Header(None))
         raise
     except Exception as e:
         logger.error(f"Error deleting lead: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/leads/{lead_id}/email", response_model=APIResponse)
+async def email_lead(lead_id: str, request: EmailLeadRequest, authorization: Optional[str] = Header(None)) -> APIResponse:
+    """Envía un email al lead vía Resend (texto plano). SURFACING HONESTO: sin key→503 · Resend
+    rechaza (dominio no verificado, etc.)→502 con detalle · JAMÁS éxito falso. Éxito → auto-nota."""
+    try:
+        user = await get_current_user(authorization)  # 401 sin token
+        service = get_supabase_service()
+        lead = await service.get_lead_by_id(lead_id)
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        await _authz_lead(user, lead)  # no-autorizado → 404
+        ok, err = await send_email(lead["email"], request.subject, request.message)
+        if not ok:
+            if err == "not_configured":
+                raise HTTPException(status_code=503, detail="email_not_configured")
+            raise HTTPException(status_code=502, detail=f"resend_rejected: {err}")
+        await _append_note(service, lead, f"Email enviado · asunto: {request.subject}")
+        return APIResponse(success=True, data={}, message="Email sent")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error emailing lead: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/leads/{lead_id}/notify", response_model=APIResponse)
+async def notify_lead(lead_id: str, authorization: Optional[str] = Header(None)) -> APIResponse:
+    """Notifica in-app al usuario de OMEGA cuyo email = el del lead. Si el lead aún no es usuario →
+    200 honesto {notified:false, reason:not_a_user}. Si lo es → inserta notificación + auto-nota."""
+    try:
+        user = await get_current_user(authorization)  # 401 sin token
+        service = get_supabase_service()
+        lead = await service.get_lead_by_id(lead_id)
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        await _authz_lead(user, lead)  # no-autorizado → 404
+        uid = await service.user_id_by_email(lead["email"])
+        if not uid:
+            return APIResponse(success=True, data={"notified": False, "reason": "not_a_user"}, message="Lead is not an OMEGA user yet")
+        who = lead.get("name") or lead["email"]
+        await service.create_notification(uid, "lead", "Un lead te contactó", f"{who} dejó sus datos en la landing de OMEGA.")
+        await _append_note(service, lead, "Notificado al dashboard del usuario")
+        return APIResponse(success=True, data={"notified": True}, message="Notification sent")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error notifying lead: {e}")
         raise HTTPException(status_code=500, detail=str(e))

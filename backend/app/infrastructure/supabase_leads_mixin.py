@@ -139,6 +139,46 @@ class LeadsMixin:
             logger.error(f"Error deleting lead: {e}")
             raise
 
+    # ── Notifications (00090 · pieza 3) ────────────────────────
+
+    async def user_id_by_email(self, email: str) -> Optional[str]:
+        """email → auth uid vía RPC SECURITY DEFINER (O(1) indexado · case-insensitive) · None si no
+        es usuario. NO admin-API paginado (D-A: list_users no filtra por email → falsos not_a_user)."""
+        try:
+            r = self.client.rpc("user_id_by_email", {"p_email": email}).execute()
+            return r.data if r.data else None
+        except Exception as e:
+            logger.error(f"Error resolving user by email: {e}")
+            raise
+
+    async def create_notification(self, user_id: str, ntype: str, title: str, body: Optional[str]) -> None:
+        try:
+            self.client.table("notifications").insert(
+                {"user_id": user_id, "type": ntype, "title": title, "body": body}
+            ).execute()
+            logger.info(f"Notification created for {user_id}")
+        except Exception as e:
+            logger.error(f"Error creating notification: {e}")
+            raise
+
+    async def get_notifications(self, user_id: str, limit: int = 30) -> List[Dict[str, Any]]:
+        try:
+            r = self.client.table("notifications").select("*").eq("user_id", user_id) \
+                .order("created_at", desc=True).limit(limit).execute()
+            return r.data or []
+        except Exception as e:
+            logger.error(f"Error getting notifications: {e}")
+            raise
+
+    async def mark_notification_read(self, notification_id: str, user_id: str) -> None:
+        """Marca leída SOLO si es del user_id (scope · defensa además de la RLS)."""
+        try:
+            self.client.table("notifications").update({"is_read": True}) \
+                .eq("id", notification_id).eq("user_id", user_id).execute()
+        except Exception as e:
+            logger.error(f"Error marking notification read: {e}")
+            raise
+
     # ── User Roles ─────────────────────────────────────────────
 
     async def get_user_by_email(self, email: str) -> dict:
