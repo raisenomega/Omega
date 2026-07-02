@@ -46,7 +46,7 @@ from app.api.routes import (
     reports, growth, video_production, ab_testing, orchestrator, resellers, auth,
     context, clients, social_accounts, agents,
     system, omega, nova, sentinel, oracle, prompt_vault, handoff, reseller, sub_brands,
-    security_dev
+    security_dev, platform
 )
 # DEBT-036: módulo billing legacy desregistrado · reemplazado por billing_v3 bc_billing
 from app.api.routes import billing_v3
@@ -253,6 +253,7 @@ app.include_router(orchestrator.router, prefix=settings.api_v1_prefix, tags=["Or
 
 # Multi-Tenant Infrastructure
 app.include_router(resellers.router, prefix=settings.api_v1_prefix, tags=["Resellers 🏢"])
+app.include_router(platform.router, prefix=settings.api_v1_prefix, tags=["Platform 🌐"])
 app.include_router(auth.router, prefix=settings.api_v1_prefix, tags=["Auth 🔐"])
 app.include_router(billing_v3.router, prefix=settings.api_v1_prefix, tags=["Billing 💳"])
 app.include_router(oauth_router, prefix=settings.api_v1_prefix)
