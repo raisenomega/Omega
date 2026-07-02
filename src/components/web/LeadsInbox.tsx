@@ -1,59 +1,68 @@
-import { useState } from "react";
-import { useAdminLeads } from "@/hooks/useAdminLeads";
-import { LeadRow } from "./LeadRow";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useMemo, useState } from "react";
+import { useAdminLeads, type Lead } from "@/hooks/useAdminLeads";
+import { LeadsFilters, type FilterState } from "./leads/LeadsFilters";
+import { LeadsStats } from "./leads/LeadsStats";
+import { LeadsTable } from "./leads/LeadsTable";
+import { LeadViewDialog } from "./leads/LeadViewDialog";
+import { LeadEditDialog } from "./leads/LeadEditDialog";
+import { LeadNotesDialog } from "./leads/LeadNotesDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 
-const AUDIENCES = [{ v: "", l: "Todos" }, { v: "pyme", l: "PYME" }, { v: "reseller", l: "Agencia" }];
-const STATUSES = ["new", "contacted", "qualified", "converted", "lost"];
+// CRM — Leads · réplica 1:1 del AdminLeads del molde (título, buscador, 4 stats, tabla con badges +
+// selects inline, acciones ver/notas/editar/eliminar/WhatsApp) + extensiones D5/D6/D7. Filtrado en
+// cliente (useMemo, como el molde) sobre lo cargado. Toda escritura por endpoints guardados (hook).
+const EMPTY: FilterState = { search: "", status: "", temp: "", audience: "", source: "" };
 
-// Inbox de leads de plataforma (reseller_id NULL) · filtro por audience (pills) + status (select).
-// Todo por endpoints guardados del checkpoint A (useAdminLeads). Status select mapea "all"→"" (radix
-// no admite value vacío).
 export function LeadsInbox() {
-  const [audience, setAudience] = useState("");
-  const [status, setStatus] = useState("");
-  const { leads, isLoading, patch } = useAdminLeads(audience, status);
+  const { leads, isLoading, update, remove } = useAdminLeads();
   const { toast } = useToast();
+  const [filters, setFilters] = useState<FilterState>(EMPTY);
+  const [viewing, setViewing] = useState<Lead | null>(null);
+  const [editing, setEditing] = useState<Lead | null>(null);
+  const [noting, setNoting] = useState<Lead | null>(null);
 
-  const onSave = (v: { id: string; status?: string; notes?: string }) =>
-    patch.mutate(v, {
-      onError: (e) => toast({ title: "No se pudo guardar", description: e instanceof Error ? e.message : "Error", variant: "destructive" }),
-    });
+  const onErr = (e: unknown) =>
+    toast({ title: "No se pudo guardar", description: e instanceof Error ? e.message : "Error", variant: "destructive" });
+  const save = (v: { id: string } & Partial<Omit<Lead, "id">>, close?: () => void) =>
+    update.mutate(v, { onError: onErr, onSuccess: close });
+
+  const sources = useMemo(() => [...new Set(leads.map((l) => l.source).filter(Boolean) as string[])], [leads]);
+  const filtered = useMemo(
+    () =>
+      leads.filter((l) => {
+        if (filters.status && l.status !== filters.status) return false;
+        if (filters.temp && l.temperature !== filters.temp) return false;
+        if (filters.audience && l.audience !== filters.audience) return false;
+        if (filters.source && l.source !== filters.source) return false;
+        if (filters.search) {
+          const q = filters.search.toLowerCase();
+          return (l.name ?? "").toLowerCase().includes(q) || l.email.toLowerCase().includes(q) || (l.company ?? "").toLowerCase().includes(q);
+        }
+        return true;
+      }),
+    [leads, filters],
+  );
+
+  if (isLoading) return <Skeleton className="h-96 w-full" />;
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <h1 className="mb-1 font-display text-2xl font-bold text-foreground">Leads</h1>
-      <p className="mb-6 text-sm text-muted-foreground">Inbox de la landing de plataforma.</p>
-
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        <div className="flex gap-2">
-          {AUDIENCES.map((a) => (
-            <Button key={a.v} size="sm" variant={audience === a.v ? "default" : "outline"} onClick={() => setAudience(a.v)}>
-              {a.l}
-            </Button>
-          ))}
-        </div>
-        <Select value={status || "all"} onValueChange={(v) => setStatus(v === "all" ? "" : v)}>
-          <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los status</SelectItem>
-            {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {isLoading ? (
-        <Skeleton className="h-64 w-full" />
-      ) : leads.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No hay leads todavía.</p>
-      ) : (
-        <div className="space-y-3">
-          {leads.map((l) => <LeadRow key={l.id} lead={l} onSave={onSave} saving={patch.isPending} />)}
-        </div>
-      )}
+    <div className="mx-auto max-w-5xl">
+      <h1 className="mb-6 font-display text-2xl font-bold text-foreground">CRM — Leads</h1>
+      <LeadsFilters value={filters} set={(p) => setFilters((f) => ({ ...f, ...p }))} sources={sources} />
+      <LeadsStats leads={leads} />
+      <LeadsTable
+        leads={filtered}
+        onView={setViewing}
+        onNotes={setNoting}
+        onEdit={setEditing}
+        onStatus={(id, status) => save({ id, status })}
+        onTemp={(id, temperature) => save({ id, temperature })}
+        onDelete={(id) => remove.mutate(id, { onError: onErr })}
+      />
+      <LeadViewDialog lead={viewing} onClose={() => setViewing(null)} />
+      <LeadEditDialog lead={editing} onClose={() => setEditing(null)} onSave={(id, fields) => save({ id, ...fields }, () => setEditing(null))} />
+      <LeadNotesDialog lead={noting} onClose={() => setNoting(null)} onSave={(id, notes) => save({ id, notes }, () => setNoting(null))} />
     </div>
   );
 }
