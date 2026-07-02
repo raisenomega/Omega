@@ -4,9 +4,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { RootRoute } from "@/components/auth/RootRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ARIAProvider } from "@/contexts/ARIAContext";
 import { ActiveBusinessProvider } from "@/contexts/ActiveBusinessContext";
@@ -48,6 +49,13 @@ function ClientLegacyRedirect() {
   return <Navigate to={`/clients?business=${id}`} replace />;
 }
 
+// Fase 1 · el chat ARIA (drawer flotante) NO corre en la landing pública · solo con sesión.
+// Vive dentro de AuthProvider + ActiveBusinessProvider (lee useAuth + useActiveBusiness sin romper el árbol).
+function AuthGatedDrawer() {
+  const { session } = useAuth();
+  return session ? <ARIADrawer /> : null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
@@ -59,8 +67,9 @@ const App = () => (
             <BrowserRouter>
             <ActiveBusinessProvider>
             {/* ARIADrawer (chat flotante global) DENTRO del Provider: usa useARIAChat → useActiveBusiness.
-                Antes se montaba fuera → crash "must be used within ActiveBusinessProvider" (Commit B). */}
-            <ARIADrawer />
+                Antes se montaba fuera → crash "must be used within ActiveBusinessProvider" (Commit B).
+                Fase 1 · gateado por sesión (AuthGatedDrawer): no aparece en la landing pública. */}
+            <AuthGatedDrawer />
             <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="/auth" element={<Auth />} />
@@ -68,7 +77,8 @@ const App = () => (
               <Route path="/zernio/return" element={<ZernioReturn />} />
               {/* Relay del popup OAuth de analítica (Google/Meta) · público · solo postMessage+close */}
               <Route path="/oauth/return" element={<OAuthAnalyticsReturn />} />
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              {/* Fase 1 · "/" condicional: anónimo → landing pública · logueado → /dashboard (RootRoute). */}
+              <Route path="/" element={<RootRoute />} />
               <Route
                 path="/dashboard"
                 element={
